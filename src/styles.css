@@ -1,0 +1,41 @@
+:root {
+  --bg: #0a0a0a;
+  --bg-elevated: #141414;
+  --border: #222;
+  --accent: #00ff88;
+  --accent-dim: #00cc6e;
+  --text: #e6e6e6;
+  --muted: #888;
+  --danger: #ff4d4d;
+  --warning: #ffcc00;
+
+  color-scheme: dark;
+  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  overflow: hidden;
+  user-select: none;
+}
+
+a {
+  color: var(--accent);
+}

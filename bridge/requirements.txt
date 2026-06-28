@@ -1,0 +1,9 @@
+# Production bridge dependencies (Windows).
+#
+# pyirsdk only works on Windows (it reads iRacing's shared memory). For the
+# macOS/Linux mock bridge you only need `websockets`.
+pyirsdk==1.3.5
+websockets>=12.0
+
+# Build-time only: used by CI to produce the onefile sidecar exe.
+pyinstaller>=6.0
