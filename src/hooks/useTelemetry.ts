@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useState } from "react";
 import {
   WS_URL,
   RECONNECT_BASE_MS,
@@ -96,95 +96,97 @@ export function useTelemetry(url: string = WS_URL): UseTelemetryState {
   const [connected, setConnected] = useState(false);
   const [iracingActive, setIracingActive] = useState(false);
 
-  const wsRef = useRef<WebSocket | null>(null);
-  const reconnectTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const attemptRef = useRef(0);
-  const closedByUs = useRef(false);
-
-  const connect = useCallback(() => {
-    // Clean up any previous socket before opening a new one.
-    if (wsRef.current) {
-      closedByUs.current = true;
-      wsRef.current.close();
-      wsRef.current = null;
-    }
-    closedByUs.current = false;
-
-    let ws: WebSocket;
-    try {
-      ws = new WebSocket(url);
-    } catch {
-      scheduleReconnect();
-      return;
-    }
-    wsRef.current = ws;
-
-    ws.onopen = () => {
-      attemptRef.current = 0;
-      setConnected(true);
-    };
-
-    ws.onmessage = (event: MessageEvent) => {
-      try {
-        const msg = JSON.parse(event.data as string) as BridgeMessage;
-        if (msg.connected) {
-          setIracingActive(true);
-          setData(msg);
-        } else {
-          setIracingActive(false);
-          setData(null);
-        }
-      } catch {
-        // Ignore malformed frames.
-      }
-    };
-
-    ws.onerror = () => {
-      // The close handler will take care of reconnection.
-      ws.close();
-    };
-
-    ws.onclose = () => {
-      setConnected(false);
-      setIracingActive(false);
-      if (wsRef.current === ws) {
-        wsRef.current = null;
-      }
-      if (!closedByUs.current) {
-        scheduleReconnect();
-      }
-    };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [url]);
-
-  const scheduleReconnect = useCallback(() => {
-    if (reconnectTimer.current) return;
-    const delay = Math.min(
-      RECONNECT_BASE_MS * 2 ** attemptRef.current,
-      RECONNECT_MAX_MS
-    );
-    attemptRef.current += 1;
-    reconnectTimer.current = setTimeout(() => {
-      reconnectTimer.current = null;
-      connect();
-    }, delay);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [connect]);
-
   useEffect(() => {
-    connect();
-    return () => {
-      closedByUs.current = true;
-      if (reconnectTimer.current) {
-        clearTimeout(reconnectTimer.current);
-        reconnectTimer.current = null;
+    // All connection state lives in the effect closure so it can never get out
+    // of sync across renders (the shared-ref version mistook intentional closes
+    // for drops and reconnected in a loop).
+    let stopped = false;
+    let ws: WebSocket | null = null;
+    let reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+    let attempt = 0;
+
+    // Detach handlers so a socket we close on purpose can't trigger reconnects.
+    const detach = (sock: WebSocket) => {
+      sock.onopen = null;
+      sock.onmessage = null;
+      sock.onerror = null;
+      sock.onclose = null;
+    };
+
+    const scheduleReconnect = () => {
+      if (stopped || reconnectTimer) return;
+      const delay = Math.min(
+        RECONNECT_BASE_MS * 2 ** attempt,
+        RECONNECT_MAX_MS
+      );
+      attempt += 1;
+      reconnectTimer = setTimeout(() => {
+        reconnectTimer = null;
+        open();
+      }, delay);
+    };
+
+    const open = () => {
+      if (stopped) return;
+
+      let sock: WebSocket;
+      try {
+        sock = new WebSocket(url);
+      } catch {
+        scheduleReconnect();
+        return;
       }
-      if (wsRef.current) {
-        wsRef.current.close();
-        wsRef.current = null;
+      ws = sock;
+
+      sock.onopen = () => {
+        attempt = 0;
+        setConnected(true);
+      };
+
+      sock.onmessage = (event: MessageEvent) => {
+        try {
+          const msg = JSON.parse(event.data as string) as BridgeMessage;
+          if (msg.connected) {
+            setIracingActive(true);
+            setData(msg);
+          } else {
+            setIracingActive(false);
+            setData(null);
+          }
+        } catch {
+          // Ignore malformed frames.
+        }
+      };
+
+      sock.onerror = () => {
+        // A close event always follows; reconnection is handled there.
+      };
+
+      sock.onclose = () => {
+        // Only react to the *current* socket dropping unexpectedly.
+        if (ws !== sock) return;
+        ws = null;
+        setConnected(false);
+        setIracingActive(false);
+        scheduleReconnect();
+      };
+    };
+
+    open();
+
+    return () => {
+      stopped = true;
+      if (reconnectTimer) {
+        clearTimeout(reconnectTimer);
+        reconnectTimer = null;
+      }
+      if (ws) {
+        detach(ws);
+        ws.close();
+        ws = null;
       }
     };
-  }, [connect]);
+  }, [url]);
 
   return { data, connected, iracingActive };
 }
