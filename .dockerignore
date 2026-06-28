@@ -1,0 +1,16 @@
+.git
+node_modules
+dist
+dist-ssr
+src-tauri/target
+src-tauri/binaries/*.exe
+bridge/build
+bridge/dist
+bridge/__pycache__
+**/__pycache__
+**/*.pyc
+.venv
+venv
+.env
+*.local
+.DS_Store

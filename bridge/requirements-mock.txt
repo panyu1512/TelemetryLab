@@ -1,0 +1,5 @@
+# Minimal dependencies for the mock bridge (macOS / Linux / Docker dev).
+#
+# The mock does NOT import pyirsdk, so it runs anywhere — only websockets is
+# needed. The full Windows bridge deps live in requirements.txt.
+websockets>=12.0

@@ -17,6 +17,31 @@ frontend connects to it and renders the data. On Windows the real bridge talks
 to iRacing; on macOS/Linux a **mock bridge** generates synthetic data so you can
 develop the UI without a sim.
 
+> **Status:** v0.1.0 — the end-to-end pipeline works; the dashboard is a
+> placeholder. See the [roadmap](ROADMAP.md) (north star: a multi-class
+> timing/standings overlay) and the [changelog](CHANGELOG.md).
+
+## Quick start (Docker)
+
+The fastest way to bring up the **dev environment** (mock telemetry + the React
+app) with a single command:
+
+```bash
+docker compose up --build
+# → open http://localhost:1420
+```
+
+This runs the mock bridge (`ws://localhost:8765`) and the Vite dev server with
+hot reload. Edit files under `src/` and the browser updates live. To simulate
+iRacing connecting/disconnecting, set `MOCK_DISCONNECT_EVERY` in
+[docker-compose.yml](docker-compose.yml).
+
+> ⚠️ Docker only runs the **development** stack. The Tauri desktop app is a
+> native Windows/macOS binary and the **real** bridge needs iRacing's Windows
+> shared memory — neither runs in a Linux container. Those are produced by CI
+> ([`.github/workflows/build.yml`](.github/workflows/build.yml)). Use the native
+> workflows below for the full app.
+
 ## Project layout
 
 ```
