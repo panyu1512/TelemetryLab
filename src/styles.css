@@ -1,25 +1,53 @@
+@import "tailwindcss";
+
+/*
+ * Design tokens — the single source of truth for color / typography.
+ * Declared in Tailwind's `@theme` so every token also generates a utility
+ * (e.g. `--color-accent` → `bg-accent`, `text-accent`, `border-accent`) while
+ * remaining available as a raw CSS variable (`var(--color-accent)`).
+ */
+@theme {
+  --color-bg: #0a0a0a;
+  --color-surface: #141414;
+  --color-surface-2: #1b1b1b;
+  --color-border: #222222;
+  --color-border-strong: #333333;
+
+  --color-accent: #00ff88;
+  --color-accent-dim: #00cc6e;
+
+  --color-text: #e6e6e6;
+  --color-muted: #888888;
+
+  --color-danger: #ff4d4d;
+  --color-warning: #ffcc00;
+
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+}
+
+/*
+ * Short aliases kept for the names referenced throughout the roadmap / older
+ * code (`var(--accent)`, `var(--bg)`…). They point at the canonical `@theme`
+ * tokens so there is still exactly one place to change a value.
+ */
 :root {
-  --bg: #0a0a0a;
-  --bg-elevated: #141414;
-  --border: #222;
-  --accent: #00ff88;
-  --accent-dim: #00cc6e;
-  --text: #e6e6e6;
-  --muted: #888;
-  --danger: #ff4d4d;
-  --warning: #ffcc00;
+  --bg: var(--color-bg);
+  --bg-elevated: var(--color-surface);
+  --border: var(--color-border);
+  --accent: var(--color-accent);
+  --accent-dim: var(--color-accent-dim);
+  --text: var(--color-text);
+  --muted: var(--color-muted);
+  --danger: var(--color-danger);
+  --warning: var(--color-warning);
 
   color-scheme: dark;
-  font-family: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
-    "Liberation Mono", monospace;
+  font-family: var(--font-mono);
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-}
-
-* {
-  box-sizing: border-box;
 }
 
 html,
@@ -30,12 +58,88 @@ body,
 }
 
 body {
-  background: var(--bg);
-  color: var(--text);
+  background: var(--color-bg);
+  color: var(--color-text);
   overflow: hidden;
   user-select: none;
 }
 
 a {
-  color: var(--accent);
+  color: var(--color-accent);
+}
+
+/* Tabular, monospace numerals everywhere data is shown. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum";
+}
+
+/* Thin, unobtrusive scrollbars for the dark UI. */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border-strong) transparent;
+}
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 4px;
+}
+
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* --- react-grid-layout theming ------------------------------------------- */
+
+/* The drop target shown while dragging/resizing. */
+.react-grid-item.react-grid-placeholder {
+  background: var(--color-accent);
+  opacity: 0.12;
+  border-radius: 12px;
+}
+
+/* Lift the card while it's being moved. */
+.react-grid-item.react-draggable-dragging,
+.react-grid-item.resizing {
+  z-index: 20;
+  box-shadow: 0 12px 32px rgb(0 0 0 / 0.55);
+}
+
+/* Replace RGL's default corner image with a subtle themed grip. */
+.react-grid-item > .react-resizable-handle {
+  inset-inline-end: 4px;
+  inset-block-end: 4px;
+  width: 14px;
+  height: 14px;
+  background: none;
+  padding: 0;
+  opacity: 0;
+  transition: opacity 120ms ease;
+}
+.react-grid-item > .react-resizable-handle::after {
+  content: "";
+  position: absolute;
+  right: 2px;
+  bottom: 2px;
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid var(--color-muted);
+  border-bottom: 2px solid var(--color-muted);
+  border-bottom-right-radius: 3px;
+}
+.is-editing .react-grid-item > .react-resizable-handle {
+  opacity: 1;
+}
+.react-grid-item > .react-resizable-handle:hover::after {
+  border-color: var(--color-accent);
 }
