@@ -7,7 +7,7 @@ import {
   type WidgetSize,
 } from "../dashboards/registry";
 
-const STORAGE_KEY = "telemetrylab.layout.v2";
+const STORAGE_KEY = "telemetrylab.layout.v4";
 
 /** Grid geometry constants — shared with the grid component. */
 export const GRID_COLS = 12;
@@ -68,7 +68,7 @@ function defaultItem(
   def: WidgetDef,
   cursor: { x: number; y: number; rowH: number }
 ): Layout {
-  const { w, h } = SIZE_FOOTPRINT[def.defaultSize];
+  const { w, h } = def.defaultLayout ?? SIZE_FOOTPRINT[def.defaultSize];
   if (cursor.x + w > GRID_COLS) {
     cursor.x = 0;
     cursor.y += cursor.rowH;
