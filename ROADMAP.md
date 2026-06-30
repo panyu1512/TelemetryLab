@@ -36,17 +36,25 @@ installer by CI. Single-car telemetry only. (See the [changelog](CHANGELOG.md).)
 
 ---
 
-## 🚧 v0.2.0 — Real dashboard widgets
+## ✅ v0.2.0 — Real dashboard widgets
 
-Turn the raw JSON into an actual driving dashboard. All data already flows from
-the bridge — this is purely frontend.
+The raw JSON becomes an actual driving dashboard — purely frontend, on the
+existing single-car `TelemetryData`. (See the [changelog](CHANGELOG.md).)
 
-- Speed / RPM / gear cluster with an RPM bar + shift light.
-- Throttle & brake bars, steering indicator.
-- Fuel: level, %, and a simple "laps of fuel left" estimate.
-- Lap timing: current / last / best, with a +/- delta vs best.
-- Tyre temps (LF/RF/LR/RR) with a color heat scale; pressures.
-- Reusable `components/` (Gauge, Bar, StatTile) + a layout grid.
+- ✅ Speed / RPM / gear cluster with an RPM bar + shift light.
+- ✅ Throttle & brake bars, steering indicator.
+- ✅ Fuel: level, %, and a simple "laps of fuel left" estimate.
+- ✅ Lap timing: current / last / best, with a +/- delta vs best.
+- ✅ Tyre temps (LF/RF/LR/RR) with a color heat scale; pressures.
+- ✅ Reusable `components/` (Gauge, Bar, StatTile) + a layout grid.
+
+Delivered beyond the checklist: a configurable drag-and-drop / resize widget
+grid with an overlay dock + widget manager and an edit mode, a rolling
+input-trace graph, and fully responsive (container-query-sized) widgets.
+
+> The RPM redline / shift point and the steering range self-calibrate from
+> observed values — the real `DriverCarRedLine` / wheel-range data arrives with
+> `DriverInfo` in v0.3.0.
 
 **Needs:** nothing new — current `TelemetryData`.
 

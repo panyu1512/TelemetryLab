@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { ComponentType } from "react";
 import {
   Gauge,
   SlidersHorizontal,
@@ -11,10 +11,20 @@ import {
   type LucideIcon,
 } from "lucide-react";
 import type { TelemetryData } from "../hooks/useTelemetry";
-import { num, pct, gearLabel, lapTime } from "../lib/format";
+import { ClusterWidget } from "../components/widgets/ClusterWidget";
+import { InputsWidget } from "../components/widgets/InputsWidget";
+import { FuelWidget } from "../components/widgets/FuelWidget";
+import { TimingWidget } from "../components/widgets/TimingWidget";
+import { TyresWidget } from "../components/widgets/TyresWidget";
+import { PositionWidget } from "../components/widgets/PositionWidget";
 
 /** Relative footprint of a widget on the 12-column dashboard grid. */
 export type WidgetSize = "sm" | "md" | "lg" | "xl";
+
+/** Props every widget body receives. */
+export interface WidgetBodyProps {
+  data: TelemetryData | null;
+}
 
 export interface WidgetDef {
   id: string;
@@ -23,8 +33,9 @@ export interface WidgetDef {
   description: string;
   icon: LucideIcon;
   defaultSize: WidgetSize;
-  /** Live preview body. Polished Gauge/Bar primitives land in v0.2. */
-  body: (data: TelemetryData | null) => ReactNode;
+  /** Optional explicit default footprint, overriding the size→{w,h} map. */
+  defaultLayout?: { w: number; h: number };
+  Component: ComponentType<WidgetBodyProps>;
 }
 
 export interface DashboardDef {
@@ -38,54 +49,6 @@ export interface DashboardDef {
   widgets: WidgetDef[];
 }
 
-/* --- tiny presentational helpers (placeholder bodies) --------------------- */
-
-function Metric({
-  value,
-  unit,
-  label,
-}: {
-  value: ReactNode;
-  unit?: string;
-  label?: string;
-}) {
-  return (
-    <div className="flex flex-col gap-0.5">
-      <div className="flex items-baseline gap-1">
-        <span className="tnum text-3xl font-semibold leading-none text-text">
-          {value}
-        </span>
-        {unit && <span className="text-xs text-muted">{unit}</span>}
-      </div>
-      {label && (
-        <span className="text-[10px] uppercase tracking-wider text-muted">
-          {label}
-        </span>
-      )}
-    </div>
-  );
-}
-
-function Bar({
-  value,
-  color = "var(--color-accent)",
-}: {
-  value: number | null | undefined;
-  color?: string;
-}) {
-  const v = Math.max(0, Math.min(1, value ?? 0));
-  return (
-    <div className="h-2 w-full overflow-hidden rounded-full bg-surface-2">
-      <div
-        className="h-full rounded-full transition-[width] duration-100"
-        style={{ width: `${v * 100}%`, background: color }}
-      />
-    </div>
-  );
-}
-
-/* --- dashboards ----------------------------------------------------------- */
-
 export const DASHBOARDS: DashboardDef[] = [
   {
     id: "dashboard",
@@ -96,124 +59,45 @@ export const DASHBOARDS: DashboardDef[] = [
       {
         id: "cluster",
         title: "Speed · RPM · Gear",
-        description: "Primary driving cluster with gear and engine speed.",
+        description: "Driving cluster: speed gauge, gear, RPM bar + shift light.",
         icon: Gauge,
         defaultSize: "lg",
-        body: (d) => (
-          <div className="flex h-full items-end justify-between gap-4">
-            <Metric value={num(d?.speedKmh)} unit="km/h" label="Speed" />
-            <div className="tnum text-6xl font-bold leading-none text-accent">
-              {gearLabel(d?.gear)}
-            </div>
-            <Metric value={num(d?.rpm)} unit="rpm" label="Engine" />
-          </div>
-        ),
+        defaultLayout: { w: 6, h: 3 },
+        Component: ClusterWidget,
       },
       {
         id: "inputs",
         title: "Inputs",
-        description: "Throttle, brake and steering trace.",
+        description: "Throttle/brake trace, input bars and a steering indicator.",
         icon: SlidersHorizontal,
-        defaultSize: "md",
-        body: (d) => (
-          <div className="flex h-full flex-col justify-center gap-3">
-            <div className="flex items-center gap-2">
-              <span className="w-14 text-[10px] uppercase tracking-wider text-muted">
-                Throttle
-              </span>
-              <Bar value={d?.throttle} />
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-14 text-[10px] uppercase tracking-wider text-muted">
-                Brake
-              </span>
-              <Bar value={d?.brake} color="var(--color-danger)" />
-            </div>
-            <div className="flex items-center gap-2">
-              <span className="w-14 text-[10px] uppercase tracking-wider text-muted">
-                Steering
-              </span>
-              <span className="tnum text-sm text-text">
-                {num(d?.steeringDeg)}°
-              </span>
-            </div>
-          </div>
-        ),
+        defaultSize: "lg",
+        defaultLayout: { w: 6, h: 3 },
+        Component: InputsWidget,
       },
       {
         id: "fuel",
         title: "Fuel",
-        description: "Tank level, percentage and laps remaining.",
+        description: "Tank level, percentage and a laps-remaining estimate.",
         icon: Fuel,
         defaultSize: "sm",
-        body: (d) => (
-          <div className="flex h-full flex-col justify-center gap-2">
-            <Metric value={num(d?.fuelLevel, 1)} unit="L" label="In tank" />
-            <Bar value={d?.fuelLevelPct} />
-            <span className="tnum text-xs text-muted">
-              {pct(d?.fuelLevelPct)}%
-            </span>
-          </div>
-        ),
+        Component: FuelWidget,
       },
       {
         id: "timing",
         title: "Lap timing",
-        description: "Current, last and best lap with delta.",
+        description: "Current, last and best lap with a delta vs best.",
         icon: Timer,
         defaultSize: "md",
-        body: (d) => (
-          <div className="grid h-full grid-cols-3 items-center gap-2 text-center">
-            {(
-              [
-                ["Last", d?.lapLastLapTime],
-                ["Best", d?.lapBestLapTime],
-                ["Current", d?.lapCurrentLapTime],
-              ] as const
-            ).map(([label, t]) => (
-              <div key={label} className="flex flex-col gap-1">
-                <span className="text-[10px] uppercase tracking-wider text-muted">
-                  {label}
-                </span>
-                <span className="tnum text-sm font-semibold text-text">
-                  {lapTime(t)}
-                </span>
-              </div>
-            ))}
-          </div>
-        ),
+        Component: TimingWidget,
       },
       {
         id: "tyres",
         title: "Tyre temps",
-        description: "Per-corner carcass temperatures and pressures.",
+        description: "Per-corner temps on a heat scale, plus pressures.",
         icon: Donut,
         defaultSize: "md",
-        body: (d) => {
-          const corners = [
-            ["LF", d?.tyres.lf.tempM],
-            ["RF", d?.tyres.rf.tempM],
-            ["LR", d?.tyres.lr.tempM],
-            ["RR", d?.tyres.rr.tempM],
-          ] as const;
-          return (
-            <div className="grid h-full grid-cols-2 grid-rows-2 gap-2">
-              {corners.map(([name, t]) => (
-                <div
-                  key={name}
-                  className="flex items-center justify-between rounded-md bg-surface-2 px-3"
-                >
-                  <span className="text-[10px] uppercase text-muted">
-                    {name}
-                  </span>
-                  <span className="tnum text-sm text-text">
-                    {num(t)}°
-                  </span>
-                </div>
-              ))}
-            </div>
-          );
-        },
+        defaultLayout: { w: 4, h: 3 },
+        Component: TyresWidget,
       },
       {
         id: "position",
@@ -221,12 +105,7 @@ export const DASHBOARDS: DashboardDef[] = [
         description: "Race position and current lap.",
         icon: Flag,
         defaultSize: "sm",
-        body: (d) => (
-          <div className="flex h-full items-end justify-between">
-            <Metric value={`P${num(d?.playerCarPosition)}`} label="Position" />
-            <Metric value={num(d?.lap)} label="Lap" />
-          </div>
-        ),
+        Component: PositionWidget,
       },
     ],
   },

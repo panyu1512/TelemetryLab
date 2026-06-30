@@ -4,6 +4,7 @@ dist
 dist-ssr
 *.local
 .vite
+*.tsbuildinfo
 
 # --- Logs ---
 npm-debug.log*

@@ -25,7 +25,7 @@ export function Widget({ def, data, editMode, onHide }: WidgetProps) {
   return (
     <section
       className={[
-        "flex h-full flex-col rounded-xl border bg-surface p-3.5 transition-colors",
+        "flex h-full flex-col overflow-hidden rounded-xl border bg-surface p-3.5 transition-colors",
         editMode
           ? "border-border-strong ring-1 ring-accent/20"
           : "border-border hover:border-border-strong",
@@ -33,7 +33,7 @@ export function Widget({ def, data, editMode, onHide }: WidgetProps) {
     >
       <header
         className={[
-          "mb-3 flex items-center gap-2",
+          "mb-3 flex shrink-0 items-center gap-2",
           editMode ? `${WIDGET_DRAG_HANDLE} cursor-grab active:cursor-grabbing` : "",
         ].join(" ")}
       >
@@ -58,7 +58,18 @@ export function Widget({ def, data, editMode, onHide }: WidgetProps) {
         )}
       </header>
 
-      <div className="min-h-0 flex-1">{def.body(data)}</div>
+      {/*
+        `container-type: size` makes this body a query container so widgets can
+        size their content fluidly (cqmin/cqh units); `overflow-hidden` keeps a
+        widget that's been shrunk past its content from spilling onto its
+        neighbours.
+      */}
+      <div
+        className="min-h-0 flex-1 overflow-hidden"
+        style={{ containerType: "size" }}
+      >
+        <def.Component data={data} />
+      </div>
     </section>
   );
 }
