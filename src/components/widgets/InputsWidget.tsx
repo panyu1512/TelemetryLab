@@ -1,0 +1,152 @@
+import type { TelemetryData } from "../../hooks/useTelemetry";
+import { useInputTrace, type InputSample } from "../../hooks/useInputTrace";
+import { num } from "../../lib/format";
+
+const TRACE_POINTS = 300;
+
+const THROTTLE_FILL =
+  "repeating-linear-gradient(45deg, var(--color-accent-dim) 0 6px, var(--color-accent) 6px 12px)";
+
+/* -------------------------------------------------------------------------- */
+/*  Rolling throttle / brake trace                                            */
+/* -------------------------------------------------------------------------- */
+
+function tracePoints(
+  samples: InputSample[],
+  key: keyof InputSample,
+  maxPoints: number
+): string {
+  const n = samples.length;
+  if (n === 0) return "";
+  // Newest sample pinned to the right edge; older points scroll left.
+  return samples
+    .map((s, i) => {
+      const x = 100 - ((n - 1 - i) / (maxPoints - 1)) * 100;
+      const y = 100 - s[key] * 100;
+      return `${x.toFixed(2)},${y.toFixed(2)}`;
+    })
+    .join(" ");
+}
+
+function InputTrace({ samples }: { samples: InputSample[] }) {
+  return (
+    <div className="relative min-w-0 flex-1 overflow-hidden rounded-md border border-border bg-bg">
+      <svg
+        viewBox="0 0 100 100"
+        preserveAspectRatio="none"
+        className="h-full w-full"
+      >
+        {[25, 50, 75].map((y) => (
+          <line
+            key={y}
+            x1="0"
+            y1={y}
+            x2="100"
+            y2={y}
+            stroke="var(--color-border)"
+            strokeWidth="0.5"
+            vectorEffect="non-scaling-stroke"
+          />
+        ))}
+        <polyline
+          points={tracePoints(samples, "brake", TRACE_POINTS)}
+          fill="none"
+          stroke="var(--color-danger)"
+          strokeWidth="2"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
+        />
+        <polyline
+          points={tracePoints(samples, "throttle", TRACE_POINTS)}
+          fill="none"
+          stroke="var(--color-accent)"
+          strokeWidth="2"
+          strokeLinejoin="round"
+          strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
+        />
+      </svg>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Vertical input bar (throttle / brake)                                     */
+/* -------------------------------------------------------------------------- */
+
+function VBar({
+  value,
+  label,
+  fill,
+}: {
+  value: number | null | undefined;
+  label: string;
+  fill: string;
+}) {
+  const v = Math.max(0, Math.min(1, value ?? 0));
+  return (
+    <div className="flex w-8 shrink-0 flex-col items-center gap-1">
+      <span className="tnum text-[10px] font-semibold text-text">
+        {Math.round(v * 100)}
+      </span>
+      <div className="relative w-full flex-1 overflow-hidden rounded-sm bg-surface-2">
+        <div
+          className="absolute inset-x-0 bottom-0 rounded-sm transition-[height] duration-75"
+          style={{ height: `${v * 100}%`, background: fill }}
+        />
+      </div>
+      <span className="text-[9px] uppercase tracking-wider text-muted">
+        {label}
+      </span>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Steering deflection indicator                                              */
+/* -------------------------------------------------------------------------- */
+
+const STEER_MAX = 120;
+
+function SteeringIndicator({ deg }: { deg: number | null | undefined }) {
+  const d = Math.max(-STEER_MAX, Math.min(STEER_MAX, deg ?? 0));
+  const frac = Math.abs(d) / STEER_MAX;
+  const toLeft = d < 0;
+  return (
+    <div className="flex items-center gap-2">
+      <span className="w-14 shrink-0 text-[10px] uppercase tracking-wider text-muted">
+        Steering
+      </span>
+      <div className="relative h-2 flex-1 rounded-full bg-surface-2">
+        <span className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border-strong" />
+        <div
+          className="absolute top-0 h-full rounded-full bg-accent transition-all duration-100"
+          style={{
+            width: `${frac * 50}%`,
+            left: toLeft ? `${50 - frac * 50}%` : "50%",
+          }}
+        />
+      </div>
+      <span className="tnum w-12 text-right text-sm text-text">
+        {num(deg)}°
+      </span>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+
+export function InputsWidget({ data }: { data: TelemetryData | null }) {
+  const trace = useInputTrace(data, TRACE_POINTS);
+  return (
+    <div className="flex h-full flex-col gap-2">
+      <div className="flex min-h-0 flex-1 gap-2">
+        <InputTrace samples={trace} />
+        <VBar value={data?.throttle} label="Thr" fill={THROTTLE_FILL} />
+        <VBar value={data?.brake} label="Brk" fill="var(--color-danger)" />
+      </div>
+      <SteeringIndicator deg={data?.steeringDeg} />
+    </div>
+  );
+}
