@@ -1,18 +1,21 @@
 import type { TelemetryData, TyreData } from "../../hooks/useTelemetry";
 import { num } from "../../lib/format";
-import { heatColor } from "../../lib/scales";
+import { heatColor, HEAT_MIN, HEAT_MAX } from "../../lib/scales";
 
 /** Normalize a tyre temp to 0..1 across the heat-scale range for the mini bar. */
 function tempFrac(temp: number | null | undefined): number {
   if (temp == null) return 0;
-  return Math.max(0, Math.min(1, (temp - 40) / (110 - 40)));
+  return Math.max(0, Math.min(1, (temp - HEAT_MIN) / (HEAT_MAX - HEAT_MIN)));
 }
 
 function Corner({ name, tyre }: { name: string; tyre: TyreData | undefined }) {
   const temp = tyre?.tempM;
   const color = heatColor(temp);
   return (
-    <div className="flex flex-col justify-center rounded-md bg-surface-2 px-3 py-2">
+    <div
+      className="flex flex-col justify-center rounded-md bg-surface-2 px-3 py-2"
+      style={{ borderLeft: `3px solid ${color}` }}
+    >
       <div className="flex items-baseline justify-between">
         <span className="text-[10px] uppercase tracking-wider text-muted">
           {name}
