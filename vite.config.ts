@@ -9,6 +9,15 @@ const host = process.env.TAURI_DEV_HOST;
 export default defineConfig({
   plugins: [react(), tailwindcss()],
 
+  // react-draggable (via react-grid-layout) reads process.env.DRAGGABLE_DEBUG
+  // on every drag start. The browser has no `process` global, so in dev mode
+  // (where this isn't dead-code-eliminated like it is in a production build)
+  // that throws and silently kills drag/resize. Inline it so esbuild drops
+  // the branch.
+  define: {
+    "process.env.DRAGGABLE_DEBUG": "false",
+  },
+
   // Prevent Vite from clearing Rust/Tauri logs from the terminal.
   clearScreen: false,
 
