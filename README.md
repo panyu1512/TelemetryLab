@@ -199,7 +199,3 @@ The full TypeScript type lives in
 [`src/hooks/useTelemetry.ts`](src/hooks/useTelemetry.ts).
 
 ---
-
-## License
-
-MIT
