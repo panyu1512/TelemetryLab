@@ -1,0 +1,132 @@
+import { useEffect, useMemo, useRef, useState } from "react";
+import GridLayout from "react-grid-layout";
+import { Eye, Sparkles } from "lucide-react";
+import "react-grid-layout/css/styles.css";
+import "react-resizable/css/styles.css";
+import {
+  GRID_COLS,
+  GRID_ROW_HEIGHT,
+  GRID_MARGIN,
+  type DashboardLayout,
+} from "../../hooks/useDashboardLayout";
+import type { TelemetryData } from "../../hooks/useTelemetry";
+import { Widget, WIDGET_DRAG_HANDLE, WIDGET_NO_DRAG } from "./Widget";
+
+interface DashboardGridProps {
+  layout: DashboardLayout;
+  data: TelemetryData | null;
+}
+
+export function DashboardGrid({ layout, data }: DashboardGridProps) {
+  const {
+    dashboard,
+    visibleWidgets,
+    gridLayout,
+    editMode,
+    onLayoutChange,
+    toggleWidget,
+  } = layout;
+
+  // Measure our own width and feed it to react-grid-layout. The bundled
+  // WidthProvider HOC fails to report a width inside this flex/overflow layout,
+  // which collapses colWidth and breaks horizontal positioning + resizing.
+  const wrapRef = useRef<HTMLDivElement>(null);
+  const [width, setWidth] = useState(0);
+  useEffect(() => {
+    const el = wrapRef.current;
+    if (!el) return;
+    const ro = new ResizeObserver(([entry]) => {
+      setWidth(entry.contentRect.width);
+    });
+    ro.observe(el);
+    setWidth(el.clientWidth);
+    return () => ro.disconnect();
+  }, []);
+
+  const byId = useMemo(
+    () => new Map(visibleWidgets.map((d) => [d.id, d])),
+    [visibleWidgets]
+  );
+
+  let content: React.ReactNode;
+
+  if (!dashboard.available) {
+    content = (
+      <Placeholder
+        title={`${dashboard.label} is on the roadmap`}
+        body={`This screen ships in ${dashboard.milestone ?? "a future release"}. The layout and overlay it lives in are ready today.`}
+        icon={<Sparkles className="size-6 text-accent" />}
+      />
+    );
+  } else if (visibleWidgets.length === 0) {
+    content = (
+      <Placeholder
+        title="No widgets visible"
+        body="Open the Widgets panel in the dock to turn some back on."
+        icon={<Eye className="size-6 text-muted" />}
+      />
+    );
+  } else if (width > 0) {
+    content = (
+      <GridLayout
+        className={editMode ? "is-editing" : ""}
+        width={width}
+        layout={gridLayout}
+        cols={GRID_COLS}
+        rowHeight={GRID_ROW_HEIGHT}
+        margin={[GRID_MARGIN, GRID_MARGIN]}
+        containerPadding={[0, 0]}
+        isDraggable={editMode}
+        isResizable={editMode}
+        draggableHandle={`.${WIDGET_DRAG_HANDLE}`}
+        draggableCancel={`.${WIDGET_NO_DRAG}`}
+        resizeHandles={["se"]}
+        onLayoutChange={onLayoutChange}
+        compactType="vertical"
+      >
+        {gridLayout.map((item) => {
+          const def = byId.get(item.i);
+          if (!def) return null;
+          return (
+            <div key={item.i}>
+              <Widget
+                def={def}
+                data={data}
+                editMode={editMode}
+                onHide={() => toggleWidget(def.id)}
+              />
+            </div>
+          );
+        })}
+      </GridLayout>
+    );
+  }
+
+  return (
+    <div ref={wrapRef} className="h-full">
+      {content}
+    </div>
+  );
+}
+
+function Placeholder({
+  title,
+  body,
+  icon,
+}: {
+  title: string;
+  body: string;
+  icon: React.ReactNode;
+}) {
+  return (
+    <div className="grid h-full place-items-center">
+      <div className="flex max-w-sm flex-col items-center gap-3 text-center">
+        <div className="grid size-12 place-items-center rounded-xl border border-border bg-surface">
+          {icon}
+        </div>
+        <h2 className="text-base font-semibold text-text">{title}</h2>
+        <p className="text-sm leading-relaxed text-muted">{body}</p>
+      </div>
+    </div>
+  );
+}

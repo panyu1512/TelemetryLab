@@ -1,193 +1,73 @@
+import { useEffect, useState } from "react";
 import { useTelemetry } from "./hooks/useTelemetry";
-import { WS_URL } from "./config";
-
-/** True when running inside the Tauri WebView (vs. a plain browser tab). */
-const isTauri =
-  typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
-
-async function windowAction(action: "minimize" | "close") {
-  if (!isTauri) return;
-  // Imported lazily so a plain browser dev session never touches the Tauri API.
-  const { getCurrentWindow } = await import("@tauri-apps/api/window");
-  const w = getCurrentWindow();
-  if (action === "minimize") await w.minimize();
-  if (action === "close") await w.close();
-}
+import { useDashboardLayout } from "./hooks/useDashboardLayout";
+import { TitleBar, type ConnectionStatus } from "./components/layout/TitleBar";
+import { DashboardGrid } from "./components/layout/DashboardGrid";
+import { Dock } from "./components/layout/Dock";
+import { OverlayManager } from "./components/layout/OverlayManager";
 
 export default function App() {
   const { data, connected, iracingActive } = useTelemetry();
+  const layout = useDashboardLayout();
+  const [managerOpen, setManagerOpen] = useState(false);
 
-  let status: { label: string; color: string };
+  // Esc closes the overlay manager.
+  useEffect(() => {
+    if (!managerOpen) return;
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "Escape") setManagerOpen(false);
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [managerOpen]);
+
+  let status: ConnectionStatus;
   if (!connected) {
-    status = { label: "Connecting to bridge…", color: "var(--warning)" };
+    status = { label: "Connecting to bridge…", color: "var(--color-warning)" };
   } else if (!iracingActive) {
-    status = { label: "Waiting for iRacing…", color: "var(--muted)" };
+    status = { label: "Waiting for iRacing…", color: "var(--color-muted)" };
   } else {
-    status = { label: "Live", color: "var(--accent)" };
+    status = { label: "Live", color: "var(--color-accent)" };
   }
 
   return (
-    <div style={styles.app}>
-      {/* Custom frameless title bar (the native one is disabled). */}
-      <header style={styles.titlebar} data-tauri-drag-region>
-        <div style={styles.brand} data-tauri-drag-region>
-          <span style={{ color: "var(--accent)" }}>●</span>
-          <span>iRacing Telemetry</span>
-        </div>
-        <div style={styles.statusPill}>
-          <span style={{ ...styles.dot, background: status.color }} />
-          <span style={{ color: status.color }}>{status.label}</span>
-        </div>
-        {isTauri && (
-          <div style={styles.windowControls}>
-            <button
-              style={styles.winBtn}
-              onClick={() => windowAction("minimize")}
-              aria-label="Minimize"
-            >
-              –
-            </button>
-            <button
-              style={{ ...styles.winBtn, ...styles.closeBtn }}
-              onClick={() => windowAction("close")}
-              aria-label="Close"
-            >
-              ✕
-            </button>
-          </div>
-        )}
-      </header>
+    <div className="flex h-full flex-col bg-bg text-text">
+      <TitleBar status={status} />
 
-      <main style={styles.main}>
-        {!connected && (
-          <div style={styles.center}>
-            <h1 style={styles.h1}>Connecting…</h1>
-            <p style={styles.muted}>
-              Trying to reach the telemetry bridge at <code>{WS_URL}</code>
-            </p>
+      <main className="relative flex-1 overflow-auto p-4 pb-28">
+        {!iracingActive && (
+          <div className="mb-3 flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-xs text-muted">
+            <span
+              className="inline-block size-1.5 rounded-full"
+              style={{ background: status.color }}
+            />
+            {connected
+              ? "Bridge connected — start a session in iRacing (or run the mock bridge) to see live data."
+              : "Reaching the telemetry bridge… the layout below is fully usable offline."}
           </div>
         )}
 
-        {connected && !iracingActive && (
-          <div style={styles.center}>
-            <h1 style={styles.h1}>Waiting for iRacing…</h1>
-            <p style={styles.muted}>
-              The bridge is connected. Start a session in iRacing (or run the
-              mock bridge) to see live data.
-            </p>
-          </div>
-        )}
-
-        {connected && iracingActive && data && (
-          <div style={styles.dataView}>
-            <p style={styles.muted}>
-              Raw telemetry frame — UI components will render this data later.
-            </p>
-            <pre style={styles.pre}>{JSON.stringify(data, null, 2)}</pre>
-          </div>
-        )}
+        <DashboardGrid layout={layout} data={data} />
       </main>
+
+      {/* Floating overlay: dock + (optionally) the widget manager above it. */}
+      <div className="pointer-events-none fixed inset-x-0 bottom-5 z-40 flex flex-col items-center gap-3 px-4">
+        {managerOpen && (
+          <div className="pointer-events-auto">
+            <OverlayManager
+              layout={layout}
+              onClose={() => setManagerOpen(false)}
+            />
+          </div>
+        )}
+        <div className="pointer-events-auto">
+          <Dock
+            layout={layout}
+            managerOpen={managerOpen}
+            onToggleManager={() => setManagerOpen((o) => !o)}
+          />
+        </div>
+      </div>
     </div>
   );
 }
-
-const styles: Record<string, React.CSSProperties> = {
-  app: {
-    display: "flex",
-    flexDirection: "column",
-    height: "100%",
-    background: "var(--bg)",
-    color: "var(--text)",
-  },
-  titlebar: {
-    display: "flex",
-    alignItems: "center",
-    gap: 16,
-    height: 40,
-    padding: "0 12px",
-    background: "var(--bg-elevated)",
-    borderBottom: "1px solid var(--border)",
-    flex: "0 0 auto",
-  },
-  brand: {
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-    fontWeight: 600,
-    fontSize: 13,
-    letterSpacing: 0.5,
-  },
-  statusPill: {
-    display: "flex",
-    alignItems: "center",
-    gap: 8,
-    fontSize: 12,
-  },
-  dot: {
-    width: 8,
-    height: 8,
-    borderRadius: "50%",
-    display: "inline-block",
-  },
-  windowControls: {
-    marginLeft: "auto",
-    display: "flex",
-    gap: 4,
-  },
-  winBtn: {
-    width: 28,
-    height: 24,
-    background: "transparent",
-    color: "var(--muted)",
-    border: "none",
-    borderRadius: 4,
-    cursor: "pointer",
-    fontSize: 14,
-    lineHeight: 1,
-  },
-  closeBtn: {
-    color: "var(--text)",
-  },
-  main: {
-    flex: "1 1 auto",
-    overflow: "auto",
-    padding: 24,
-  },
-  center: {
-    height: "100%",
-    display: "flex",
-    flexDirection: "column",
-    alignItems: "center",
-    justifyContent: "center",
-    textAlign: "center",
-    gap: 8,
-  },
-  h1: {
-    margin: 0,
-    fontSize: 24,
-    fontWeight: 600,
-    color: "var(--accent)",
-  },
-  muted: {
-    margin: 0,
-    color: "var(--muted)",
-    fontSize: 13,
-  },
-  dataView: {
-    display: "flex",
-    flexDirection: "column",
-    gap: 12,
-  },
-  pre: {
-    margin: 0,
-    padding: 16,
-    background: "var(--bg-elevated)",
-    border: "1px solid var(--border)",
-    borderRadius: 8,
-    fontSize: 12,
-    lineHeight: 1.5,
-    color: "var(--accent)",
-    overflow: "auto",
-    userSelect: "text",
-  },
-};
