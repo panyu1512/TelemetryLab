@@ -58,7 +58,9 @@ export function Widget({ def, data, editMode, onHide }: WidgetProps) {
         )}
       </header>
 
-      <div className="min-h-0 flex-1">{def.body(data)}</div>
+      <div className="min-h-0 flex-1">
+        <def.Component data={data} />
+      </div>
     </section>
   );
 }
