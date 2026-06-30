@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 
 /* -------------------------------------------------------------------------- */
 /*  StatTile — a labelled numeric readout                                     */
@@ -16,11 +16,20 @@ interface StatTileProps {
   sub?: ReactNode;
 }
 
-const VALUE_SIZE = {
-  md: "text-2xl",
-  lg: "text-3xl",
-  xl: "text-4xl",
-} as const;
+/*
+ * Fluid font sizes in container-query units: the value tracks the widget's
+ * smaller dimension (`cqmin`) so it grows/shrinks with the card, clamped so it
+ * never gets unreadably small or absurdly large. Requires an ancestor with
+ * `container-type` — the widget body sets it (see Widget.tsx).
+ */
+const VALUE_FONT: Record<NonNullable<StatTileProps["size"]>, string> = {
+  md: "clamp(0.9rem, 13cqmin, 1.6rem)",
+  lg: "clamp(1rem, 16cqmin, 2.1rem)",
+  xl: "clamp(1.1rem, 20cqmin, 2.8rem)",
+};
+
+const LABEL_FONT = "clamp(0.5rem, 6cqmin, 0.65rem)";
+const UNIT_FONT = "clamp(0.55rem, 6cqmin, 0.75rem)";
 
 const ALIGN = {
   start: "items-start text-left",
@@ -38,18 +47,28 @@ export function StatTile({
   sub,
 }: StatTileProps) {
   return (
-    <div className={`flex flex-col gap-0.5 ${ALIGN[align]}`}>
-      <div className="flex items-baseline gap-1">
+    <div className={`flex min-w-0 flex-col gap-0.5 ${ALIGN[align]}`}>
+      <div className="flex max-w-full items-baseline gap-1">
         <span
-          className={`tnum ${VALUE_SIZE[size]} font-semibold leading-none ${color ? "" : "text-text"}`}
-          style={color ? { color } : undefined}
+          className={`tnum truncate font-semibold leading-none ${color ? "" : "text-text"}`}
+          style={{ fontSize: VALUE_FONT[size], color }}
         >
           {value}
         </span>
-        {unit && <span className="text-xs text-muted">{unit}</span>}
+        {unit && (
+          <span
+            className="shrink-0 text-muted"
+            style={{ fontSize: UNIT_FONT }}
+          >
+            {unit}
+          </span>
+        )}
       </div>
       {label && (
-        <span className="text-[10px] uppercase tracking-wider text-muted">
+        <span
+          className="truncate uppercase tracking-wider text-muted"
+          style={{ fontSize: LABEL_FONT }}
+        >
           {label}
         </span>
       )}
@@ -68,8 +87,6 @@ interface BarProps {
   color?: string;
   track?: string;
   height?: number;
-  /** Anchor the fill to the right edge instead of the left. */
-  fromRight?: boolean;
   className?: string;
 }
 
@@ -78,39 +95,33 @@ export function Bar({
   color = "var(--color-accent)",
   track = "var(--color-surface-2)",
   height = 8,
-  fromRight = false,
   className = "",
 }: BarProps) {
   const v = Math.max(0, Math.min(1, value ?? 0));
   return (
     <div
-      className={`w-full overflow-hidden rounded-full ${className}`}
+      className={`w-full shrink-0 overflow-hidden rounded-full ${className}`}
       style={{ height, background: track }}
     >
       <div
         className="h-full rounded-full transition-[width] duration-100"
-        style={{
-          width: `${v * 100}%`,
-          background: color,
-          marginLeft: fromRight ? "auto" : undefined,
-        }}
+        style={{ width: `${v * 100}%`, background: color }}
       />
     </div>
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Gauge — a 270° radial arc gauge                                           */
+/*  Gauge — a 270° radial arc gauge (resolution-independent)                  */
 /* -------------------------------------------------------------------------- */
 
 interface GaugeProps {
   value: number | null | undefined;
   max: number;
   min?: number;
-  size?: number;
+  /** Arc stroke width, in the 0..100 viewBox space. */
   thickness?: number;
   unit?: string;
-  label?: string;
   color?: string;
   trackColor?: string;
   /** Replaces the default centered value (e.g. to show a gear). */
@@ -132,14 +143,24 @@ function arcPath(cx: number, cy: number, r: number, a0: number, a1: number) {
   return `M ${start.x} ${start.y} A ${r} ${r} 0 ${large} 1 ${end.x} ${end.y}`;
 }
 
+const GAUGE_VALUE_STYLE: CSSProperties = {
+  fontSize: "clamp(0.9rem, 22cqmin, 2.4rem)",
+};
+const GAUGE_UNIT_STYLE: CSSProperties = {
+  fontSize: "clamp(0.45rem, 7cqmin, 0.8rem)",
+};
+
+/**
+ * Renders into a 0..100 viewBox and fills its parent, so the parent decides the
+ * size (give it a square box). The centered readout scales with the widget via
+ * container-query units.
+ */
 export function Gauge({
   value,
   max,
   min = 0,
-  size = 116,
-  thickness = 9,
+  thickness = 8,
   unit,
-  label,
   color = "var(--color-accent)",
   trackColor = "var(--color-surface-2)",
   children,
@@ -148,12 +169,16 @@ export function Gauge({
     value == null || max <= min
       ? 0
       : Math.max(0, Math.min(1, (value - min) / (max - min)));
-  const r = (size - thickness) / 2;
-  const c = size / 2;
+  const c = 50;
+  const r = (100 - thickness) / 2;
 
   return (
-    <div className="relative shrink-0" style={{ width: size, height: size }}>
-      <svg width={size} height={size} className="block">
+    <div className="relative h-full w-full">
+      <svg
+        viewBox="0 0 100 100"
+        preserveAspectRatio="xMidYMid meet"
+        className="absolute inset-0 h-full w-full"
+      >
         <path
           d={arcPath(c, c, r, GAUGE_START, GAUGE_START + GAUGE_SPAN)}
           fill="none"
@@ -174,22 +199,23 @@ export function Gauge({
       <div className="absolute inset-0 flex flex-col items-center justify-center">
         {children ?? (
           <>
-            <span className="tnum text-2xl font-semibold leading-none text-text">
+            <span
+              className="tnum font-semibold leading-none text-text"
+              style={GAUGE_VALUE_STYLE}
+            >
               {value == null ? "—" : Math.round(value)}
             </span>
             {unit && (
-              <span className="mt-0.5 text-[10px] uppercase tracking-wider text-muted">
+              <span
+                className="uppercase tracking-wider text-muted"
+                style={GAUGE_UNIT_STYLE}
+              >
                 {unit}
               </span>
             )}
           </>
         )}
       </div>
-      {label && (
-        <span className="absolute inset-x-0 bottom-0 text-center text-[10px] uppercase tracking-wider text-muted">
-          {label}
-        </span>
-      )}
     </div>
   );
 }

@@ -13,24 +13,33 @@ function Corner({ name, tyre }: { name: string; tyre: TyreData | undefined }) {
   const color = heatColor(temp);
   return (
     <div
-      className="flex flex-col justify-center rounded-md bg-surface-2 px-3 py-2"
+      className="flex flex-col justify-center overflow-hidden rounded-md bg-surface-2 px-2.5 py-1.5"
       style={{ borderLeft: `3px solid ${color}` }}
     >
-      <div className="flex items-baseline justify-between">
-        <span className="text-[10px] uppercase tracking-wider text-muted">
+      <div className="flex items-baseline justify-between gap-1">
+        <span
+          className="uppercase tracking-wider text-muted"
+          style={{ fontSize: "clamp(0.5rem, 5cqmin, 0.65rem)" }}
+        >
           {name}
         </span>
-        <span className="tnum text-lg font-semibold" style={{ color }}>
+        <span
+          className="tnum font-semibold"
+          style={{ fontSize: "clamp(0.8rem, 9cqmin, 1.2rem)", color }}
+        >
           {num(temp)}°
         </span>
       </div>
-      <div className="mt-1.5 h-1 overflow-hidden rounded-full bg-bg">
+      <div className="mt-1 h-1 shrink-0 overflow-hidden rounded-full bg-bg">
         <div
           className="h-full rounded-full transition-all duration-200"
           style={{ width: `${tempFrac(temp) * 100}%`, background: color }}
         />
       </div>
-      <span className="tnum mt-1 text-[10px] text-muted">
+      <span
+        className="tnum mt-1 truncate text-muted"
+        style={{ fontSize: "clamp(0.45rem, 5cqmin, 0.65rem)" }}
+      >
         {num(tyre?.pressure)} kPa
       </span>
     </div>

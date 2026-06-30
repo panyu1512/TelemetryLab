@@ -86,8 +86,11 @@ function VBar({
 }) {
   const v = Math.max(0, Math.min(1, value ?? 0));
   return (
-    <div className="flex w-8 shrink-0 flex-col items-center gap-1">
-      <span className="tnum text-[10px] font-semibold text-text">
+    <div className="flex w-7 shrink-0 flex-col items-center gap-1">
+      <span
+        className="tnum font-semibold text-text"
+        style={{ fontSize: "clamp(0.5rem, 6cqmin, 0.7rem)" }}
+      >
         {Math.round(v * 100)}
       </span>
       <div className="relative w-full flex-1 overflow-hidden rounded-sm bg-surface-2">
@@ -96,7 +99,10 @@ function VBar({
           style={{ height: `${v * 100}%`, background: fill }}
         />
       </div>
-      <span className="text-[9px] uppercase tracking-wider text-muted">
+      <span
+        className="uppercase tracking-wider text-muted"
+        style={{ fontSize: "clamp(0.45rem, 5cqmin, 0.6rem)" }}
+      >
         {label}
       </span>
     </div>
@@ -114,11 +120,14 @@ function SteeringIndicator({ deg }: { deg: number | null | undefined }) {
   const frac = Math.abs(d) / STEER_MAX;
   const toLeft = d < 0;
   return (
-    <div className="flex items-center gap-2">
-      <span className="w-14 shrink-0 text-[10px] uppercase tracking-wider text-muted">
-        Steering
+    <div className="flex shrink-0 items-center gap-2">
+      <span
+        className="shrink-0 uppercase tracking-wider text-muted"
+        style={{ fontSize: "clamp(0.45rem, 5cqmin, 0.65rem)" }}
+      >
+        Steer
       </span>
-      <div className="relative h-2 flex-1 rounded-full bg-surface-2">
+      <div className="relative h-2 min-w-0 flex-1 rounded-full bg-surface-2">
         <span className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border-strong" />
         <div
           className="absolute top-0 h-full rounded-full bg-accent transition-all duration-100"
@@ -128,7 +137,10 @@ function SteeringIndicator({ deg }: { deg: number | null | undefined }) {
           }}
         />
       </div>
-      <span className="tnum w-12 text-right text-sm text-text">
+      <span
+        className="tnum shrink-0 text-right text-text"
+        style={{ fontSize: "clamp(0.6rem, 7cqmin, 0.9rem)", minWidth: "2.5em" }}
+      >
         {num(deg)}°
       </span>
     </div>

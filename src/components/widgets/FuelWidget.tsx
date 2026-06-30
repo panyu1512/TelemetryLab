@@ -28,9 +28,12 @@ export function FuelWidget({ data }: { data: TelemetryData | null }) {
         />
       </div>
       <Bar value={data?.fuelLevelPct} />
-      <div className="flex items-center justify-between text-xs text-muted">
+      <div
+        className="flex items-center justify-between gap-1 text-muted"
+        style={{ fontSize: "clamp(0.55rem, 6cqmin, 0.75rem)" }}
+      >
         <span className="tnum">{pct(data?.fuelLevelPct)}%</span>
-        <span className="tnum">
+        <span className="tnum truncate">
           {perLap == null ? "calibrating…" : `${perLap.toFixed(2)} L/lap`}
         </span>
       </div>
