@@ -7,6 +7,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.1] - 2026-07-02
+
+Standings enrichments: visual car brand identity and live tyre data per car,
+making the timing table immediately richer without requiring new bridge
+architecture.
+
+### Added
+
+- **Monochrome SVG brand icons** (`src/components/standings/cells.tsx`): a
+  `BrandIcon` component that renders an inline, `currentColor` SVG for 20+
+  iRacing manufacturers — Audi (four-ring wordmark), BMW (roundel with filled
+  quadrants), McLaren (Speedmark double-arc), Mercedes (three-pointed star),
+  Ferrari (Scuderia shield), Porsche (quartered crest), Chevrolet (bowtie),
+  Cadillac (shield crest), Ford (oval), Toyota (triple ellipse), Honda (H in
+  pentagon), Dallara (bold D), Lamborghini (shield with crossed lines), Acura
+  (precision A), Mazda (M-wing arcs), Nissan (bar-through-circle), Hyundai
+  (H in oval), Subaru (Pleiades cluster), Volkswagen (stacked V/W in circle),
+  Lotus (L in ellipse), Radical (R letterform), and Skip Barber (S curve).
+  Unknown brands fall back to a muted three-letter pill. Icons are sized at
+  11 px tall with proportional width via `width: auto`.
+- **Per-car tyre column** in the standings table:
+  - **Compound badge** (P / A / B / C) with compound-specific color-coding —
+    primary in accent green, alternate in warning yellow, further options in
+    danger red / sector purple — derived from the `CarIdxTireCompound` SDK
+    array (`bridge/telemetrylab/ingest.py`).
+  - **Laps on tyre** counter next to the badge, reset each time a car leaves
+    its pit stall (derived by detecting `in_pit_stall → not in_pit_stall`
+    state transitions in `StandingsEngine`).
+  - `TireCell` component (`src/components/standings/cells.tsx`) and a `tire`
+    column in the CSS grid template (`src/components/standings/constants.ts`).
+- **Bridge tyre data pipeline**: `CarIdxTireCompound` added to `CAR_IDX_VARS`
+  ingest list and propagated through `CarTiming` → `StandingsEntry` →
+  WebSocket payload → `StandingsEntry` TypeScript interface → Zustand store.
+  Pit-stall transition tracking (`_prev_in_pit_stall`, `_tire_stint_start_lap`)
+  added to `StandingsEngine` with reset on session change.
+- **Mock bridge** synthesizes compound data cycling every ~20 laps per car so
+  the tyre column can be developed without iRacing running.
+
 ## [0.4.0] - 2026-07-02
 
 Standings / timing screen: a production-grade, multi-class timing table — the
@@ -168,6 +206,9 @@ React dashboard, plus CI that ships a Windows installer.
   the `.msi` as an artifact and a Release asset on `v*` tags.
 - Project documentation (`README.md`) with Windows and macOS (mock) setup.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v0.4.1...HEAD
+[0.4.1]: https://github.com/panyu1512/TelemetryLab/compare/v0.4.0...v0.4.1
+[0.4.0]: https://github.com/panyu1512/TelemetryLab/compare/v0.3.0...v0.4.0
+[0.3.0]: https://github.com/panyu1512/TelemetryLab/compare/v0.2.0...v0.3.0
 [0.2.0]: https://github.com/panyu1512/TelemetryLab/compare/v0.1.0...v0.2.0
 [0.1.0]: https://github.com/panyu1512/TelemetryLab/releases/tag/v0.1.0
