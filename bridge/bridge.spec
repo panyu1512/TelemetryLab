@@ -18,6 +18,9 @@ from PyInstaller.utils.hooks import collect_submodules
 hiddenimports = []
 hiddenimports += collect_submodules("websockets")
 hiddenimports += collect_submodules("irsdk")
+# Our own shared core (imported by bridge.py, but be explicit so nothing in the
+# package is dropped by static analysis).
+hiddenimports += collect_submodules("telemetrylab")
 hiddenimports += ["yaml", "yaml.cyaml"]
 
 a = Analysis(

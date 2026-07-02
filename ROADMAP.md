@@ -60,25 +60,34 @@ input-trace graph, and fully responsive (container-query-sized) widgets.
 
 ---
 
-## ⏳ v0.3.0 — Session & multi-car data layer
+## ✅ v0.3.0 — Session & multi-car data layer
 
-The unglamorous but essential foundation for standings/relative. Teach the
-bridge to publish the **whole field** and the **session**, not just the player.
+The unglamorous but essential foundation for standings/relative. The bridge now
+publishes the **whole field** and the **session**, not just the player.
+(See the [changelog](CHANGELOG.md).)
 
-- Parse `DriverInfo` (the YAML session string) → per-car: name, car number,
-  car brand/model, class, iRating, license + safety rating.
-- Read the `CarIdx*` telemetry arrays (all cars): `CarIdxPosition`,
+- ✅ Parse `DriverInfo` (the YAML session string) → per-car: name, car number,
+  car brand/model, class, iRating, license + safety rating, club, division.
+- ✅ Read the `CarIdx*` telemetry arrays (all cars): `CarIdxPosition`,
   `CarIdxClassPosition`, `CarIdxLapDistPct`, `CarIdxLap`, `CarIdxLastLapTime`,
   `CarIdxBestLapTime`, `CarIdxEstTime`, `CarIdxF2Time`, `CarIdxOnPitRoad`,
   `CarIdxTrackSurface`.
-- Session state: `SessionTimeRemain`, `SessionLapsRemain`, `SessionState`,
-  `SessionFlags`, plus SOF and track/air temp.
-- Split the WebSocket protocol into channels so the heavy/rarely-changing data
-  (driver roster) doesn't ship at 60 fps:
+- ✅ Session state: `SessionTimeRemain`, `SessionLapsRemain`, `SessionState`,
+  decoded `SessionFlags`, plus per-class/overall SOF and track/air temp.
+- ✅ Split the WebSocket protocol into versioned channels so the
+  heavy/rarely-changing data (driver roster) doesn't ship at 60 fps:
   - `telemetry` — player car, high frequency (~60 Hz).
   - `session` — roster + session info, low frequency (~1 Hz / on change).
   - `standings` — computed field order, medium frequency (~5–10 Hz).
-- Typed TS models (`SessionInfo`, `DriverEntry`, `CarTiming`).
+  - `bridge` — connection status; stateful channels replay on connect.
+- ✅ Typed TS models (`SessionInfo`, `DriverEntry`, `CarTiming`,
+  `StandingsEntry`) + Zustand stores optimized for 100+ rows.
+- ✅ Mock bridge synthesizes a full multi-car (multi-class) field.
+
+Delivered beyond the checklist: a source-agnostic bridge core
+(`bridge/telemetrylab/`) with repositories + an event bus, so the real and mock
+bridges share one code path; a standings computation skeleton with gap/interval
+and lapped-car handling; and a relative `deltaToPlayer` ready for v0.5.
 
 **Needs:** `DriverInfo` YAML + `CarIdx*` arrays + `WeekendInfo`.
 

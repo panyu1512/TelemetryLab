@@ -1,67 +1,61 @@
-"""iRacing telemetry bridge.
+"""iRacing telemetry bridge (production, Windows).
 
-Reads iRacing's shared memory via pyirsdk at ~60 fps and broadcasts the
-telemetry as JSON over a WebSocket server (ws://localhost:8765).
+Reads iRacing's shared memory via pyirsdk and publishes it over a WebSocket
+(ws://localhost:8765), split into the ``telemetry`` / ``session`` / ``standings``
+channels defined in :mod:`telemetrylab.protocol`.
 
-Protocol
---------
-- When iRacing is active, each frame is a JSON object with ``"connected": true``
-  plus the telemetry fields (see ``Bridge.sample``).
-- When iRacing is not running, the bridge emits ``{"connected": false}`` once per
-  second.
+This module is intentionally thin: it is only the *source* — it reads raw values
+from the SDK and hands them to :class:`telemetrylab.BridgeService`, which owns
+the cadences, repositories, change-detection and publishing. The mock bridge is
+a different source plugged into the same service, so both emit identical wire
+formats.
 
-The bridge handles iRacing being closed and reopened: it keeps polling the SDK
-and transparently reconnects when a session becomes available again.
-
-This module only runs on Windows (pyirsdk reads the Windows shared memory).
-For development on macOS/Linux use ``mock_bridge.py`` instead.
+Windows only (pyirsdk reads Windows shared memory). For development on
+macOS/Linux use ``mock_bridge.py``.
 """
 
 from __future__ import annotations
 
 import asyncio
-import json
 import math
-from typing import Any, Optional, Set
+from typing import Any, Optional
 
 import irsdk
-from websockets.asyncio.server import ServerConnection, serve
+from websockets.asyncio.server import serve
+
+from telemetrylab import BridgeService
+from telemetrylab.ingest import CAR_IDX_VARS
 
 HOST = "0.0.0.0"
 PORT = 8765
 
-# Target sampling rate while connected to iRacing.
-TICK_HZ = 60.0
-CONNECTED_INTERVAL = 1.0 / TICK_HZ
-# How often to emit the "disconnected" heartbeat while iRacing is closed.
-DISCONNECTED_INTERVAL = 1.0
 
+class IrsdkSource:
+    """A :class:`telemetrylab.TelemetrySource` backed by pyirsdk.
 
-class Bridge:
-    """Thin wrapper around pyirsdk with safe variable access + reconnection."""
+    Owns the SDK connection lifecycle (startup/shutdown + reconnect) and exposes
+    safe, typed reads. Reads that touch the live telemetry buffer freeze the
+    latest frame first; the session YAML is read straight from the SDK's parsed
+    cache (pyirsdk only re-parses it when iRacing changes the string).
+    """
 
     def __init__(self) -> None:
         self.ir = irsdk.IRSDK()
-        self.connected = False
+        self._connected = False
 
-    def check_connection(self) -> None:
-        """Sync our connection flag with the live SDK state.
-
-        Detects iRacing closing (shutdown + flag reset) and reopening
-        (startup) so the bridge recovers automatically.
-        """
-        if self.connected and not (
-            self.ir.is_initialized and self.ir.is_connected
-        ):
-            self.connected = False
+    # --- connection ---------------------------------------------------------
+    def poll_connection(self) -> bool:
+        if self._connected and not (self.ir.is_initialized and self.ir.is_connected):
+            self._connected = False
             self.ir.shutdown()
             print("[bridge] iRacing disconnected", flush=True)
-        elif not self.connected and self.ir.startup() and self.ir.is_connected:
-            self.connected = True
+        elif not self._connected and self.ir.startup() and self.ir.is_connected:
+            self._connected = True
             print("[bridge] iRacing connected", flush=True)
+        return self._connected
 
+    # --- safe SDK access ----------------------------------------------------
     def _get(self, name: str, default: Any = None) -> Any:
-        """Read a telemetry var, returning ``default`` if absent/unavailable."""
         try:
             value = self.ir[name]
         except Exception:  # noqa: BLE001
@@ -69,11 +63,6 @@ class Bridge:
         return default if value is None else value
 
     def _tyre(self, prefix: str) -> dict[str, Any]:
-        """Per-tyre carcass temperatures (L/M/R) and pressure.
-
-        Prefixes: ``LF``, ``RF``, ``LR``, ``RR``. Some of these vars are only
-        exposed by iRacing in certain situations, hence the safe ``_get``.
-        """
         return {
             "tempL": self._get(f"{prefix}tempCL"),
             "tempM": self._get(f"{prefix}tempCM"),
@@ -81,15 +70,29 @@ class Bridge:
             "pressure": self._get(f"{prefix}press"),
         }
 
-    def sample(self) -> dict[str, Any]:
-        """Read one telemetry frame from the latest shared-memory buffer."""
-        self.ir.freeze_var_buffer_latest()
+    # --- session ------------------------------------------------------------
+    def read_session_raw(self) -> Optional[dict[str, Any]]:
+        session_info = self._get("SessionInfo") or {}
+        return {
+            "weekend_info": self._get("WeekendInfo") or {},
+            "driver_info": self._get("DriverInfo") or {},
+            "sessions": session_info.get("Sessions", []),
+            "session_num": self._get("SessionNum", 0),
+            "session_state": self._get("SessionState", 0),
+            "session_time_remain": self._get("SessionTimeRemain"),
+            "session_laps_remain": self._get("SessionLapsRemain"),
+            "session_flags": self._get("SessionFlags", 0),
+            "air_temp": self._get("AirTemp"),
+            "track_temp": self._get("TrackTemp"),
+            "player_car_idx": self._get("PlayerCarIdx", 0),
+        }
 
+    # --- player telemetry (60 Hz channel) -----------------------------------
+    def read_player_frame(self) -> Optional[dict[str, Any]]:
+        self.ir.freeze_var_buffer_latest()
         speed = self._get("Speed", 0.0) or 0.0
         steer = self._get("SteeringWheelAngle", 0.0) or 0.0
-
         return {
-            "connected": True,
             "sessionTime": self._get("SessionTime"),
             "speed": speed,
             "speedKmh": round(speed * 3.6, 1),
@@ -105,7 +108,9 @@ class Bridge:
             "lapBestLapTime": self._get("LapBestLapTime"),
             "lapLastLapTime": self._get("LapLastLapTime"),
             "lap": self._get("Lap"),
+            "lapDistPct": self._get("LapDistPct"),
             "playerCarPosition": self._get("PlayerCarPosition"),
+            "playerCarClassPosition": self._get("PlayerCarClassPosition"),
             "latAccel": self._get("LatAccel"),
             "lonAccel": self._get("LonAccel"),
             "onPitRoad": self._get("OnPitRoad"),
@@ -119,59 +124,17 @@ class Bridge:
             },
         }
 
-
-# Currently connected WebSocket clients (frontends).
-clients: Set[ServerConnection] = set()
-
-
-async def register(connection: ServerConnection) -> None:
-    """Handle a client connection: register it and wait until it disconnects."""
-    clients.add(connection)
-    peer = connection.remote_address
-    print(f"[bridge] client connected: {peer}", flush=True)
-    try:
-        await connection.wait_closed()
-    finally:
-        clients.discard(connection)
-        print(f"[bridge] client disconnected: {peer}", flush=True)
-
-
-async def broadcast(message: str) -> None:
-    """Send a message to every connected client, dropping the ones that fail."""
-    if not clients:
-        return
-    await asyncio.gather(
-        *(client.send(message) for client in list(clients)),
-        return_exceptions=True,
-    )
-
-
-async def telemetry_loop() -> None:
-    """Poll iRacing and broadcast frames forever."""
-    bridge = Bridge()
-    while True:
-        bridge.check_connection()
-        if bridge.connected:
-            try:
-                payload: dict[str, Any] = bridge.sample()
-                interval = CONNECTED_INTERVAL
-            except Exception as exc:  # noqa: BLE001
-                # A read failure usually means iRacing went away mid-frame.
-                print(f"[bridge] sample error: {exc}", flush=True)
-                payload = {"connected": False}
-                interval = DISCONNECTED_INTERVAL
-        else:
-            payload = {"connected": False}
-            interval = DISCONNECTED_INTERVAL
-
-        await broadcast(json.dumps(payload))
-        await asyncio.sleep(interval)
+    # --- multi-car arrays (standings channel) -------------------------------
+    def read_car_arrays(self) -> dict[str, Any]:
+        self.ir.freeze_var_buffer_latest()
+        return {name: self._get(name) for name in CAR_IDX_VARS}
 
 
 async def main() -> None:
-    async with serve(register, HOST, PORT):
+    service = BridgeService(IrsdkSource())
+    async with serve(service.publisher.register, HOST, PORT):
         print(f"[bridge] WebSocket server listening on ws://{HOST}:{PORT}", flush=True)
-        await telemetry_loop()
+        await service.run()
 
 
 if __name__ == "__main__":

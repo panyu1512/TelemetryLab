@@ -48,8 +48,11 @@ iRacing connecting/disconnecting, set `MOCK_DISCONNECT_EVERY` in
 .
 ├── src/                      # React frontend (Vite + TypeScript)
 │   ├── components/
+│   ├── telemetry/            # Wire protocol, typed models, WS connection
+│   ├── stores/               # Zustand stores (session/telemetry/standings/bridge)
 │   ├── hooks/
-│   │   └── useTelemetry.ts   # WebSocket hook with reconnect + typed telemetry
+│   │   ├── useBridge.ts      # Owns the WS connection; feeds the stores
+│   │   └── useTelemetry.ts   # Single-car compatibility selector
 │   ├── config.ts             # Configurable WS host/port (no hardcoded localhost)
 │   └── App.tsx
 ├── src-tauri/                # Tauri (Rust)
@@ -60,8 +63,9 @@ iRacing connecting/disconnecting, set `MOCK_DISCONNECT_EVERY` in
 │   ├── tauri.conf.json
 │   └── Cargo.toml
 ├── bridge/                   # Python sidecar
-│   ├── bridge.py             # Real bridge (Windows, pyirsdk)
-│   ├── mock_bridge.py        # Synthetic data for Mac/Linux dev
+│   ├── telemetrylab/         # Shared core: protocol, models, repos, service
+│   ├── bridge.py             # Real bridge source (Windows, pyirsdk)
+│   ├── mock_bridge.py        # Synthetic multi-car field source (Mac/Linux dev)
 │   ├── bridge.spec           # PyInstaller config (onefile, console)
 │   └── requirements.txt
 └── .github/workflows/build.yml
@@ -96,7 +100,8 @@ npm run bridge:mock          # → ws://localhost:8765 streaming fake telemetry
 npm run dev                  # → http://localhost:1420
 ```
 
-Open <http://localhost:1420>. You should see the raw telemetry JSON streaming.
+Open <http://localhost:1420>. You should see the live dashboard, driven by the
+mock bridge's synthetic field.
 
 Useful tweaks:
 
@@ -175,27 +180,42 @@ git push origin v0.1.0
 
 ---
 
-## Telemetry data
+## Wire protocol
 
-The bridge emits one JSON frame per tick. When iRacing is not running it emits
-`{"connected": false}` once per second.
+Since v0.3.0 the bridge multiplexes several **channels** over the single
+WebSocket, each in a versioned envelope so the frontend can route by `type` and
+pick a different cadence per channel (never shipping the heavy driver roster at
+60 fps):
 
-| Field                | Source / notes                                  |
-| -------------------- | ----------------------------------------------- |
-| `speed` / `speedKmh` | `Speed` (m/s) and its km/h conversion           |
-| `rpm`, `gear`        | `RPM`, `Gear`                                    |
-| `throttle`, `brake`  | `Throttle`, `Brake` (0–1)                        |
-| `steeringWheelAngle` / `steeringDeg` | `SteeringWheelAngle` (rad) + degrees |
-| `fuelLevel`, `fuelLevelPct` | `FuelLevel`, `FuelLevelPct`               |
-| `lapCurrentLapTime`, `lapBestLapTime`, `lapLastLapTime`, `lap` | lap timing |
-| `playerCarPosition`  | `PlayerCarPosition`                              |
-| `latAccel`, `lonAccel` | `LatAccel`, `LonAccel` (m/s²)                  |
-| `onPitRoad`          | `OnPitRoad`                                       |
-| `sessionTime`        | `SessionTime`                                     |
-| `airTemp`, `trackTemp` | `AirTemp`, `TrackTemp`                          |
-| `tyres.{lf,rf,lr,rr}` | per-tyre carcass temps (`tempL/M/R`) + `pressure` |
+```jsonc
+{ "v": 1, "type": "telemetry", "ts": 1719936000123, "seq": 4211, "payload": { … } }
+```
 
-The full TypeScript type lives in
-[`src/hooks/useTelemetry.ts`](src/hooks/useTelemetry.ts).
+| Channel     | Cadence            | Payload                                                        |
+| ----------- | ------------------ | -------------------------------------------------------------- |
+| `telemetry` | ~60 Hz             | Player car only: speed/rpm/gear, inputs, tyres, current lap.   |
+| `standings` | ~5–10 Hz (on change) | Computed field order: positions, gaps, per-car timing, pit state. |
+| `session`   | on change / ~1 Hz  | Driver roster, session/track/weather metadata, flags, SOF.     |
+| `bridge`    | on change          | `{ iracingActive }` — replaces the old `{connected:false}` heartbeat. |
+
+Stateful channels (`session` / `standings` / `bridge`) are **replayed on
+connect**, so a client that joins mid-session renders the current world
+immediately instead of waiting for the next tick.
+
+The models are defined once and mirrored on both sides:
+
+- Python: [`bridge/telemetrylab/models.py`](bridge/telemetrylab/models.py)
+  (dataclasses) + [`protocol.py`](bridge/telemetrylab/protocol.py).
+- TypeScript: [`src/telemetry/types.ts`](src/telemetry/types.ts) +
+  [`protocol.ts`](src/telemetry/protocol.ts).
+
+On the frontend each channel feeds a Zustand store (`useTelemetryStore`,
+`useSessionStore`, `useStandingsStore`, `useBridgeStore`); the standings store is
+normalized (`order` + `byIdx`) so 100+ rows only re-render when their own numbers
+change. `useTelemetry()` remains as a single-car compatibility selector for the
+existing dashboard widgets.
+
+The mock bridge synthesizes a full field (`MOCK_CARS`, `MOCK_MULTICLASS`) so the
+session/standings/relative screens can be built entirely on macOS/Linux.
 
 ---

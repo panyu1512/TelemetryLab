@@ -7,11 +7,52 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
-### Planned
+## [0.3.0] - 2026-07-02
 
-- Session & multi-car data layer: teach the bridge to publish the whole field
-  and the session (not just the player), split into WebSocket channels. See the
-  [roadmap](ROADMAP.md).
+Session & multi-car data layer: the bridge now understands the whole field and
+the session, not just the player, and publishes it over a redesigned
+multi-channel protocol. This is the foundation for standings, relative, track
+map and race-control screens.
+
+### Added
+
+- **Shared bridge core** (`bridge/telemetrylab/`): a source-agnostic package —
+  wire protocol, normalized dataclasses, DriverInfo/CarIdx parsing,
+  session/car repositories, an event bus, and a channel publisher — wired
+  together by a `BridgeService`. The real (pyirsdk) and mock bridges are now
+  thin *sources* over the same machine, guaranteeing identical payloads.
+- **Multi-channel WebSocket protocol** with a versioned envelope
+  (`{ v, type, ts, seq, payload }`):
+  - `telemetry` (~60 Hz) — player car only.
+  - `standings` (~5–10 Hz, on change) — computed field order, gaps, per-car
+    timing, pit/track-surface state.
+  - `session` (on change / ~1 Hz) — driver roster, session/track/weather
+    metadata, flags, and Strength of Field.
+  - `bridge` — connection status, replacing the old `{connected:false}`
+    heartbeat.
+  - Stateful channels are **replayed on connect** so late joiners render the
+    current world immediately.
+- **Driver roster** parsed from the `DriverInfo` session info: name, team, car
+  number/brand/model, class, iRating, license + safety rating, club, division,
+  and pace/spectator/AI/team flags. Per-class and overall SOF computed with the
+  iRacing-style exponential model.
+- **Session state**: time/laps remaining, session state + decoded flags,
+  track/weather metadata, and self-calibration data (redline RPM, est lap time)
+  that the widgets previously had to guess.
+- **Per-car timing** from the `CarIdx*` arrays, plus a standings computation
+  skeleton (field order, gap-to-leader / interval, lapped detection) and a
+  relative `deltaToPlayer` computed from est-time.
+- **Frontend data layer**: typed models mirroring the Python (`src/telemetry/`),
+  a single multiplexing WebSocket connection (`useBridge`), and four Zustand
+  stores. The standings store is normalized (`order` + `byIdx`) so 100+ rows
+  only re-render when their own values change.
+- **Mock bridge** now synthesizes a full multi-car field (`MOCK_CARS`,
+  `MOCK_MULTICLASS`) so the multi-car screens can be developed without iRacing.
+
+### Changed
+
+- `useTelemetry()` is now a single-car compatibility selector over the stores
+  (the socket moved to `useBridge`); the dashboard widgets are unchanged.
 
 ## [0.2.0] - 2026-06-30
 
