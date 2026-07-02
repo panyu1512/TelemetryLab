@@ -7,6 +7,122 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.7.0] - 2026-07-02
+
+Overlay Manager & Configuration: a full-screen control panel that transforms the set of individual overlay screens into a cohesive, configurable application. Every overlay is now independently configurable for appearance, visibility, and streaming.
+
+### Added
+
+- **Full-screen Overlay Manager** (`src/components/manager/ManagerWindow.tsx`):
+  a centered 1000×700 dialog that opens over the dashboard via the dock's
+  slider icon (replaces the previous small floating widget panel). Closes with
+  Escape or a backdrop click.
+  - **Overlay catalog sidebar** — lists Dashboard, Standings, and Relative with
+    per-overlay enable/disable mini-toggles and an active-item highlight.
+  - **Profile selector dropdown** in the header with inline create / rename /
+    duplicate / delete / export (JSON) / import actions.
+  - **Four per-overlay tabs**: Appearance · Visibility · Window · Browser Source.
+  - **Bottom sidebar nav**: Global Settings and Debug sections.
+  - **Footer status bar** mirrors the connection state (bridge connected / live / waiting).
+
+- **Theme system** (`src/themes/index.ts`):
+  four named design-token bundles — Obsidian (default, green), Neon (magenta),
+  Classic Dark (sapphire), Midnight (amber) — each specifying all color tokens.
+  `applyTheme()` injects them as inline CSS custom properties on `<html>`,
+  overriding the `@theme` stylesheet defaults so all Tailwind utilities and
+  `var(--color-*)` references update instantly. `clearThemeOverrides()` reverts.
+  Theme switches animate via a `:root` CSS transition (220 ms ease).
+
+- **`useOverlayConfigStore`** (`src/stores/useOverlayConfigStore.ts`):
+  the central v0.7.0 Zustand store, fully persisted to `localStorage`:
+  - **Profiles** — `createProfile`, `duplicateProfile`, `renameProfile`,
+    `deleteProfile`, `setActiveProfile`, `exportProfile` (JSON string),
+    `importProfile` (parses and re-IDs to avoid collisions). Always keeps at
+    least one profile; "Default" created on first launch.
+  - **Per-overlay settings** scoped to the active profile:
+    `enabled`, `appearance` (themeId override, saturation 0–200, brightness
+    0–200, opacity 0–100), `visibility` rules (hideOnReplay, hideOnPits,
+    hideOnLoneQualify). Each is mutated via a typed setter and immediately
+    re-persisted.
+  - **Global settings**: active theme, bridge endpoint (ws://127.0.0.1:8765),
+    HTTP server port (9999), server/browser-source enable toggles, log level,
+    and a randomly-generated auth key for OBS URL protection.
+  - On module load the persisted theme is applied synchronously (before React
+    hydrates) so there is no flash of the default theme.
+
+- **Appearance panel** (`src/components/manager/AppearancePanel.tsx`):
+  - **Theme picker** — 2-column grid of theme cards with bg→accent gradient
+    swatches; active theme highlighted with an accent border; "global" badge on
+    the inherited theme; one-click override or reset.
+  - **Saturation / Brightness / Opacity sliders** — custom-styled range inputs
+    with a filled track, themed thumb, numeric readout, and per-slider reset.
+    Defaults: sat=100, bri=100, opacity=100 (no-op).
+  - **Live preview card** — a miniature telemetry widget rendered with the
+    effective theme's colors and the combined `filter: saturate() brightness()`
+    + `opacity` applied, so the user sees the exact result before saving.
+
+- **Visibility rules panel** (`src/components/manager/VisibilityPanel.tsx`):
+  - Three rule checkboxes (Replay, In Pits, Lone Qualify / first lap) with
+    descriptive labels and an "Active now" warning badge pulled from live
+    `useSessionStore` flags.
+  - Current session snapshot (type, state, track, driver count, flags).
+  - A live status pill: "would be hidden / visible in the current session."
+
+- **Window controls panel** (`src/components/manager/WindowPanel.tsx`):
+  - Overlay-mode toggle (always-on-top + transparent background).
+  - Lock toggle (click-through; Ctrl+Shift+L shortcut noted).
+  - Open-overlay action button (switches the active dashboard and closes the
+    manager) and an info note about per-window multi-overlay support coming in a
+    future release.
+
+- **Browser source panel** (`src/components/manager/BrowserSourcePanel.tsx`):
+  - HTTP server status badge and enable toggle.
+  - Full per-overlay OBS URL (`http://127.0.0.1:<port>/overlay/<id>?profile=…&key=…`)
+    with copy-to-clipboard and open-in-browser buttons.
+  - Auth-key display with show/hide and regenerate actions.
+  - Quick-list of all overlay URLs for convenient OBS setup.
+
+- **Global settings panel** (`src/components/manager/GlobalSettingsPanel.tsx`):
+  - Bridge endpoint text input (synced to global settings store).
+  - HTTP server port, server/browser-sources enable toggles.
+  - Auth-key field with show/hide and regenerate.
+  - Log-level selector (debug / info / warn / error).
+
+- **Debug panel** (`src/components/manager/DebugPanel.tsx`):
+  - Connection status tiles (Bridge WS, iRacing, protocol version).
+  - Live session snapshot (type, state, track, SOF, flags).
+  - Telemetry frame snapshot (speed, RPM, gear, throttle, brake, fuel, lap, position).
+  - Real-time log viewer with level filter (all/debug/info/warn/error), auto-scroll
+    toggle, clear button, and export-to-file (`.log`) download.
+
+- **`src/lib/debugLog.ts`**: module-level append-only ring buffer (300 entries)
+  with `pushLog`, `getLog`, `clearLog`, and `subscribeLog` (React-friendly
+  external-store subscription). Imported by `BridgeConnection` to record
+  connect / disconnect / iRacing-start / iRacing-stop events, and by
+  `DebugPanel` to drive the live log viewer.
+
+- **Conditional visibility in `App.tsx`**: the main content area gets
+  `visibility: hidden` in overlay mode when the active overlay's visibility
+  rules fire (replay / lone qualify conditions matched against live session
+  flags). Appearance filter (`filter: saturate() brightness()` + `opacity`) is
+  applied as an inline style on the main content area, live-previewing the
+  active overlay's adjusted look.
+
+- **Manager entrance animation** (`styles.css`): `@keyframes manager-in` —
+  scale from 0.97 + 8 px translateY → full size; applied to the backdrop
+  container on mount. `:root` CSS transition on color/border/background
+  properties (220 ms ease) so theme switches animate smoothly.
+
+### Changed
+
+- **Dock** (`src/components/layout/Dock.tsx`): the widget manager button now
+  uses a `SlidersHorizontal` icon and the tooltip reads "Overlay Manager
+  (v0.7)" to reflect the promoted scope. It opens the new full-screen
+  `ManagerWindow` instead of the small floating panel.
+- **`App.tsx`** no longer renders the old `OverlayManager` floating card.
+  The `ManagerWindow` portal renders at the top of the React tree (above the
+  locked-pill indicator) so it is never occluded.
+
 ## [0.5.0] - 2026-07-02
 
 Relative screen: the classic proximity overlay showing the handful of cars

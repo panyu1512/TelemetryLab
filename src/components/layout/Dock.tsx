@@ -1,4 +1,4 @@
-import { Pencil, LayoutGrid } from "lucide-react";
+import { Pencil, SlidersHorizontal } from "lucide-react";
 import type { DashboardLayout } from "../../hooks/useDashboardLayout";
 
 interface DockProps {
@@ -61,9 +61,9 @@ export function Dock({ layout, managerOpen, onToggleManager }: DockProps) {
       <DockIcon
         active={managerOpen}
         onClick={onToggleManager}
-        title="Widgets"
+        title="Overlay Manager (v0.7)"
       >
-        <LayoutGrid className="size-4" />
+        <SlidersHorizontal className="size-4" />
       </DockIcon>
     </div>
   );
