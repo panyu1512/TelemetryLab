@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { useBridge } from "./hooks/useBridge";
 import { useTelemetry } from "./hooks/useTelemetry";
 import { useDashboardLayout } from "./hooks/useDashboardLayout";
 import { TitleBar, type ConnectionStatus } from "./components/layout/TitleBar";
@@ -7,6 +8,8 @@ import { Dock } from "./components/layout/Dock";
 import { OverlayManager } from "./components/layout/OverlayManager";
 
 export default function App() {
+  // Own the bridge WebSocket for the app's lifetime; it feeds all the stores.
+  useBridge();
   const { data, connected, iracingActive } = useTelemetry();
   const layout = useDashboardLayout();
   const [managerOpen, setManagerOpen] = useState(false);

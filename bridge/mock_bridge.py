@@ -1,153 +1,282 @@
 """Mock telemetry bridge for development without iRacing.
 
-Emits the exact same WebSocket protocol as ``bridge.py`` but generates
-synthetic, realistic-looking telemetry so the frontend can be developed on
-macOS/Linux (or on Windows without iRacing running).
-
-Only depends on ``websockets`` (no pyirsdk), so it runs anywhere:
+Speaks the exact same channel protocol as ``bridge.py`` (via the shared
+:class:`telemetrylab.BridgeService`) but synthesizes a whole field: a roster of
+AI + human-looking drivers across one or two classes, all circulating the track
+at different paces, so the v0.3+ session / standings / relative screens can be
+built entirely on macOS/Linux.
 
     pip install websockets
     python bridge/mock_bridge.py
 
-Set ``MOCK_DISCONNECT_EVERY`` to a number of seconds to periodically simulate
-iRacing going away (emits ``{"connected": false}``) to exercise the UI states.
+Environment knobs:
+  MOCK_CARS=20            number of cars in the field
+  MOCK_MULTICLASS=1       split the field into GT3 + GT4 (0 = single class)
+  MOCK_DISCONNECT_EVERY=0 seconds; >0 toggles iRacing on/off to exercise the UI
 """
 
 from __future__ import annotations
 
 import asyncio
-import json
 import math
 import os
+import random
 import time
-from typing import Any, Set
+from typing import Any, Optional
 
-from websockets.asyncio.server import ServerConnection, serve
+from websockets.asyncio.server import serve
+
+from telemetrylab import BridgeService
 
 HOST = "0.0.0.0"
 PORT = 8765
 
-TICK_HZ = 60.0
-CONNECTED_INTERVAL = 1.0 / TICK_HZ
-DISCONNECTED_INTERVAL = 1.0
-
-# If > 0, alternate between "iRacing active" and "iRacing closed" every N seconds.
+FIELD_SIZE = int(os.environ.get("MOCK_CARS", "20") or 20)
+MULTICLASS = (os.environ.get("MOCK_MULTICLASS", "1") or "1") != "0"
 DISCONNECT_EVERY = float(os.environ.get("MOCK_DISCONNECT_EVERY", "0") or 0)
 
-# Simple lap model so lap timer / fuel evolve sensibly.
-LAP_TIME = 92.0  # seconds per lap
-TANK_CAPACITY = 60.0  # litres
+RACE_LENGTH = 3600.0    # seconds of session
+TANK_CAPACITY = 60.0    # litres
+
+# Two fictitious classes so multi-class rendering can be exercised.
+CLASS_GT3 = {"id": 84, "short": "GT3", "color": 0xff4d4d, "base_lap": 138.0}
+CLASS_GT4 = {"id": 85, "short": "GT4", "color": 0x4d9dff, "base_lap": 150.0}
+
+_FIRST = ["Kike", "Matt", "Ana", "Luca", "Sven", "Yuki", "Pia", "Omar",
+          "Nils", "Rui", "Ivo", "Tom", "Kai", "Zoe", "Max", "Lea",
+          "Jon", "Eva", "Sam", "Nia", "Rex", "Ada", "Leo", "Mia"]
+_LAST = ["Ferrer", "Farrow", "Silva", "Rossi", "Berg", "Tanaka", "Costa",
+         "Haddad", "Vega", "Moreau", "Klein", "Novak", "Reyes", "Falk"]
 
 
-def _tyre(base: float, t: float, idx: float) -> dict[str, Any]:
-    """Generate a plausible tyre reading that breathes around ``base`` °C."""
-    wobble = 6.0 * math.sin(t * 0.5 + idx)
-    return {
-        "tempL": round(base + wobble - 4.0, 1),
-        "tempM": round(base + wobble, 1),
-        "tempR": round(base + wobble + 3.0, 1),
-        "pressure": round(165.0 + 4.0 * math.sin(t * 0.2 + idx), 1),  # kPa
-    }
+class MockCar:
+    """A synthetic competitor with a stable identity and a per-lap pace."""
+
+    def __init__(self, idx: int, rng: random.Random, klass: dict[str, Any]) -> None:
+        self.idx = idx
+        self.klass = klass
+        self.number = str(rng.randint(1, 199))
+        self.user_id = 100000 + idx
+        self.name = f"{rng.choice(_FIRST)} {rng.choice(_LAST)}"
+        self.is_ai = idx != 0 and rng.random() < 0.5
+        self.irating = max(600, int(rng.gauss(2200 if klass is CLASS_GT3 else 1600, 700)))
+        sr = round(rng.uniform(1.5, 4.99), 2)
+        grp = "A" if sr > 4 else "B" if sr > 3 else "C" if sr > 2 else "D"
+        self.license_string = f"{grp} {sr:.2f}"
+        self.lic_sub = int(sr * 100)
+        self.lic_level = {"A": 13, "B": 9, "C": 5, "D": 3}[grp]
+        # Pace: faster drivers (higher iR) lap a touch quicker; add jitter.
+        self.pace = klass["base_lap"] * (1.0 + (2200 - self.irating) / 40000.0)
+        self.phase = rng.uniform(0.0, 1.0)          # grid stagger
+        self.wobble = rng.uniform(0.3, 1.2)         # lap-time variation amplitude
+        self.pit_at = rng.uniform(0.35, 0.85) if rng.random() < 0.25 else None
+
+    # --- dynamics -----------------------------------------------------------
+    def lap_time(self, t: float) -> float:
+        return self.pace + self.wobble * math.sin(t * 0.03 + self.idx)
+
+    def progress(self, t: float) -> float:
+        """Total laps completed (float): integer part = lap, frac = lapDistPct."""
+        return self.phase + t / self.pace
+
+    def driver_dict(self) -> dict[str, Any]:
+        return {
+            "CarIdx": self.idx,
+            "UserID": self.user_id,
+            "UserName": self.name,
+            "TeamName": "",
+            "CarNumber": self.number,
+            "CarClassID": self.klass["id"],
+            "CarClassShortName": self.klass["short"],
+            "CarClassColor": self.klass["color"],
+            "CarPath": self.klass["short"].lower(),
+            "CarScreenName": "Audi R8 LMS EVO II" if self.klass is CLASS_GT3 else "McLaren 570S GT4",
+            "IRating": self.irating,
+            "LicLevel": self.lic_level,
+            "LicSubLevel": self.lic_sub,
+            "LicString": self.license_string,
+            "LicColor": 0x00ff88,
+            "IsSpectator": 0,
+            "ClubName": "Iberia",
+            "DivisionName": str((self.idx % 5) + 1),
+            "CarIsPaceCar": 0,
+            "CarIsAI": 1 if self.is_ai else 0,
+            "CurDriverIncidentCount": self.idx % 4,
+            "TeamID": 0,
+        }
 
 
-def sample(t: float) -> dict[str, Any]:
-    """Build one synthetic telemetry frame for elapsed time ``t`` seconds."""
-    # Speed/RPM follow a smooth lap-like profile (accelerate, brake, repeat).
-    lap_phase = (t % LAP_TIME) / LAP_TIME  # 0..1 around the lap
-    throttle_wave = (math.sin(t * 0.8) + 1.0) / 2.0
-    braking = max(0.0, math.sin(t * 0.8 + math.pi)) * (1.0 if throttle_wave < 0.3 else 0.0)
+class MockField:
+    """The whole synthetic field: builds the roster once and animates it."""
 
-    speed_kmh = 80.0 + 140.0 * throttle_wave  # ~80..220 km/h
-    speed_ms = speed_kmh / 3.6
-    rpm = 4000.0 + 4500.0 * throttle_wave
-    gear = max(1, min(6, int(1 + throttle_wave * 5)))
+    def __init__(self) -> None:
+        rng = random.Random(42)  # deterministic field across restarts
+        self.cars: list[MockCar] = []
+        for idx in range(FIELD_SIZE):
+            klass = CLASS_GT3 if (not MULTICLASS or idx % 2 == 0) else CLASS_GT4
+            self.cars.append(MockCar(idx, rng, klass))
+        self.player = self.cars[0]
 
-    steer_rad = 0.6 * math.sin(t * 0.6)
-    fuel_pct = max(0.05, 1.0 - (t % (LAP_TIME * 20)) / (LAP_TIME * 20))
+    # --- ordering -----------------------------------------------------------
+    def _ordered(self, t: float) -> list[MockCar]:
+        return sorted(self.cars, key=lambda c: c.progress(t), reverse=True)
 
-    lap_number = int(t // LAP_TIME) + 1
-    current_lap_time = t % LAP_TIME
+    def car_arrays(self, t: float) -> dict[str, Any]:
+        n = FIELD_SIZE
+        order = self._ordered(t)
+        overall_pos = {c.idx: i + 1 for i, c in enumerate(order)}
 
-    return {
-        "connected": True,
-        "sessionTime": round(t, 3),
-        "speed": round(speed_ms, 3),
-        "speedKmh": round(speed_kmh, 1),
-        "rpm": round(rpm),
-        "gear": gear,
-        "throttle": round(throttle_wave, 3),
-        "brake": round(braking, 3),
-        "steeringWheelAngle": round(steer_rad, 4),
-        "steeringDeg": round(math.degrees(steer_rad), 1),
-        "fuelLevel": round(TANK_CAPACITY * fuel_pct, 2),
-        "fuelLevelPct": round(fuel_pct, 3),
-        "lapCurrentLapTime": round(current_lap_time, 3),
-        "lapBestLapTime": round(LAP_TIME - 1.2, 3),
-        "lapLastLapTime": round(LAP_TIME + 0.4, 3),
-        "lap": lap_number,
-        "playerCarPosition": 3,
-        "latAccel": round(9.0 * math.sin(t * 0.6), 2),
-        "lonAccel": round(6.0 * (throttle_wave - braking), 2),
-        "onPitRoad": lap_phase < 0.02,
-        "airTemp": 24.0,
-        "trackTemp": round(30.0 + 2.0 * math.sin(t * 0.05), 1),
-        "tyres": {
-            "lf": _tyre(85.0, t, 0.0),
-            "rf": _tyre(88.0, t, 1.0),
-            "lr": _tyre(80.0, t, 2.0),
-            "rr": _tyre(82.0, t, 3.0),
-        },
-    }
+        # Class positions.
+        class_pos: dict[int, int] = {}
+        seen: dict[int, int] = {}
+        for c in order:
+            seen[c.klass["id"]] = seen.get(c.klass["id"], 0) + 1
+            class_pos[c.idx] = seen[c.klass["id"]]
+
+        leader = order[0]
+        leader_prog = leader.progress(t)
+
+        arr: dict[str, list[Any]] = {k: [None] * n for k in (
+            "CarIdxPosition", "CarIdxClassPosition", "CarIdxLap", "CarIdxLapDistPct",
+            "CarIdxLastLapTime", "CarIdxBestLapTime", "CarIdxEstTime", "CarIdxF2Time",
+            "CarIdxOnPitRoad", "CarIdxTrackSurface",
+        )}
+        for c in self.cars:
+            prog = c.progress(t)
+            lap = int(prog)
+            pct = prog - lap
+            on_pit = c.pit_at is not None and abs(pct - c.pit_at) < 0.02
+            gap = (leader_prog - prog) * c.pace  # seconds behind leader
+            arr["CarIdxPosition"][c.idx] = overall_pos[c.idx]
+            arr["CarIdxClassPosition"][c.idx] = class_pos[c.idx]
+            arr["CarIdxLap"][c.idx] = lap
+            arr["CarIdxLapDistPct"][c.idx] = round(pct, 4)
+            arr["CarIdxLastLapTime"][c.idx] = round(c.lap_time(t), 3)
+            arr["CarIdxBestLapTime"][c.idx] = round(c.pace - 0.8, 3)
+            arr["CarIdxEstTime"][c.idx] = round(pct * c.pace, 3)
+            arr["CarIdxF2Time"][c.idx] = round(max(0.0, gap), 3)
+            arr["CarIdxOnPitRoad"][c.idx] = on_pit
+            arr["CarIdxTrackSurface"][c.idx] = 1 if on_pit else 3
+        return arr
+
+    def session_raw(self, t: float, active_state: int, flags: int) -> dict[str, Any]:
+        return {
+            "weekend_info": {
+                "TrackID": 266,
+                "TrackDisplayName": "Circuit de Spa-Francorchamps",
+                "TrackConfigName": "Grand Prix Pits",
+                "TrackLength": "7.00 km",
+                "TrackNumTurns": 19,
+                "TrackCity": "Stavelot",
+                "TrackCountry": "Belgium",
+                "Category": "Road",
+                "SubSessionID": 987654321,
+            },
+            "driver_info": {
+                "DriverCarIdx": self.player.idx,
+                "PaceCarIdx": -1,
+                "DriverCarRedLine": 7800,
+                "DriverCarEstLapTime": self.player.pace,
+                "Drivers": [c.driver_dict() for c in self.cars],
+            },
+            "sessions": [
+                {"SessionNum": 0, "SessionType": "Race", "SessionName": "RACE",
+                 "SessionLaps": "unlimited", "SessionTime": f"{RACE_LENGTH:.4f}"},
+            ],
+            "session_num": 0,
+            "session_state": active_state,
+            "session_time_remain": max(0.0, RACE_LENGTH - t),
+            "session_laps_remain": 32767,
+            "session_flags": flags,
+            "air_temp": 22.0,
+            "track_temp": round(30.0 + 2.0 * math.sin(t * 0.01), 1),
+        }
+
+    def player_frame(self, t: float) -> dict[str, Any]:
+        c = self.player
+        prog = c.progress(t)
+        pct = prog - int(prog)
+        throttle = (math.sin(t * 0.8) + 1.0) / 2.0
+        braking = max(0.0, math.sin(t * 0.8 + math.pi)) * (1.0 if throttle < 0.3 else 0.0)
+        speed_kmh = 80.0 + 160.0 * throttle
+        rpm = 4000.0 + 3600.0 * throttle
+        steer = 0.6 * math.sin(t * 0.6)
+        fuel_pct = max(0.05, 1.0 - (t % (c.pace * 20)) / (c.pace * 20))
+        return {
+            "sessionTime": round(t, 3),
+            "speed": round(speed_kmh / 3.6, 3),
+            "speedKmh": round(speed_kmh, 1),
+            "rpm": round(rpm),
+            "gear": max(1, min(6, int(1 + throttle * 5))),
+            "throttle": round(throttle, 3),
+            "brake": round(braking, 3),
+            "steeringWheelAngle": round(steer, 4),
+            "steeringDeg": round(math.degrees(steer), 1),
+            "fuelLevel": round(TANK_CAPACITY * fuel_pct, 2),
+            "fuelLevelPct": round(fuel_pct, 3),
+            "lapCurrentLapTime": round(pct * c.pace, 3),
+            "lapBestLapTime": round(c.pace - 0.8, 3),
+            "lapLastLapTime": round(c.lap_time(t), 3),
+            "lap": int(prog),
+            "lapDistPct": round(pct, 4),
+            "playerCarPosition": None,  # standings channel is authoritative
+            "playerCarClassPosition": None,
+            "latAccel": round(9.0 * math.sin(t * 0.6), 2),
+            "lonAccel": round(6.0 * (throttle - braking), 2),
+            "onPitRoad": False,
+            "airTemp": 22.0,
+            "trackTemp": round(30.0 + 2.0 * math.sin(t * 0.01), 1),
+            "tyres": {
+                corner: {
+                    "tempL": round(base + 6 * math.sin(t * 0.5 + i) - 4, 1),
+                    "tempM": round(base + 6 * math.sin(t * 0.5 + i), 1),
+                    "tempR": round(base + 6 * math.sin(t * 0.5 + i) + 3, 1),
+                    "pressure": round(165 + 4 * math.sin(t * 0.2 + i), 1),
+                }
+                for i, (corner, base) in enumerate(
+                    (("lf", 85.0), ("rf", 88.0), ("lr", 80.0), ("rr", 82.0))
+                )
+            },
+        }
 
 
-clients: Set[ServerConnection] = set()
+class MockSource:
+    """A :class:`telemetrylab.TelemetrySource` driven by :class:`MockField`."""
 
+    def __init__(self) -> None:
+        self.field = MockField()
+        self.start = time.monotonic()
 
-async def register(connection: ServerConnection) -> None:
-    clients.add(connection)
-    print(f"[mock] client connected: {connection.remote_address}", flush=True)
-    try:
-        await connection.wait_closed()
-    finally:
-        clients.discard(connection)
-        print(f"[mock] client disconnected: {connection.remote_address}", flush=True)
+    def _elapsed(self) -> float:
+        return time.monotonic() - self.start
 
+    def poll_connection(self) -> bool:
+        if DISCONNECT_EVERY <= 0:
+            return True
+        return (self._elapsed() % (DISCONNECT_EVERY * 2)) < DISCONNECT_EVERY
 
-async def broadcast(message: str) -> None:
-    if not clients:
-        return
-    await asyncio.gather(
-        *(client.send(message) for client in list(clients)),
-        return_exceptions=True,
-    )
+    def read_session_raw(self) -> Optional[dict[str, Any]]:
+        t = self._elapsed()
+        # Warmup for the first 10s, then racing under green.
+        state = 2 if t < 10 else 4
+        flags = 0x00000004  # green
+        return self.field.session_raw(t, state, flags)
 
+    def read_player_frame(self) -> Optional[dict[str, Any]]:
+        return self.field.player_frame(self._elapsed())
 
-def is_active(elapsed: float) -> bool:
-    """Toggle a fake iRacing session on/off when DISCONNECT_EVERY is set."""
-    if DISCONNECT_EVERY <= 0:
-        return True
-    cycle = elapsed % (DISCONNECT_EVERY * 2)
-    return cycle < DISCONNECT_EVERY
-
-
-async def telemetry_loop() -> None:
-    start = time.monotonic()
-    while True:
-        elapsed = time.monotonic() - start
-        if is_active(elapsed):
-            await broadcast(json.dumps(sample(elapsed)))
-            await asyncio.sleep(CONNECTED_INTERVAL)
-        else:
-            await broadcast(json.dumps({"connected": False}))
-            await asyncio.sleep(DISCONNECTED_INTERVAL)
+    def read_car_arrays(self) -> dict[str, Any]:
+        return self.field.car_arrays(self._elapsed())
 
 
 async def main() -> None:
-    async with serve(register, HOST, PORT):
-        print(f"[mock] WebSocket server listening on ws://{HOST}:{PORT}", flush=True)
+    service = BridgeService(MockSource())
+    async with serve(service.publisher.register, HOST, PORT):
+        print(f"[mock] WebSocket server on ws://{HOST}:{PORT} "
+              f"({FIELD_SIZE} cars, multiclass={MULTICLASS})", flush=True)
         if DISCONNECT_EVERY > 0:
             print(f"[mock] simulating disconnects every {DISCONNECT_EVERY}s", flush=True)
-        await telemetry_loop()
+        await service.run()
 
 
 if __name__ == "__main__":

@@ -11,6 +11,7 @@ COPY requirements-mock.txt ./
 RUN pip install --no-cache-dir -r requirements-mock.txt
 
 COPY mock_bridge.py ./
+COPY telemetrylab ./telemetrylab
 
 # WebSocket server port (mock_bridge.py binds 0.0.0.0:8765).
 EXPOSE 8765
