@@ -93,11 +93,13 @@ and lapped-car handling; and a relative `deltaToPlayer` ready for v0.5.
 
 ---
 
-## ⏳ v0.4.0 — Standings / timing screen (the reference)
+## ✅ v0.4.0 — Standings / timing screen (the reference)
 
 The screen from the [reference image][kapps]. Multi-class timing table.
+(See the [changelog](CHANGELOG.md) and
+[architecture doc](docs/standings-architecture.md).)
 
-Anatomy of one row we're targeting:
+Anatomy of one row:
 
 ```
 ▲2  1  26  Matt J Farrow   [Audi]  A3.45  8895 ▲14   GAP   INT   1:40.2   .3  .7  .7
@@ -105,14 +107,24 @@ Anatomy of one row we're targeting:
  change
 ```
 
-- Multi-class grouping; per-class header with class name, SOF, laps/leader.
-- Position + **position-change** indicator (▲/▼ since session start or last lap).
-- Gap to leader and interval to car ahead (from `CarIdxEstTime`/`F2Time`).
-- Last lap, best lap, with **overall fastest lap highlighted** (purple).
-- **Per-sector deltas** with green/yellow/red coloring vs personal/overall best
-  (needs `SplitTimeInfo` sector definitions + `CarIdxLapDistPct` tracking).
-- License + SR badge, iRating + delta, car-brand icon.
-- Pit / off-track / lapped states (`CarIdxOnPitRoad`, `CarIdxTrackSurface`).
+- ✅ Multi-class grouping; per-class header with class name, SOF, laps/leader,
+  fastest lap; collapse/solo-filter; grouped vs flat views.
+- ✅ Position + **position-change** indicator (▲/▼ since session start and last
+  lap), with overtake / class-overtake detection.
+- ✅ Gap to leader and interval to car ahead (from `CarIdxF2Time`), plus
+  class-relative gaps, interval-to-player, and estimated catch time.
+- ✅ Last lap, best lap, with **overall fastest lap highlighted** (purple).
+- ✅ **Per-sector deltas** with purple/green/yellow/red coloring vs
+  personal/overall best (from `SplitTimeInfo` + `CarIdxLapDistPct` tracking),
+  plus theoretical best.
+- ✅ License + SR badge, iRating + **live projected** delta, car-brand pill.
+- ✅ Pit / off-track / lapped / retired states (`CarIdxOnPitRoad`,
+  `CarIdxTrackSurface`).
+
+Delivered beyond the checklist: a stateful `StandingsEngine` that ships a fully
+self-contained snapshot, a 60 fps virtualized renderer with GPU row-glide
+animations, and a state model designed for the momentum/battle/proximity
+overlays sketched in the architecture doc.
 
 **Needs:** everything from v0.3.0 + `SplitTimeInfo` for sectors.
 

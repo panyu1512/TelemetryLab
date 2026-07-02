@@ -50,7 +50,11 @@ export function DashboardGrid({ layout, data }: DashboardGridProps) {
 
   let content: React.ReactNode;
 
-  if (!dashboard.available) {
+  if (dashboard.available && dashboard.Screen) {
+    // Full-bleed screen (e.g. the standings timing table): replaces the grid.
+    const Screen = dashboard.Screen;
+    content = <Screen />;
+  } else if (!dashboard.available) {
     content = (
       <Placeholder
         title={`${dashboard.label} is on the roadmap`}

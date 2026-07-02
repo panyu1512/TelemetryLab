@@ -77,6 +77,8 @@ class IrsdkSource:
             "weekend_info": self._get("WeekendInfo") or {},
             "driver_info": self._get("DriverInfo") or {},
             "sessions": session_info.get("Sessions", []),
+            # Sector boundaries for the standings screen's derived sector timing.
+            "split_time_info": self._get("SplitTimeInfo") or {},
             "session_num": self._get("SessionNum", 0),
             "session_state": self._get("SessionState", 0),
             "session_time_remain": self._get("SessionTimeRemain"),

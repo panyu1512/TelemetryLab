@@ -25,6 +25,7 @@ from .models import (
     TrackInfo,
     WeatherInfo,
 )
+from .sectors import parse_sector_starts
 
 def _is_unlimited(value: Any) -> bool:
     """iRacing marks an untimed/unlimited SessionTime/SessionLaps as
@@ -200,6 +201,7 @@ def parse_session_info(raw: dict[str, Any]) -> SessionInfo:
     driver_info: dict[str, Any] = raw.get("driver_info") or {}
     sessions: list[dict[str, Any]] = raw.get("sessions") or []
     session_num = _int(raw.get("session_num"), 0)
+    sector_starts = parse_sector_starts(raw.get("split_time_info"))
 
     category = str(weekend.get("Category", "") or "").lower().replace(" ", "_")
     drivers = parse_drivers(driver_info, category)
@@ -272,4 +274,5 @@ def parse_session_info(raw: dict[str, Any]) -> SessionInfo:
         car_est_lap_time=_num(raw.get("car_est_lap_time"))
         if raw.get("car_est_lap_time") is not None
         else _num(driver_info.get("DriverCarEstLapTime")),
+        sector_starts=sector_starts,
     )

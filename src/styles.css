@@ -22,6 +22,10 @@
   --color-danger: #ff4d4d;
   --color-warning: #ffcc00;
 
+  /* Timing-screen sector/lap grading: purple = overall best (green = personal
+   * best reuses the accent, yellow = warning, red = danger). */
+  --color-sector-purple: #b061ff;
+
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
     "Liberation Mono", monospace;
 }
@@ -96,6 +100,46 @@ a {
   to {
     opacity: 1;
     transform: translateY(0);
+  }
+}
+
+/* --- standings / timing screen ------------------------------------------- */
+
+/* A freshly completed sector fades up as its colored value/delta lands. Keyed
+ * remount in SectorCell replays this only when the split actually changes. */
+@keyframes sector-pop {
+  from {
+    opacity: 0.3;
+    transform: translateY(-1px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.sec-cell {
+  animation: sector-pop 260ms ease-out;
+}
+
+/* A new overall-fastest lap flashes purple once (keyed on the lap time). */
+@keyframes lap-flash {
+  0% {
+    text-shadow: 0 0 12px var(--color-sector-purple);
+    filter: brightness(1.6);
+  }
+  100% {
+    text-shadow: none;
+    filter: brightness(1);
+  }
+}
+.sec-flash {
+  animation: lap-flash 900ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sec-cell,
+  .sec-flash {
+    animation: none;
   }
 }
 
