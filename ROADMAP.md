@@ -167,15 +167,18 @@ A new **Tyre** column after Best Lap shows each car's current tyre state:
 
 ---
 
-## ⏳ v0.5.0 — Relative screen
+## ✅ v0.5.0 — Relative screen
 
 The other classic overlay: the handful of cars physically around you on track,
 sorted by relative time gap, with closing rates — invaluable in traffic and
-multi-class racing.
+multi-class racing. (See the [changelog](CHANGELOG.md).)
 
-- Compute relative gaps from `CarIdxEstTime` vs the player.
-- N cars ahead / behind, color-coded by class.
-- Closing-rate / "faster class approaching" hints.
+- ✅ Compute relative gaps from `CarIdxEstTime` vs the player (reuses
+  `StandingsEntry.intervalToPlayer` — no bridge changes needed).
+- ✅ N cars ahead / behind (configurable 3–10, default 5), color-coded by class
+  (left border + class badge per row).
+- ✅ Closing-rate / "faster class approaching" hint: ⚡ icon for cars behind the
+  player that gain ≥ 0.3 s/lap within 10 s, red for different class.
 
 **Needs:** same data layer as v0.3.0.
 
