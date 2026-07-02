@@ -22,6 +22,7 @@ export function ColumnHeader({ sectorCount }: { sectorCount: number }) {
       <span className="text-right">Int</span>
       <span className="text-right">Last</span>
       <span className="text-right">Best</span>
+      <span className="text-center">Tyre</span>
       {Array.from({ length: sectorCount }, (_, i) => (
         <span key={i} className="text-center">
           S{i + 1}

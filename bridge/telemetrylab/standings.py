@@ -109,6 +109,9 @@ class StandingsEngine:
         # Retirement detection.
         self._out_ticks: dict[int, int] = {}
         self._seen_in_world: set[int] = set()
+        # Tyre stint tracking: detect pit-stall exit → assume fresh tyres.
+        self._prev_in_pit_stall: dict[int, bool] = {}
+        self._tire_stint_start_lap: dict[int, int] = {}
 
     # -- lifecycle -----------------------------------------------------------
     def _sync_session(self, session: SessionInfo) -> None:
@@ -122,6 +125,8 @@ class StandingsEngine:
             self._last_lap_gained.clear()
             self._out_ticks.clear()
             self._seen_in_world.clear()
+            self._prev_in_pit_stall.clear()
+            self._tire_stint_start_lap.clear()
             self._sectors = FieldSectorState(starts)
         else:
             self._sectors.retune(starts)
@@ -183,11 +188,21 @@ class StandingsEngine:
         # Pass 1: fold every car into the persistent state (sectors, best lap,
         # position history, presence) so per-row grading below sees fresh bests.
         retired_by_idx: dict[int, bool] = {}
+        tire_laps_by_idx: dict[int, int] = {}
         for t in rows:
             in_world = t.track_surface is not None and t.track_surface >= 0
             self._sectors.observe(t.car_idx, t.lap_dist_pct, t.lap, t.last_lap_time, now_ms)
             self._track_position(t.car_idx, t.position, t.lap, racing)
             retired_by_idx[t.car_idx] = self._track_presence(t.car_idx, in_world)
+            # Tyre stint: when a car leaves the pit stall, start a new set.
+            in_pit_stall = t.track_surface_label == "in_pit_stall"
+            was_in_pit_stall = self._prev_in_pit_stall.get(t.car_idx, False)
+            if was_in_pit_stall and not in_pit_stall:
+                self._tire_stint_start_lap[t.car_idx] = t.lap or 0
+            self._prev_in_pit_stall[t.car_idx] = in_pit_stall
+            tire_laps_by_idx[t.car_idx] = max(
+                0, (t.lap or 0) - self._tire_stint_start_lap.get(t.car_idx, 0)
+            )
 
         ir_changes = _projected_irating_changes(
             [(t.car_idx, drivers_by_idx[t.car_idx].i_rating, t.position or 0) for t in rows]
@@ -270,6 +285,8 @@ class StandingsEngine:
                     is_overall_leader=t is leader,
                     is_class_leader=is_class_leader,
                     is_lapped=gap_is_laps,
+                    tire_compound=t.tire_compound,
+                    tire_laps=tire_laps_by_idx.get(t.car_idx, 0),
                 )
             )
             prev_row = t

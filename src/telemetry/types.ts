@@ -269,6 +269,11 @@ export interface StandingsEntry {
   isOverallLeader: boolean;
   isClassLeader: boolean;
   isLapped: boolean;
+
+  /** Raw CarIdxTireCompound value (series-specific; 0 = primary, 1 = alternate). */
+  tireCompound: number | null;
+  /** Laps on the current tyre set (derived: counts from last pit-stall exit). */
+  tireLaps: number;
 }
 
 /** Per-class grouping metadata for the multi-class timing screen. */

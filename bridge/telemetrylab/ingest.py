@@ -26,6 +26,7 @@ CAR_IDX_VARS = (
     "CarIdxF2Time",
     "CarIdxOnPitRoad",
     "CarIdxTrackSurface",
+    "CarIdxTireCompound",
 )
 
 
@@ -119,5 +120,6 @@ def ingest_car_timings(
             track_surface=surface,
             track_surface_label=track_surface(surface),
             timestamp=timestamp,
+            tire_compound=_at_int(_at(arrays.get("CarIdxTireCompound"), idx)),
         )
     return out

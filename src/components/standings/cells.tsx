@@ -88,14 +88,63 @@ export function LicenseBadge({
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Car-brand pill ([Audi])                                                   */
+/*  Car-brand icon — color-coded pill with manufacturer abbreviation          */
 /* -------------------------------------------------------------------------- */
 
-export function BrandBadge({ make }: { make: string }) {
+/**
+ * Brand color + 3-letter abbreviation for known iRacing manufacturers.
+ * Background is the brand's primary hue at low opacity; text is the hue at
+ * full saturation so it stays readable on the dark surface.
+ */
+const BRAND_META: Record<string, { abbr: string; color: string }> = {
+  Acura:         { abbr: "ACU", color: "#e05050" },
+  Audi:          { abbr: "AUD", color: "#dd2233" },
+  BMW:           { abbr: "BMW", color: "#2288cc" },
+  Cadillac:      { abbr: "CAD", color: "#b09060" },
+  Chevrolet:     { abbr: "CHE", color: "#d4a820" },
+  Dallara:       { abbr: "DAL", color: "#4477cc" },
+  Ferrari:       { abbr: "FER", color: "#ee1122" },
+  Ford:          { abbr: "FOR", color: "#3366cc" },
+  Honda:         { abbr: "HON", color: "#cc2222" },
+  Hyundai:       { abbr: "HYU", color: "#4466aa" },
+  Lamborghini:   { abbr: "LAM", color: "#ccaa22" },
+  Lotus:         { abbr: "LOT", color: "#22aa55" },
+  Mazda:         { abbr: "MAZ", color: "#aa2222" },
+  McLaren:       { abbr: "MCL", color: "#ee8811" },
+  Mercedes:      { abbr: "MB",  color: "#22bbaa" },
+  "Mercedes-AMG":{ abbr: "AMG", color: "#22bbaa" },
+  Nissan:        { abbr: "NIS", color: "#cc2222" },
+  Porsche:       { abbr: "POR", color: "#aa9955" },
+  Radical:       { abbr: "RAD", color: "#9944cc" },
+  Skip:          { abbr: "SKB", color: "#cc5522" },
+  Subaru:        { abbr: "SUB", color: "#3355cc" },
+  Toyota:        { abbr: "TOY", color: "#ee1133" },
+  Volkswagen:    { abbr: "VW",  color: "#3355aa" },
+  VW:            { abbr: "VW",  color: "#3355aa" },
+};
+
+export function BrandIcon({ make }: { make: string }) {
   if (!make) return null;
+  const meta = BRAND_META[make];
+  if (!meta) {
+    // Unknown brand: plain muted pill with first 3 letters.
+    return (
+      <span className="shrink-0 rounded bg-surface-2 px-1 text-[9px] uppercase tracking-wide text-muted">
+        {make.slice(0, 3)}
+      </span>
+    );
+  }
   return (
-    <span className="truncate rounded bg-surface-2 px-1 text-[9px] uppercase tracking-wide text-muted">
-      {make}
+    <span
+      className="shrink-0 rounded px-1 text-[9px] font-bold uppercase tracking-wide"
+      style={{
+        background: `${meta.color}22`,
+        color: meta.color,
+        border: `1px solid ${meta.color}44`,
+      }}
+      title={make}
+    >
+      {meta.abbr}
     </span>
   );
 }
@@ -171,6 +220,54 @@ export function SectorCell({ sector }: { sector: SectorSplit | undefined }) {
     >
       {label}
     </span>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Tyre compound + age cell                                                  */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Compound label + laps-on-tyre indicator.
+ *
+ * iRacing uses 0 for the primary compound and 1 for the alternate in most
+ * series; higher values appear in series with three or more compounds.
+ * We label them P/A/B/… rather than hard-coding "soft/medium/hard" because
+ * compound naming varies by series.
+ */
+const COMPOUND_LABEL: Record<number, string> = { 0: "P", 1: "A", 2: "B", 3: "C" };
+const COMPOUND_COLOR: Record<number, string> = {
+  0: "var(--color-accent)",
+  1: "var(--color-warning)",
+  2: "var(--color-danger)",
+  3: "var(--color-sector-purple)",
+};
+
+export function TireCell({
+  compound,
+  laps,
+}: {
+  compound: number | null;
+  laps: number;
+}) {
+  if (compound == null) {
+    return <span className="text-center text-[10px] text-muted/30">·</span>;
+  }
+  const label = COMPOUND_LABEL[compound] ?? String(compound);
+  const color = COMPOUND_COLOR[compound] ?? "var(--color-muted)";
+  return (
+    <div className="flex items-center justify-center gap-0.5">
+      <span
+        className="rounded px-0.5 text-[9px] font-bold leading-tight"
+        style={{ background: `${color}22`, color, border: `1px solid ${color}44` }}
+        title={`Compound ${label}`}
+      >
+        {label}
+      </span>
+      <span className="text-[9px] tabular-nums text-muted/60" title={`${laps} laps on tyres`}>
+        {laps}
+      </span>
+    </div>
   );
 }
 

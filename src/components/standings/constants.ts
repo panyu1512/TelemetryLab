@@ -24,6 +24,7 @@ const FIXED = {
   interval: "3.4rem",
   last: "4.6rem",
   best: "4.6rem",
+  tire: "3.2rem",
   sector: "2.8rem",
   state: "2.2rem",
 } as const;
@@ -44,6 +45,7 @@ export function gridTemplate(sectorCount: number): string {
     FIXED.interval,
     FIXED.last,
     FIXED.best,
+    FIXED.tire,
     sectors,
     FIXED.state,
   ]
@@ -53,7 +55,7 @@ export function gridTemplate(sectorCount: number): string {
 
 /** Minimum table width so columns never crush; below this it scrolls-x. */
 export function tableMinWidth(sectorCount: number): number {
-  return 560 + sectorCount * 46;
+  return 612 + sectorCount * 46;
 }
 
 /** Sector-status → CSS color token. Drives purple/green/yellow/red. */

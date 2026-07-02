@@ -139,7 +139,7 @@ class MockField:
         arr: dict[str, list[Any]] = {k: [None] * n for k in (
             "CarIdxPosition", "CarIdxClassPosition", "CarIdxLap", "CarIdxLapDistPct",
             "CarIdxLastLapTime", "CarIdxBestLapTime", "CarIdxEstTime", "CarIdxF2Time",
-            "CarIdxOnPitRoad", "CarIdxTrackSurface",
+            "CarIdxOnPitRoad", "CarIdxTrackSurface", "CarIdxTireCompound",
         )}
         for c in self.cars:
             prog = c.progress(t)
@@ -157,6 +157,8 @@ class MockField:
             arr["CarIdxF2Time"][c.idx] = round(max(0.0, gap), 3)
             arr["CarIdxOnPitRoad"][c.idx] = on_pit
             arr["CarIdxTrackSurface"][c.idx] = 1 if on_pit else 3
+            # Alternate compound every ~20 laps to exercise the tyre column.
+            arr["CarIdxTireCompound"][c.idx] = (lap // 20) % 2
         return arr
 
     def session_raw(self, t: float, active_state: int, flags: int) -> dict[str, Any]:
