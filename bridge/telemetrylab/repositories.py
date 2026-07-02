@@ -15,7 +15,8 @@ from . import events
 from .events import EventBus
 from .models import CarTiming, DriverEntry, SessionInfo, StandingsSnapshot
 from .parsing import parse_session_info
-from .standings import compute_standings
+from .protocol import now_ms
+from .standings import StandingsEngine
 
 
 class SessionRepository:
@@ -95,6 +96,9 @@ class CarRepository:
         self._session_repo = session_repo
         self._timings: dict[int, CarTiming] = {}
         self._last_standings_wire: Optional[dict[str, Any]] = None
+        # The engine carries cross-tick history (sectors, start grid, best laps);
+        # it lives as long as this repository, and resets itself on session change.
+        self._engine = StandingsEngine()
 
     def update(self, timings: dict[int, CarTiming]) -> None:
         self._timings = timings
@@ -104,8 +108,14 @@ class CarRepository:
         return self._timings
 
     def compute(self, player_car_idx: int) -> StandingsSnapshot:
-        return compute_standings(
-            self._session_repo.drivers_by_idx, self._timings, player_car_idx
+        session = self._session_repo.current
+        if session is None:
+            return StandingsSnapshot(player_car_idx=player_car_idx)
+        return self._engine.compute(
+            session,
+            self._session_repo.drivers_by_idx,
+            self._timings,
+            now_ms(),
         )
 
     def standings_changed(self, wire: dict[str, Any]) -> bool:

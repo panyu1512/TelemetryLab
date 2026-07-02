@@ -30,3 +30,51 @@ export function lapTime(seconds: number | null | undefined): string {
   const s = seconds - m * 60;
   return `${m}:${s.toFixed(3).padStart(6, "0")}`;
 }
+
+/**
+ * Gap to leader for the timing screen: seconds (`+3.4`), or a lap count
+ * (`+2L`) when the car is one or more laps down.
+ */
+export function gap(
+  value: number | null | undefined,
+  isLaps: boolean
+): string {
+  if (value == null || Number.isNaN(value)) return "—";
+  if (isLaps) return value >= 1 ? `+${Math.round(value)}L` : "—";
+  if (value <= 0) return "—";
+  return `+${value.toFixed(value < 100 ? 1 : 0)}`;
+}
+
+/** Interval to the car ahead: `+0.7`, or em dash when not a clean seconds gap. */
+export function interval(value: number | null | undefined): string {
+  if (value == null || Number.isNaN(value) || value <= 0) return "—";
+  return `+${value.toFixed(value < 100 ? 1 : 0)}`;
+}
+
+/** Signed delta like `-0.312` / `+0.7` for sector/lap deltas (or em dash). */
+export function delta(
+  value: number | null | undefined,
+  digits = 1
+): string {
+  if (value == null || Number.isNaN(value)) return "—";
+  const s = Math.abs(value).toFixed(digits);
+  if (value > 0) return `+${s}`;
+  if (value < 0) return `-${s}`;
+  return s;
+}
+
+/** Short sector time like `23.7` / `1:40.2` (compact for the sector cells). */
+export function sectorTime(seconds: number | null | undefined): string {
+  if (seconds == null || seconds <= 0 || Number.isNaN(seconds)) return "—";
+  if (seconds < 60) return seconds.toFixed(1);
+  const m = Math.floor(seconds / 60);
+  const s = seconds - m * 60;
+  return `${m}:${s.toFixed(1).padStart(4, "0")}`;
+}
+
+/** Signed integer with a sign, e.g. `+14` / `-3` / `0` (for iR / positions). */
+export function signed(value: number | null | undefined): string {
+  if (value == null || Number.isNaN(value)) return "—";
+  if (value > 0) return `+${value}`;
+  return String(value);
+}

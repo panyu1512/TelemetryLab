@@ -7,6 +7,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.0] - 2026-07-02
+
+Standings / timing screen: a production-grade, multi-class timing table — the
+first major consumer of the v0.3.0 Session & Multi-Car data layer. Built to
+broadcast quality and designed so advanced overlays and effects can be layered
+on without touching the pipeline. See
+[docs/standings-architecture.md](docs/standings-architecture.md).
+
+### Added
+
+- **`StandingsEngine`** (`bridge/telemetrylab/standings.py`): a stateful,
+  once-per-tick brain that ships a self-contained snapshot so the client never
+  has to remember the previous frame. It computes:
+  - **Ordering** by position with a track-progress tiebreak; pace/spectator
+    filtering.
+  - **Gaps & intervals** — gap-to-leader and interval-to-car-ahead from
+    `CarIdxF2Time` (lap-count fallback when lapped), plus **class-relative**
+    gap/interval, interval-to-player (`CarIdxEstTime`), and an estimated
+    **catch time** from the per-lap closing rate.
+  - **Position change** since the green flag and over the last lap (overtake /
+    class-overtake detection falls out of the same data).
+  - **Projected iRating** — a live Elo-based estimate of gain/loss, clearly
+    labelled as an estimate.
+  - **Special states** — pit road / pit stall / off-track / not-in-world /
+    retired / lapped / class-leader / overall-leader.
+  - **Multi-class grouping** — per-class SOF, leader, lap count, fastest lap and
+    class order, alongside the authoritative flat order.
+- **Sector timing** (`bridge/telemetrylab/sectors.py`): per-car sector splits
+  derived from `CarIdxLapDistPct` crossing the `SplitTimeInfo` boundaries, with
+  personal-best / overall-best sectors, theoretical best, and purple/green/
+  yellow/red grading. Guards discard partial (first-sighting) sectors, skipped
+  sectors, and teleports so a split is only ever recorded when a sector was
+  entered cleanly at its start.
+- **Standings screen** (`src/components/standings/`): a virtualized, 60 fps
+  multi-class table with position-change arrows, license + SR badges, iRating +
+  projected delta, gap/interval, last/best laps with fastest-lap highlighting,
+  colored per-sector deltas, and pit/off-track badges. Class headers with SOF /
+  leader / lap count / fastest lap, collapsible classes, class solo-filter, flat
+  vs grouped views, and follow-player.
+- **Animations**: GPU `translateY` row glides for position swaps, a `sector-pop`
+  on new splits, a one-shot purple `lap-flash` on a new overall-fastest lap
+  (`prefers-reduced-motion` aware).
+- **Stores**: `useStandingsStore` extended (identity-preserved rows, `classes`,
+  `meta`, selectors) and a persisted `useStandingsUiStore` for view prefs; a
+  full-bleed `Screen` slot in the dashboard registry.
+
+### Changed
+
+- The `standings` channel payload now carries the full multi-class + sector +
+  position-change model (see the architecture doc's schema).
+- Both bridges read `SplitTimeInfo`; the mock synthesizes a 3-sector track and a
+  tighter, race-realistic grid.
+
 ## [0.3.0] - 2026-07-02
 
 Session & multi-car data layer: the bridge now understands the whole field and

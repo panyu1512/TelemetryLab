@@ -158,6 +158,8 @@ export interface SessionInfo {
   driverCarIdx: number;
   carRedlineRpm: number | null;
   carEstLapTime: number | null;
+  /** Sector boundaries as lap-distance fractions (from SplitTimeInfo). */
+  sectorStarts: number[];
 }
 
 // ---------------------------------------------------------------------------
@@ -183,7 +185,37 @@ export interface CarTiming {
   timestamp: number;
 }
 
-/** A computed standings row: driver + timing joined with derived gaps. */
+/**
+ * How a sector/lap time grades against the bests — drives the timing screen's
+ * purple / green / yellow / red colouring (and future colour-transition anims).
+ */
+export type SectorStatus =
+  | "overall_best" // purple — fastest in the field this session
+  | "personal_best" // green — this car's own best
+  | "slower" // yellow — off personal best
+  | "much_slower" // red — a big time loss
+  | "none";
+
+/** One derived sector split for a car (see the bridge's `sectors` module). */
+export interface SectorSplit {
+  index: number;
+  /** Last completed sector time (s), or null if not yet timed. */
+  lastTime: number | null;
+  /** This car's personal best for the sector (s). */
+  bestTime: number | null;
+  /** Signed delta vs personal best (negative = new best). */
+  delta: number | null;
+  status: SectorStatus;
+}
+
+/** Grade of a car's last full lap (fastest-lap highlight). */
+export type LapStatus = "overall_best" | "personal_best" | "normal" | "none";
+
+/**
+ * A computed standings row: driver + timing joined with every derived value the
+ * timing screen renders. Which fields are direct from iRacing vs derived by the
+ * bridge is documented in `docs/standings-architecture.md`.
+ */
 export interface StandingsEntry {
   carIdx: number;
   position: number | null;
@@ -193,18 +225,75 @@ export interface StandingsEntry {
   lapDistPct: number | null;
   lastLapTime: number | null;
   bestLapTime: number | null;
+
+  // Gaps.
   /** Seconds behind the leader, or a lap count when `gapIsLaps` is true. */
   gapToLeader: number | null;
   /** Seconds to the car directly ahead. */
   interval: number | null;
   gapIsLaps: boolean;
+  lapsDown: number;
+  /** Gap to the *class* leader (seconds, or a lap count when classGapIsLaps). */
+  gapToClassLeader: number | null;
+  /** Interval to the car ahead *in class* (seconds). */
+  classInterval: number | null;
+  classGapIsLaps: boolean;
+  /** Signed est-time gap to the player (negative = behind the player). */
+  intervalToPlayer: number | null;
+  /** Estimated seconds to catch the car ahead at the current pace delta. */
+  estCatchTime: number | null;
+
+  // Position change engine.
+  positionsGainedTotal: number;
+  positionsGainedLastLap: number;
+
+  // Rating (projection).
+  iRating: number;
+  /** Live projected iRating change — an estimate, not iRacing's exact number. */
+  iRatingChangeEst: number;
+
+  // Lap / sector colouring.
+  lastLapStatus: LapStatus;
+  sectors: SectorSplit[];
+  /** Sum of personal best sectors (ideal lap), or null until all are set. */
+  theoreticalBest: number | null;
+
+  // Special states.
   onPitRoad: boolean | null;
   trackSurfaceLabel: string;
+  isOffTrack: boolean;
+  isInPitStall: boolean;
+  isInWorld: boolean;
+  isRetired: boolean;
   isPlayer: boolean;
+  isOverallLeader: boolean;
+  isClassLeader: boolean;
+  isLapped: boolean;
+}
+
+/** Per-class grouping metadata for the multi-class timing screen. */
+export interface ClassStanding {
+  carClassId: number;
+  shortName: string;
+  color: string;
+  sof: number;
+  carCount: number;
+  leaderCarIdx: number | null;
+  leaderLap: number | null;
+  fastestLap: number | null;
+  fastestLapCarIdx: number | null;
+  /** carIdx sequence within the class, in class-position order. */
+  order: number[];
 }
 
 export interface StandingsPayload {
   playerCarIdx: number;
+  sectorCount: number;
+  overallBestLap: number | null;
+  overallBestLapCarIdx: number | null;
+  /** Field-best time per sector index (purple reference). */
+  overallBestSectors: (number | null)[];
+  classes: ClassStanding[];
   entries: StandingsEntry[];
 }
 

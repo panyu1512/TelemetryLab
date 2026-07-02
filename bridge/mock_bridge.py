@@ -67,7 +67,7 @@ class MockCar:
         self.lic_level = {"A": 13, "B": 9, "C": 5, "D": 3}[grp]
         # Pace: faster drivers (higher iR) lap a touch quicker; add jitter.
         self.pace = klass["base_lap"] * (1.0 + (2200 - self.irating) / 40000.0)
-        self.phase = rng.uniform(0.0, 1.0)          # grid stagger
+        self.phase = rng.uniform(0.0, 0.4)          # grid stagger (fraction of a lap)
         self.wobble = rng.uniform(0.3, 1.2)         # lap-time variation amplitude
         self.pit_at = rng.uniform(0.35, 0.85) if rng.random() < 0.25 else None
 
@@ -183,6 +183,14 @@ class MockField:
                 {"SessionNum": 0, "SessionType": "Race", "SessionName": "RACE",
                  "SessionLaps": "unlimited", "SessionTime": f"{RACE_LENGTH:.4f}"},
             ],
+            # Three sectors, so the standings screen has boundaries to time against.
+            "split_time_info": {
+                "Sectors": [
+                    {"SectorNum": 0, "SectorStartPct": 0.0},
+                    {"SectorNum": 1, "SectorStartPct": 0.34},
+                    {"SectorNum": 2, "SectorStartPct": 0.71},
+                ],
+            },
             "session_num": 0,
             "session_state": active_state,
             "session_time_remain": max(0.0, RACE_LENGTH - t),

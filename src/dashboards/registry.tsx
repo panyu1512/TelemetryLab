@@ -17,6 +17,7 @@ import { FuelWidget } from "../components/widgets/FuelWidget";
 import { TimingWidget } from "../components/widgets/TimingWidget";
 import { TyresWidget } from "../components/widgets/TyresWidget";
 import { PositionWidget } from "../components/widgets/PositionWidget";
+import { StandingsScreen } from "../components/standings/StandingsScreen";
 
 /** Relative footprint of a widget on the 12-column dashboard grid. */
 export type WidgetSize = "sm" | "md" | "lg" | "xl";
@@ -47,6 +48,12 @@ export interface DashboardDef {
   /** Roadmap milestone that ships this screen (for the placeholder copy). */
   milestone?: string;
   widgets: WidgetDef[];
+  /**
+   * A full-bleed screen that replaces the widget grid entirely (e.g. the
+   * standings timing table). When set, `widgets` is ignored and the dashboard
+   * is not a drag/resize grid.
+   */
+  Screen?: ComponentType;
 }
 
 export const DASHBOARDS: DashboardDef[] = [
@@ -113,9 +120,10 @@ export const DASHBOARDS: DashboardDef[] = [
     id: "standings",
     label: "Standings",
     icon: ListOrdered,
-    available: false,
+    available: true,
     milestone: "v0.4.0",
     widgets: [],
+    Screen: StandingsScreen,
   },
   {
     id: "relative",
