@@ -294,10 +294,12 @@ export function BrandIcon({ make }: { make: string }) {
   if (!make) return null;
   const Icon = BRAND_ICONS[make];
   if (Icon) {
+    // .brand-icon CSS rule: > svg { height: 100%; width: auto; display: block; }
+    // inline-flex default (align-items: stretch) lets height:100% resolve to 13px.
     return (
       <span
-        className="shrink-0 inline-flex items-center text-text/55"
-        style={{ height: 11 }}
+        className="brand-icon shrink-0 inline-flex"
+        style={{ height: 13, color: "rgba(230,230,230,0.55)" }}
         title={make}
       >
         <Icon />
@@ -409,6 +411,26 @@ const COMPOUND_COLOR: Record<number, string> = {
   3: "var(--color-sector-purple)",
 };
 
+/** Tire viewed from the side: thick sidewall ring + rim ring + cross spokes. */
+function TireCompoundIcon({ compound }: { compound: number }) {
+  const color = COMPOUND_COLOR[compound] ?? "var(--color-muted)";
+  return (
+    <svg
+      viewBox="0 0 14 14"
+      style={{ height: 14, width: 14, display: "block", flexShrink: 0 }}
+      fill="none"
+    >
+      {/* Outer tire ring (sidewall / tread) */}
+      <circle cx="7" cy="7" r="6" stroke={color} strokeWidth="2.5" strokeOpacity="0.7" />
+      {/* Rim */}
+      <circle cx="7" cy="7" r="2.8" stroke={color} strokeWidth="1.2" />
+      {/* Cross spokes */}
+      <line x1="7" y1="4.2" x2="7" y2="9.8" stroke={color} strokeWidth="0.9" strokeOpacity="0.45" />
+      <line x1="4.2" y1="7" x2="9.8" y2="7" stroke={color} strokeWidth="0.9" strokeOpacity="0.45" />
+    </svg>
+  );
+}
+
 export function TireCell({
   compound,
   laps,
@@ -423,14 +445,15 @@ export function TireCell({
   const color = COMPOUND_COLOR[compound] ?? "var(--color-muted)";
   return (
     <div className="flex items-center justify-center gap-0.5">
+      <TireCompoundIcon compound={compound} />
       <span
-        className="rounded px-0.5 text-[9px] font-bold leading-tight"
-        style={{ background: `${color}22`, color, border: `1px solid ${color}44` }}
+        className="text-[9px] font-bold leading-none"
+        style={{ color }}
         title={`Compound ${label}`}
       >
         {label}
       </span>
-      <span className="text-[9px] tabular-nums text-muted/60" title={`${laps} laps on tyres`}>
+      <span className="text-[9px] tabular-nums" style={{ color: "rgba(136,136,136,0.7)" }} title={`${laps} laps on tyres`}>
         {laps}
       </span>
     </div>
