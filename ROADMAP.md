@@ -130,6 +130,43 @@ overlays sketched in the architecture doc.
 
 ---
 
+## ⏳ v0.4.1 — Standings enrichments
+
+Small-batch polish round for the timing screen: visual brand identity and
+live tyre data per car — two things that make the table immediately richer
+without requiring new bridge architecture.
+
+### Car brand icons
+
+Replace the plain `[AUDI]` text pill with a **color-coded brand badge**:
+manufacturer abbreviation on a brand-specific tinted background, so each
+manufacturer is visually distinct at a glance.
+
+- A curated `BRAND_META` table maps the `carMake` field (first word of
+  `CarScreenName`) to an abbreviation and hue for all major iRacing brands:
+  Audi, BMW, Ferrari, Ford, McLaren, Mercedes, Porsche, Toyota, Chevrolet,
+  Cadillac, Dallara, Lamborghini, and more.
+- Unknown brands fall back to the first three letters on a neutral pill.
+- The badge sits inline in the driver name column; no extra grid column needed.
+
+### Per-car tyre info column
+
+A new **Tyre** column after Best Lap shows each car's current tyre state:
+
+- **Compound badge** (P / A / B / …) color-coded by slot — primary in green,
+  alternate in yellow, further options in red/purple — driven by iRacing's
+  `CarIdxTireCompound` array (series-specific integer).
+- **Laps on tyres** — a small counter next to the badge that increments each
+  lap and resets when a car exits the pit stall (derived by detecting
+  `in_pit_stall → not in_pit_stall` transitions in the standings engine).
+- The compound label is intentionally abstract (P/A/B rather than
+  "soft/medium/hard") because compound naming varies by series.
+
+**Needs:** `CarIdxTireCompound` added to the `CAR_IDX_VARS` ingest list
+(already done) + the pit-stall transition tracker in `StandingsEngine`.
+
+---
+
 ## ⏳ v0.5.0 — Relative screen
 
 The other classic overlay: the handful of cars physically around you on track,

@@ -4,7 +4,7 @@ import { useStandingsRow } from "../../stores/useStandingsStore";
 import { useDriver } from "../../stores/useSessionStore";
 import { gridTemplate, LAP_COLOR, ROW_H } from "./constants";
 import {
-  BrandBadge,
+  BrandIcon,
   GapCell,
   IntervalCell,
   IRatingCell,
@@ -12,6 +12,7 @@ import {
   LicenseBadge,
   PosChange,
   SectorCell,
+  TireCell,
 } from "./cells";
 
 interface StandingsRowProps {
@@ -98,7 +99,7 @@ function StandingsRowInner({
           <span className="truncate text-[12px] text-text">
             {driver?.userName ?? `Car ${carIdx}`}
           </span>
-          <BrandBadge make={driver?.carMake ?? ""} />
+          <BrandIcon make={driver?.carMake ?? ""} />
         </div>
 
         {/* license + SR */}
@@ -130,6 +131,9 @@ function StandingsRowInner({
           flash={row?.lastLapStatus === "overall_best"}
         />
         <LapCell time={row?.bestLapTime ?? null} color="var(--color-muted)" />
+
+        {/* tyre compound + laps */}
+        <TireCell compound={row?.tireCompound ?? null} laps={row?.tireLaps ?? 0} />
 
         {/* sector deltas */}
         {Array.from({ length: sectorCount }, (_, i) => (

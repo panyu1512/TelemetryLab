@@ -232,6 +232,7 @@ class CarTiming:
     track_surface: Optional[int]
     track_surface_label: str
     timestamp: int                        # server ms when sampled
+    tire_compound: Optional[int] = None   # CarIdxTireCompound (series-specific int)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -249,6 +250,7 @@ class CarTiming:
             "trackSurface": self.track_surface,
             "trackSurfaceLabel": self.track_surface_label,
             "timestamp": self.timestamp,
+            "tireCompound": self.tire_compound,
         }
 
 
@@ -314,6 +316,10 @@ class StandingsEntry:
     is_class_leader: bool
     is_lapped: bool                       # at least one lap down on the leader
 
+    # --- tyre info -----------------------------------------------------------
+    tire_compound: Optional[int] = None   # direct: CarIdxTireCompound (series-specific)
+    tire_laps: int = 0                    # derived: laps on the current tyre set
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "carIdx": self.car_idx,
@@ -350,6 +356,8 @@ class StandingsEntry:
             "isOverallLeader": self.is_overall_leader,
             "isClassLeader": self.is_class_leader,
             "isLapped": self.is_lapped,
+            "tireCompound": self.tire_compound,
+            "tireLaps": self.tire_laps,
         }
 
 
