@@ -16,12 +16,11 @@
         "title": "iRacing Telemetry",
         "width": 1400,
         "height": 900,
-        "minWidth": 1200,
-        "minHeight": 700,
+        "minWidth": 800,
+        "minHeight": 400,
         "resizable": true,
         "decorations": false,
-        "transparent": false,
-        "backgroundColor": "#0a0a0a"
+        "transparent": true
       }
     ],
     "security": {
