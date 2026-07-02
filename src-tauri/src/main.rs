@@ -4,7 +4,8 @@
 
 use std::sync::Mutex;
 
-use tauri::{Manager, RunEvent};
+use tauri::{Emitter, Manager, RunEvent};
+use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, ShortcutState};
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
 
@@ -54,8 +55,31 @@ fn spawn_bridge(app: &tauri::AppHandle) -> Result<(), Box<dyn std::error::Error>
 fn main() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
+        // Global shortcut plugin: Ctrl+Shift+L toggles overlay lock mode.
+        // The handler emits an event to the frontend which owns the lock state.
+        .plugin(
+            tauri_plugin_global_shortcut::Builder::new()
+                .with_handler(|app, _shortcut, event| {
+                    if event.state() == ShortcutState::Pressed {
+                        let _ = app.emit("overlay://toggle-lock", ());
+                    }
+                })
+                .build(),
+        )
         .manage(SidecarProcess(Mutex::new(None)))
         .setup(|app| {
+            // Register the overlay lock/unlock hotkey (Ctrl+Shift+L).
+            // This fires even when iRacing has focus, allowing the user to
+            // toggle the overlay without clicking into the telemetry window.
+            use tauri_plugin_global_shortcut::Shortcut;
+            let shortcut = Shortcut::new(
+                Some(Modifiers::CONTROL | Modifiers::SHIFT),
+                Code::KeyL,
+            );
+            if let Err(err) = app.handle().global_shortcut().register(shortcut) {
+                eprintln!("[overlay] failed to register hotkey Ctrl+Shift+L: {err}");
+            }
+
             // Launch the Python telemetry bridge as soon as the app starts.
             if let Err(err) = spawn_bridge(app.handle()) {
                 eprintln!("[bridge] failed to spawn sidecar: {err}");
