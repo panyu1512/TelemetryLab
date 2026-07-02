@@ -105,6 +105,16 @@ a {
 
 /* --- standings / timing screen ------------------------------------------- */
 
+/* Brand icon: the SVG child fills the container height and auto-sizes its
+ * width from the viewBox aspect ratio. The container uses align-items:stretch
+ * (inline-flex default) so height:100% on the SVG resolves correctly. */
+.brand-icon > svg {
+  height: 100%;
+  width: auto;
+  display: block;
+}
+
+
 /* A freshly completed sector fades up as its colored value/delta lands. Keyed
  * remount in SectorCell replays this only when the split actually changes. */
 @keyframes sector-pop {
