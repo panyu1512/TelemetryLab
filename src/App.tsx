@@ -5,11 +5,14 @@ import { useDashboardLayout } from "./hooks/useDashboardLayout";
 import { TitleBar, type ConnectionStatus } from "./components/layout/TitleBar";
 import { DashboardGrid } from "./components/layout/DashboardGrid";
 import { Dock } from "./components/layout/Dock";
-import { OverlayManager } from "./components/layout/OverlayManager";
+import { ManagerWindow } from "./components/manager/ManagerWindow";
 import {
   useOverlayStore,
   initWindowBoundsPersistence,
 } from "./stores/useOverlayStore";
+import { useOverlayConfigStore } from "./stores/useOverlayConfigStore";
+import { useSessionStore } from "./stores/useSessionStore";
+import { getTheme, applyTheme } from "./themes";
 
 const isTauri =
   typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
@@ -22,7 +25,27 @@ export default function App() {
   const [managerOpen, setManagerOpen] = useState(false);
   const { overlayMode, locked } = useOverlayStore();
 
-  // ── Overlay CSS class sync ──────────────────────────────────────────────
+  // v0.7.0 overlay config
+  const configStore = useOverlayConfigStore();
+  const activeOverlayId = layout.active;
+  const overlaySettings = configStore.getOverlaySettings(activeOverlayId);
+
+  // Session state for conditional visibility
+  const session = useSessionStore((s) => s.session);
+  const sessionFlags = session?.flags ?? [];
+  const sessionState = session?.sessionStateLabel ?? "";
+
+  // ── Conditional visibility ───────────────────────────────────────────────
+  // Determine whether the active overlay should be shown based on visibility rules.
+  const isReplay = sessionState === "Replay" || sessionFlags.includes("replay");
+  const isLoneQualify = sessionFlags.includes("lone_qualify");
+
+  const shouldHide =
+    overlaySettings.enabled === false ||
+    (overlaySettings.visibility.hideOnReplay && isReplay) ||
+    (overlaySettings.visibility.hideOnLoneQualify && isLoneQualify);
+
+  // ── Overlay CSS class sync ───────────────────────────────────────────────
   // Keep <html> class list in sync with store so CSS rules can target it.
   useEffect(() => {
     const html = document.documentElement;
@@ -30,7 +53,15 @@ export default function App() {
     html.classList.toggle("overlay-locked", overlayMode && locked);
   }, [overlayMode, locked]);
 
-  // ── Tauri: init window bounds + Ctrl+Shift+L hotkey listener ───────────
+  // ── Theme sync ───────────────────────────────────────────────────────────
+  // Re-apply global theme whenever it changes (the store applies it on mutation
+  // too, but this handles the first render after a HMR reload in dev).
+  useEffect(() => {
+    const { themeId } = configStore.globalSettings;
+    applyTheme(getTheme(themeId));
+  }, [configStore.globalSettings.themeId]);
+
+  // ── Tauri: init window bounds + Ctrl+Shift+L hotkey listener ────────────
   useEffect(() => {
     initWindowBoundsPersistence();
 
@@ -50,7 +81,7 @@ export default function App() {
     };
   }, []);
 
-  // ── Esc closes the overlay manager ─────────────────────────────────────
+  // ── Esc closes the overlay manager ──────────────────────────────────────
   useEffect(() => {
     if (!managerOpen) return;
     const onKey = (e: KeyboardEvent) => {
@@ -69,11 +100,29 @@ export default function App() {
     status = { label: "Live", color: "var(--color-accent)" };
   }
 
+  // ── Per-overlay appearance filters ──────────────────────────────────────
+  // Apply saturation/brightness/opacity from the active overlay's settings
+  // as a CSS filter on the main content area.
+  const { saturation, brightness, opacity } = overlaySettings.appearance;
+  const appearanceStyle: React.CSSProperties = {};
+  if (saturation !== 100 || brightness !== 100) {
+    appearanceStyle.filter = `saturate(${saturation}%) brightness(${brightness}%)`;
+  }
+  if (opacity !== 100) {
+    appearanceStyle.opacity = opacity / 100;
+  }
+
   return (
     <div className="flex h-full flex-col bg-bg text-text">
       <TitleBar status={status} />
 
-      <main className="relative flex-1 overflow-auto p-4 pb-28">
+      <main
+        className={[
+          "relative flex-1 overflow-auto p-4 pb-28 transition-[filter,opacity]",
+          shouldHide && overlayMode ? "invisible" : "",
+        ].join(" ")}
+        style={appearanceStyle}
+      >
         {!iracingActive && !overlayMode && (
           <div className="mb-3 flex items-center gap-2 rounded-lg border border-border bg-surface px-3 py-2 text-xs text-muted">
             <span
@@ -89,18 +138,10 @@ export default function App() {
         <DashboardGrid layout={layout} data={data} />
       </main>
 
-      {/* Floating overlay: dock + (optionally) the widget manager above it.
-          Hidden when the overlay is locked so it doesn't block iRacing. */}
+      {/* Floating overlay: dock. Hidden when the overlay is locked so it doesn't
+          block iRacing input. */}
       {!locked && (
         <div className="pointer-events-none fixed inset-x-0 bottom-5 z-40 flex flex-col items-center gap-3 px-4">
-          {managerOpen && (
-            <div className="pointer-events-auto">
-              <OverlayManager
-                layout={layout}
-                onClose={() => setManagerOpen(false)}
-              />
-            </div>
-          )}
           <div className="pointer-events-auto">
             <Dock
               layout={layout}
@@ -109,6 +150,17 @@ export default function App() {
             />
           </div>
         </div>
+      )}
+
+      {/* v0.7.0 — Full-screen Overlay Manager */}
+      {managerOpen && (
+        <ManagerWindow
+          onClose={() => setManagerOpen(false)}
+          onActivateOverlay={(overlayId) => {
+            layout.setActive(overlayId);
+            setManagerOpen(false);
+          }}
+        />
       )}
 
       {/* Locked-mode indicator: a small floating pill showing the hotkey hint. */}

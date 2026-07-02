@@ -13,6 +13,7 @@
  */
 
 import { RECONNECT_BASE_MS, RECONNECT_MAX_MS, WS_URL } from "../config";
+import { pushLog } from "../lib/debugLog";
 import { useBridgeStore } from "../stores/useBridgeStore";
 import { useSessionStore } from "../stores/useSessionStore";
 import { useStandingsStore } from "../stores/useStandingsStore";
@@ -88,6 +89,7 @@ export class BridgeConnection {
     sock.onopen = () => {
       this.attempt = 0;
       useBridgeStore.getState().setSocketConnected(true);
+      pushLog("info", `Bridge WebSocket connected: ${this.url}`);
     };
 
     sock.onmessage = (event: MessageEvent) => {
@@ -105,6 +107,7 @@ export class BridgeConnection {
       bridge.setSocketConnected(false);
       bridge.setIracingActive(false);
       useTelemetryStore.getState().clear();
+      pushLog("warn", "Bridge WebSocket disconnected — reconnecting…");
       this.scheduleReconnect();
     };
   }
@@ -132,7 +135,13 @@ export class BridgeConnection {
         break;
       case Channel.Bridge: {
         const status = msg.payload as BridgeStatus;
+        const wasActive = useBridgeStore.getState().iracingActive;
         useBridgeStore.getState().setIracingActive(status.iracingActive);
+        if (status.iracingActive && !wasActive) {
+          pushLog("info", "iRacing session started.");
+        } else if (!status.iracingActive && wasActive) {
+          pushLog("info", "iRacing session ended.");
+        }
         if (!status.iracingActive) {
           // iRacing went away: telemetry is dead, standings are stale.
           useTelemetryStore.getState().clear();
