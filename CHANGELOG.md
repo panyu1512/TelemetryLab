@@ -7,6 +7,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.5.0] - 2026-07-02
+
+Relative screen: the classic proximity overlay showing the handful of cars
+physically around the player on track, sorted by signed time gap, with
+closing-rate hints for multi-class traffic.
+
+### Added
+
+- **`RelativeScreen`** (`src/components/relative/RelativeScreen.tsx`): a
+  full-bleed screen registered at the "Relative" dashboard slot, now active
+  (was previously a "coming soon" placeholder).
+  - **Window size control** (±, default 5, range 3–10): shows N cars ahead and N
+    cars behind the player. Adjusted via `+` / `-` buttons in the header.
+  - **Signed relative gap** column: `+X.Xs` (green) for cars ahead, `-X.Xs`
+    (red) for cars behind, `0.0s` for the player row. Values come from
+    `StandingsEntry.intervalToPlayer`, which the bridge already computes each
+    tick from `CarIdxEstTime` wrapped to ±half-lap.
+  - **Class-coded rows**: each row has a left border in the car's class color,
+    and a class badge (`GT3` / `GT4` / …) so multi-class traffic is instantly
+    distinguishable.
+  - **Closing-rate hint** (`⚡`): shown on cars behind the player that are
+    lapping ≥ 0.3 s/lap faster than the player **and** within 10 s. The icon
+    is red when the closing car is from a different class (the most critical
+    multi-class scenario), yellow for a same-class faster car.
+  - **Sort order**: cars are sorted by `intervalToPlayer` descending — furthest
+    ahead at the top, player in the centre, closest behind just below, furthest
+    behind at the bottom — matching the standard iRacing relative overlay
+    convention.
+  - **Player row**: highlighted in accent green with a `0.0s` gap; shows a
+    wrench icon when on pit road.
+  - **Empty state**: consistent with the standings screen; prompts to start a
+    session or run the mock bridge when no standings data is available.
+- **Registry**: `relative` dashboard entry upgraded from `available: false` to
+  `available: true` with `Screen: RelativeScreen`
+  (`src/dashboards/registry.tsx`).
+
+### Notes
+
+No bridge changes required: `intervalToPlayer` was already computed in the v0.3
+standings engine and carried through every tick on `StandingsEntry`. The
+relative screen is a pure frontend transform over the existing `standings`
+channel.
+
 ## [0.4.2] - 2026-07-02
 
 Brand icons upgraded to real manufacturer logos; tire cell gains a compound
@@ -238,7 +281,9 @@ React dashboard, plus CI that ships a Windows installer.
   the `.msi` as an artifact and a Release asset on `v*` tags.
 - Project documentation (`README.md`) with Windows and macOS (mock) setup.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v0.4.1...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v0.5.0...HEAD
+[0.5.0]: https://github.com/panyu1512/TelemetryLab/compare/v0.4.2...v0.5.0
+[0.4.2]: https://github.com/panyu1512/TelemetryLab/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/panyu1512/TelemetryLab/compare/v0.4.0...v0.4.1
 [0.4.0]: https://github.com/panyu1512/TelemetryLab/compare/v0.3.0...v0.4.0
 [0.3.0]: https://github.com/panyu1512/TelemetryLab/compare/v0.2.0...v0.3.0

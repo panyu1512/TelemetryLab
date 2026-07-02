@@ -18,6 +18,7 @@ import { TimingWidget } from "../components/widgets/TimingWidget";
 import { TyresWidget } from "../components/widgets/TyresWidget";
 import { PositionWidget } from "../components/widgets/PositionWidget";
 import { StandingsScreen } from "../components/standings/StandingsScreen";
+import { RelativeScreen } from "../components/relative/RelativeScreen";
 
 /** Relative footprint of a widget on the 12-column dashboard grid. */
 export type WidgetSize = "sm" | "md" | "lg" | "xl";
@@ -129,9 +130,10 @@ export const DASHBOARDS: DashboardDef[] = [
     id: "relative",
     label: "Relative",
     icon: Users,
-    available: false,
+    available: true,
     milestone: "v0.5.0",
     widgets: [],
+    Screen: RelativeScreen,
   },
 ];
 
