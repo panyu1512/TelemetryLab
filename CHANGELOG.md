@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [0.4.2] - 2026-07-02
+
+Brand icons upgraded to real manufacturer logos; tire cell gains a compound
+wheel icon.
+
+### Changed
+
+- **Real manufacturer SVG logos** replace the hand-crafted geometric
+  approximations for 10 brands in `BrandIcon`
+  (`src/components/standings/cells.tsx`): Toyota (concentric-ellipse oval/T
+  mark), Honda (H letterform in rounded-rectangle badge), Lamborghini (shield
+  with detailed interior paths and letter banner), Mercedes (three-pointed star
+  in circle), McLaren (Speedmark swoosh), Porsche (quartered crest with rampant
+  horse detail), Ford (oval wordmark), BMW (roundel with filled quadrants),
+  Ferrari (Prancing Horse shield), and Audi (four interlocking rings). Path
+  data sourced from the SVGRepo flat-logo collection; SVGRepo wrapper groups
+  stripped, `fill="#000000"` replaced with `fill="currentColor"` throughout,
+  and BMW `class` attributes inlined as `fill` for JSX compatibility.
+
+### Fixed
+
+- **Brand icons not rendering**: `BrandIcon` container switched from
+  `inline-flex items-center` (does not stretch children) to plain `inline-flex`
+  (default `align-items: stretch`) so that `height: 100%` on the SVG child
+  resolves correctly against the 13 px container. A `.brand-icon > svg`
+  CSS rule in `styles.css` locks `height: 100%; width: auto` centrally.
+  Color corrected from a Tailwind opacity modifier (`text-text/55`) to a direct
+  `rgba()` inline style for reliable rendering.
+- **Tire compound display**: `TireCell` now renders a `TireCompoundIcon` — a
+  14×14 px SVG of a tyre viewed from the side (thick sidewall ring, inner rim
+  ring, cross spokes) colored by compound — replacing the plain text badge.
+
 ## [0.4.1] - 2026-07-02
 
 Standings enrichments: visual car brand identity and live tyre data per car,
