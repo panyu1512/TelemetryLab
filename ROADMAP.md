@@ -226,9 +226,33 @@ settings store; builds on the overlay windows from v0.6.0.
 
 ---
 
+## ✅ v0.8.0 — Fuel & strategy calculator
+
+The first backlog feature to graduate: a full-bleed **Fuel Calc** overlay that
+gives real-time guidance on fuel, pit strategy and stint length without any
+mental math. (See the [changelog](CHANGELOG.md).)
+
+- ✅ Consumption rate from a rolling average of per-lap burn; laps of fuel with
+  a configurable safety reserve.
+- ✅ Finish prediction — surplus/deficit litres and a whole-lap margin, framed
+  for both timed (`SessionTimeRemain` ÷ avg lap) and lap-limited
+  (`SessionLapsRemain`) races.
+- ✅ Fuel-save % and target L/lap to reach the flag without an extra stop.
+- ✅ Stint breakdown + pit window (must-pit-by countdown, recommended lap).
+- ✅ Alternate strategies: greedy fewest-stops plan vs. an even-split
+  one-more-stop plan, with per-stop fuel amounts.
+- ✅ Manual pit-fuel override (fixed fill vs. auto) and adjustable reserve.
+
+Delivered as a pure, total calculation core (`lib/fuelStrategy.ts`) fed by a
+sampling hook (`hooks/useFuelStrategy.ts`), so all the math is isolated from the
+presentation and degrades gracefully before the first lap of data.
+
+**Needs:** nothing new — current `PlayerTelemetry` + `SessionInfo`.
+
+---
+
 ## 💡 Backlog / ideas
 
-- Fuel & strategy calculator (stints, target lap, save %).
 - Predictive lap / delta bar (live time gain/loss vs best).
 - Input trace graph (throttle/brake/steer over time).
 - Track map with live car positions (`CarIdxLapDistPct` + track geometry).

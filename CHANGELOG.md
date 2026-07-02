@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Fuel & Strategy Calculator** — a new full-bleed overlay screen (backlog
+  Feature 1) that turns raw fuel telemetry into live race strategy. Registered
+  in the dashboard catalog as **Fuel Calc**, so it appears in the dock and the
+  Overlay Manager (appearance / visibility / window / browser-source) with no
+  extra wiring.
+  - **Pure calculation core** (`src/lib/fuelStrategy.ts`): a total,
+    side-effect-free `computeFuelStrategy()` that derives consumption, laps of
+    fuel (raw + above a safety reserve), a finish prediction (surplus/deficit
+    litres and whole-lap margin), the fuel-save % and target L/lap needed to
+    reach the flag, the current stint framing + pit window, and one or two
+    candidate stint plans. Any missing input collapses only the dependent
+    outputs to `null` — it never throws.
+  - **Strategy planners**: a greedy fewest-stops plan (run to the reserve, then
+    add only what the rest of the race needs, capped at a full tank or a fixed
+    manual fill) plus an even-split alternative with one extra stop for a
+    lighter car / shorter stints. Both are loop-guarded and terminate.
+  - **`useFuelStrategy` hook** (`src/hooks/useFuelStrategy.ts`): samples per-lap
+    burn and lap time over a rolling window at each lap boundary, infers tank
+    capacity from `level ÷ fraction` while the tank is full, anchors the stint
+    to the last pit-road exit, and latches an out-of-fuel condition (cleared on
+    refuel). Feeds a clean snapshot into the pure core.
+  - **`FuelStrategyScreen`** (`src/components/fuel/FuelStrategyScreen.tsx`):
+    tank bar with a reserve marker, a color-coded prediction banner
+    (calibrating / finish / save / pit / empty), a stint card with progress +
+    pit window + margin, a fuel-save card, a collapsible pit-strategies list,
+    and a manual per-stop **pit-fuel override** (auto or a fixed litre amount)
+    plus an adjustable safety **reserve**.
+  - **Edge cases** handled: first lap with no data (estimated framing +
+    "calibrating"), timed races (laps-to-flag estimated from `sessionTimeRemain`
+    ÷ average lap time), lap-limited races (uses `sessionLapsRemain` directly),
+    a dynamically-updating burn rate, an empty tank ("pit immediately" alert),
+    and a session reset (all samples cleared).
+
 ## [0.7.0] - 2026-07-02
 
 Overlay Manager & Configuration: a full-screen control panel that transforms the set of individual overlay screens into a cohesive, configurable application. Every overlay is now independently configurable for appearance, visibility, and streaming.
