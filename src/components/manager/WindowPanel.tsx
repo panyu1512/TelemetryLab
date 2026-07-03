@@ -1,6 +1,7 @@
-import { ExternalLink, Lock, Unlock, Info } from "lucide-react";
+import { ExternalLink, Lock, Unlock, Info, AppWindow } from "lucide-react";
 import { useOverlayStore } from "../../stores/useOverlayStore";
 import { getDashboard } from "../../dashboards/registry";
+import { openOverlayWindow } from "../../lib/overlayWindows";
 
 interface WindowPanelProps {
   overlayId: string;
@@ -46,9 +47,15 @@ export function WindowPanel({ overlayId, onActivate }: WindowPanelProps) {
         <SectionLabel>Quick Actions</SectionLabel>
         <div className="grid grid-cols-2 gap-2">
           <ActionButton
+            icon={<AppWindow className="size-4" />}
+            label="Open in new window"
+            description="Pop this overlay out into its own separate window"
+            onClick={() => openOverlayWindow(overlayId, dashboard.label)}
+          />
+          <ActionButton
             icon={<ExternalLink className="size-4" />}
-            label="Open Overlay"
-            description="Focus this overlay in the current window"
+            label="Show here"
+            description="Switch the main window to this overlay"
             onClick={() => onActivate?.(overlayId)}
           />
           <ActionButton
@@ -94,9 +101,10 @@ export function WindowPanel({ overlayId, onActivate }: WindowPanelProps) {
       <div className="flex items-start gap-2 rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-xs text-muted">
         <Info className="mt-0.5 size-3.5 shrink-0" />
         <span>
-          Per-overlay independent windows with individual position/size/lock
-          controls are planned for a future release. Currently all overlays share
-          one application window.
+          <span className="text-text">Open in new window</span> pops this overlay
+          out on its own. On the desktop app it becomes a separate always-on-top
+          window you can position and size independently; in a browser it opens
+          in a new tab. Each window remembers its own layout.
         </span>
       </div>
     </div>

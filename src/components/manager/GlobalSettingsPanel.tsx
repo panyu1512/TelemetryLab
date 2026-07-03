@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { RefreshCw, Info } from "lucide-react";
 import { useOverlayConfigStore } from "../../stores/useOverlayConfigStore";
+import { THEMES } from "../../themes";
 
 export function GlobalSettingsPanel() {
   const store = useOverlayConfigStore();
@@ -8,6 +9,23 @@ export function GlobalSettingsPanel() {
 
   return (
     <div className="space-y-6">
+      {/* Appearance */}
+      <section>
+        <SectionLabel>Appearance</SectionLabel>
+        <SettingsGroup>
+          <LabeledField
+            label="Global Theme"
+            hint="Default color theme for every overlay. Individual overlays can override this in their Appearance tab."
+          >
+            <SelectInput
+              value={globalSettings.themeId}
+              options={THEMES.map((t) => ({ value: t.id, label: t.name }))}
+              onChange={(v) => store.setGlobalTheme(v)}
+            />
+          </LabeledField>
+        </SettingsGroup>
+      </section>
+
       {/* Bridge connection */}
       <section>
         <SectionLabel>Telemetry Bridge</SectionLabel>
