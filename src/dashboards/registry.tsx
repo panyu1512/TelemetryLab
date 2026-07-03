@@ -19,6 +19,7 @@ import { TyresWidget } from "../components/widgets/TyresWidget";
 import { PositionWidget } from "../components/widgets/PositionWidget";
 import { StandingsScreen } from "../components/standings/StandingsScreen";
 import { RelativeScreen } from "../components/relative/RelativeScreen";
+import { FuelStrategyScreen } from "../components/fuel/FuelStrategyScreen";
 
 /** Relative footprint of a widget on the 12-column dashboard grid. */
 export type WidgetSize = "sm" | "md" | "lg" | "xl";
@@ -134,6 +135,15 @@ export const DASHBOARDS: DashboardDef[] = [
     milestone: "v0.5.0",
     widgets: [],
     Screen: RelativeScreen,
+  },
+  {
+    id: "fuel",
+    label: "Fuel Calc",
+    icon: Fuel,
+    available: true,
+    milestone: "v0.8.0",
+    widgets: [],
+    Screen: FuelStrategyScreen,
   },
 ];
 
