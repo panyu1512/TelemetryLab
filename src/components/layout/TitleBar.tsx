@@ -1,5 +1,4 @@
-import { Minus, X, Monitor, Lock, Unlock } from "lucide-react";
-import { useWindowStore, WINDOW_LABEL } from "../../stores/useWindowStore";
+import { Minus, X } from "lucide-react";
 
 /** True when running inside the Tauri WebView (vs. a plain browser tab). */
 const isTauri =
@@ -19,21 +18,16 @@ export interface ConnectionStatus {
   color: string;
 }
 
-/** Frameless, draggable title bar with brand, live status, overlay controls, and window buttons. */
+/**
+ * Frameless, draggable title bar for the Overlay Manager: brand, live bridge
+ * status and standard window buttons. The manager is a normal window — it never
+ * becomes an overlay, so there are no overlay-mode or lock controls here.
+ */
 export function TitleBar({ status }: { status: ConnectionStatus }) {
-  const { overlayMode, setOverlayMode, setLock, isLocked } = useWindowStore();
-  const locked = isLocked(WINDOW_LABEL);
-  const setLocked = (v: boolean) => setLock(WINDOW_LABEL, v);
-
   return (
     <header
       data-tauri-drag-region
-      className={[
-        "flex h-10 flex-none items-center gap-4 border-b px-3 transition-colors",
-        overlayMode
-          ? "border-accent/20 bg-bg/60 backdrop-blur-xl"
-          : "border-border bg-surface",
-      ].join(" ")}
+      className="flex h-10 flex-none items-center gap-4 border-b border-border bg-surface px-3"
     >
       {/* Brand */}
       <div
@@ -41,70 +35,32 @@ export function TitleBar({ status }: { status: ConnectionStatus }) {
         className="flex items-center gap-2 text-[13px] font-semibold tracking-wide"
       >
         <span
-          className="inline-block size-2 rounded-full transition-colors"
-          style={{ background: overlayMode ? "var(--color-accent)" : status.color }}
+          className="inline-block size-2 rounded-full"
+          style={{ background: status.color }}
         />
         <span data-tauri-drag-region>iRacing Telemetry</span>
       </div>
 
-      {/* Connection status — hidden while locked in overlay (saves space) */}
-      {(!overlayMode || !locked) && (
-        <div className="flex items-center gap-2 text-xs">
-          <span
-            className="inline-block size-2 rounded-full"
-            style={{ background: status.color }}
-          />
-          <span style={{ color: status.color }}>{status.label}</span>
+      {/* Connection status */}
+      <div className="flex items-center gap-2 text-xs">
+        <span
+          className="inline-block size-2 rounded-full"
+          style={{ background: status.color }}
+        />
+        <span style={{ color: status.color }}>{status.label}</span>
+      </div>
+
+      {/* Standard window controls */}
+      {isTauri && (
+        <div className="ml-auto flex items-center gap-1">
+          <TitleBarBtn onClick={() => windowAction("minimize")} title="Minimize">
+            <Minus className="size-4" />
+          </TitleBarBtn>
+          <TitleBarBtn onClick={() => windowAction("close")} title="Close" closeBtn>
+            <X className="size-4" />
+          </TitleBarBtn>
         </div>
       )}
-
-      <div className="ml-auto flex items-center gap-1">
-        {/* Overlay mode toggle — only meaningful inside Tauri */}
-        {isTauri && (
-          <TitleBarBtn
-            onClick={() => setOverlayMode(!overlayMode)}
-            title={overlayMode ? "Exit overlay mode" : "Enter overlay mode (always-on-top)"}
-            active={overlayMode}
-          >
-            <Monitor className="size-4" />
-          </TitleBarBtn>
-        )}
-
-        {/* Lock/unlock — only in overlay mode */}
-        {overlayMode && (
-          <TitleBarBtn
-            onClick={() => setLocked(!locked)}
-            title={
-              locked
-                ? "Unlock overlay (Ctrl+Shift+L)"
-                : "Lock overlay — enable click-through (Ctrl+Shift+L)"
-            }
-            active={locked}
-            danger={locked}
-          >
-            {locked ? <Lock className="size-4" /> : <Unlock className="size-4" />}
-          </TitleBarBtn>
-        )}
-
-        {/* Standard window controls */}
-        {isTauri && (
-          <>
-            <TitleBarBtn
-              onClick={() => windowAction("minimize")}
-              title="Minimize"
-            >
-              <Minus className="size-4" />
-            </TitleBarBtn>
-            <TitleBarBtn
-              onClick={() => windowAction("close")}
-              title="Close"
-              closeBtn
-            >
-              <X className="size-4" />
-            </TitleBarBtn>
-          </>
-        )}
-      </div>
     </header>
   );
 }

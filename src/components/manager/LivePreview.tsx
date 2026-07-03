@@ -1,23 +1,57 @@
 /**
- * Live preview — a themed, representative render of the overlay being edited.
+ * Live preview of the overlay being edited.
  *
- * It reads the *selected* overlay's settings straight from the config store, so
- * every edit (theme, saturation, brightness, opacity) is reflected instantly
- * with no apply/refresh step — the same store mutation also propagates to a real
- * open overlay window over the bus, keeping preview and window in sync.
+ * For the **dashboard** it renders the *real* widget components fed by a ticking
+ * mock telemetry frame, so the preview looks and behaves exactly like the live
+ * overlay (gauges sweep, traces scroll) without needing iRacing or the bridge.
+ * Full-screen overlays (standings/relative/fuel) show a representative sample.
  *
- * The theme is applied to a scoped container (not the document root) via
- * {@link applyTheme}, so the preview can show a different overlay's theme than
- * the one the main window is currently displaying.
+ * It reads the selected overlay's settings straight from the config store, so
+ * every edit (theme, saturation, brightness, opacity) is reflected instantly —
+ * the same store mutation also propagates to a real open overlay window over the
+ * bus, keeping preview and window in sync. The theme is applied to a scoped
+ * container (not the document root) via {@link applyTheme}.
  */
 
-import { useEffect, useRef } from "react";
-import { getDashboard } from "../../dashboards/registry";
+import { useEffect, useRef, useState } from "react";
+import { getDashboard, type DashboardDef } from "../../dashboards/registry";
 import { useOverlayConfigStore } from "../../stores/useOverlayConfigStore";
+import { mockPlayerTelemetry } from "../../lib/mockData";
+import type { PlayerTelemetry } from "../../telemetry/types";
 import { applyTheme, getTheme, type Theme } from "../../themes";
 
 interface LivePreviewProps {
   overlayId: string;
+}
+
+/**
+ * A mock telemetry frame that advances in real time so the real widgets animate.
+ * Only runs while `active` (the dashboard preview) to avoid needless work.
+ */
+function useMockFrame(active: boolean): PlayerTelemetry | null {
+  const [frame, setFrame] = useState<PlayerTelemetry | null>(() =>
+    active ? mockPlayerTelemetry(0) : null
+  );
+  useEffect(() => {
+    if (!active) {
+      setFrame(null);
+      return;
+    }
+    const start = performance.now();
+    let raf = 0;
+    let last = 0;
+    const tick = (now: number) => {
+      // ~12 fps is plenty for gauges/traces and keeps re-renders cheap.
+      if (now - last > 80) {
+        setFrame(mockPlayerTelemetry((now - start) / 1000));
+        last = now;
+      }
+      raf = requestAnimationFrame(tick);
+    };
+    raf = requestAnimationFrame(tick);
+    return () => cancelAnimationFrame(raf);
+  }, [active]);
+  return frame;
 }
 
 export function LivePreview({ overlayId }: LivePreviewProps) {
@@ -28,6 +62,9 @@ export function LivePreview({ overlayId }: LivePreviewProps) {
 
   const themeId = appearance.themeId ?? store.globalSettings.themeId;
   const theme = getTheme(themeId);
+
+  const isDashboard = dashboard.widgets.length > 0;
+  const frame = useMockFrame(isDashboard);
 
   const surfaceRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
@@ -63,11 +100,15 @@ export function LivePreview({ overlayId }: LivePreviewProps) {
       >
         <div
           ref={surfaceRef}
-          className="absolute inset-0 flex flex-col gap-2 overflow-hidden p-3 transition-[filter,opacity]"
+          className="absolute inset-0 flex flex-col gap-2 overflow-y-auto p-3 transition-[filter,opacity]"
           style={{ filter, opacity: appearance.opacity / 100 }}
         >
           <PreviewHeader theme={theme} label={dashboard.label} />
-          <OverlaySample overlayId={overlayId} />
+          {isDashboard ? (
+            <DashboardPreview dashboard={dashboard} frame={frame} />
+          ) : (
+            <OverlaySample overlayId={overlayId} />
+          )}
         </div>
       </div>
 
@@ -104,9 +145,58 @@ function PreviewHeader({ theme, label }: { theme: Theme; label: string }) {
 }
 
 /**
- * Overlay-specific sample content. Full-screen overlays (standings/relative/
- * fuel) get a mini table; the widget dashboard gets a tile grid. All values are
- * static placeholders — the preview demonstrates *appearance*, not live data.
+ * The real dashboard: every widget component rendered with a live mock frame, so
+ * the preview matches the actual overlay exactly. Wide widgets span both columns.
+ */
+function DashboardPreview({
+  dashboard,
+  frame,
+}: {
+  dashboard: DashboardDef;
+  frame: PlayerTelemetry | null;
+}) {
+  return (
+    <div className="grid grid-cols-2 gap-2">
+      {dashboard.widgets.map((w) => {
+        const Body = w.Component;
+        const wide = w.defaultSize === "lg" || w.defaultSize === "xl";
+        const Icon = w.icon;
+        return (
+          <div
+            key={w.id}
+            className={[
+              "flex flex-col overflow-hidden rounded-lg border backdrop-blur",
+              wide ? "col-span-2" : "",
+            ].join(" ")}
+            style={{
+              background: "var(--color-surface)",
+              borderColor: "var(--color-border)",
+              height: wide ? 120 : 96,
+            }}
+          >
+            <header className="flex items-center gap-1.5 px-2 pt-1.5">
+              <Icon className="size-3 shrink-0 text-muted" strokeWidth={2} />
+              <span className="truncate text-[9px] font-medium uppercase tracking-wider text-muted">
+                {w.title}
+              </span>
+            </header>
+            <div
+              className="min-h-0 flex-1 overflow-hidden p-2"
+              style={{ containerType: "size" }}
+            >
+              <Body data={frame} />
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+/**
+ * Overlay-specific sample content for full-screen overlays (standings/relative/
+ * fuel): a mini table or tiles. These aren't widget-based, so the preview
+ * demonstrates *appearance* with representative content.
  */
 function OverlaySample({ overlayId }: { overlayId: string }) {
   if (overlayId === "standings" || overlayId === "relative") {

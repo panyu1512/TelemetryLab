@@ -32,7 +32,7 @@ beforeEach(() => {
     clear: () => store.clear(),
   };
   broadcasts.length = 0;
-  useWindowStore.setState({ overlayMode: false, locks: {} });
+  useWindowStore.setState({ locks: {} });
 });
 
 afterEach(() => {
@@ -61,17 +61,28 @@ describe("window locking", () => {
     });
   });
 
-  it("main and extra windows use the same locking mechanism", () => {
+  it("overlay and widget windows use the same locking mechanism", () => {
     const { setLock, isLocked } = useWindowStore.getState();
-    setLock("main", true);
     setLock("overlay-standings", true);
-    expect(isLocked("main")).toBe(true);
+    setLock("widget-fuel", true);
     expect(isLocked("overlay-standings")).toBe(true);
+    expect(isLocked("widget-fuel")).toBe(true);
     // Both went through the same broadcast path.
     expect(broadcasts.map((b) => (b.payload as { label: string }).label)).toEqual([
-      "main",
       "overlay-standings",
+      "widget-fuel",
     ]);
+  });
+
+  it("never locks the manager (main) window", () => {
+    const store = useWindowStore.getState();
+    // Explicit attempts are ignored…
+    store.setLock("main", true);
+    expect(useWindowStore.getState().isLocked("main")).toBe(false);
+    // …and the Ctrl+Shift+L hotkey is a no-op in the manager window.
+    store.toggleLock();
+    expect(useWindowStore.getState().isLocked("main")).toBe(false);
+    expect(broadcasts).toHaveLength(0);
   });
 
   it("adopts a lock change arriving from another window without echoing", () => {
@@ -81,27 +92,5 @@ describe("window locking", () => {
     expect(useWindowStore.getState().isLocked("widget-fuel")).toBe(true);
     // Applying a remote change must not re-broadcast (no feedback loop).
     expect(broadcasts).toHaveLength(0);
-  });
-
-  it("only lets the main window lock while it is an overlay", () => {
-    const store = useWindowStore.getState();
-    // Not in overlay mode → toggling the main window is a no-op.
-    store.toggleLock();
-    expect(useWindowStore.getState().isLocked("main")).toBe(false);
-
-    store.setOverlayMode(true);
-    useWindowStore.getState().toggleLock();
-    expect(useWindowStore.getState().isLocked("main")).toBe(true);
-  });
-
-  it("clears the main window lock when leaving overlay mode", () => {
-    const store = useWindowStore.getState();
-    store.setOverlayMode(true);
-    useWindowStore.getState().setLock("main", true);
-    expect(useWindowStore.getState().isLocked("main")).toBe(true);
-
-    useWindowStore.getState().setOverlayMode(false);
-    expect(useWindowStore.getState().isLocked("main")).toBe(false);
-    expect(isWindowLocked("main")).toBe(false);
   });
 });
