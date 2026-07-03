@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Compacted the Fuel & Strategy overlay so it fits without scrolling.** The
+  read-outs now flow into two columns based on the overlay's own width
+  (container query), padding/typography are tighter, and the "Pit strategies"
+  list is collapsed by default — so the calculator fits a small always-on-top
+  window while driving instead of requiring a scroll you can't do mid-race.
+
 ### Fixed
 
 - **Overlay windows no longer show a solid black background (real root cause).**
