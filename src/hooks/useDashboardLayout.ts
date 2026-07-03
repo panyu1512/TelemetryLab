@@ -94,7 +94,7 @@ function defaultItem(
  * geometry. Everything but `editMode` is persisted to localStorage so a layout
  * survives reloads.
  */
-export function useDashboardLayout() {
+export function useDashboardLayout(forcedActive?: string) {
   const [layout, setLayout] = useState<PersistedLayout>(load);
   const [editMode, setEditMode] = useState(false);
 
@@ -106,12 +106,18 @@ export function useDashboardLayout() {
     }
   }, [layout]);
 
-  const active = layout.active;
+  // A single-overlay window pins the active overlay via `forcedActive` and must
+  // not persist it (that would hijack the main window's selection).
+  const active = forcedActive ?? layout.active;
   const dashboard = getDashboard(active);
 
-  const setActive = useCallback((id: string) => {
-    setLayout((l) => ({ ...l, active: id }));
-  }, []);
+  const setActive = useCallback(
+    (id: string) => {
+      if (forcedActive) return;
+      setLayout((l) => ({ ...l, active: id }));
+    },
+    [forcedActive]
+  );
 
   const hiddenIds = useMemo(
     () => new Set(layout.hidden[active] ?? []),

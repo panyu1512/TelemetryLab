@@ -195,7 +195,6 @@ function SliderRow({
   onChange: (v: number) => void;
   accentColor: string;
 }) {
-  const pct = ((value - min) / (max - min)) * 100;
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
@@ -217,31 +216,17 @@ function SliderRow({
           </span>
         </div>
       </div>
-      <div className="relative h-1.5 rounded-full bg-surface-2">
-        {/* Filled track */}
-        <div
-          className="absolute inset-y-0 left-0 rounded-full transition-[width]"
-          style={{ width: `${pct}%`, background: accentColor }}
-        />
-        <input
-          type="range"
-          min={min}
-          max={max}
-          value={value}
-          onChange={(e) => onChange(Number(e.target.value))}
-          className="absolute inset-0 h-full w-full cursor-pointer opacity-0"
-        />
-        {/* Thumb */}
-        <div
-          className="pointer-events-none absolute top-1/2 -translate-x-1/2 -translate-y-1/2"
-          style={{ left: `${pct}%` }}
-        >
-          <div
-            className="size-3 rounded-full border-2 border-bg shadow"
-            style={{ background: accentColor }}
-          />
-        </div>
-      </div>
+      {/* A plain native slider: the browser draws a proper filled track + a
+          clearly-visible handle, themed via `accent-color`. */}
+      <input
+        type="range"
+        min={min}
+        max={max}
+        value={value}
+        onChange={(e) => onChange(Number(e.target.value))}
+        style={{ accentColor }}
+        className="h-1.5 w-full cursor-pointer"
+      />
     </div>
   );
 }

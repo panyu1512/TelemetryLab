@@ -1,11 +1,10 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
-  "identifier": "default",
-  "description": "Default permissions for the main window.",
-  "windows": ["main"],
+  "identifier": "overlay-windows",
+  "description": "Permissions for per-overlay windows spawned via 'Open in new window' (labels overlay-*).",
+  "windows": ["overlay-*"],
   "permissions": [
     "core:default",
-    "core:webview:allow-create-webview-window",
     "core:window:allow-start-dragging",
     "core:window:allow-minimize",
     "core:window:allow-close",

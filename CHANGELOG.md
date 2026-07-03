@@ -42,6 +42,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
     a dynamically-updating burn rate, an empty tank ("pit immediately" alert),
     and a session reset (all samples cleared).
 
+- **Per-overlay windows** — "Open in new window" (Window tab) pops an overlay
+  out on its own via a new `?overlay=<id>` route that renders just that overlay
+  with no dock/manager/title-bar chrome. On the desktop build it spawns a real
+  always-on-top Tauri window (`src/lib/overlayWindows.ts` +
+  `capabilities/overlay.json`); in a browser it opens the same URL in a new tab.
+  Each window applies the overlay's own theme + appearance
+  (`src/components/OverlayWindow.tsx`).
+- **Working browser-source links** — the Browser Source tab now generates real,
+  copy-pasteable URLs from the address the app is actually served on (a
+  full-app link plus one per overlay), so "see everything in the browser" works
+  in any browser and as an OBS Browser Source. Replaces the previous URLs that
+  pointed at a local HTTP server that didn't exist.
+- **Global theme selector** in Global Settings, so the profile-wide default
+  theme can actually be set (previously only an unwired per-overlay picker
+  existed).
+
+### Fixed
+
+- **Theme switching did nothing.** The Appearance tab's theme picker set a
+  per-overlay `themeId` that was never applied to the DOM (the app only ever
+  applied the *global* theme, which no UI set). The active overlay's *effective*
+  theme (own override, else global) is now applied live, so both the per-overlay
+  picker and the new global selector take effect immediately.
+- **Appearance sliders looked broken.** The custom overlaid fill/thumb rendered
+  a barely-visible handle that read like a progress bar; replaced with clean
+  native range inputs themed via `accent-color`.
+
 ## [0.7.0] - 2026-07-02
 
 Overlay Manager & Configuration: a full-screen control panel that transforms the set of individual overlay screens into a cohesive, configurable application. Every overlay is now independently configurable for appearance, visibility, and streaming.

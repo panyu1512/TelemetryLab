@@ -54,12 +54,15 @@ export default function App() {
   }, [overlayMode, locked]);
 
   // ── Theme sync ───────────────────────────────────────────────────────────
-  // Re-apply global theme whenever it changes (the store applies it on mutation
-  // too, but this handles the first render after a HMR reload in dev).
+  // Apply the *active overlay's* effective theme: its own override if set,
+  // otherwise the profile's global theme. This is what makes both the
+  // per-overlay theme picker (Appearance tab) and the global theme selector
+  // take effect live.
+  const effectiveThemeId =
+    overlaySettings.appearance.themeId ?? configStore.globalSettings.themeId;
   useEffect(() => {
-    const { themeId } = configStore.globalSettings;
-    applyTheme(getTheme(themeId));
-  }, [configStore.globalSettings.themeId]);
+    applyTheme(getTheme(effectiveThemeId));
+  }, [effectiveThemeId]);
 
   // ── Tauri: init window bounds + Ctrl+Shift+L hotkey listener ────────────
   useEffect(() => {
