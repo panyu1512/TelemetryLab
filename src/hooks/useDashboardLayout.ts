@@ -89,14 +89,13 @@ function defaultItem(
 }
 
 /**
- * Owns the dashboard/overlay layout: which dashboard is active, whether we are
- * in edit mode, each widget's visibility, and the full drag/resize grid
- * geometry. Everything but `editMode` is persisted to localStorage so a layout
- * survives reloads.
+ * Owns the dashboard/overlay layout: which dashboard is active, each widget's
+ * visibility, and the full drag/resize grid geometry. Widgets are always
+ * directly draggable/resizable and every change is persisted to localStorage,
+ * so a layout survives reloads with no explicit "edit mode" to toggle.
  */
 export function useDashboardLayout(forcedActive?: string) {
   const [layout, setLayout] = useState<PersistedLayout>(load);
-  const [editMode, setEditMode] = useState(false);
 
   useEffect(() => {
     try {
@@ -196,8 +195,6 @@ export function useDashboardLayout(forcedActive?: string) {
     visibleWidgets,
     gridLayout,
     onLayoutChange,
-    editMode,
-    toggleEditMode: () => setEditMode((e) => !e),
     toggleWidget,
     resetDashboard,
   };
