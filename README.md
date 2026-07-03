@@ -169,27 +169,36 @@ npm run tauri build
 
 ---
 
-## Overlay editor & pop-out windows
+## Overlay Manager
 
-The **Overlay Manager** is a dedicated editor: a sidebar lists every overlay,
-selecting one opens its configuration in place (Appearance / Visibility /
-Window), and a **live preview** reflects every change instantly — no save or
-apply step. If an overlay is popped out into its own window, edits propagate to
-that window in real time over a cross-window event bus.
+The main app window is a dedicated **Overlay Manager** — it configures,
+previews, opens, closes and tracks overlays, and never behaves as an overlay
+itself. The architecture is deliberately flat:
 
-Any overlay or widget can be popped out into its own frameless, always-on-top
-desktop window from the **Window** tab ("Open in new window"). Each window
-remembers its own position, size and lock state, and is restored exactly on the
-next launch. Internally a single view is selected with a URL param
-(`?overlay=<id>` / `?widget=<id>`); a hash form (`#overlay=<id>` / `#/<id>`) is
-also accepted. During `npm run dev` these open as browser tabs for convenience.
+```
+Overlay Manager (main window) → individual overlay windows
+```
+
+A sidebar lists every overlay; selecting one shows its **entire** configuration
+inline on one page (Appearance / Visibility / Window) with a **live preview**
+that reflects every change instantly — no save or apply step. Each overlay is
+**opened and closed directly from the manager** into its own frameless,
+always-on-top window; the manager tracks which overlays are open, and edits
+propagate to an open overlay window in real time over a cross-window event bus.
+
+Each overlay window remembers its own position, size and lock state and is
+restored exactly on the next launch (closing the manager closes every overlay
+window; nothing is orphaned). Internally a single view is selected with a URL
+param (`?overlay=<id>` / `?widget=<id>`); a hash form (`#overlay=<id>` /
+`#/<id>`) is also accepted. During `npm run dev` these open as browser tabs.
 
 ### Locking
 
-Any window — the main window or any pop-out — can be **locked**: it becomes
-click-through (all mouse input passes to iRacing) and immovable. Lock state is
-persisted per window and propagates to open windows immediately. Press
-**Ctrl+Shift+L** to toggle the focused window.
+Any overlay window can be **locked**: it becomes click-through (all mouse input
+passes to iRacing) and immovable. Lock state is persisted per window and
+propagates to the open window immediately. Press **Ctrl+Shift+L** to toggle the
+focused overlay window. (The manager window is never an overlay and is never
+locked.)
 
 ---
 

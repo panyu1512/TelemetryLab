@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from "react";
 import {
-  X,
   Settings,
   Bug,
   Plus,
@@ -10,6 +9,8 @@ import {
   Trash2,
   FileDown,
   Check,
+  AppWindow,
+  PanelTopClose,
 } from "lucide-react";
 import {
   DASHBOARDS,
@@ -20,6 +21,7 @@ import {
   useOverlayConfigStore,
   type Profile,
 } from "../../stores/useOverlayConfigStore";
+import { useActiveOverlaysStore } from "../../stores/useActiveOverlaysStore";
 import { useBridgeStore } from "../../stores/useBridgeStore";
 import { AppearancePanel } from "./AppearancePanel";
 import { VisibilityPanel } from "./VisibilityPanel";
@@ -35,21 +37,18 @@ type SidebarItem =
   | { kind: "global" }
   | { kind: "debug" };
 
-// ── ManagerWindow ──────────────────────────────────────────────────────────────
-
-interface ManagerWindowProps {
-  onClose: () => void;
-  onActivateOverlay?: (overlayId: string) => void;
-}
+// ── OverlayManager ──────────────────────────────────────────────────────────────
 
 /**
- * The overlay configuration surface, laid out as a single full-window page
- * (not a modal): a left list of overlays + settings sections, and a main area
- * that shows the selected overlay's *entire* configuration inline on one
- * scrolling page — no dialogs, no tabs. This mirrors dedicated overlay editors
- * like Kapps, where everything for an overlay is set up in one place.
+ * The main window *is* the Overlay Manager — a dedicated surface for
+ * configuring, previewing, opening, closing and tracking overlay windows. It is
+ * not a modal and never behaves as an overlay itself.
+ *
+ * Layout: a left list of overlays + settings sections, and a main area that
+ * shows the selected overlay's *entire* configuration inline on one scrolling
+ * page — no dialogs, no tabs — with a live preview pinned alongside.
  */
-export function ManagerWindow({ onClose, onActivateOverlay }: ManagerWindowProps) {
+export function OverlayManager() {
   const setLastOverlay = useOverlayConfigStore((s) => s.setLastOverlay);
   // Reopen on the overlay the user last edited (persisted), falling back to the
   // first overlay if the stored id is unknown.
@@ -66,21 +65,12 @@ export function ManagerWindow({ onClose, onActivateOverlay }: ManagerWindowProps
     if (item.kind === "overlay") setLastOverlay(item.overlayId);
   };
 
-  // Close on Escape (App.tsx also handles this, but belt-and-suspenders)
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => {
-      if (e.key === "Escape") onClose();
-    };
-    window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [onClose]);
-
   return (
     <div
-      className="fixed inset-0 z-40 flex flex-col bg-bg"
+      className="flex min-h-0 flex-1 flex-col"
       style={{ animation: "manager-in 160ms ease-out" }}
     >
-      <ManagerHeader onClose={onClose} />
+      <ManagerHeader />
 
       {/* Body: sidebar + content */}
       <div className="flex min-h-0 flex-1">
@@ -91,10 +81,7 @@ export function ManagerWindow({ onClose, onActivateOverlay }: ManagerWindowProps
             <div className="flex min-h-0 flex-1">
               {/* One scrolling page with every setting for this overlay. */}
               <div className="min-h-0 flex-1 overflow-y-auto">
-                <OverlayConfigPage
-                  overlayId={selected.overlayId}
-                  onActivate={onActivateOverlay}
-                />
+                <OverlayConfigPage overlayId={selected.overlayId} />
               </div>
               {/* Live preview, pinned alongside. */}
               <div className="hidden w-80 flex-none border-l border-border bg-surface p-4 lg:block">
@@ -139,37 +126,65 @@ export function ManagerWindow({ onClose, onActivateOverlay }: ManagerWindowProps
  * a header (name + enable), then Appearance, Visibility and Window sections —
  * everything visible and editable without switching tabs or opening dialogs.
  */
-function OverlayConfigPage({
-  overlayId,
-  onActivate,
-}: {
-  overlayId: string;
-  onActivate?: (overlayId: string) => void;
-}) {
+function OverlayConfigPage({ overlayId }: { overlayId: string }) {
   const store = useOverlayConfigStore();
   const settings = store.getOverlaySettings(overlayId);
   const dashboard = getDashboard(overlayId);
   const Icon = dashboard.icon;
 
+  const isOpen = useActiveOverlaysStore((s) => s.isOverlayOpen(overlayId));
+  const openOverlay = useActiveOverlaysStore((s) => s.openOverlay);
+  const closeOverlay = useActiveOverlaysStore((s) => s.closeOverlay);
+
   return (
     <div className="mx-auto max-w-3xl space-y-8 p-6">
       {/* Page header */}
-      <div className="flex items-center gap-3">
+      <div className="flex flex-wrap items-center gap-3">
         <span className="grid size-9 place-items-center rounded-xl bg-accent/10 text-accent">
           <Icon className="size-5" />
         </span>
         <div className="min-w-0 flex-1">
-          <h1 className="truncate text-base font-semibold text-text">
-            {dashboard.label}
-          </h1>
+          <div className="flex items-center gap-2">
+            <h1 className="truncate text-base font-semibold text-text">
+              {dashboard.label}
+            </h1>
+            <span
+              className={[
+                "rounded px-1.5 py-0.5 text-[9px] uppercase tracking-wide",
+                isOpen ? "bg-accent/15 text-accent" : "bg-surface-2 text-muted",
+              ].join(" ")}
+            >
+              {isOpen ? "Open" : "Closed"}
+            </span>
+          </div>
           <p className="text-xs text-muted">
-            Appearance, visibility and window behaviour — all on one page.
+            Configure, preview and open this overlay — all on one page.
           </p>
         </div>
+
         <EnableToggle
           enabled={settings.enabled}
           onChange={(v) => store.setOverlayEnabled(overlayId, v)}
         />
+        {isOpen ? (
+          <button
+            type="button"
+            onClick={() => closeOverlay(overlayId)}
+            className="flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-xs font-medium text-text transition-colors hover:border-danger/50 hover:text-danger"
+          >
+            <PanelTopClose className="size-3.5" />
+            Close window
+          </button>
+        ) : (
+          <button
+            type="button"
+            onClick={() => openOverlay(overlayId, dashboard.label)}
+            className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-bg transition-opacity hover:opacity-90"
+          >
+            <AppWindow className="size-3.5" />
+            Open window
+          </button>
+        )}
       </div>
 
       <ConfigSection
@@ -188,9 +203,9 @@ function OverlayConfigPage({
 
       <ConfigSection
         title="Window & Locking"
-        description="Open this overlay in its own window and lock any window."
+        description="Position, size and click-through lock for this overlay's window."
       >
-        <WindowPanel overlayId={overlayId} onActivate={onActivate} />
+        <WindowPanel overlayId={overlayId} />
       </ConfigSection>
     </div>
   );
@@ -253,7 +268,7 @@ function EnableToggle({
 
 // ── ManagerHeader ─────────────────────────────────────────────────────────────
 
-function ManagerHeader({ onClose }: { onClose: () => void }) {
+function ManagerHeader() {
   return (
     <header className="flex h-12 flex-none items-center gap-4 border-b border-border px-4">
       <div className="flex items-center gap-2">
@@ -262,21 +277,12 @@ function ManagerHeader({ onClose }: { onClose: () => void }) {
         </span>
         <span className="text-muted/40">·</span>
         <span className="text-sm font-semibold text-text">
-          Overlay Editor
+          Overlay Manager
         </span>
       </div>
 
       <div className="ml-auto flex items-center gap-2">
         <ProfileSelector />
-        <button
-          type="button"
-          onClick={onClose}
-          title="Back to overlay (Esc)"
-          className="flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-xs font-medium text-text transition-colors hover:border-border-strong"
-        >
-          <X className="size-3.5" />
-          Done
-        </button>
       </div>
     </header>
   );
@@ -472,6 +478,10 @@ function Sidebar({
   onSelect: (item: SidebarItem) => void;
 }) {
   const store = useOverlayConfigStore();
+  const openWindows = useActiveOverlaysStore((s) => s.windows);
+  const openIds = new Set(
+    openWindows.filter((w) => w.kind === "overlay").map((w) => w.id)
+  );
 
   return (
     <aside className="flex w-52 flex-none flex-col border-r border-border bg-bg">
@@ -491,6 +501,7 @@ function Sidebar({
               dashboard={d}
               selected={isSelected}
               enabled={settings.enabled}
+              open={openIds.has(d.id)}
               onSelect={() => onSelect({ kind: "overlay", overlayId: d.id })}
               onToggleEnabled={() =>
                 store.setOverlayEnabled(d.id, !settings.enabled)
@@ -523,12 +534,14 @@ function OverlaySidebarItem({
   dashboard,
   selected,
   enabled,
+  open,
   onSelect,
   onToggleEnabled,
 }: {
   dashboard: DashboardDef;
   selected: boolean;
   enabled: boolean;
+  open: boolean;
   onSelect: () => void;
   onToggleEnabled: () => void;
 }) {
@@ -549,7 +562,16 @@ function OverlaySidebarItem({
         className="flex min-w-0 flex-1 items-center gap-2 text-left"
         onClick={onSelect}
       >
-        <Icon className="size-3.5 shrink-0" />
+        <span className="relative shrink-0">
+          <Icon className="size-3.5" />
+          {/* Active-window indicator dot. */}
+          {open && (
+            <span
+              className="absolute -right-1 -top-1 size-1.5 rounded-full bg-accent ring-2 ring-bg"
+              title="Window open"
+            />
+          )}
+        </span>
         <span className="truncate text-xs font-medium">{dashboard.label}</span>
       </button>
 
@@ -615,6 +637,9 @@ function NavItem({
 
 function ManagerFooter() {
   const { socketConnected, iracingActive } = useBridgeStore();
+  const activeCount = useActiveOverlaysStore(
+    (s) => s.windows.filter((w) => w.kind === "overlay").length
+  );
 
   let label: string;
   let color: string;
@@ -639,7 +664,9 @@ function ManagerFooter() {
         {label}
       </span>
       <span className="ml-auto text-[11px] text-muted">
-        Press Esc to close
+        {activeCount === 0
+          ? "No overlays open"
+          : `${activeCount} overlay${activeCount === 1 ? "" : "s"} open`}
       </span>
     </footer>
   );

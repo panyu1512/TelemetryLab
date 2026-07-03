@@ -65,7 +65,7 @@ export function DashboardGrid({ layout, data }: DashboardGridProps) {
     content = (
       <Placeholder
         title="No widgets visible"
-        body="Open the Widgets panel in the dock to turn some back on."
+        body="Turn some widgets back on from the Overlay Manager."
         icon={<Eye className="size-6 text-muted" />}
       />
     );

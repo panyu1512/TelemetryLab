@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The main window is now a dedicated Overlay Manager.** It configures,
+  previews, opens, closes and tracks overlays and never behaves as an overlay or
+  floating controller. Overlays are opened directly from the manager into their
+  own windows — the architecture is a flat *Overlay Manager → overlay windows*
+  with no intermediate controller. The manager is the single source of truth for
+  which overlays are active and for their persisted window state.
+
+### Removed
+
+- **The floating overlay dock** and the "main window as overlay" mode
+  (transparent/always-on-top toggle + its lock). The main window is a normal
+  window; only overlay windows can be locked (click-through). All related UI,
+  state and the dock component were removed.
+
 ### Added
 
 - **Dedicated overlay editor with a live preview.** The Overlay Manager sidebar

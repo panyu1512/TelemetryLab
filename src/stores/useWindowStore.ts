@@ -1,20 +1,16 @@
 /**
- * Window store — overlay mode + generic, per-window locking.
+ * Window store — generic, per-window locking for overlay/widget windows.
  *
- * There is exactly one lock concept in the app and it works identically for the
- * `main` window and every popped-out `overlay-*` / `widget-*` window:
+ * The main window is a dedicated Overlay Manager: it is never an overlay and is
+ * never locked. Only popped-out `overlay-*` / `widget-*` windows can be locked:
  *
  *   - **locked** = click-through. Pointer events pass straight to the game, and
  *     the window can't be moved or accidentally modified.
  *
  * Lock state is the single source of truth in {@link windowState} (persisted per
- * label) mirrored reactively here as `locks`. Changing a lock — for *this*
- * window or any other — persists it and broadcasts over {@link windowBus}; the
- * target window applies the OS-level click-through to itself and the manager UI
- * updates from the same event. No polling, no duplicated lock logic per window.
- *
- * `overlayMode` (transparent, always-on-top) is a property of the *main* window
- * only; spawned overlay/widget windows are inherently transparent overlays.
+ * label) mirrored reactively here as `locks`. Changing a lock persists it and
+ * broadcasts over {@link windowBus}; the target window applies the OS-level
+ * click-through to itself. No polling, no duplicated lock logic per window.
  */
 
 import { create } from "zustand";
@@ -42,64 +38,36 @@ async function getWin() {
   return getCurrentWindow();
 }
 
-// ── overlay-mode persistence (main window) ────────────────────────────────────
-
-const OVERLAY_KEY = "telemetrylab.overlay.v1";
-
-function loadOverlayMode(): boolean {
-  try {
-    const raw = localStorage.getItem(OVERLAY_KEY);
-    if (!raw) return false;
-    return Boolean((JSON.parse(raw) as { overlayMode?: boolean }).overlayMode);
-  } catch {
-    return false;
-  }
-}
-
-function saveOverlayMode(overlayMode: boolean): void {
-  try {
-    localStorage.setItem(OVERLAY_KEY, JSON.stringify({ overlayMode }));
-  } catch {}
-}
-
 // ── CSS class helpers (current window) ────────────────────────────────────────
 
-function syncClasses(overlayMode: boolean, locked: boolean): void {
+function syncClasses(locked: boolean): void {
   if (typeof document === "undefined") return;
   const html = document.documentElement;
-  // Spawned overlay/widget windows are always overlay-mode; main follows toggle.
-  const overlay = IS_MAIN ? overlayMode : true;
-  html.classList.toggle("overlay-mode", overlay);
+  // The main window (the manager) is never an overlay; spawned windows always are.
+  html.classList.toggle("overlay-mode", !IS_MAIN);
   html.classList.toggle("overlay-locked", locked);
 }
 
 /**
- * Apply click-through to *this* window. Locking the main window only makes sense
- * while it's an overlay; spawned windows are always overlays so they always may.
+ * Apply click-through to *this* window. Only spawned overlay/widget windows are
+ * ever locked; the main manager window never becomes click-through.
  */
-async function applyCurrentWindowLock(
-  locked: boolean,
-  overlayMode: boolean
-): Promise<void> {
+async function applyCurrentWindowLock(locked: boolean): Promise<void> {
+  if (IS_MAIN) return;
   const w = await getWin();
   if (!w) return;
-  const canClickThrough = IS_MAIN ? overlayMode : true;
-  await w.setIgnoreCursorEvents(canClickThrough ? locked : false);
+  await w.setIgnoreCursorEvents(locked);
 }
 
 // ── store ─────────────────────────────────────────────────────────────────────
 
 interface WindowState {
-  /** Main window transparent/always-on-top overlay mode. */
-  overlayMode: boolean;
   /** Reactive mirror of each window's persisted lock, keyed by label. */
   locks: Record<string, boolean>;
 
-  /** Toggle the main window's overlay (transparent, always-on-top) mode. */
-  setOverlayMode: (enabled: boolean) => void;
   /** Lock or unlock any window by label. Propagates to that window at once. */
   setLock: (label: string, locked: boolean) => void;
-  /** Toggle the current window's lock (Ctrl+Shift+L). */
+  /** Toggle the current window's lock (Ctrl+Shift+L). No-op in the manager. */
   toggleLock: () => void;
   /** Current lock state for a label (persisted fallback if not yet mirrored). */
   isLocked: (label: string) => boolean;
@@ -108,40 +76,24 @@ interface WindowState {
 const initialLocked = isWindowLocked(WINDOW_LABEL);
 
 export const useWindowStore = create<WindowState>()((set, get) => ({
-  overlayMode: IS_MAIN ? loadOverlayMode() : false,
   locks: { [WINDOW_LABEL]: initialLocked },
 
-  setOverlayMode(enabled) {
-    // Leaving overlay mode always clears the lock so the app stays usable.
-    const locked = enabled ? get().isLocked(WINDOW_LABEL) : false;
-    set((s) => ({
-      overlayMode: enabled,
-      locks: { ...s.locks, [WINDOW_LABEL]: locked },
-    }));
-    saveOverlayMode(enabled);
-    if (!enabled) saveWindowLock(WINDOW_LABEL, false);
-    syncClasses(enabled, locked);
-    getWin().then((w) => {
-      if (!w) return;
-      w.setAlwaysOnTop(enabled);
-      if (!enabled) w.setIgnoreCursorEvents(false);
-    });
-  },
-
   setLock(label, locked) {
+    // The manager window is never locked.
+    if (label === "main") return;
     set((s) => ({ locks: { ...s.locks, [label]: locked } }));
     saveWindowLock(label, locked);
     broadcast("window:lock", { label, locked });
     if (label === WINDOW_LABEL) {
-      syncClasses(get().overlayMode, locked);
-      applyCurrentWindowLock(locked, get().overlayMode);
+      syncClasses(locked);
+      applyCurrentWindowLock(locked);
     }
   },
 
   toggleLock() {
-    const { overlayMode, isLocked, setLock } = get();
-    // The main window can only be locked while it is acting as an overlay.
-    if (IS_MAIN && !overlayMode) return;
+    // Only spawned overlay/widget windows lock; the manager never does.
+    if (IS_MAIN) return;
+    const { isLocked, setLock } = get();
     setLock(WINDOW_LABEL, !isLocked(WINDOW_LABEL));
   },
 
@@ -162,27 +114,23 @@ subscribe("window:lock", (payload) => {
     locked?: boolean;
   };
   if (!label || typeof locked !== "boolean") return;
-  const store = useWindowStore;
-  store.setState((s) => ({ locks: { ...s.locks, [label]: locked } }));
+  useWindowStore.setState((s) => ({ locks: { ...s.locks, [label]: locked } }));
   if (label === WINDOW_LABEL) {
-    const { overlayMode } = store.getState();
-    syncClasses(overlayMode, locked);
-    applyCurrentWindowLock(locked, overlayMode);
+    syncClasses(locked);
+    applyCurrentWindowLock(locked);
   }
 });
 
 // ── window lifecycle: bounds restore/persist + lock apply + hotkey ────────────
 
 /**
- * Restore this window's saved position/size, re-apply persisted overlay/lock
- * state, then keep bounds in sync on every move/resize. Also wires the
- * Ctrl+Shift+L lock hotkey to the *focused* window. Idempotent-ish: safe to call
- * once per window on mount. No-op outside Tauri except for class syncing.
+ * Restore this window's saved position/size, re-apply persisted lock state, then
+ * keep bounds in sync on every move/resize. Also wires the Ctrl+Shift+L lock
+ * hotkey to the *focused* window. Safe to call once per window on mount.
  */
 export async function initWindow(): Promise<void> {
-  const { overlayMode } = useWindowStore.getState();
   const locked = isWindowLocked(WINDOW_LABEL);
-  syncClasses(overlayMode, locked);
+  syncClasses(locked);
 
   if (!isTauri) return;
 
@@ -200,9 +148,8 @@ export async function initWindow(): Promise<void> {
     } catch {}
   }
 
-  // Re-apply overlay + lock state for this window.
-  if (IS_MAIN && overlayMode) await w.setAlwaysOnTop(true);
-  if (locked) await applyCurrentWindowLock(true, overlayMode);
+  // Re-apply this window's lock (spawned overlay/widget windows only).
+  if (locked) await applyCurrentWindowLock(true);
 
   const saveBounds = async () => {
     try {
@@ -228,5 +175,5 @@ export async function initWindow(): Promise<void> {
 
 // Apply initial classes synchronously on module load (before React renders).
 if (typeof window !== "undefined") {
-  syncClasses(useWindowStore.getState().overlayMode, initialLocked);
+  syncClasses(initialLocked);
 }

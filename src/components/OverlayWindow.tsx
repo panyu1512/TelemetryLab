@@ -22,6 +22,7 @@ import { DashboardGrid } from "./layout/DashboardGrid";
 import { OverlayChrome } from "./OverlayChrome";
 import { getDashboard } from "../dashboards/registry";
 import { useOverlayConfigStore } from "../stores/useOverlayConfigStore";
+import { useSessionStore } from "../stores/useSessionStore";
 import { getTheme, applyTheme } from "../themes";
 import { initWindow } from "../stores/useWindowStore";
 
@@ -34,6 +35,19 @@ export function OverlayWindow({ id }: { id: string }) {
   const config = useOverlayConfigStore();
   const settings = config.getOverlaySettings(id);
   const dashboard = getDashboard(id);
+
+  // Conditional visibility: hide this overlay's content when it's disabled or
+  // when the session matches a "hide when in" rule. The window stays open (so it
+  // still restores), but paints nothing while hidden.
+  const session = useSessionStore((s) => s.session);
+  const isReplay =
+    session?.sessionStateLabel === "Replay" ||
+    (session?.flags ?? []).includes("replay");
+  const isLoneQualify = (session?.flags ?? []).includes("lone_qualify");
+  const hidden =
+    !settings.enabled ||
+    (settings.visibility.hideOnReplay && isReplay) ||
+    (settings.visibility.hideOnLoneQualify && isLoneQualify);
 
   // Transparent, frosted background so the game (or an OBS capture) shows
   // through — a single-overlay render is always "overlay mode". Also remember
@@ -69,7 +83,10 @@ export function OverlayWindow({ id }: { id: string }) {
       <OverlayChrome kind="overlay" id={id} />
 
       <main
-        className="min-h-0 flex-1 overflow-auto p-2 transition-[filter,opacity]"
+        className={[
+          "min-h-0 flex-1 overflow-auto p-2 transition-[filter,opacity]",
+          hidden ? "invisible" : "",
+        ].join(" ")}
         style={style}
       >
         <DashboardGrid layout={layout} data={data} />

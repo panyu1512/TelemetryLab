@@ -12,6 +12,7 @@
  */
 
 import { getWindowBounds } from "./windowState";
+import { broadcast } from "./windowBus";
 
 const isTauri =
   typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
@@ -142,6 +143,9 @@ function saveRemembered(list: RememberedWindow[]): void {
   } catch {
     // Storage may be unavailable (private mode); restore just won't work.
   }
+  // The open-window set is shared state; tell other windows (the manager) it
+  // changed so their active-overlay view stays in sync.
+  broadcast("windows:changed", null);
 }
 
 /** Record a window as open (deduped by kind+id). */
@@ -207,7 +211,9 @@ async function openWindow(
   }
 
   // Browser / dev fallback: a new tab pointed at the single-view URL.
-  window.open(relativeUrl(param, id), `${kind}-${id}`, "noopener");
+  if (typeof window !== "undefined") {
+    window.open(relativeUrl(param, id), `${kind}-${id}`, "noopener");
+  }
 }
 
 /** Open a whole overlay in its own always-on-top window (or a browser tab). */
@@ -229,6 +235,27 @@ export async function restoreOpenWindows(): Promise<void> {
   for (const w of getRememberedWindows()) {
     if (w.kind === "widget") await openWidgetWindow(w.id, w.label);
     else await openOverlayWindow(w.id, w.label);
+  }
+}
+
+/**
+ * Close a specific overlay/widget window *from another window* (the manager),
+ * by label, and forget it so it won't restore. Programmatic close, so the
+ * target window's own close handler never runs.
+ */
+export async function closeOverlayWindow(
+  kind: WindowKind,
+  id: string
+): Promise<void> {
+  forgetWindow(kind, id);
+  if (!isTauri) return;
+  try {
+    const { WebviewWindow } = await import("@tauri-apps/api/webviewWindow");
+    const w = await WebviewWindow.getByLabel(`${kind}-${id}`);
+    await w?.close();
+  } catch (err) {
+    // eslint-disable-next-line no-console
+    console.error(`[overlay] failed to close ${kind}-${id}:`, err);
   }
 }
 
