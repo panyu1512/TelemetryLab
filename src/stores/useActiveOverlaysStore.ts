@@ -18,6 +18,7 @@ import {
   closeOverlayWindow,
   getRememberedWindows,
   openOverlayWindow,
+  openWidgetWindow,
   type RememberedWindow,
 } from "../lib/overlayWindows";
 
@@ -26,10 +27,16 @@ interface ActiveOverlaysState {
   windows: RememberedWindow[];
   /** Whether an overlay (by id) currently has an open window. */
   isOverlayOpen: (id: string) => boolean;
+  /** Whether a single widget (by id) currently has an open window. */
+  isWidgetOpen: (id: string) => boolean;
   /** Open an overlay in its own window and track it as active. */
   openOverlay: (id: string, label: string) => void;
   /** Close an overlay's window and stop tracking it. */
   closeOverlay: (id: string) => void;
+  /** Open a single telemetry widget in its own window and track it. */
+  openWidget: (id: string, label: string) => void;
+  /** Close a widget's window and stop tracking it. */
+  closeWidget: (id: string) => void;
   /** Re-read the persisted set (after a cross-window change). */
   refresh: () => void;
 }
@@ -41,6 +48,10 @@ export const useActiveOverlaysStore = create<ActiveOverlaysState>()((set, get) =
     return get().windows.some((w) => w.kind === "overlay" && w.id === id);
   },
 
+  isWidgetOpen(id) {
+    return get().windows.some((w) => w.kind === "widget" && w.id === id);
+  },
+
   openOverlay(id, label) {
     // openOverlayWindow persists via saveRemembered → broadcasts windows:changed;
     // refresh immediately for snappy local feedback too.
@@ -50,6 +61,16 @@ export const useActiveOverlaysStore = create<ActiveOverlaysState>()((set, get) =
 
   closeOverlay(id) {
     closeOverlayWindow("overlay", id);
+    set({ windows: getRememberedWindows() });
+  },
+
+  openWidget(id, label) {
+    openWidgetWindow(id, label);
+    set({ windows: getRememberedWindows() });
+  },
+
+  closeWidget(id) {
+    closeOverlayWindow("widget", id);
     set({ windows: getRememberedWindows() });
   },
 

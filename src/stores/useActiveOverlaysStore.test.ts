@@ -63,6 +63,22 @@ describe("active overlays (manager as single source of truth)", () => {
     expect(store().isOverlayOpen("standings")).toBe(false);
   });
 
+  it("opens and closes a single widget independently of overlays", () => {
+    store().openWidget("fuel", "Fuel");
+    expect(store().isWidgetOpen("fuel")).toBe(true);
+    // A widget and an overlay with the same id don't collide (different kinds).
+    expect(store().isOverlayOpen("fuel")).toBe(false);
+
+    store().openWidget("cluster", "Speed · RPM · Gear");
+    expect(store().isWidgetOpen("cluster")).toBe(true);
+    // Opening one widget doesn't open the others.
+    expect(store().isWidgetOpen("timing")).toBe(false);
+
+    store().closeWidget("fuel");
+    expect(store().isWidgetOpen("fuel")).toBe(false);
+    expect(store().isWidgetOpen("cluster")).toBe(true);
+  });
+
   it("refreshes from persistence when another window changes the open set", () => {
     expect(store().isOverlayOpen("standings")).toBe(false);
     // Another window (e.g. restore-on-launch, or an overlay closing itself)

@@ -16,6 +16,7 @@ import {
   DASHBOARDS,
   getDashboard,
   type DashboardDef,
+  type WidgetDef,
 } from "../../dashboards/registry";
 import {
   useOverlayConfigStore,
@@ -187,6 +188,19 @@ function OverlayConfigPage({ overlayId }: { overlayId: string }) {
         )}
       </div>
 
+      {dashboard.widgets.length > 0 && (
+        <ConfigSection
+          title="Widgets"
+          description="Pop out individual widgets into their own windows — one, several, or all."
+        >
+          <div className="space-y-2">
+            {dashboard.widgets.map((w) => (
+              <WidgetRow key={w.id} widget={w} />
+            ))}
+          </div>
+        </ConfigSection>
+      )}
+
       <ConfigSection
         title="Appearance"
         description="Theme, saturation, brightness and opacity for this overlay."
@@ -207,6 +221,53 @@ function OverlayConfigPage({ overlayId }: { overlayId: string }) {
       >
         <WindowPanel overlayId={overlayId} />
       </ConfigSection>
+    </div>
+  );
+}
+
+/** One widget row with a toggle that opens/closes its own window. */
+function WidgetRow({ widget }: { widget: WidgetDef }) {
+  const open = useActiveOverlaysStore((s) => s.isWidgetOpen(widget.id));
+  const openWidget = useActiveOverlaysStore((s) => s.openWidget);
+  const closeWidget = useActiveOverlaysStore((s) => s.closeWidget);
+  const Icon = widget.icon;
+
+  return (
+    <div
+      className={[
+        "flex items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors",
+        open ? "border-accent/40 bg-accent/5" : "border-border bg-surface-2",
+      ].join(" ")}
+    >
+      <Icon
+        className={["size-4 shrink-0", open ? "text-accent" : "text-muted"].join(" ")}
+      />
+      <div className="min-w-0 flex-1">
+        <div className="text-xs font-medium text-text">{widget.title}</div>
+        <div className="mt-0.5 truncate text-[11px] text-muted">
+          {widget.description}
+        </div>
+      </div>
+      <button
+        type="button"
+        role="switch"
+        aria-checked={open}
+        title={open ? "Close widget window" : "Open widget window"}
+        onClick={() =>
+          open ? closeWidget(widget.id) : openWidget(widget.id, widget.title)
+        }
+        className={[
+          "relative h-5 w-9 shrink-0 rounded-full transition-colors",
+          open ? "bg-accent" : "bg-surface border border-border-strong",
+        ].join(" ")}
+      >
+        <span
+          className={[
+            "absolute top-0.5 size-4 rounded-full bg-bg transition-[left]",
+            open ? "left-[18px]" : "left-0.5",
+          ].join(" ")}
+        />
+      </button>
     </div>
   );
 }
