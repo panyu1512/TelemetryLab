@@ -18,7 +18,7 @@ from __future__ import annotations
 
 import asyncio
 import math
-from typing import Any, Optional
+from typing import Any
 
 import irsdk
 from websockets.asyncio.server import serve
@@ -71,7 +71,7 @@ class IrsdkSource:
         }
 
     # --- session ------------------------------------------------------------
-    def read_session_raw(self) -> Optional[dict[str, Any]]:
+    def read_session_raw(self) -> dict[str, Any] | None:
         session_info = self._get("SessionInfo") or {}
         return {
             "weekend_info": self._get("WeekendInfo") or {},
@@ -90,7 +90,7 @@ class IrsdkSource:
         }
 
     # --- player telemetry (60 Hz channel) -----------------------------------
-    def read_player_frame(self) -> Optional[dict[str, Any]]:
+    def read_player_frame(self) -> dict[str, Any] | None:
         self.ir.freeze_var_buffer_latest()
         speed = self._get("Speed", 0.0) or 0.0
         steer = self._get("SteeringWheelAngle", 0.0) or 0.0

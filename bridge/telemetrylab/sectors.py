@@ -37,8 +37,8 @@ best lap is simply the sum of a car's personal best sectors.
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
-from typing import Any, Optional
+from dataclasses import dataclass
+from typing import Any
 
 # A sector split more than this many seconds over the car's own best is treated
 # as "much slower" (red) rather than merely "slower" (yellow) — usually a lift,
@@ -86,8 +86,8 @@ class SectorSplit:
     """A single completed sector time + how it grades against the bests."""
 
     index: int
-    last_time: Optional[float] = None
-    best_time: Optional[float] = None
+    last_time: float | None = None
+    best_time: float | None = None
     status: str = "none"
 
     def to_dict(self) -> dict[str, Any]:
@@ -123,14 +123,14 @@ class CarSectorTracker:
     def __init__(self, starts: list[float]) -> None:
         self._starts = starts
         self._n = len(starts)
-        self._cur_sector: Optional[int] = None
-        self._enter_ms: Optional[int] = None
+        self._cur_sector: int | None = None
+        self._enter_ms: int | None = None
         # Whether the in-flight sector was entered at its *start* boundary. The
         # sector a car is first sighted in was joined mid-way, so its time would
         # be a partial — we only record sectors that were entered cleanly.
         self._clean: bool = False
-        self._last_pct: Optional[float] = None
-        self._last_lap: Optional[int] = None
+        self._last_pct: float | None = None
+        self._last_lap: int | None = None
         #: personal best time per sector index.
         self.best: dict[int, float] = {}
         #: last completed time per sector index.
@@ -144,10 +144,10 @@ class CarSectorTracker:
 
     def update(
         self,
-        pct: Optional[float],
-        lap: Optional[int],
+        pct: float | None,
+        lap: int | None,
         ts_ms: int,
-    ) -> Optional[int]:
+    ) -> int | None:
         """Feed one tick. Returns the index of a sector just *completed*, if any.
 
         The completing car's new personal/overall bests are the caller's job to
@@ -190,11 +190,7 @@ class CarSectorTracker:
         completed = prev_sector
         expected_next = (prev_sector + 1) % self._n
         advanced_one = sector == expected_next
-        split = (
-            (ts_ms - self._enter_ms) / 1000.0
-            if advanced_one and self._clean
-            else None
-        )
+        split = (ts_ms - self._enter_ms) / 1000.0 if advanced_one and self._clean else None
 
         # The new sector is entered cleanly iff we crossed exactly its start.
         self._reset_flight(sector, ts_ms, clean=advanced_one)
@@ -206,7 +202,7 @@ class CarSectorTracker:
             self.best[completed] = split
         return completed
 
-    def theoretical_best(self) -> Optional[float]:
+    def theoretical_best(self) -> float | None:
         """Sum of personal-best sectors — the ideal lap, if it exists in full."""
         if len(self.best) < self._n:
             return None
@@ -227,8 +223,8 @@ class FieldSectorState:
         #: fastest time seen for each sector index across the whole field.
         self.overall_best: dict[int, float] = {}
         #: fastest full lap seen across the field (session best lap).
-        self.overall_best_lap: Optional[float] = None
-        self.overall_best_lap_car: Optional[int] = None
+        self.overall_best_lap: float | None = None
+        self.overall_best_lap_car: int | None = None
 
     @property
     def sector_count(self) -> int:
@@ -253,9 +249,9 @@ class FieldSectorState:
     def observe(
         self,
         car_idx: int,
-        pct: Optional[float],
-        lap: Optional[int],
-        last_lap_time: Optional[float],
+        pct: float | None,
+        lap: int | None,
+        last_lap_time: float | None,
         ts_ms: int,
     ) -> None:
         """Fold one car's tick into the field sector state."""
@@ -282,23 +278,25 @@ class FieldSectorState:
             last = tracker.last.get(i)
             best = tracker.best.get(i)
             out.append(
-                SectorSplit(index=i, last_time=last, best_time=best, status=self._grade(i, last, best))
+                SectorSplit(
+                    index=i, last_time=last, best_time=best, status=self._grade(i, last, best)
+                )
             )
         return out
 
-    def theoretical_best_for(self, car_idx: int) -> Optional[float]:
+    def theoretical_best_for(self, car_idx: int) -> float | None:
         tracker = self._trackers.get(car_idx)
         return tracker.theoretical_best() if tracker else None
 
-    def _grade(self, index: int, last: Optional[float], best: Optional[float]) -> str:
+    def _grade(self, index: int, last: float | None, best: float | None) -> str:
         """Classify a sector's last time for purple/green/yellow/red colouring."""
         if last is None:
             return "none"
         overall = self.overall_best.get(index)
         if overall is not None and last <= overall + 1e-4:
-            return "overall_best"        # purple — fastest in the field
+            return "overall_best"  # purple — fastest in the field
         if best is not None and last <= best + 1e-4:
-            return "personal_best"       # green — this car's own best
+            return "personal_best"  # green — this car's own best
         if best is not None and last - best > MUCH_SLOWER_THRESHOLD:
-            return "much_slower"         # red — big time loss
-        return "slower"                  # yellow — off personal best
+            return "much_slower"  # red — big time loss
+        return "slower"  # yellow — off personal best

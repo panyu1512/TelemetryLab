@@ -18,7 +18,7 @@ Design notes
 from __future__ import annotations
 
 from dataclasses import dataclass, field
-from typing import Any, Optional
+from typing import Any
 
 
 # ---------------------------------------------------------------------------
@@ -32,7 +32,7 @@ class DriverEntry:
     user_id: int
     user_name: str
     team_name: str
-    car_number: str          # kept as string: iRacing numbers can be "01", "007"
+    car_number: str  # kept as string: iRacing numbers can be "01", "007"
     car_class_id: int
     car_class_short_name: str
     car_path: str
@@ -40,13 +40,13 @@ class DriverEntry:
     car_model: str
     car_screen_name: str
     i_rating: int
-    license_level: int       # irsdk LicLevel (1..20-ish; maps to R/D/C/B/A/Pro)
-    license_string: str      # e.g. "A 3.45"
-    license_group: str       # e.g. "A", "B", ... derived from license_string
-    license_category: str    # session discipline (road/oval/...), see SessionInfo
-    safety_rating: float     # LicSubLevel / 100, e.g. 3.45
-    license_color: str       # hex "#rrggbb" for badge tinting
-    car_class_color: str     # hex "#rrggbb" for multi-class grouping
+    license_level: int  # irsdk LicLevel (1..20-ish; maps to R/D/C/B/A/Pro)
+    license_string: str  # e.g. "A 3.45"
+    license_group: str  # e.g. "A", "B", ... derived from license_string
+    license_category: str  # session discipline (road/oval/...), see SessionInfo
+    safety_rating: float  # LicSubLevel / 100, e.g. 3.45
+    license_color: str  # hex "#rrggbb" for badge tinting
+    car_class_color: str  # hex "#rrggbb" for multi-class grouping
     club_name: str
     division: int
     incident_count: int
@@ -96,8 +96,8 @@ class TrackInfo:
     config: str
     city: str
     country: str
-    length_km: Optional[float]
-    num_turns: Optional[int]
+    length_km: float | None
+    num_turns: int | None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -113,10 +113,10 @@ class TrackInfo:
 
 @dataclass(slots=True)
 class WeatherInfo:
-    air_temp: Optional[float]
-    track_temp: Optional[float]
-    skies: Optional[str]
-    track_wetness: Optional[str]
+    air_temp: float | None
+    track_temp: float | None
+    skies: str | None
+    track_wetness: str | None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -134,7 +134,7 @@ class ClassEntry:
     car_class_id: int
     short_name: str
     color: str
-    sof: int          # strength of field for this class
+    sof: int  # strength of field for this class
     car_count: int
 
     def to_dict(self) -> dict[str, Any]:
@@ -151,29 +151,29 @@ class ClassEntry:
 class SessionInfo:
     """A snapshot of the whole session: what/where/when + the roster."""
 
-    session_id: str            # stable-ish id derived from subsession + track
-    session_num: int           # index of the current session in the weekend
-    session_type: str          # "Practice" | "Qualify" | "Race" | ...
+    session_id: str  # stable-ish id derived from subsession + track
+    session_num: int  # index of the current session in the weekend
+    session_type: str  # "Practice" | "Qualify" | "Race" | ...
     session_name: str
     session_state: int
     session_state_label: str
-    session_time_remain: Optional[float]   # seconds; None = unlimited
-    session_laps_remain: Optional[int]     # None = unlimited / timed
-    session_time_total: Optional[float]
-    session_laps_total: Optional[int]
+    session_time_remain: float | None  # seconds; None = unlimited
+    session_laps_remain: int | None  # None = unlimited / timed
+    session_time_total: float | None
+    session_laps_total: int | None
     is_timed: bool
     flags: list[str]
     flags_raw: int
-    category: str              # road / oval / dirt_road / dirt_oval
-    sof: int                   # overall SOF across the field
+    category: str  # road / oval / dirt_road / dirt_oval
+    sof: int  # overall SOF across the field
     track: TrackInfo
     weather: WeatherInfo
     classes: list[ClassEntry]
     drivers: list[DriverEntry]
-    driver_car_idx: int        # the player's carIdx (PlayerCarIdx)
+    driver_car_idx: int  # the player's carIdx (PlayerCarIdx)
     # Self-calibration data that used to be guessed by the frontend:
-    car_redline_rpm: Optional[float]
-    car_est_lap_time: Optional[float]
+    car_redline_rpm: float | None
+    car_est_lap_time: float | None
     # Sector boundaries as lap-distance fractions (from SplitTimeInfo). Static per
     # track/config; the standings engine times sectors against these.
     sector_starts: list[float] = field(default_factory=list)
@@ -219,20 +219,20 @@ class CarTiming:
     """
 
     car_idx: int
-    position: Optional[int]
-    class_position: Optional[int]
-    lap: Optional[int]
-    lap_dist_pct: Optional[float]
-    last_lap_time: Optional[float]
-    best_lap_time: Optional[float]
-    estimated_lap_time: Optional[float]   # CarIdxEstTime: est time to current pos
-    f2_time: Optional[float]              # CarIdxF2Time: sim's gap value
-    delta_to_player: Optional[float]
-    on_pit_road: Optional[bool]
-    track_surface: Optional[int]
+    position: int | None
+    class_position: int | None
+    lap: int | None
+    lap_dist_pct: float | None
+    last_lap_time: float | None
+    best_lap_time: float | None
+    estimated_lap_time: float | None  # CarIdxEstTime: est time to current pos
+    f2_time: float | None  # CarIdxF2Time: sim's gap value
+    delta_to_player: float | None
+    on_pit_road: bool | None
+    track_surface: int | None
     track_surface_label: str
-    timestamp: int                        # server ms when sampled
-    tire_compound: Optional[int] = None   # CarIdxTireCompound (series-specific int)
+    timestamp: int  # server ms when sampled
+    tire_compound: int | None = None  # CarIdxTireCompound (series-specific int)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -270,43 +270,43 @@ class StandingsEntry:
     """
 
     car_idx: int
-    position: Optional[int]               # direct: CarIdxPosition
-    class_position: Optional[int]         # direct: CarIdxClassPosition
+    position: int | None  # direct: CarIdxPosition
+    class_position: int | None  # direct: CarIdxClassPosition
     car_class_id: int
-    lap: Optional[int]                    # direct: CarIdxLap
-    lap_dist_pct: Optional[float]         # direct: CarIdxLapDistPct
-    last_lap_time: Optional[float]        # direct: CarIdxLastLapTime
-    best_lap_time: Optional[float]        # direct: CarIdxBestLapTime
+    lap: int | None  # direct: CarIdxLap
+    lap_dist_pct: float | None  # direct: CarIdxLapDistPct
+    last_lap_time: float | None  # direct: CarIdxLastLapTime
+    best_lap_time: float | None  # direct: CarIdxBestLapTime
 
     # --- gaps (see standings engine) ---------------------------------------
-    gap_to_leader: Optional[float]        # derived: F2Time / lap delta (overall)
-    interval: Optional[float]             # derived: to the car ahead (overall)
-    gap_is_laps: bool                     # True when lapped (gap is a lap count)
-    laps_down: int                        # derived: laps behind the overall leader
+    gap_to_leader: float | None  # derived: F2Time / lap delta (overall)
+    interval: float | None  # derived: to the car ahead (overall)
+    gap_is_laps: bool  # True when lapped (gap is a lap count)
+    laps_down: int  # derived: laps behind the overall leader
     # Class-relative variants: gap to the *class* leader and interval to the car
     # ahead *in class* — what a driver actually races in multi-class.
-    gap_to_class_leader: Optional[float]
-    class_interval: Optional[float]
+    gap_to_class_leader: float | None
+    class_interval: float | None
     class_gap_is_laps: bool
-    interval_to_player: Optional[float]   # derived: signed est-time gap to player
-    est_catch_time: Optional[float]       # derived: seconds to catch car ahead
+    interval_to_player: float | None  # derived: signed est-time gap to player
+    est_catch_time: float | None  # derived: seconds to catch car ahead
 
     # --- position change engine --------------------------------------------
-    positions_gained_total: int           # derived: since the green flag
-    positions_gained_last_lap: int        # derived: over this car's last lap
+    positions_gained_total: int  # derived: since the green flag
+    positions_gained_last_lap: int  # derived: over this car's last lap
 
     # --- rating (projection) ------------------------------------------------
-    i_rating: int                         # static convenience (from roster)
-    irating_change_est: int               # derived/estimated: live iR projection
+    i_rating: int  # static convenience (from roster)
+    irating_change_est: int  # derived/estimated: live iR projection
 
     # --- lap / sector colouring --------------------------------------------
-    last_lap_status: str                  # overall_best | personal_best | normal | none
-    sectors: list[dict[str, Any]]         # derived: graded SectorSplit dicts
-    theoretical_best: Optional[float]     # derived: sum of personal best sectors
+    last_lap_status: str  # overall_best | personal_best | normal | none
+    sectors: list[dict[str, Any]]  # derived: graded SectorSplit dicts
+    theoretical_best: float | None  # derived: sum of personal best sectors
 
     # --- special states -----------------------------------------------------
-    on_pit_road: Optional[bool]           # direct: CarIdxOnPitRoad
-    track_surface_label: str              # derived label of CarIdxTrackSurface
+    on_pit_road: bool | None  # direct: CarIdxOnPitRoad
+    track_surface_label: str  # derived label of CarIdxTrackSurface
     is_off_track: bool
     is_in_pit_stall: bool
     is_in_world: bool
@@ -314,11 +314,11 @@ class StandingsEntry:
     is_player: bool
     is_overall_leader: bool
     is_class_leader: bool
-    is_lapped: bool                       # at least one lap down on the leader
+    is_lapped: bool  # at least one lap down on the leader
 
     # --- tyre info -----------------------------------------------------------
-    tire_compound: Optional[int] = None   # direct: CarIdxTireCompound (series-specific)
-    tire_laps: int = 0                    # derived: laps on the current tyre set
+    tire_compound: int | None = None  # direct: CarIdxTireCompound (series-specific)
+    tire_laps: int = 0  # derived: laps on the current tyre set
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -375,11 +375,11 @@ class ClassStanding:
     color: str
     sof: int
     car_count: int
-    leader_car_idx: Optional[int]         # overall-order leader of this class
-    leader_lap: Optional[int]             # laps completed by the class leader
-    fastest_lap: Optional[float]          # best lap within the class
-    fastest_lap_car_idx: Optional[int]
-    order: list[int]                      # carIdx sequence, class-position order
+    leader_car_idx: int | None  # overall-order leader of this class
+    leader_lap: int | None  # laps completed by the class leader
+    fastest_lap: float | None  # best lap within the class
+    fastest_lap_car_idx: int | None
+    order: list[int]  # carIdx sequence, class-position order
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -408,9 +408,9 @@ class StandingsSnapshot:
     classes: list[ClassStanding] = field(default_factory=list)
     player_car_idx: int = -1
     sector_count: int = 0
-    overall_best_lap: Optional[float] = None
-    overall_best_lap_car_idx: Optional[int] = None
-    overall_best_sectors: list[Optional[float]] = field(default_factory=list)
+    overall_best_lap: float | None = None
+    overall_best_lap_car_idx: int | None = None
+    overall_best_sectors: list[float | None] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {

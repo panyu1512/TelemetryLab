@@ -22,7 +22,7 @@ import math
 import os
 import random
 import time
-from typing import Any, Optional
+from typing import Any
 
 from websockets.asyncio.server import serve
 
@@ -35,18 +35,55 @@ FIELD_SIZE = int(os.environ.get("MOCK_CARS", "20") or 20)
 MULTICLASS = (os.environ.get("MOCK_MULTICLASS", "1") or "1") != "0"
 DISCONNECT_EVERY = float(os.environ.get("MOCK_DISCONNECT_EVERY", "0") or 0)
 
-RACE_LENGTH = 3600.0    # seconds of session
-TANK_CAPACITY = 60.0    # litres
+RACE_LENGTH = 3600.0  # seconds of session
+TANK_CAPACITY = 60.0  # litres
 
 # Two fictitious classes so multi-class rendering can be exercised.
-CLASS_GT3 = {"id": 84, "short": "GT3", "color": 0xff4d4d, "base_lap": 138.0}
-CLASS_GT4 = {"id": 85, "short": "GT4", "color": 0x4d9dff, "base_lap": 150.0}
+CLASS_GT3 = {"id": 84, "short": "GT3", "color": 0xFF4D4D, "base_lap": 138.0}
+CLASS_GT4 = {"id": 85, "short": "GT4", "color": 0x4D9DFF, "base_lap": 150.0}
 
-_FIRST = ["Kike", "Matt", "Ana", "Luca", "Sven", "Yuki", "Pia", "Omar",
-          "Nils", "Rui", "Ivo", "Tom", "Kai", "Zoe", "Max", "Lea",
-          "Jon", "Eva", "Sam", "Nia", "Rex", "Ada", "Leo", "Mia"]
-_LAST = ["Ferrer", "Farrow", "Silva", "Rossi", "Berg", "Tanaka", "Costa",
-         "Haddad", "Vega", "Moreau", "Klein", "Novak", "Reyes", "Falk"]
+_FIRST = [
+    "Kike",
+    "Matt",
+    "Ana",
+    "Luca",
+    "Sven",
+    "Yuki",
+    "Pia",
+    "Omar",
+    "Nils",
+    "Rui",
+    "Ivo",
+    "Tom",
+    "Kai",
+    "Zoe",
+    "Max",
+    "Lea",
+    "Jon",
+    "Eva",
+    "Sam",
+    "Nia",
+    "Rex",
+    "Ada",
+    "Leo",
+    "Mia",
+]
+_LAST = [
+    "Ferrer",
+    "Farrow",
+    "Silva",
+    "Rossi",
+    "Berg",
+    "Tanaka",
+    "Costa",
+    "Haddad",
+    "Vega",
+    "Moreau",
+    "Klein",
+    "Novak",
+    "Reyes",
+    "Falk",
+]
 
 
 class MockCar:
@@ -67,8 +104,8 @@ class MockCar:
         self.lic_level = {"A": 13, "B": 9, "C": 5, "D": 3}[grp]
         # Pace: faster drivers (higher iR) lap a touch quicker; add jitter.
         self.pace = klass["base_lap"] * (1.0 + (2200 - self.irating) / 40000.0)
-        self.phase = rng.uniform(0.0, 0.4)          # grid stagger (fraction of a lap)
-        self.wobble = rng.uniform(0.3, 1.2)         # lap-time variation amplitude
+        self.phase = rng.uniform(0.0, 0.4)  # grid stagger (fraction of a lap)
+        self.wobble = rng.uniform(0.3, 1.2)  # lap-time variation amplitude
         self.pit_at = rng.uniform(0.35, 0.85) if rng.random() < 0.25 else None
 
     # --- dynamics -----------------------------------------------------------
@@ -90,12 +127,14 @@ class MockCar:
             "CarClassShortName": self.klass["short"],
             "CarClassColor": self.klass["color"],
             "CarPath": self.klass["short"].lower(),
-            "CarScreenName": "Audi R8 LMS EVO II" if self.klass is CLASS_GT3 else "McLaren 570S GT4",
+            "CarScreenName": "Audi R8 LMS EVO II"
+            if self.klass is CLASS_GT3
+            else "McLaren 570S GT4",
             "IRating": self.irating,
             "LicLevel": self.lic_level,
             "LicSubLevel": self.lic_sub,
             "LicString": self.license_string,
-            "LicColor": 0x00ff88,
+            "LicColor": 0x00FF88,
             "IsSpectator": 0,
             "ClubName": "Iberia",
             "DivisionName": str((self.idx % 5) + 1),
@@ -136,11 +175,22 @@ class MockField:
         leader = order[0]
         leader_prog = leader.progress(t)
 
-        arr: dict[str, list[Any]] = {k: [None] * n for k in (
-            "CarIdxPosition", "CarIdxClassPosition", "CarIdxLap", "CarIdxLapDistPct",
-            "CarIdxLastLapTime", "CarIdxBestLapTime", "CarIdxEstTime", "CarIdxF2Time",
-            "CarIdxOnPitRoad", "CarIdxTrackSurface", "CarIdxTireCompound",
-        )}
+        arr: dict[str, list[Any]] = {
+            k: [None] * n
+            for k in (
+                "CarIdxPosition",
+                "CarIdxClassPosition",
+                "CarIdxLap",
+                "CarIdxLapDistPct",
+                "CarIdxLastLapTime",
+                "CarIdxBestLapTime",
+                "CarIdxEstTime",
+                "CarIdxF2Time",
+                "CarIdxOnPitRoad",
+                "CarIdxTrackSurface",
+                "CarIdxTireCompound",
+            )
+        }
         for c in self.cars:
             prog = c.progress(t)
             lap = int(prog)
@@ -182,8 +232,13 @@ class MockField:
                 "Drivers": [c.driver_dict() for c in self.cars],
             },
             "sessions": [
-                {"SessionNum": 0, "SessionType": "Race", "SessionName": "RACE",
-                 "SessionLaps": "unlimited", "SessionTime": f"{RACE_LENGTH:.4f}"},
+                {
+                    "SessionNum": 0,
+                    "SessionType": "Race",
+                    "SessionName": "RACE",
+                    "SessionLaps": "unlimited",
+                    "SessionTime": f"{RACE_LENGTH:.4f}",
+                },
             ],
             # Three sectors, so the standings screen has boundaries to time against.
             "split_time_info": {
@@ -265,14 +320,14 @@ class MockSource:
             return True
         return (self._elapsed() % (DISCONNECT_EVERY * 2)) < DISCONNECT_EVERY
 
-    def read_session_raw(self) -> Optional[dict[str, Any]]:
+    def read_session_raw(self) -> dict[str, Any] | None:
         t = self._elapsed()
         # Warmup for the first 10s, then racing under green.
         state = 2 if t < 10 else 4
         flags = 0x00000004  # green
         return self.field.session_raw(t, state, flags)
 
-    def read_player_frame(self) -> Optional[dict[str, Any]]:
+    def read_player_frame(self) -> dict[str, Any] | None:
         return self.field.player_frame(self._elapsed())
 
     def read_car_arrays(self) -> dict[str, Any]:
@@ -282,8 +337,11 @@ class MockSource:
 async def main() -> None:
     service = BridgeService(MockSource())
     async with serve(service.publisher.register, HOST, PORT):
-        print(f"[mock] WebSocket server on ws://{HOST}:{PORT} "
-              f"({FIELD_SIZE} cars, multiclass={MULTICLASS})", flush=True)
+        print(
+            f"[mock] WebSocket server on ws://{HOST}:{PORT} "
+            f"({FIELD_SIZE} cars, multiclass={MULTICLASS})",
+            flush=True,
+        )
         if DISCONNECT_EVERY > 0:
             print(f"[mock] simulating disconnects every {DISCONNECT_EVERY}s", flush=True)
         await service.run()

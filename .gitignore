@@ -6,6 +6,15 @@ dist-ssr
 .vite
 *.tsbuildinfo
 
+# --- Test / coverage output ---
+coverage/
+.vitest/
+htmlcov/
+.coverage
+coverage.xml
+.pytest_cache/
+.ruff_cache/
+
 # --- Logs ---
 npm-debug.log*
 yarn-debug.log*

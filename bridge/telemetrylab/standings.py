@@ -30,7 +30,6 @@ sector splits are derived from lap-distance crossings (see :mod:`sectors`).
 from __future__ import annotations
 
 import math
-from typing import Optional
 
 from .models import (
     CarTiming,
@@ -99,7 +98,7 @@ class StandingsEngine:
     """Owns the cross-tick state and produces a :class:`StandingsSnapshot`."""
 
     def __init__(self) -> None:
-        self._session_id: Optional[str] = None
+        self._session_id: str | None = None
         self._sectors = FieldSectorState([0.0])
         # Position-change history.
         self._start_pos: dict[int, int] = {}
@@ -132,7 +131,9 @@ class StandingsEngine:
             self._sectors.retune(starts)
 
     # -- per-tick position-change tracking -----------------------------------
-    def _track_position(self, car_idx: int, position: Optional[int], lap: Optional[int], racing: bool) -> None:
+    def _track_position(
+        self, car_idx: int, position: int | None, lap: int | None, racing: bool
+    ) -> None:
         if position is None:
             return
         # Capture the green-flag grid the first time we see a racing position.
@@ -159,10 +160,7 @@ class StandingsEngine:
             self._out_ticks[car_idx] = 0
             return False
         self._out_ticks[car_idx] = self._out_ticks.get(car_idx, 0) + 1
-        return (
-            car_idx in self._seen_in_world
-            and self._out_ticks[car_idx] >= _RETIRE_TICKS
-        )
+        return car_idx in self._seen_in_world and self._out_ticks[car_idx] >= _RETIRE_TICKS
 
     # -- main computation ----------------------------------------------------
     def compute(
@@ -214,21 +212,19 @@ class StandingsEngine:
         class_leader_seen: set[int] = set()
 
         entries: list[StandingsEntry] = []
-        prev_time_gap: Optional[float] = None
-        prev_row: Optional[CarTiming] = None
+        prev_time_gap: float | None = None
+        prev_row: CarTiming | None = None
         for t in rows:
             driver = drivers_by_idx[t.car_idx]
 
             laps_down = (
-                max(0, leader_lap - t.lap)
-                if leader_lap is not None and t.lap is not None
-                else 0
+                max(0, leader_lap - t.lap) if leader_lap is not None and t.lap is not None else 0
             )
             gap_is_laps = laps_down >= 1
 
             if t is leader:
-                gap_to_leader: Optional[float] = 0.0
-                interval: Optional[float] = 0.0
+                gap_to_leader: float | None = 0.0
+                interval: float | None = 0.0
                 prev_time_gap = 0.0
             elif gap_is_laps:
                 gap_to_leader = float(laps_down)
@@ -263,7 +259,7 @@ class StandingsEngine:
                     interval=interval,
                     gap_is_laps=gap_is_laps,
                     laps_down=laps_down,
-                    gap_to_class_leader=None,   # filled in by _fill_class_relative
+                    gap_to_class_leader=None,  # filled in by _fill_class_relative
                     class_interval=None,
                     class_gap_is_laps=False,
                     interval_to_player=t.delta_to_player,
@@ -305,7 +301,7 @@ class StandingsEngine:
         )
 
     # -- helpers -------------------------------------------------------------
-    def _gained_total(self, car_idx: int, position: Optional[int]) -> int:
+    def _gained_total(self, car_idx: int, position: int | None) -> int:
         start = self._start_pos.get(car_idx)
         if start is None or position is None:
             return 0
@@ -324,10 +320,10 @@ class StandingsEngine:
 
     def _catch_time(
         self,
-        interval: Optional[float],
+        interval: float | None,
         car: CarTiming,
-        ahead: Optional[CarTiming],
-    ) -> Optional[float]:
+        ahead: CarTiming | None,
+    ) -> float | None:
         """Seconds for ``car`` to catch the car ``ahead`` at the current pace gap."""
         if (
             interval is None
@@ -386,9 +382,7 @@ class StandingsEngine:
                 e.gap_to_class_leader = (
                     f2 - leader_f2 if f2 is not None and leader_f2 is not None else None
                 )
-                e.class_interval = (
-                    f2 - prev_f2 if f2 is not None and prev_f2 is not None else None
-                )
+                e.class_interval = f2 - prev_f2 if f2 is not None and prev_f2 is not None else None
             prev_of[cid] = e
 
     def _group_classes(
@@ -413,7 +407,7 @@ class StandingsEngine:
             m = meta.get(cid)
             leader = members[0] if members else None
             fastest_car = None
-            fastest_lap: Optional[float] = None
+            fastest_lap: float | None = None
             for e in members:
                 best = e.best_lap_time
                 if best is not None and best > 0 and (fastest_lap is None or best < fastest_lap):

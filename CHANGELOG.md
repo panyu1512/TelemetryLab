@@ -9,6 +9,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Automated test suite & CI quality gates** — the project now has real,
+  enforced quality gates on both sides of the WebSocket.
+  - **Python bridge tests** (`bridge/tests/`, pytest): ~155 unit + integration
+    tests covering session parsing and Strength-of-Field, the CarIdx ingest and
+    relative-delta wrapping, the derived per-car sector timer and field board,
+    the stateful standings engine (order, gaps, laps-down, position change,
+    retirement, class grouping), the repositories and event bus, model
+    `to_dict()` camelCase serialization, and an end-to-end `BridgeService`
+    integration test driven by a fake source/publisher. ~97% line coverage,
+    gated at 85%.
+  - **Frontend tests** (`src/**/*.test.ts`, Vitest): full coverage of the value
+    formatters (`lib/format.ts`), the tyre-heat colour scale (`lib/scales.ts`),
+    the wire-protocol envelope parser (`telemetry/protocol.ts`), and the
+    fuel-&-strategy solver (`lib/fuelStrategy.ts`) — 67 specs, 99% statement /
+    97% branch coverage on the tested modules, with thresholds enforced.
+  - **Tooling & config**: `bridge/pyproject.toml` (pytest, ruff lint/format,
+    coverage) with a `requirements-dev.txt`; `vitest.config.ts` and new
+    `typecheck` / `test` / `test:coverage` npm scripts. The existing bridge
+    source was normalized with `ruff format` and cleaned of lint findings.
+  - **CI pipeline** (`.github/workflows/ci.yml`): a new quality-gate workflow
+    that runs on every push to `main`/`claude/**` and every pull request, with
+    parallel `bridge` (ruff + pytest) and `frontend` (typecheck + vitest +
+    build) jobs rolling up into a single required `ci` status. The existing
+    `build.yml` remains the tag-triggered Windows `.msi` release build.
+
 - **Fuel & Strategy Calculator** — a new full-bleed overlay screen (backlog
   Feature 1) that turns raw fuel telemetry into live race strategy. Registered
   in the dashboard catalog as **Fuel Calc**, so it appears in the dock and the

@@ -9,7 +9,7 @@ bridges alike.
 
 from __future__ import annotations
 
-from typing import Any, Optional
+from typing import Any
 
 from . import events
 from .events import EventBus
@@ -31,8 +31,8 @@ class SessionRepository:
 
     def __init__(self, bus: EventBus) -> None:
         self._bus = bus
-        self._current: Optional[SessionInfo] = None
-        self._last_wire: Optional[dict[str, Any]] = None
+        self._current: SessionInfo | None = None
+        self._last_wire: dict[str, Any] | None = None
         self._drivers_by_idx: dict[int, DriverEntry] = {}
         self._last_flags: list[str] = []
 
@@ -73,14 +73,14 @@ class SessionRepository:
                 self._bus.emit(events.DriverLeft(idx, driver.user_name))
 
     @property
-    def current(self) -> Optional[SessionInfo]:
+    def current(self) -> SessionInfo | None:
         return self._current
 
     @property
     def drivers_by_idx(self) -> dict[int, DriverEntry]:
         return self._drivers_by_idx
 
-    def snapshot(self) -> Optional[dict[str, Any]]:
+    def snapshot(self) -> dict[str, Any] | None:
         return self._last_wire
 
 
@@ -95,7 +95,7 @@ class CarRepository:
     def __init__(self, session_repo: SessionRepository) -> None:
         self._session_repo = session_repo
         self._timings: dict[int, CarTiming] = {}
-        self._last_standings_wire: Optional[dict[str, Any]] = None
+        self._last_standings_wire: dict[str, Any] | None = None
         # The engine carries cross-tick history (sectors, start grid, best laps);
         # it lives as long as this repository, and resets itself on session change.
         self._engine = StandingsEngine()
@@ -125,5 +125,5 @@ class CarRepository:
         self._last_standings_wire = wire
         return True
 
-    def snapshot(self) -> Optional[dict[str, Any]]:
+    def snapshot(self) -> dict[str, Any] | None:
         return self._last_standings_wire

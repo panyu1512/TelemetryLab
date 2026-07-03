@@ -1,0 +1,10 @@
+# Developer / CI tooling for the bridge. Install with:
+#   pip install -r requirements-dev.txt
+#
+# Runtime deps (websockets, pyirsdk on Windows) come from requirements.txt /
+# requirements-mock.txt; these are only needed to lint and test.
+-r requirements-mock.txt
+
+pytest>=8.0
+pytest-cov>=5.0
+ruff>=0.6

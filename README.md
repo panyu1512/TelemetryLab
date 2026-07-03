@@ -49,7 +49,9 @@ iRacing connecting/disconnecting, set `MOCK_DISCONNECT_EVERY` in
 ├── src/                      # React frontend (Vite + TypeScript)
 │   ├── components/
 │   ├── telemetry/            # Wire protocol, typed models, WS connection
+│   │   └── protocol.test.ts  # Wire-envelope parser specs
 │   ├── stores/               # Zustand stores (session/telemetry/standings/bridge)
+│   ├── lib/                  # Pure helpers (format/scales/fuelStrategy) + *.test.ts
 │   ├── hooks/
 │   │   ├── useBridge.ts      # Owns the WS connection; feeds the stores
 │   │   └── useTelemetry.ts   # Single-car compatibility selector
@@ -64,11 +66,16 @@ iRacing connecting/disconnecting, set `MOCK_DISCONNECT_EVERY` in
 │   └── Cargo.toml
 ├── bridge/                   # Python sidecar
 │   ├── telemetrylab/         # Shared core: protocol, models, repos, service
+│   ├── tests/                # pytest suite (unit + service integration)
 │   ├── bridge.py             # Real bridge source (Windows, pyirsdk)
 │   ├── mock_bridge.py        # Synthetic multi-car field source (Mac/Linux dev)
 │   ├── bridge.spec           # PyInstaller config (onefile, console)
-│   └── requirements.txt
-└── .github/workflows/build.yml
+│   ├── pyproject.toml        # pytest / ruff / coverage config
+│   ├── requirements.txt      # runtime deps  (requirements-dev.txt = test/lint)
+│   └── requirements-dev.txt
+└── .github/workflows/
+    ├── ci.yml                # Quality gates: lint + typecheck + tests (every push/PR)
+    └── build.yml             # Release: Windows .msi on version tags
 ```
 
 ## Prerequisites
@@ -159,11 +166,58 @@ npm run tauri build
 
 ---
 
+## Testing & quality gates
+
+The pure logic on both sides of the WebSocket is covered by fast, isolated unit
+tests — no sim, no socket, no DOM required — plus a small integration test that
+drives the bridge service end-to-end with a fake source.
+
+**Python bridge** ([`bridge/`](bridge/)) — [pytest](https://pytest.org) +
+[ruff](https://docs.astral.sh/ruff/):
+
+```bash
+cd bridge
+pip install -r requirements-dev.txt
+pytest                 # unit + integration suite, coverage gate at 85%
+ruff check .           # lint
+ruff format --check .  # formatting
+```
+
+Tests live in [`bridge/tests/`](bridge/tests/) and cover session parsing, SOF,
+the CarIdx ingest, the derived-sector timer, the stateful standings engine, the
+repositories/event bus, and the async service loop (~97% line coverage).
+
+**Frontend** ([`src/`](src/)) — [Vitest](https://vitest.dev) + `tsc`:
+
+```bash
+npm install
+npm run typecheck       # tsc --noEmit (strict)
+npm test                # vitest run
+npm run test:coverage   # with coverage thresholds
+```
+
+Specs sit next to the code they exercise (`*.test.ts`) and cover the value
+formatters, the tyre-heat colour scale, the wire-protocol parser, and the full
+fuel-&-strategy solver.
+
 ## Continuous integration
 
-[`.github/workflows/build.yml`](.github/workflows/build.yml) runs on
-`windows-latest` and is triggered by **version tags** (`v*`) or manually
-(`workflow_dispatch`). It:
+Two workflows split the fast feedback loop from the release build:
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) is the **quality-gate**
+pipeline. It runs on every push to `main`/`claude/**` and on every pull request,
+across two parallel `ubuntu-latest` jobs:
+
+- **bridge** — `ruff check`, `ruff format --check`, and `pytest` with the
+  coverage gate.
+- **frontend** — `npm run typecheck`, `npm run test:coverage`, and `npm run build`.
+
+Both roll up into a single `ci` status so branch protection can require one
+check. Nothing should merge with a red gate.
+
+[`.github/workflows/build.yml`](.github/workflows/build.yml) is the **release**
+pipeline. It runs on `windows-latest`, triggered by **version tags** (`v*`) or
+manually (`workflow_dispatch`). It:
 
 1. Builds the bridge into a onefile `iracing-bridge.exe` with PyInstaller.
 2. Copies it to `src-tauri/binaries/iracing-bridge-x86_64-pc-windows-msvc.exe`
