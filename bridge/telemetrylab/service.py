@@ -24,9 +24,9 @@ swaps and as time ticks down, not 60×/s.
 from __future__ import annotations
 
 import asyncio
-from typing import Any, Optional, Protocol
+from typing import Any, Protocol
 
-from .events import EventBus, ConnectionChanged, Event
+from .events import ConnectionChanged, Event, EventBus
 from .ingest import ingest_car_timings
 from .protocol import Channel, now_ms
 from .publisher import ChannelPublisher
@@ -44,10 +44,10 @@ class TelemetrySource(Protocol):
     def poll_connection(self) -> bool:
         """Return whether iRacing/data is currently available (reconnect-aware)."""
 
-    def read_session_raw(self) -> Optional[dict[str, Any]]:
+    def read_session_raw(self) -> dict[str, Any] | None:
         """Raw snapshot for :func:`telemetrylab.parsing.parse_session_info`."""
 
-    def read_player_frame(self) -> Optional[dict[str, Any]]:
+    def read_player_frame(self) -> dict[str, Any] | None:
         """The player-only telemetry payload (see the telemetry channel schema)."""
 
     def read_car_arrays(self) -> dict[str, Any]:

@@ -15,7 +15,7 @@ from __future__ import annotations
 
 import math
 import re
-from typing import Any, Optional
+from typing import Any
 
 from .enums import decode_flags, session_state
 from .models import (
@@ -27,13 +27,14 @@ from .models import (
 )
 from .sectors import parse_sector_starts
 
+
 def _is_unlimited(value: Any) -> bool:
     """iRacing marks an untimed/unlimited SessionTime/SessionLaps as
     ``"unlimited"`` (and occasionally as a missing/blank value)."""
     return value is None or str(value).strip().lower() in {"unlimited", ""}
 
 
-def _num(value: Any) -> Optional[float]:
+def _num(value: Any) -> float | None:
     """Coerce iRacing's numeric-ish values (may be str with units) to float."""
     if value is None:
         return None
@@ -150,9 +151,8 @@ def parse_drivers(driver_info: dict[str, Any], category: str) -> list[DriverEntr
                 club_name=str(d.get("ClubName", "") or ""),
                 division=_int(d.get("DivisionName"), 0),
                 incident_count=_int(d.get("CurDriverIncidentCount"), 0),
-                is_pace_car=_bool(d.get("CarIsPaceCar")) or car_idx == _int(
-                    driver_info.get("PaceCarIdx"), -1
-                ),
+                is_pace_car=_bool(d.get("CarIsPaceCar"))
+                or car_idx == _int(driver_info.get("PaceCarIdx"), -1),
                 is_spectator=_bool(d.get("IsSpectator")),
                 is_ai=_bool(d.get("CarIsAI")),
                 is_team_driver=team_id > 0,
@@ -230,19 +230,24 @@ def parse_session_info(raw: dict[str, Any]) -> SessionInfo:
     )
 
     weather = WeatherInfo(
-        air_temp=_num(raw.get("air_temp")) if raw.get("air_temp") is not None
+        air_temp=_num(raw.get("air_temp"))
+        if raw.get("air_temp") is not None
         else _num(weekend.get("TrackAirTemp")),
-        track_temp=_num(raw.get("track_temp")) if raw.get("track_temp") is not None
+        track_temp=_num(raw.get("track_temp"))
+        if raw.get("track_temp") is not None
         else _num(weekend.get("TrackSurfaceTemp")),
         skies=str(weekend.get("TrackSkies")) if weekend.get("TrackSkies") else None,
-        track_wetness=str(weekend.get("TrackWeatherType")) if weekend.get("TrackWeatherType") else None,
+        track_wetness=str(weekend.get("TrackWeatherType"))
+        if weekend.get("TrackWeatherType")
+        else None,
     )
 
     flags_raw = _int(raw.get("session_flags"), 0)
     sub_session = _int(weekend.get("SubSessionID"), 0)
 
-    overall_sof = strength_of_field([d.i_rating for d in drivers
-                                     if not d.is_pace_car and not d.is_spectator])
+    overall_sof = strength_of_field(
+        [d.i_rating for d in drivers if not d.is_pace_car and not d.is_spectator]
+    )
 
     return SessionInfo(
         session_id=f"{sub_session}:{track.track_id}:{session_num}",
@@ -253,7 +258,8 @@ def parse_session_info(raw: dict[str, Any]) -> SessionInfo:
         session_state_label=session_state(_int(raw.get("session_state"), 0)),
         session_time_remain=_num(raw.get("session_time_remain")),
         session_laps_remain=(
-            None if raw.get("session_laps_remain") in (None, 32767)
+            None
+            if raw.get("session_laps_remain") in (None, 32767)
             else _int(raw.get("session_laps_remain"))
         ),
         session_time_total=time_total,

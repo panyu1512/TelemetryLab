@@ -14,8 +14,8 @@ inline from the ingest loops); do real work on the asyncio loop instead.
 from __future__ import annotations
 
 from collections import defaultdict
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Callable
 
 
 # --- Event types ------------------------------------------------------------
@@ -26,6 +26,7 @@ class Event:
 @dataclass(frozen=True, slots=True)
 class SessionChanged(Event):
     """The parsed session (roster / track / rules) changed meaningfully."""
+
     session_id: str
 
 

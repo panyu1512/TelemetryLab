@@ -8,7 +8,8 @@ of arrays, so the real bridge (irsdk) and the mock feed it identically.
 
 from __future__ import annotations
 
-from typing import Any, Iterable, Optional
+from collections.abc import Iterable
+from typing import Any
 
 from .enums import track_surface
 from .models import CarTiming
@@ -40,24 +41,24 @@ def _at(arr: Any, idx: int) -> Any:
         return None
 
 
-def _pos(value: Any) -> Optional[int]:
+def _pos(value: Any) -> int | None:
     """Position 0 means 'no position yet' in iRacing → normalize to None."""
     v = _at_int(value)
     return v if v and v > 0 else None
 
 
-def _at_int(value: Any) -> Optional[int]:
+def _at_int(value: Any) -> int | None:
     return int(value) if isinstance(value, (int, float)) else None
 
 
-def _at_float(value: Any) -> Optional[float]:
+def _at_float(value: Any) -> float | None:
     if not isinstance(value, (int, float)):
         return None
     # iRacing uses -1 as "no valid time" for lap-time-ish arrays.
     return None if value < 0 else float(value)
 
 
-def _wrap_delta(delta: float, lap_time: Optional[float]) -> float:
+def _wrap_delta(delta: float, lap_time: float | None) -> float:
     """Wrap a raw est-time difference to the shortest way round the lap.
 
     Relative gaps are only meaningful within ±half a lap; beyond that the car is
@@ -78,7 +79,7 @@ def ingest_car_timings(
     *,
     timestamp: int,
     player_car_idx: int,
-    est_lap_time: Optional[float],
+    est_lap_time: float | None,
     include: Iterable[int],
 ) -> dict[int, CarTiming]:
     """Build ``{car_idx: CarTiming}`` for every car in ``include``.
@@ -98,7 +99,7 @@ def ingest_car_timings(
         surface = _at_int(_at(surf_arr, idx))
         car_est = _at_float(_at(est_arr, idx))
 
-        delta: Optional[float] = None
+        delta: float | None = None
         if player_est is not None and car_est is not None and idx != player_car_idx:
             delta = _wrap_delta(car_est - player_est, est_lap_time)
         elif idx == player_car_idx:
@@ -116,7 +117,8 @@ def ingest_car_timings(
             f2_time=_at_float(_at(arrays.get("CarIdxF2Time"), idx)),
             delta_to_player=delta,
             on_pit_road=bool(_at(arrays.get("CarIdxOnPitRoad"), idx))
-            if _at(arrays.get("CarIdxOnPitRoad"), idx) is not None else None,
+            if _at(arrays.get("CarIdxOnPitRoad"), idx) is not None
+            else None,
             track_surface=surface,
             track_surface_label=track_surface(surface),
             timestamp=timestamp,
