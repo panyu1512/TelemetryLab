@@ -12,6 +12,7 @@ import {
 } from "./stores/useOverlayStore";
 import { useOverlayConfigStore } from "./stores/useOverlayConfigStore";
 import { useSessionStore } from "./stores/useSessionStore";
+import { restoreOpenWindows } from "./lib/overlayWindows";
 import { getTheme, applyTheme } from "./themes";
 
 const isTauri =
@@ -61,14 +62,19 @@ export default function App() {
   const effectiveThemeId =
     overlaySettings.appearance.themeId ?? configStore.globalSettings.themeId;
   useEffect(() => {
-    applyTheme(getTheme(effectiveThemeId));
-  }, [effectiveThemeId]);
+    // In overlay mode the background must be transparent so the game shows
+    // through; applyTheme owns that (inline vars beat the overlay-mode CSS).
+    applyTheme(getTheme(effectiveThemeId), overlayMode);
+  }, [effectiveThemeId, overlayMode]);
 
   // ── Tauri: init window bounds + Ctrl+Shift+L hotkey listener ────────────
   useEffect(() => {
     initWindowBoundsPersistence();
 
     if (!isTauri) return;
+
+    // Re-open the overlay/widget windows the user had open last session.
+    restoreOpenWindows();
 
     let unlisten: (() => void) | undefined;
     import("@tauri-apps/api/event").then(({ listen }) => {

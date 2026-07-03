@@ -150,3 +150,11 @@ export const DASHBOARDS: DashboardDef[] = [
 export function getDashboard(id: string): DashboardDef {
   return DASHBOARDS.find((d) => d.id === id) ?? DASHBOARDS[0];
 }
+
+/** Every widget across all dashboards (for the "open widget in a window" list). */
+export const ALL_WIDGETS: WidgetDef[] = DASHBOARDS.flatMap((d) => d.widgets);
+
+/** Look up a single widget definition by id, across all dashboards. */
+export function getWidget(id: string): WidgetDef | undefined {
+  return ALL_WIDGETS.find((w) => w.id === id);
+}

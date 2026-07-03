@@ -130,17 +130,48 @@ const THEME_PROPS = [
   "--warning",
 ] as const;
 
-/** Apply a theme's tokens as inline CSS custom properties on the root element. */
+/** Convert a `#rrggbb` / `#rgb` hex color to an `rgba()` string at `alpha`. */
+export function hexToRgba(hex: string, alpha: number): string {
+  let h = hex.replace("#", "").trim();
+  if (h.length === 3) {
+    h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
+  }
+  const r = parseInt(h.slice(0, 2), 16);
+  const g = parseInt(h.slice(2, 4), 16);
+  const b = parseInt(h.slice(4, 6), 16);
+  if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) return hex;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
+/**
+ * Apply a theme's tokens as inline CSS custom properties on the root element.
+ *
+ * When `overlay` is true (a transparent, always-on-top overlay window or an OBS
+ * browser source) the page background is made **transparent** and the widget
+ * surfaces/borders **translucent**, so the game shows through. This MUST be set
+ * here — inline on the same element — because inline custom properties beat the
+ * `html.overlay-mode { … }` stylesheet rules; setting a solid `--color-bg`
+ * inline (as the non-overlay path does) is exactly what used to paint a solid
+ * black background over the game.
+ */
 export function applyTheme(
   theme: Theme,
+  overlay = false,
   el: HTMLElement = document.documentElement
 ): void {
   const c = theme.colors;
-  el.style.setProperty("--color-bg", c.bg);
-  el.style.setProperty("--color-surface", c.surface);
-  el.style.setProperty("--color-surface-2", c.surface2);
-  el.style.setProperty("--color-border", c.border);
-  el.style.setProperty("--color-border-strong", c.borderStrong);
+  // Backgrounds/surfaces: solid normally, transparent/translucent in overlay.
+  const bg = overlay ? "transparent" : c.bg;
+  const surface = overlay ? hexToRgba(c.surface, 0.62) : c.surface;
+  const surface2 = overlay ? hexToRgba(c.surface2, 0.62) : c.surface2;
+  const border = overlay ? hexToRgba(c.border, 0.45) : c.border;
+  const borderStrong = overlay ? hexToRgba(c.borderStrong, 0.45) : c.borderStrong;
+
+  el.style.setProperty("--color-bg", bg);
+  el.style.setProperty("--color-surface", surface);
+  el.style.setProperty("--color-surface-2", surface2);
+  el.style.setProperty("--color-border", border);
+  el.style.setProperty("--color-border-strong", borderStrong);
   el.style.setProperty("--color-accent", c.accent);
   el.style.setProperty("--color-accent-dim", c.accentDim);
   el.style.setProperty("--color-text", c.text);
@@ -149,9 +180,9 @@ export function applyTheme(
   el.style.setProperty("--color-warning", c.warning);
   el.style.setProperty("--color-sector-purple", c.sectorPurple);
   // Short aliases
-  el.style.setProperty("--bg", c.bg);
-  el.style.setProperty("--bg-elevated", c.surface);
-  el.style.setProperty("--border", c.border);
+  el.style.setProperty("--bg", bg);
+  el.style.setProperty("--bg-elevated", surface);
+  el.style.setProperty("--border", border);
   el.style.setProperty("--accent", c.accent);
   el.style.setProperty("--accent-dim", c.accentDim);
   el.style.setProperty("--text", c.text);

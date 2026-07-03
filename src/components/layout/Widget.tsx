@@ -1,6 +1,7 @@
-import { EyeOff } from "lucide-react";
+import { EyeOff, ExternalLink } from "lucide-react";
 import type { WidgetDef } from "../../dashboards/registry";
 import type { TelemetryData } from "../../hooks/useTelemetry";
+import { openWidgetWindow } from "../../lib/overlayWindows";
 
 /** Class react-grid-layout uses to know where a widget can be grabbed. */
 export const WIDGET_DRAG_HANDLE = "widget-drag-handle";
@@ -32,14 +33,24 @@ export function Widget({ def, data, onHide }: WidgetProps) {
           {def.title}
         </h3>
 
-        <button
-          type="button"
-          onClick={onHide}
-          title="Hide widget"
-          className={`${WIDGET_NO_DRAG} ml-auto grid size-6 place-items-center rounded-md text-muted opacity-0 transition-opacity hover:bg-surface-2 hover:text-danger group-hover:opacity-100`}
-        >
-          <EyeOff className="size-3.5" />
-        </button>
+        <div className="ml-auto flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+          <button
+            type="button"
+            onClick={() => openWidgetWindow(def.id, def.title)}
+            title="Open this widget in its own window"
+            className={`${WIDGET_NO_DRAG} grid size-6 place-items-center rounded-md text-muted transition-colors hover:bg-surface-2 hover:text-accent`}
+          >
+            <ExternalLink className="size-3.5" />
+          </button>
+          <button
+            type="button"
+            onClick={onHide}
+            title="Hide widget"
+            className={`${WIDGET_NO_DRAG} grid size-6 place-items-center rounded-md text-muted transition-colors hover:bg-surface-2 hover:text-danger`}
+          >
+            <EyeOff className="size-3.5" />
+          </button>
+        </div>
       </header>
 
       {/*

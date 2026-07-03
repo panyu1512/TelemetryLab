@@ -31,6 +31,9 @@ omit = [
     "tests/*",
     # Thin I/O shells exercised end-to-end, not unit-tested:
     "telemetrylab/publisher.py",
+    # Network/threaded static server — verified by an integration test
+    # (test_http_server.py) rather than the unit-coverage gate.
+    "telemetrylab/http_server.py",
 ]
 
 [tool.coverage.report]

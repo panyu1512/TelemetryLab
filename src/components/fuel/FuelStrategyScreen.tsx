@@ -62,7 +62,8 @@ export function FuelStrategyScreen() {
   // User controls.
   const [reservePct, setReservePct] = useState(5); // %
   const [pitFuel, setPitFuel] = useState<number | null>(null); // litres, null = auto
-  const [showAlternates, setShowAlternates] = useState(true);
+  // Collapsed by default so the core read-outs fit an overlay without scrolling.
+  const [showAlternates, setShowAlternates] = useState(false);
 
   const { strategy, sampleCount, outOfFuel } = useFuelStrategy(data, session, {
     reservePct: reservePct / 100,
@@ -83,27 +84,29 @@ export function FuelStrategyScreen() {
       {!hasFuel ? (
         <EmptyState iracingActive={iracingActive} />
       ) : (
-        <div className="flex flex-1 flex-col gap-3 overflow-auto p-3">
+        // `@container` lets the layout switch to two columns based on the
+        // overlay's *own* width (not the viewport), so the core read-outs fit a
+        // small always-on-top window without scrolling while you drive.
+        <div className="@container flex flex-1 flex-col gap-2 overflow-auto p-2">
           {(outOfFuel || strategy.status === "empty") && <OutOfFuelAlert />}
-
-          <FuelBar strategy={strategy} />
 
           <PredictionRow strategy={strategy} sampleCount={sampleCount} />
 
-          <StrategyCard strategy={strategy} />
-
-          <FuelSaveCard strategy={strategy} />
+          <div className="grid grid-cols-1 gap-2 @[460px]:grid-cols-2">
+            <FuelBar strategy={strategy} />
+            <StrategyCard strategy={strategy} />
+            <FuelSaveCard strategy={strategy} />
+            <PitFuelControl
+              pitFuel={pitFuel}
+              capacity={strategy.tankCapacity}
+              onChange={setPitFuel}
+            />
+          </div>
 
           <PlansCard
             strategy={strategy}
             open={showAlternates}
             onToggle={() => setShowAlternates((o) => !o)}
-          />
-
-          <PitFuelControl
-            pitFuel={pitFuel}
-            capacity={strategy.tankCapacity}
-            onChange={setPitFuel}
           />
         </div>
       )}
@@ -125,7 +128,7 @@ function Header({
   config: string | null;
 }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border px-3 py-2">
+    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border px-3 py-1.5">
       <span className="flex items-center gap-1.5 text-sm font-semibold text-text">
         <Fuel className="size-4 text-accent" />
         Fuel &amp; Strategy
@@ -162,7 +165,7 @@ function FuelBar({ strategy }: { strategy: FuelStrategy }) {
   const fill = low ? "var(--color-danger)" : "var(--color-accent)";
 
   return (
-    <section className="rounded-lg border border-border bg-surface-2 p-3">
+    <section className="rounded-lg border border-border bg-surface-2 p-2.5">
       <div className="mb-2 flex items-end justify-between">
         <Metric
           label="In tank"
@@ -224,26 +227,26 @@ function PredictionRow({
 
   return (
     <section
-      className="flex items-center gap-3 rounded-lg border px-3 py-2.5"
+      className="flex items-center gap-2.5 rounded-lg border px-2.5 py-2"
       style={{ borderColor: `${meta.color}44`, background: `${meta.color}12` }}
     >
       <div
-        className="grid size-9 shrink-0 place-items-center rounded-lg"
+        className="grid size-8 shrink-0 place-items-center rounded-lg"
         style={{ background: `${meta.color}22`, color: meta.color }}
       >
-        <meta.Icon className="size-5" />
+        <meta.Icon className="size-4" />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-semibold" style={{ color: meta.color }}>
+        <div className="text-sm font-semibold leading-tight" style={{ color: meta.color }}>
           {meta.label}
         </div>
-        <div className="text-[11px] text-muted">
+        <div className="truncate text-[11px] text-muted">
           {sampleCount === 0
-            ? "Estimating consumption — complete a lap for live data."
+            ? "Estimating — complete a lap for live data."
             : `${sampleCount} lap${sampleCount === 1 ? "" : "s"} sampled`}
         </div>
       </div>
-      <div className="flex shrink-0 gap-4">
+      <div className="flex shrink-0 gap-3">
         <Metric label="Fuel laps" value={lapsLeftFuel} align="end" />
         <Metric label="To flag" value={lapsToFinish} unit="laps" align="end" />
       </div>
@@ -262,7 +265,7 @@ function StrategyCard({ strategy }: { strategy: FuelStrategy }) {
       : null;
 
   return (
-    <section className="rounded-lg border border-border bg-surface-2 p-3">
+    <section className="rounded-lg border border-border bg-surface-2 p-2.5">
       <SectionTitle icon={Flag}>Current stint</SectionTitle>
 
       <div className="mb-1 flex items-baseline justify-between">
@@ -338,7 +341,7 @@ function FuelSaveCard({ strategy }: { strategy: FuelStrategy }) {
   const finishing = finishesOnFuel === true || !saveNeededPct;
 
   return (
-    <section className="rounded-lg border border-border bg-surface-2 p-3">
+    <section className="rounded-lg border border-border bg-surface-2 p-2.5">
       <SectionTitle icon={Leaf}>Fuel save</SectionTitle>
       {finishing ? (
         <p className="text-xs text-muted">
@@ -348,7 +351,7 @@ function FuelSaveCard({ strategy }: { strategy: FuelStrategy }) {
       ) : (
         <div className="flex items-center justify-between gap-3">
           <div>
-            <div className="text-lg font-semibold text-warning">
+            <div className="text-base font-semibold text-warning">
               Save {Math.round((saveNeededPct ?? 0) * 100)}%
             </div>
             <p className="mt-0.5 text-[11px] text-muted">
@@ -466,7 +469,7 @@ function PitFuelControl({
   const current = pitFuel ?? Math.min(max, 40);
 
   return (
-    <section className="rounded-lg border border-border bg-surface-2 p-3">
+    <section className="rounded-lg border border-border bg-surface-2 p-2.5">
       <div className="flex items-center justify-between">
         <SectionTitle icon={Droplet} noMargin>
           Pit fuel
@@ -549,7 +552,7 @@ function Metric({
   return (
     <div className={`flex flex-col ${align === "end" ? "items-end" : "items-start"}`}>
       <div className="flex items-baseline gap-1">
-        <span className="tnum text-lg font-semibold leading-none" style={{ color: color ?? "var(--color-text)" }}>
+        <span className="tnum text-base font-semibold leading-none" style={{ color: color ?? "var(--color-text)" }}>
           {value}
         </span>
         {unit && <span className="text-[11px] text-muted">{unit}</span>}

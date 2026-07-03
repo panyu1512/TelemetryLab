@@ -7,7 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Compacted the Fuel & Strategy overlay so it fits without scrolling.** The
+  read-outs now flow into two columns based on the overlay's own width
+  (container query), padding/typography are tighter, and the "Pit strategies"
+  list is collapsed by default — so the calculator fits a small always-on-top
+  window while driving instead of requiring a scroll you can't do mid-race.
+
 ### Fixed
+
+- **Overlay windows no longer show a solid black background (real root cause).**
+  `applyTheme` writes the design tokens as **inline** custom properties on
+  `<html>`, and inline properties beat the `html.overlay-mode { … }` stylesheet
+  rules — so the earlier CSS-only transparency was silently overridden and the
+  `bg-bg` shell painted solid black over the game. `applyTheme` is now
+  overlay-aware: in overlay mode it sets `--color-bg: transparent` and
+  translucent surfaces/borders inline (text/accent stay solid), and `main.tsx`
+  sets the transparent background synchronously before first paint so there's no
+  black flash. Applies to the main window in overlay mode and to every
+  popped-out overlay/widget window.
+
+### Added
+
+- **Localhost HTTP server for browser / OBS access.** The Python bridge now
+  serves the built frontend over plain HTTP (default `http://127.0.0.1:9999/`),
+  so `http://127.0.0.1:9999/?overlay=standings` loads in any browser and as an
+  OBS Browser Source — the Tauri `tauri://localhost` protocol is only reachable
+  inside the app's own WebView. Dependency-free (`telemetrylab/http_server.py`),
+  runs alongside the WebSocket server, with a path-traversal guard and SPA
+  fallback. Configurable via `BRIDGE_HTTP` / `BRIDGE_HTTP_HOST` /
+  `BRIDGE_HTTP_PORT` / `BRIDGE_HTTP_ROOT`; the packaged sidecar bundles `dist/`.
+- **Individual telemetry widgets pop out into their own windows.** Each
+  dashboard widget (speed, fuel, inputs, tyres, …) has an "open in new window"
+  button, and `?widget=<id>` renders a single widget on its own transparent,
+  always-on-top window — so metrics can be placed independently instead of the
+  whole dashboard as one block.
+- **Open overlay/widget windows are restored on restart.** The app remembers
+  which overlay/widget windows were open (per profile-independent registry) and
+  re-opens them on the next launch, at their saved per-window positions. A close
+  button on each popped-out window forgets it so it doesn't come back.
+
+### Fixed (overlay windows, continued)
 
 - **Popped-out overlay windows now composite over the game.** A single-overlay
   render (`?overlay=<id>` window / OBS browser source) painted a solid black

@@ -2,15 +2,31 @@ import React from "react";
 import ReactDOM from "react-dom/client";
 import App from "./App";
 import { OverlayWindow } from "./components/OverlayWindow";
-import { getOverlayRoute } from "./lib/overlayWindows";
+import { SingleWidgetWindow } from "./components/SingleWidgetWindow";
+import { getOverlayRoute, getWidgetRoute } from "./lib/overlayWindows";
 import "./styles.css";
 
-// `?overlay=<id>` renders that single overlay in isolation (a spawned desktop
-// window or a browser-source tab); otherwise the full app with its dock.
+// `?widget=<id>` renders a single telemetry widget; `?overlay=<id>` renders one
+// whole overlay; otherwise the full app with its dock. The first two are
+// spawned desktop windows or browser-source tabs.
+const widgetId = getWidgetRoute();
 const overlayId = getOverlayRoute();
 
+// A single-view window paints transparent so the game shows through. Set the
+// background to transparent *synchronously* (before first paint) so there's no
+// black flash before the theme effect runs.
+if (widgetId || overlayId) {
+  const root = document.documentElement;
+  root.classList.add("overlay-mode");
+  root.style.setProperty("--color-bg", "transparent");
+  root.style.setProperty("--bg", "transparent");
+}
+
+let view: React.ReactNode;
+if (widgetId) view = <SingleWidgetWindow id={widgetId} />;
+else if (overlayId) view = <OverlayWindow id={overlayId} />;
+else view = <App />;
+
 ReactDOM.createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
-    {overlayId ? <OverlayWindow id={overlayId} /> : <App />}
-  </React.StrictMode>
+  <React.StrictMode>{view}</React.StrictMode>
 );
