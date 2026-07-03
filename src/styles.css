@@ -195,12 +195,15 @@ html.overlay-mode #root {
 }
 
 html.overlay-mode {
-  /* Opaque surfaces become semi-transparent glass in overlay mode. */
+  /* Opaque surfaces become semi-transparent glass in overlay mode so the game
+     (or an OBS capture) stays visible behind the overlay. The alpha is tuned
+     low enough to see through, but paired with the backdrop-blur below the
+     widgets still read clearly. */
   --color-bg: rgba(10, 10, 10, 0.01);
-  --color-surface: rgba(20, 20, 20, 0.80);
-  --color-surface-2: rgba(27, 27, 27, 0.80);
-  --color-border: rgba(34, 34, 34, 0.55);
-  --color-border-strong: rgba(51, 51, 51, 0.55);
+  --color-surface: rgba(20, 20, 20, 0.62);
+  --color-surface-2: rgba(27, 27, 27, 0.62);
+  --color-border: rgba(34, 34, 34, 0.45);
+  --color-border-strong: rgba(51, 51, 51, 0.45);
 }
 
 /*
@@ -260,7 +263,9 @@ html.overlay-locked * {
   border-bottom: 2px solid var(--color-muted);
   border-bottom-right-radius: 3px;
 }
-.is-editing .react-grid-item > .react-resizable-handle {
+/* Widgets are always rearrangeable, so the resize grip fades in on hover of
+   the card rather than requiring a separate edit mode. */
+.react-grid-item:hover > .react-resizable-handle {
   opacity: 1;
 }
 .react-grid-item > .react-resizable-handle:hover::after {

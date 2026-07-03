@@ -22,7 +22,6 @@ export function DashboardGrid({ layout, data }: DashboardGridProps) {
     dashboard,
     visibleWidgets,
     gridLayout,
-    editMode,
     onLayoutChange,
     toggleWidget,
   } = layout;
@@ -73,15 +72,14 @@ export function DashboardGrid({ layout, data }: DashboardGridProps) {
   } else if (width > 0) {
     content = (
       <GridLayout
-        className={editMode ? "is-editing" : ""}
         width={width}
         layout={gridLayout}
         cols={GRID_COLS}
         rowHeight={GRID_ROW_HEIGHT}
         margin={[GRID_MARGIN, GRID_MARGIN]}
         containerPadding={[0, 0]}
-        isDraggable={editMode}
-        isResizable={editMode}
+        isDraggable
+        isResizable
         draggableHandle={`.${WIDGET_DRAG_HANDLE}`}
         draggableCancel={`.${WIDGET_NO_DRAG}`}
         resizeHandles={["se"]}
@@ -93,12 +91,7 @@ export function DashboardGrid({ layout, data }: DashboardGridProps) {
           if (!def) return null;
           return (
             <div key={item.i}>
-              <Widget
-                def={def}
-                data={data}
-                editMode={editMode}
-                onHide={() => toggleWidget(def.id)}
-              />
+              <Widget def={def} data={data} onHide={() => toggleWidget(def.id)} />
             </div>
           );
         })}

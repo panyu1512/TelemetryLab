@@ -42,6 +42,19 @@ export function GlobalSettingsPanel() {
               }
             />
           </LabeledField>
+
+          <LabeledField
+            label="Mock Data"
+            hint="Drive the overlays with built-in synthetic telemetry when iRacing isn't connected — for offline dev, demos and screenshots."
+          >
+            <ToggleRow
+              checked={globalSettings.mockDataEnabled}
+              label={globalSettings.mockDataEnabled ? "On" : "Off"}
+              onChange={(v) =>
+                store.setGlobalSettings({ mockDataEnabled: v })
+              }
+            />
+          </LabeledField>
         </SettingsGroup>
       </section>
 

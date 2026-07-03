@@ -57,6 +57,12 @@ export interface GlobalSettings {
   logLevel: "debug" | "info" | "warn" | "error";
   /** Simple token guarding the /overlay/* HTTP endpoints. */
   authKey: string;
+  /**
+   * Drive the UI from client-side synthetic telemetry when iRacing / the bridge
+   * aren't available. Lets the whole app be used offline for dev, demos and
+   * screenshots.
+   */
+  mockDataEnabled: boolean;
 }
 
 // ── defaults ─────────────────────────────────────────────────────────────────
@@ -89,6 +95,7 @@ function makeDefaultGlobalSettings(): GlobalSettings {
     browserSourcesEnabled: false,
     logLevel: "info",
     authKey: genKey(),
+    mockDataEnabled: false,
   };
 }
 
@@ -220,6 +227,8 @@ interface OverlayConfigState extends Persisted {
 
   // Per-overlay settings (all scoped to the active profile)
   getOverlaySettings: (overlayId: string) => OverlaySettings;
+  /** Whether an overlay is enabled in the active profile (defaults to true). */
+  isOverlayEnabled: (overlayId: string) => boolean;
   setOverlayEnabled: (overlayId: string, enabled: boolean) => void;
   setOverlayTheme: (overlayId: string, themeId: string | null) => void;
   setOverlaySaturation: (overlayId: string, value: number) => void;
@@ -329,6 +338,10 @@ export const useOverlayConfigStore = create<OverlayConfigState>()((set, get) => 
     const { profiles, activeProfileId } = get();
     const p = resolveProfile(profiles, activeProfileId);
     return p.overlays[overlayId] ?? { ...DEFAULT_OVERLAY_SETTINGS };
+  },
+
+  isOverlayEnabled(overlayId) {
+    return get().getOverlaySettings(overlayId).enabled;
   },
 
   setOverlayEnabled(overlayId, enabled) {

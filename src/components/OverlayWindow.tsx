@@ -6,9 +6,16 @@
  * that one overlay full-bleed (no dock, title bar or manager), owns its own
  * bridge connection, and applies the overlay's own theme + appearance so it
  * looks identical to how it does inside the main window.
+ *
+ * The page renders with a **transparent background** (via the `overlay-mode`
+ * class): a popped-out desktop window floats over iRacing, and an OBS Browser
+ * Source composites over the game capture — in both cases only the frosted
+ * widget surfaces should paint, never a solid black page. A thin drag strip at
+ * the top lets the user reposition the frameless desktop window.
  */
 
 import { useEffect } from "react";
+import { GripHorizontal } from "lucide-react";
 import { useBridge } from "../hooks/useBridge";
 import { useTelemetry } from "../hooks/useTelemetry";
 import { useDashboardLayout } from "../hooks/useDashboardLayout";
@@ -16,6 +23,10 @@ import { DashboardGrid } from "./layout/DashboardGrid";
 import { getDashboard } from "../dashboards/registry";
 import { useOverlayConfigStore } from "../stores/useOverlayConfigStore";
 import { getTheme, applyTheme } from "../themes";
+import { initWindowBoundsPersistence } from "../stores/useOverlayStore";
+
+const isTauri =
+  typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
 export function OverlayWindow({ id }: { id: string }) {
   // Each overlay window owns its own socket to the bridge.
@@ -26,6 +37,15 @@ export function OverlayWindow({ id }: { id: string }) {
   const config = useOverlayConfigStore();
   const settings = config.getOverlaySettings(id);
   const dashboard = getDashboard(id);
+
+  // Transparent, frosted background so the game (or an OBS capture) shows
+  // through — a single-overlay render is always "overlay mode". Also remember
+  // this window's position/size independently of the main window.
+  useEffect(() => {
+    document.documentElement.classList.add("overlay-mode");
+    initWindowBoundsPersistence();
+    return () => document.documentElement.classList.remove("overlay-mode");
+  }, []);
 
   // Apply this overlay's effective theme (own override, else global default).
   const effectiveThemeId =
@@ -47,9 +67,25 @@ export function OverlayWindow({ id }: { id: string }) {
   if (opacity !== 100) style.opacity = opacity / 100;
 
   return (
-    <div className="h-full w-full overflow-hidden bg-bg text-text">
+    <div className="flex h-full w-full flex-col overflow-hidden bg-bg text-text">
+      {/* Drag strip: repositions the frameless desktop window (data-tauri-drag-
+          region). Kept slim and only fully visible on hover so it doesn't
+          clutter an OBS capture; harmless in a plain browser. */}
+      {isTauri && (
+        <div
+          data-tauri-drag-region
+          title="Drag to move this overlay"
+          className="group flex h-5 shrink-0 cursor-grab items-center justify-center opacity-0 transition-opacity hover:opacity-100 active:cursor-grabbing"
+        >
+          <GripHorizontal
+            data-tauri-drag-region
+            className="size-3.5 text-muted"
+          />
+        </div>
+      )}
+
       <main
-        className="h-full overflow-auto p-2 transition-[filter,opacity]"
+        className="min-h-0 flex-1 overflow-auto p-2 transition-[filter,opacity]"
         style={style}
       >
         <DashboardGrid layout={layout} data={data} />

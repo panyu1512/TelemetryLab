@@ -7,7 +7,40 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Popped-out overlay windows now composite over the game.** A single-overlay
+  render (`?overlay=<id>` window / OBS browser source) painted a solid black
+  page background, obscuring the sim. It now renders transparent + frosted
+  (the `overlay-mode` treatment), so only the widget surfaces show.
+- **Overlay windows are movable.** The frameless overlay window gained a
+  `data-tauri-drag-region` drag strip, so it can be repositioned (previously it
+  was stuck in place with no title bar to grab).
+- **Overlay glass is more see-through** in overlay mode (surface alpha
+  0.80 → 0.62) so the game stays visible behind the overlay.
+- **Robust overlay deep-linking.** `getOverlayRoute` now accepts the overlay id
+  from the query string *and* the URL hash (`#overlay=<id>` / `#/<id>`), so
+  browser-source / OBS links survive hosts that don't preserve query strings.
+- **Per-window position persistence.** Window bounds are now saved under a
+  per-window-label key, so the main window and each popped-out overlay remember
+  their own position/size instead of clobbering a single shared entry.
+
+### Changed / Removed
+
+- **Removed the confusing "Edit layout" mode.** Dashboard widgets are now
+  always directly draggable/resizable (grab the header, resize from the corner)
+  and every change auto-persists — there's no separate edit toggle. Deleted the
+  unused legacy `OverlayManager` widget panel.
+
 ### Added
+
+- **Mock Data mode** — a *Global Settings* toggle (Overlay Manager) that drives
+  every overlay from built-in synthetic telemetry when iRacing / the Python
+  bridge isn't available, so the whole UI is usable offline for development,
+  demos and screenshots. New pure generators (`src/lib/mockData.ts`) synthesize
+  a player frame, session roster and multi-class standings from elapsed time,
+  fed into the stores by `MockFeed` (`src/telemetry/mockFeed.ts`); `useBridge`
+  hot-swaps between the live bridge and the mock feed as the toggle flips.
 
 - **Automated test suite & CI quality gates** — the project now has real,
   enforced quality gates on both sides of the WebSocket.

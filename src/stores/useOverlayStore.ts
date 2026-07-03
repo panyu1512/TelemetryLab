@@ -12,7 +12,16 @@ async function getWin() {
 // ── persistence ─────────────────────────────────────────────────────────────
 
 const STORAGE_KEY = "telemetrylab.overlay.v1";
-const BOUNDS_KEY = "telemetrylab.window-bounds.v1";
+/**
+ * Window bounds are persisted **per window label** so the main window and each
+ * popped-out overlay window remember their own position/size independently. A
+ * single shared key made every window clobber the others' bounds on move.
+ */
+const BOUNDS_KEY_PREFIX = "telemetrylab.window-bounds.v2";
+
+function boundsKey(label: string): string {
+  return `${BOUNDS_KEY_PREFIX}.${label}`;
+}
 
 interface PersistedOverlay {
   overlayMode: boolean;
@@ -105,10 +114,11 @@ export async function initWindowBoundsPersistence() {
   const { getCurrentWindow } = await import("@tauri-apps/api/window");
   const { PhysicalPosition, PhysicalSize } = await import("@tauri-apps/api/dpi");
   const w = getCurrentWindow();
+  const key = boundsKey(w.label);
 
   // Restore saved bounds on launch.
   try {
-    const raw = localStorage.getItem(BOUNDS_KEY);
+    const raw = localStorage.getItem(key);
     if (raw) {
       const b = JSON.parse(raw) as {
         x: number;
@@ -133,7 +143,7 @@ export async function initWindowBoundsPersistence() {
       const pos = await w.innerPosition();
       const size = await w.innerSize();
       localStorage.setItem(
-        BOUNDS_KEY,
+        key,
         JSON.stringify({ x: pos.x, y: pos.y, width: size.width, height: size.height })
       );
     } catch {}

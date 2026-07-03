@@ -41,6 +41,9 @@ iRacing connecting/disconnecting, set `MOCK_DISCONNECT_EVERY` in
 > shared memory — neither runs in a Linux container. Those are produced by CI
 > ([`.github/workflows/build.yml`](.github/workflows/build.yml)). Use the native
 > workflows below for the full app.
+>
+> No sim handy? Turn on **Mock Data** in the Overlay Manager → *Global Settings*
+> and the whole UI runs on built-in synthetic telemetry — no bridge required.
 
 ## Project layout
 
@@ -163,6 +166,18 @@ copy dist\iracing-bridge.exe ..\src-tauri\binaries\iracing-bridge-x86_64-pc-wind
 npm run tauri build
 # → src-tauri/target/release/bundle/msi/*.msi
 ```
+
+---
+
+## Viewing overlays in a browser / OBS
+
+Every overlay can be rendered on its own by loading the app with an
+`?overlay=<id>` selector — e.g. `http://localhost:1420/?overlay=standings`.
+Paste that URL into a browser tab, or into **OBS → Sources → Browser Source**,
+to composite a single overlay over your capture (the page renders with a
+transparent background). The Overlay Manager's *Browser Source* tab generates
+ready-to-copy links for each overlay. A hash form (`#overlay=<id>` / `#/<id>`)
+is also accepted for hosts that don't preserve query strings.
 
 ---
 

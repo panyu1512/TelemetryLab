@@ -1,4 +1,4 @@
-import { Pencil, SlidersHorizontal } from "lucide-react";
+import { SlidersHorizontal } from "lucide-react";
 import type { DashboardLayout } from "../../hooks/useDashboardLayout";
 
 interface DockProps {
@@ -9,11 +9,11 @@ interface DockProps {
 
 /**
  * The floating overlay dock: a glassy, minimalist control bar pinned to the
- * bottom of the window. Switches between dashboards and exposes edit / widget
- * controls. This is the surface the user interacts with the dashboards from.
+ * bottom of the window. Switches between dashboards and opens the overlay
+ * manager. This is the surface the user interacts with the dashboards from.
  */
 export function Dock({ layout, managerOpen, onToggleManager }: DockProps) {
-  const { dashboards, active, setActive, editMode, toggleEditMode } = layout;
+  const { dashboards, active, setActive } = layout;
 
   return (
     <div className="flex items-center gap-1 rounded-2xl border border-border bg-surface/80 p-1.5 shadow-2xl backdrop-blur-xl">
@@ -52,16 +52,9 @@ export function Dock({ layout, managerOpen, onToggleManager }: DockProps) {
 
       {/* Utility controls */}
       <DockIcon
-        active={editMode}
-        onClick={toggleEditMode}
-        title={editMode ? "Done editing" : "Edit layout"}
-      >
-        <Pencil className="size-4" />
-      </DockIcon>
-      <DockIcon
         active={managerOpen}
         onClick={onToggleManager}
-        title="Overlay Manager (v0.7)"
+        title="Overlay Manager"
       >
         <SlidersHorizontal className="size-4" />
       </DockIcon>
