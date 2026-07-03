@@ -169,32 +169,27 @@ npm run tauri build
 
 ---
 
-## Viewing overlays in a browser / OBS
+## Overlay editor & pop-out windows
 
-A single view is selected with a URL param: `?overlay=<id>` renders one whole
-overlay, and `?widget=<id>` renders a single telemetry widget (speed, fuel, …).
-Both render with a **transparent background** so they composite over an OBS
-capture or float over the game.
+The **Overlay Manager** is a dedicated editor: a sidebar lists every overlay,
+selecting one opens its configuration in place (Appearance / Visibility /
+Window), and a **live preview** reflects every change instantly — no save or
+apply step. If an overlay is popped out into its own window, edits propagate to
+that window in real time over a cross-window event bus.
 
-The bridge serves the built frontend over plain HTTP so these URLs work outside
-the desktop app (the Tauri `tauri://localhost` protocol is only reachable inside
-the app's own WebView):
+Any overlay or widget can be popped out into its own frameless, always-on-top
+desktop window from the **Window** tab ("Open in new window"). Each window
+remembers its own position, size and lock state, and is restored exactly on the
+next launch. Internally a single view is selected with a URL param
+(`?overlay=<id>` / `?widget=<id>`); a hash form (`#overlay=<id>` / `#/<id>`) is
+also accepted. During `npm run dev` these open as browser tabs for convenience.
 
-```
-http://127.0.0.1:9999/?overlay=standings   # a whole overlay
-http://127.0.0.1:9999/?widget=fuel          # a single widget
-```
+### Locking
 
-Paste either into a browser tab or **OBS → Sources → Browser Source**. The
-Overlay Manager's *Browser Source* tab generates ready-to-copy links. A hash
-form (`#overlay=<id>` / `#/<id>`) is also accepted for hosts that don't preserve
-query strings.
-
-The HTTP server runs from the bridge and serves the built `dist/` (so run
-`npm run build` first in dev; the packaged sidecar bundles it). Configure it
-with env vars: `BRIDGE_HTTP=0` to disable, `BRIDGE_HTTP_HOST`,
-`BRIDGE_HTTP_PORT` (default `9999`), `BRIDGE_HTTP_ROOT`. During `npm run dev`
-the Vite server at `http://localhost:1420` serves the same URLs with hot reload.
+Any window — the main window or any pop-out — can be **locked**: it becomes
+click-through (all mouse input passes to iRacing) and immovable. Lock state is
+persisted per window and propagates to open windows immediately. Press
+**Ctrl+Shift+L** to toggle the focused window.
 
 ---
 

@@ -10,8 +10,6 @@
 # The resulting `dist/iracing-bridge.exe` is copied by CI into
 # `src-tauri/binaries/iracing-bridge-x86_64-pc-windows-msvc.exe`.
 
-import os
-
 from PyInstaller.utils.hooks import collect_submodules
 
 # Pull in the full submodule trees so dynamically imported parts of these
@@ -25,14 +23,9 @@ hiddenimports += collect_submodules("irsdk")
 hiddenimports += collect_submodules("telemetrylab")
 hiddenimports += ["yaml", "yaml.cyaml"]
 
-# Bundle the built frontend (../dist) so the sidecar can serve overlays over
-# HTTP for browsers / OBS. Resolved at runtime via sys._MEIPASS/dist
-# (see telemetrylab.http_server.resolve_web_root). Only included when it has
-# been built; the bridge degrades gracefully when it's absent.
+# The sidecar is a pure WebSocket telemetry source; the Tauri app serves the
+# frontend itself, so no web assets need bundling here.
 datas = []
-_dist = os.path.join("..", "dist")
-if os.path.isfile(os.path.join(_dist, "index.html")):
-    datas.append((_dist, "dist"))
 
 a = Analysis(
     ["bridge.py"],

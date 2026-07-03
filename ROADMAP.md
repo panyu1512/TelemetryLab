@@ -213,16 +213,17 @@ The piece from the reference settings UI: a single, minimalist control panel to
   first lap, in the pits — wired to `SessionState` / `SessionFlags`.
 - **Profiles:** named, switchable config sets (practice / qualy / race) you can
   duplicate, rename and delete; everything persisted locally.
-- **Per-overlay window controls:** open in its own window, position/size, lock.
-- **Browser-source URLs (streamers):** optionally serve each overlay over a
-  local HTTP endpoint so it can be dropped into OBS as a browser source
-  (`http://127.0.0.1:<port>/overlay/<name>?profile=<profile>`), with copy /
-  open-in-browser actions.
+- **Per-overlay window controls:** open in its own window, position/size, lock
+  (any window — main or pop-out — locks through one shared mechanism).
 - **Global settings:** bridge endpoint (today env-only), plus Debug / Log views
   for troubleshooting the bridge connection.
 
-**Needs:** a small local HTTP server in the app (for the OBS URLs) + persisted
-settings store; builds on the overlay windows from v0.6.0.
+> **Deferred:** browser-source URLs / OBS HTTP endpoints were removed for now to
+> keep the window architecture focused on native pop-out overlays. They can
+> return behind a feature flag if there's demand — the `?overlay=` / `?widget=`
+> deep links that would power them still exist.
+
+**Needs:** persisted settings store; builds on the overlay windows from v0.6.0.
 
 ---
 

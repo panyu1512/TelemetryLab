@@ -4,7 +4,7 @@
 
 use std::sync::Mutex;
 
-use tauri::{Emitter, Manager, RunEvent};
+use tauri::{Emitter, Manager, RunEvent, WindowEvent};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, ShortcutState};
 use tauri_plugin_shell::process::{CommandChild, CommandEvent};
 use tauri_plugin_shell::ShellExt;
@@ -67,6 +67,22 @@ fn main() {
                 .build(),
         )
         .manage(SidecarProcess(Mutex::new(None)))
+        // Closing the main window shuts the whole app down: eagerly close every
+        // auxiliary overlay/widget window so none is left orphaned on screen.
+        // Programmatic closes here don't run the frontend's "forget" handler, so
+        // the remembered-windows list survives for restore-on-next-launch.
+        .on_window_event(|window, event| {
+            if window.label() == "main" {
+                if let WindowEvent::CloseRequested { .. } = event {
+                    let app = window.app_handle();
+                    for (label, w) in app.webview_windows() {
+                        if label != "main" {
+                            let _ = w.close();
+                        }
+                    }
+                }
+            }
+        })
         .setup(|app| {
             // Register the overlay lock/unlock hotkey (Ctrl+Shift+L).
             // This fires even when iRacing has focus, allowing the user to

@@ -15,7 +15,7 @@ import { OverlayChrome } from "./OverlayChrome";
 import { getWidget } from "../dashboards/registry";
 import { useOverlayConfigStore } from "../stores/useOverlayConfigStore";
 import { getTheme, applyTheme } from "../themes";
-import { initWindowBoundsPersistence } from "../stores/useOverlayStore";
+import { initWindow } from "../stores/useWindowStore";
 
 export function SingleWidgetWindow({ id }: { id: string }) {
   useBridge();
@@ -26,7 +26,7 @@ export function SingleWidgetWindow({ id }: { id: string }) {
   // Transparent, frosted background + independent window bounds.
   useEffect(() => {
     document.documentElement.classList.add("overlay-mode");
-    initWindowBoundsPersistence();
+    initWindow();
     return () => document.documentElement.classList.remove("overlay-mode");
   }, []);
 

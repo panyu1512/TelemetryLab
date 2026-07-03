@@ -23,7 +23,7 @@ import { OverlayChrome } from "./OverlayChrome";
 import { getDashboard } from "../dashboards/registry";
 import { useOverlayConfigStore } from "../stores/useOverlayConfigStore";
 import { getTheme, applyTheme } from "../themes";
-import { initWindowBoundsPersistence } from "../stores/useOverlayStore";
+import { initWindow } from "../stores/useWindowStore";
 
 export function OverlayWindow({ id }: { id: string }) {
   // Each overlay window owns its own socket to the bridge.
@@ -40,7 +40,7 @@ export function OverlayWindow({ id }: { id: string }) {
   // this window's position/size independently of the main window.
   useEffect(() => {
     document.documentElement.classList.add("overlay-mode");
-    initWindowBoundsPersistence();
+    initWindow();
     return () => document.documentElement.classList.remove("overlay-mode");
   }, []);
 

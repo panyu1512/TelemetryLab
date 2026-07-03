@@ -1,17 +1,17 @@
 /**
- * Per-overlay / per-widget windows + browser links + open-window persistence.
+ * Per-overlay / per-widget windows + open-window persistence.
  *
  * A single overlay is rendered on its own by loading the app with `?overlay=<id>`
- * and a single telemetry widget with `?widget=<id>` (see `main.tsx`). Those URLs
- * power three things:
- *   - **Separate desktop windows** — on Tauri we spawn a real always-on-top
- *     `WebviewWindow`; in a plain browser we fall back to a new tab.
- *   - **Browser-source links** — copy the URL into OBS (or any browser).
- *   - **The full app link** — the bare origin, for "see everything".
+ * and a single telemetry widget with `?widget=<id>` (see `main.tsx`). On Tauri we
+ * spawn a real always-on-top `WebviewWindow` for each; in a plain browser we fall
+ * back to a new tab (dev convenience).
  *
  * We also remember which of these windows are open (in localStorage) so the app
- * can re-open them on the next launch.
+ * can re-open them on the next launch, and each window's label is the key under
+ * which its position/size/lock state is persisted (see `windowState.ts`).
  */
+
+import { getWindowBounds } from "./windowState";
 
 const isTauri =
   typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
@@ -41,10 +41,8 @@ function readParam(
  * Extract the requested overlay id from a URL's `search` and `hash` parts.
  *
  * Pure and side-effect free so it can be unit-tested without a DOM. We accept
- * several shapes because the same deep link has to survive very different
- * hosts — the Tauri `tauri.localhost` webview, a Vite dev server, a static
- * export, and OBS's embedded browser (which is picky about how it forwards a
- * URL):
+ * several shapes because the same deep link has to survive different hosts —
+ * the Tauri `tauri.localhost` webview, a Vite dev server, and a static export:
  *
  *   - `?overlay=dashboard`         — query string (canonical)
  *   - `#overlay=dashboard`         — hash query (survives static hosting)
@@ -94,20 +92,18 @@ export function isSingleView(): boolean {
   return getOverlayRoute() !== null || getWidgetRoute() !== null;
 }
 
-/** Absolute URL for the whole app (dock + all overlays). */
-export function appUrl(): string {
-  const { origin, pathname } = window.location;
-  return `${origin}${pathname}`;
-}
-
-/** Absolute URL that renders a single overlay in isolation. */
-export function overlayUrl(id: string): string {
-  return `${appUrl()}?${OVERLAY_PARAM}=${encodeURIComponent(id)}`;
-}
-
-/** Absolute URL that renders a single telemetry widget in isolation. */
-export function widgetUrl(id: string): string {
-  return `${appUrl()}?${WIDGET_PARAM}=${encodeURIComponent(id)}`;
+/**
+ * The label of the window currently rendering, derived from its route. Matches
+ * the labels we assign to spawned Tauri windows (`overlay-<id>` / `widget-<id>`)
+ * and falls back to `"main"` for the primary window. Used to key per-window
+ * persisted state (bounds + lock).
+ */
+export function currentWindowLabel(): string {
+  const overlay = getOverlayRoute();
+  if (overlay) return `overlay-${overlay}`;
+  const widget = getWidgetRoute();
+  if (widget) return `widget-${widget}`;
+  return "main";
 }
 
 function relativeUrl(param: string, id: string): string {
@@ -183,11 +179,15 @@ async function openWindow(
         return;
       }
 
+      // Reopen exactly where it was last time, if we have saved bounds — so
+      // there's no default-position flash before the window restores itself.
+      const saved = getWindowBounds(winLabel);
       const win = new WebviewWindow(winLabel, {
         url: relativeUrl(param, id),
         title: `${label} — iRacing Telemetry`,
-        width: kind === "widget" ? 320 : 640,
-        height: kind === "widget" ? 220 : 420,
+        width: saved?.width ?? (kind === "widget" ? 320 : 640),
+        height: saved?.height ?? (kind === "widget" ? 220 : 420),
+        ...(saved ? { x: saved.x, y: saved.y } : {}),
         minWidth: kind === "widget" ? 160 : 320,
         minHeight: kind === "widget" ? 120 : 200,
         decorations: false,
@@ -207,8 +207,7 @@ async function openWindow(
   }
 
   // Browser / dev fallback: a new tab pointed at the single-view URL.
-  const url = kind === "widget" ? widgetUrl(id) : overlayUrl(id);
-  window.open(url, `${kind}-${id}`, "noopener");
+  window.open(relativeUrl(param, id), `${kind}-${id}`, "noopener");
 }
 
 /** Open a whole overlay in its own always-on-top window (or a browser tab). */
