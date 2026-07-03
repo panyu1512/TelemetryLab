@@ -28,7 +28,8 @@
     }
   },
   "bundle": {
-    "active": false,
+    "active": true,
+    "targets": ["msi"],
     "externalBin": ["binaries/iracing-bridge"],
     "icon": [
       "icons/32x32.png",

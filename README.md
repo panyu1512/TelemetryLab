@@ -38,8 +38,9 @@ iRacing connecting/disconnecting, set `MOCK_DISCONNECT_EVERY` in
 
 > ⚠️ Docker only runs the **development** stack. The Tauri desktop app is a
 > native Windows/macOS binary and the **real** bridge needs iRacing's Windows
-> shared memory — neither runs in a Linux container. Use the native workflows
-> below for the full app.
+> shared memory — neither runs in a Linux container. Those are produced by CI
+> ([`.github/workflows/build.yml`](.github/workflows/build.yml)). Use the native
+> workflows below for the full app.
 >
 > No sim handy? Turn on **Mock Data** in the Overlay Manager → *Global Settings*
 > and the whole UI runs on built-in synthetic telemetry — no bridge required.
@@ -71,11 +72,13 @@ iRacing connecting/disconnecting, set `MOCK_DISCONNECT_EVERY` in
 │   ├── tests/                # pytest suite (unit + service integration)
 │   ├── bridge.py             # Real bridge source (Windows, pyirsdk)
 │   ├── mock_bridge.py        # Synthetic multi-car field source (Mac/Linux dev)
+│   ├── bridge.spec           # PyInstaller config (onefile, console)
 │   ├── pyproject.toml        # pytest / ruff / coverage config
 │   ├── requirements.txt      # runtime deps  (requirements-dev.txt = test/lint)
 │   └── requirements-dev.txt
 └── .github/workflows/
-    └── ci.yml                # Quality gates: lint + typecheck + tests (every push/PR)
+    ├── ci.yml                # Quality gates: lint + typecheck + tests (every push/PR)
+    └── build.yml             # Release: Windows .msi on version tags
 ```
 
 ## Prerequisites
@@ -139,9 +142,30 @@ python bridge/bridge.py      # reads iRacing shared memory, serves ws://localhos
 npm run tauri dev
 ```
 
-> During `tauri dev` the app tries to spawn the sidecar from
-> `src-tauri/binaries/`; if it isn't there, just run `python bridge/bridge.py`
-> manually and ignore the "failed to spawn sidecar" log line.
+> In a packaged build, the Tauri app launches `iracing-bridge.exe` automatically
+> and kills it on exit. During `tauri dev` it tries to spawn the sidecar from
+> `src-tauri/binaries/` — either build it once (see below) or just run
+> `python bridge/bridge.py` manually and ignore the "failed to spawn sidecar"
+> log line.
+
+### Building the sidecar locally (optional)
+
+```bash
+cd bridge
+pip install -r requirements.txt
+pyinstaller bridge.spec
+# → dist/iracing-bridge.exe
+
+# Copy it where Tauri expects it (note the required target-triple suffix):
+copy dist\iracing-bridge.exe ..\src-tauri\binaries\iracing-bridge-x86_64-pc-windows-msvc.exe
+```
+
+### Building the full installer
+
+```bash
+npm run tauri build
+# → src-tauri/target/release/bundle/msi/*.msi
+```
 
 ---
 
@@ -193,6 +217,8 @@ fuel-&-strategy solver.
 
 ## Continuous integration
 
+Two workflows split the fast feedback loop from the release build:
+
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) is the **quality-gate**
 pipeline. It runs on every push to `main`/`claude/**` and on every pull request,
 across two parallel `ubuntu-latest` jobs:
@@ -203,6 +229,23 @@ across two parallel `ubuntu-latest` jobs:
 
 Both roll up into a single `ci` status so branch protection can require one
 check. Nothing should merge with a red gate.
+
+[`.github/workflows/build.yml`](.github/workflows/build.yml) is the **release**
+pipeline. It runs on `windows-latest`, triggered by **version tags** (`v*`) or
+manually (`workflow_dispatch`). It:
+
+1. Builds the bridge into a onefile `iracing-bridge.exe` with PyInstaller.
+2. Copies it to `src-tauri/binaries/iracing-bridge-x86_64-pc-windows-msvc.exe`
+   (the exact name Tauri requires for a sidecar: `{name}-{target-triple}.exe`).
+3. Runs `npm run tauri build` to produce the `.msi`.
+4. Uploads the `.msi` as a workflow artifact, and as a Release asset on tags.
+
+To cut a release:
+
+```bash
+git tag v0.1.0
+git push origin v0.1.0
+```
 
 ---
 

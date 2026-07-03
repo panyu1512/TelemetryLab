@@ -1,7 +1,8 @@
 name: ci
 
-# Quality gates for every change: the fast, cross-platform feedback loop that
-# must stay green before anything merges.
+# Quality gates for every change. The release build (Windows .msi) lives in
+# build.yml and is triggered by version tags; this workflow is the fast,
+# cross-platform feedback loop that must stay green before anything merges.
 
 on:
   push:

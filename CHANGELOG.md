@@ -31,9 +31,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   always directly draggable/resizable (grab the header, resize from the corner)
   and every change auto-persists — there's no separate edit toggle. Deleted the
   unused legacy `OverlayManager` widget panel.
-- **Dropped the MSI/installer build.** Removed the tag-triggered Windows `.msi`
-  release workflow (`build.yml`), the PyInstaller `bridge.spec` and its
-  build-only `pyinstaller` dependency, and disabled Tauri installer bundling.
 
 ### Added
 

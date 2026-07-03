@@ -9,7 +9,7 @@
 #
 # What this is NOT: the Tauri desktop app. Tauri is a native Windows/macOS
 # binary and the real bridge needs iRacing's Windows shared memory — neither
-# runs in a Linux container.
+# runs in a Linux container. Those are built by CI (.github/workflows/build.yml).
 #
 # The React app runs in your *host* browser, so it connects to the bridge via
 # the published port (localhost:8765), not over the internal compose network.
