@@ -11,7 +11,11 @@ import {
   FileDown,
   Check,
 } from "lucide-react";
-import { DASHBOARDS, type DashboardDef } from "../../dashboards/registry";
+import {
+  DASHBOARDS,
+  getDashboard,
+  type DashboardDef,
+} from "../../dashboards/registry";
 import {
   useOverlayConfigStore,
   type Profile,
@@ -31,8 +35,6 @@ type SidebarItem =
   | { kind: "global" }
   | { kind: "debug" };
 
-type OverlayTab = "appearance" | "visibility" | "window";
-
 // ── ManagerWindow ──────────────────────────────────────────────────────────────
 
 interface ManagerWindowProps {
@@ -40,6 +42,13 @@ interface ManagerWindowProps {
   onActivateOverlay?: (overlayId: string) => void;
 }
 
+/**
+ * The overlay configuration surface, laid out as a single full-window page
+ * (not a modal): a left list of overlays + settings sections, and a main area
+ * that shows the selected overlay's *entire* configuration inline on one
+ * scrolling page — no dialogs, no tabs. This mirrors dedicated overlay editors
+ * like Kapps, where everything for an overlay is set up in one place.
+ */
 export function ManagerWindow({ onClose, onActivateOverlay }: ManagerWindowProps) {
   const setLastOverlay = useOverlayConfigStore((s) => s.setLastOverlay);
   // Reopen on the overlay the user last edited (persisted), falling back to the
@@ -51,15 +60,10 @@ export function ManagerWindow({ onClose, onActivateOverlay }: ManagerWindowProps
       : DASHBOARDS[0].id;
     return { kind: "overlay", overlayId };
   });
-  const [tab, setTab] = useState<OverlayTab>("appearance");
-  const backdropRef = useRef<HTMLDivElement>(null);
 
   const selectItem = (item: SidebarItem) => {
     setSelected(item);
-    if (item.kind === "overlay") {
-      setTab("appearance");
-      setLastOverlay(item.overlayId);
-    }
+    if (item.kind === "overlay") setLastOverlay(item.overlayId);
   };
 
   // Close on Escape (App.tsx also handles this, but belt-and-suspenders)
@@ -71,86 +75,179 @@ export function ManagerWindow({ onClose, onActivateOverlay }: ManagerWindowProps
     return () => window.removeEventListener("keydown", handler);
   }, [onClose]);
 
-  const handleBackdropClick = (e: React.MouseEvent) => {
-    if (e.target === backdropRef.current) onClose();
-  };
-
   return (
-    // Backdrop
     <div
-      ref={backdropRef}
-      className="fixed inset-0 z-50 flex items-center justify-center bg-bg/60 backdrop-blur-sm"
-      onClick={handleBackdropClick}
-      style={{ animation: "manager-in 180ms ease-out" }}
+      className="fixed inset-0 z-40 flex flex-col bg-bg"
+      style={{ animation: "manager-in 160ms ease-out" }}
     >
-      {/* Dialog */}
-      <div
-        className="flex h-[700px] w-full max-w-[1180px] flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl"
-        onClick={(e) => e.stopPropagation()}
-      >
-        {/* Header */}
-        <ManagerHeader onClose={onClose} />
+      <ManagerHeader onClose={onClose} />
 
-        {/* Body: sidebar + content */}
-        <div className="flex min-h-0 flex-1">
-          {/* Sidebar */}
-          <Sidebar selected={selected} onSelect={selectItem} />
+      {/* Body: sidebar + content */}
+      <div className="flex min-h-0 flex-1">
+        <Sidebar selected={selected} onSelect={selectItem} />
 
-          {/* Main panel */}
-          <div className="flex min-h-0 flex-1 flex-col">
-            {selected.kind === "overlay" && (
-              <>
-                <OverlayTabBar tab={tab} onTabChange={setTab} />
-                <div className="flex min-h-0 flex-1">
-                  {/* Config column */}
-                  <div className="min-h-0 flex-1 overflow-y-auto p-5">
-                    {tab === "appearance" && (
-                      <AppearancePanel overlayId={selected.overlayId} />
-                    )}
-                    {tab === "visibility" && (
-                      <VisibilityPanel overlayId={selected.overlayId} />
-                    )}
-                    {tab === "window" && (
-                      <WindowPanel
-                        overlayId={selected.overlayId}
-                        onActivate={onActivateOverlay}
-                      />
-                    )}
-                  </div>
-                  {/* Live preview column */}
-                  <div className="hidden w-80 flex-none border-l border-border bg-bg p-4 lg:block">
-                    <LivePreview overlayId={selected.overlayId} />
-                  </div>
-                </div>
-              </>
-            )}
+        <div className="flex min-h-0 flex-1 flex-col">
+          {selected.kind === "overlay" && (
+            <div className="flex min-h-0 flex-1">
+              {/* One scrolling page with every setting for this overlay. */}
+              <div className="min-h-0 flex-1 overflow-y-auto">
+                <OverlayConfigPage
+                  overlayId={selected.overlayId}
+                  onActivate={onActivateOverlay}
+                />
+              </div>
+              {/* Live preview, pinned alongside. */}
+              <div className="hidden w-80 flex-none border-l border-border bg-surface p-4 lg:block">
+                <LivePreview overlayId={selected.overlayId} />
+              </div>
+            </div>
+          )}
 
-            {selected.kind === "global" && (
-              <div className="flex-1 overflow-y-auto p-5">
+          {selected.kind === "global" && (
+            <div className="flex-1 overflow-y-auto p-6">
+              <div className="mx-auto max-w-3xl">
                 <h2 className="mb-4 text-sm font-semibold text-text">
                   Global Settings
                 </h2>
                 <GlobalSettingsPanel />
               </div>
-            )}
+            </div>
+          )}
 
-            {selected.kind === "debug" && (
-              <div className="flex min-h-0 flex-1 flex-col p-5">
-                <h2 className="mb-4 text-sm font-semibold text-text">
-                  Debug &amp; Diagnostics
-                </h2>
-                <div className="min-h-0 flex-1">
-                  <DebugPanel />
-                </div>
+          {selected.kind === "debug" && (
+            <div className="flex min-h-0 flex-1 flex-col p-6">
+              <h2 className="mb-4 text-sm font-semibold text-text">
+                Debug &amp; Diagnostics
+              </h2>
+              <div className="min-h-0 flex-1">
+                <DebugPanel />
               </div>
-            )}
-          </div>
+            </div>
+          )}
         </div>
-
-        {/* Footer status bar */}
-        <ManagerFooter />
       </div>
+
+      <ManagerFooter />
     </div>
+  );
+}
+
+// ── OverlayConfigPage ─────────────────────────────────────────────────────────
+
+/**
+ * The full configuration for a single overlay, stacked inline on one page:
+ * a header (name + enable), then Appearance, Visibility and Window sections —
+ * everything visible and editable without switching tabs or opening dialogs.
+ */
+function OverlayConfigPage({
+  overlayId,
+  onActivate,
+}: {
+  overlayId: string;
+  onActivate?: (overlayId: string) => void;
+}) {
+  const store = useOverlayConfigStore();
+  const settings = store.getOverlaySettings(overlayId);
+  const dashboard = getDashboard(overlayId);
+  const Icon = dashboard.icon;
+
+  return (
+    <div className="mx-auto max-w-3xl space-y-8 p-6">
+      {/* Page header */}
+      <div className="flex items-center gap-3">
+        <span className="grid size-9 place-items-center rounded-xl bg-accent/10 text-accent">
+          <Icon className="size-5" />
+        </span>
+        <div className="min-w-0 flex-1">
+          <h1 className="truncate text-base font-semibold text-text">
+            {dashboard.label}
+          </h1>
+          <p className="text-xs text-muted">
+            Appearance, visibility and window behaviour — all on one page.
+          </p>
+        </div>
+        <EnableToggle
+          enabled={settings.enabled}
+          onChange={(v) => store.setOverlayEnabled(overlayId, v)}
+        />
+      </div>
+
+      <ConfigSection
+        title="Appearance"
+        description="Theme, saturation, brightness and opacity for this overlay."
+      >
+        <AppearancePanel overlayId={overlayId} />
+      </ConfigSection>
+
+      <ConfigSection
+        title="Visibility"
+        description="Automatically hide the overlay in certain session conditions."
+      >
+        <VisibilityPanel overlayId={overlayId} />
+      </ConfigSection>
+
+      <ConfigSection
+        title="Window & Locking"
+        description="Open this overlay in its own window and lock any window."
+      >
+        <WindowPanel overlayId={overlayId} onActivate={onActivate} />
+      </ConfigSection>
+    </div>
+  );
+}
+
+function ConfigSection({
+  title,
+  description,
+  children,
+}: {
+  title: string;
+  description: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className="border-t border-border pt-6">
+      <div className="mb-4">
+        <h2 className="text-sm font-semibold text-text">{title}</h2>
+        <p className="mt-0.5 text-xs text-muted">{description}</p>
+      </div>
+      {children}
+    </section>
+  );
+}
+
+function EnableToggle({
+  enabled,
+  onChange,
+}: {
+  enabled: boolean;
+  onChange: (v: boolean) => void;
+}) {
+  return (
+    <button
+      type="button"
+      role="switch"
+      aria-checked={enabled}
+      onClick={() => onChange(!enabled)}
+      className="flex items-center gap-2 rounded-lg border border-border bg-surface-2 px-2.5 py-1.5 transition-colors hover:border-border-strong"
+    >
+      <span className="text-xs font-medium text-text">
+        {enabled ? "Enabled" : "Disabled"}
+      </span>
+      <span
+        className={[
+          "relative h-4 w-7 shrink-0 rounded-full transition-colors",
+          enabled ? "bg-accent" : "bg-surface border border-border-strong",
+        ].join(" ")}
+      >
+        <span
+          className={[
+            "absolute top-0.5 size-3 rounded-full bg-bg transition-[left]",
+            enabled ? "left-[14px]" : "left-0.5",
+          ].join(" ")}
+        />
+      </span>
+    </button>
   );
 }
 
@@ -165,7 +262,7 @@ function ManagerHeader({ onClose }: { onClose: () => void }) {
         </span>
         <span className="text-muted/40">·</span>
         <span className="text-sm font-semibold text-text">
-          Overlay Manager
+          Overlay Editor
         </span>
       </div>
 
@@ -174,10 +271,11 @@ function ManagerHeader({ onClose }: { onClose: () => void }) {
         <button
           type="button"
           onClick={onClose}
-          title="Close (Esc)"
-          className="grid size-7 place-items-center rounded-lg text-muted transition-colors hover:bg-surface-2 hover:text-text"
+          title="Back to overlay (Esc)"
+          className="flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-xs font-medium text-text transition-colors hover:border-border-strong"
         >
-          <X className="size-4" />
+          <X className="size-3.5" />
+          Done
         </button>
       </div>
     </header>
@@ -510,43 +608,6 @@ function NavItem({
       {icon}
       {label}
     </button>
-  );
-}
-
-// ── OverlayTabBar ─────────────────────────────────────────────────────────────
-
-const TABS: { id: OverlayTab; label: string }[] = [
-  { id: "appearance", label: "Appearance" },
-  { id: "visibility", label: "Visibility" },
-  { id: "window", label: "Window" },
-];
-
-function OverlayTabBar({
-  tab,
-  onTabChange,
-}: {
-  tab: OverlayTab;
-  onTabChange: (t: OverlayTab) => void;
-}) {
-  // Find active tab overlay name for the header
-  return (
-    <div className="flex h-10 flex-none items-center gap-0.5 border-b border-border px-3">
-      {TABS.map((t) => (
-        <button
-          key={t.id}
-          type="button"
-          onClick={() => onTabChange(t.id)}
-          className={[
-            "rounded-md px-3 py-1.5 text-xs transition-colors",
-            tab === t.id
-              ? "bg-accent/10 text-accent"
-              : "text-muted hover:bg-surface-2 hover:text-text",
-          ].join(" ")}
-        >
-          {t.label}
-        </button>
-      ))}
-    </div>
   );
 }
 

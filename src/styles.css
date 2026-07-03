@@ -105,16 +105,17 @@ a {
 
 /*
  * v0.7.0 — Overlay Manager entrance animation.
- * The full-screen manager dialog slides up and fades in.
+ * The full-window settings page fades in with a subtle rise (no scale, so the
+ * edges of the full-bleed page never reveal what's behind it).
  */
 @keyframes manager-in {
   from {
     opacity: 0;
-    transform: scale(0.97) translateY(8px);
+    transform: translateY(6px);
   }
   to {
     opacity: 1;
-    transform: scale(1) translateY(0);
+    transform: translateY(0);
   }
 }
 
