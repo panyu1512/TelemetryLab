@@ -26,7 +26,7 @@ from typing import Any
 
 from websockets.asyncio.server import serve
 
-from telemetrylab import BridgeService, maybe_start_http_server
+from telemetrylab import BridgeService
 
 HOST = "0.0.0.0"
 PORT = 8765
@@ -336,20 +336,15 @@ class MockSource:
 
 async def main() -> None:
     service = BridgeService(MockSource())
-    http_server = maybe_start_http_server()
-    try:
-        async with serve(service.publisher.register, HOST, PORT):
-            print(
-                f"[mock] WebSocket server on ws://{HOST}:{PORT} "
-                f"({FIELD_SIZE} cars, multiclass={MULTICLASS})",
-                flush=True,
-            )
-            if DISCONNECT_EVERY > 0:
-                print(f"[mock] simulating disconnects every {DISCONNECT_EVERY}s", flush=True)
-            await service.run()
-    finally:
-        if http_server is not None:
-            http_server.stop()
+    async with serve(service.publisher.register, HOST, PORT):
+        print(
+            f"[mock] WebSocket server on ws://{HOST}:{PORT} "
+            f"({FIELD_SIZE} cars, multiclass={MULTICLASS})",
+            flush=True,
+        )
+        if DISCONNECT_EVERY > 0:
+            print(f"[mock] simulating disconnects every {DISCONNECT_EVERY}s", flush=True)
+        await service.run()
 
 
 if __name__ == "__main__":

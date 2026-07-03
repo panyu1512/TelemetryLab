@@ -7,13 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Dedicated overlay editor with a live preview.** The Overlay Manager sidebar
+  selects an overlay, its configuration opens in place, and a live preview panel
+  reflects theme/appearance edits instantly. The last-selected overlay is
+  remembered across sessions.
+- **Real-time overlay updates.** A cross-window event bus keeps the editor, the
+  live preview and any open overlay window in sync; configuration changes apply
+  immediately with no save/apply/refresh step.
+- **Generic window locking.** Any window — the main window or any popped-out
+  overlay/widget window — can be locked (click-through, immovable) through one
+  shared mechanism. Lock state persists per window and propagates to open
+  windows in real time (Ctrl+Shift+L toggles the focused window).
+
 ### Changed
 
+- **Window lifecycle.** Closing the app now closes all auxiliary windows so none
+  is orphaned. Closing a single overlay preserves its position, size and lock
+  state; reopening restores it exactly.
 - **Compacted the Fuel & Strategy overlay so it fits without scrolling.** The
   read-outs now flow into two columns based on the overlay's own width
   (container query), padding/typography are tighter, and the "Pit strategies"
   list is collapsed by default — so the calculator fits a small always-on-top
   window while driving instead of requiring a scroll you can't do mid-race.
+
+### Removed
+
+- **Browser-source / OBS HTTP support.** The bridge's static HTTP server, the
+  Overlay Manager "Browser Source" tab, and the related global settings (HTTP
+  server, browser sources, auth key) were removed. The `?overlay=` / `?widget=`
+  deep links remain for native pop-out windows.
+- **Profile import.** Importing a profile from JSON was removed; profile
+  **export** (backup) is unchanged.
 
 ### Fixed
 

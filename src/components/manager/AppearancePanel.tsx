@@ -137,23 +137,6 @@ export function AppearancePanel({ overlayId }: AppearancePanelProps) {
           </button>
         )}
       </section>
-
-      {/* Live preview swatch */}
-      <section>
-        <SectionLabel>Preview</SectionLabel>
-        <div
-          className="overflow-hidden rounded-lg border border-border"
-          style={{
-            filter: `saturate(${appearance.saturation}%) brightness(${appearance.brightness}%)`,
-            opacity: appearance.opacity / 100,
-          }}
-        >
-          <PreviewCard theme={effectiveTheme} />
-        </div>
-        <p className="mt-1.5 text-[10px] text-muted">
-          Preview shows the combined effect of theme + adjustments.
-        </p>
-      </section>
     </div>
   );
 }
@@ -231,67 +214,3 @@ function SliderRow({
   );
 }
 
-import type { Theme } from "../../themes";
-
-function PreviewCard({ theme }: { theme: Theme }) {
-  const c = theme.colors;
-  return (
-    <div
-      className="p-3 text-xs"
-      style={{
-        background: c.surface,
-        color: c.text,
-        fontFamily: "ui-monospace, monospace",
-      }}
-    >
-      <div
-        className="mb-2 flex items-center gap-2 border-b pb-2 text-[10px] uppercase tracking-wider"
-        style={{ borderColor: c.border, color: c.muted }}
-      >
-        <span
-          className="inline-block size-1.5 rounded-full"
-          style={{ background: c.accent }}
-        />
-        {theme.name} · Live
-      </div>
-      <div className="flex gap-4">
-        <StatPreview label="SPEED" value="212" unit="km/h" accent={c.accent} text={c.text} muted={c.muted} />
-        <StatPreview label="GEAR" value="6" unit="" accent={c.accent} text={c.text} muted={c.muted} />
-        <StatPreview label="FUEL" value="18.4" unit="L" accent={c.accent} text={c.text} muted={c.muted} />
-        <StatPreview label="LAP" value="1:42.3" unit="" accent={c.accent} text={c.text} muted={c.muted} />
-      </div>
-    </div>
-  );
-}
-
-function StatPreview({
-  label,
-  value,
-  unit,
-  accent,
-  text,
-  muted,
-}: {
-  label: string;
-  value: string;
-  unit: string;
-  accent: string;
-  text: string;
-  muted: string;
-}) {
-  return (
-    <div>
-      <div className="text-[9px] uppercase tracking-wider" style={{ color: muted }}>
-        {label}
-      </div>
-      <div className="text-sm font-semibold" style={{ color: accent }}>
-        {value}
-        {unit && (
-          <span className="ml-0.5 text-[10px] font-normal" style={{ color: text }}>
-            {unit}
-          </span>
-        )}
-      </div>
-    </div>
-  );
-}

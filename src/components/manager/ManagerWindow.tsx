@@ -9,7 +9,6 @@ import {
   Pencil,
   Trash2,
   FileDown,
-  FileUp,
   Check,
 } from "lucide-react";
 import { DASHBOARDS, type DashboardDef } from "../../dashboards/registry";
@@ -21,7 +20,7 @@ import { useBridgeStore } from "../../stores/useBridgeStore";
 import { AppearancePanel } from "./AppearancePanel";
 import { VisibilityPanel } from "./VisibilityPanel";
 import { WindowPanel } from "./WindowPanel";
-import { BrowserSourcePanel } from "./BrowserSourcePanel";
+import { LivePreview } from "./LivePreview";
 import { GlobalSettingsPanel } from "./GlobalSettingsPanel";
 import { DebugPanel } from "./DebugPanel";
 
@@ -32,7 +31,7 @@ type SidebarItem =
   | { kind: "global" }
   | { kind: "debug" };
 
-type OverlayTab = "appearance" | "visibility" | "window" | "sources";
+type OverlayTab = "appearance" | "visibility" | "window";
 
 // ── ManagerWindow ──────────────────────────────────────────────────────────────
 
@@ -42,12 +41,26 @@ interface ManagerWindowProps {
 }
 
 export function ManagerWindow({ onClose, onActivateOverlay }: ManagerWindowProps) {
-  const [selected, setSelected] = useState<SidebarItem>({
-    kind: "overlay",
-    overlayId: DASHBOARDS[0].id,
+  const setLastOverlay = useOverlayConfigStore((s) => s.setLastOverlay);
+  // Reopen on the overlay the user last edited (persisted), falling back to the
+  // first overlay if the stored id is unknown.
+  const [selected, setSelected] = useState<SidebarItem>(() => {
+    const last = useOverlayConfigStore.getState().lastOverlayId;
+    const overlayId = DASHBOARDS.some((d) => d.id === last)
+      ? (last as string)
+      : DASHBOARDS[0].id;
+    return { kind: "overlay", overlayId };
   });
   const [tab, setTab] = useState<OverlayTab>("appearance");
   const backdropRef = useRef<HTMLDivElement>(null);
+
+  const selectItem = (item: SidebarItem) => {
+    setSelected(item);
+    if (item.kind === "overlay") {
+      setTab("appearance");
+      setLastOverlay(item.overlayId);
+    }
+  };
 
   // Close on Escape (App.tsx also handles this, but belt-and-suspenders)
   useEffect(() => {
@@ -72,7 +85,7 @@ export function ManagerWindow({ onClose, onActivateOverlay }: ManagerWindowProps
     >
       {/* Dialog */}
       <div
-        className="flex h-[700px] w-full max-w-[1000px] flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl"
+        className="flex h-[700px] w-full max-w-[1180px] flex-col overflow-hidden rounded-2xl border border-border bg-surface shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Header */}
@@ -81,36 +94,33 @@ export function ManagerWindow({ onClose, onActivateOverlay }: ManagerWindowProps
         {/* Body: sidebar + content */}
         <div className="flex min-h-0 flex-1">
           {/* Sidebar */}
-          <Sidebar
-            selected={selected}
-            onSelect={(item) => {
-              setSelected(item);
-              // Reset to appearance tab when switching overlays
-              if (item.kind === "overlay") setTab("appearance");
-            }}
-          />
+          <Sidebar selected={selected} onSelect={selectItem} />
 
           {/* Main panel */}
           <div className="flex min-h-0 flex-1 flex-col">
             {selected.kind === "overlay" && (
               <>
                 <OverlayTabBar tab={tab} onTabChange={setTab} />
-                <div className="flex-1 overflow-y-auto p-5">
-                  {tab === "appearance" && (
-                    <AppearancePanel overlayId={selected.overlayId} />
-                  )}
-                  {tab === "visibility" && (
-                    <VisibilityPanel overlayId={selected.overlayId} />
-                  )}
-                  {tab === "window" && (
-                    <WindowPanel
-                      overlayId={selected.overlayId}
-                      onActivate={onActivateOverlay}
-                    />
-                  )}
-                  {tab === "sources" && (
-                    <BrowserSourcePanel overlayId={selected.overlayId} />
-                  )}
+                <div className="flex min-h-0 flex-1">
+                  {/* Config column */}
+                  <div className="min-h-0 flex-1 overflow-y-auto p-5">
+                    {tab === "appearance" && (
+                      <AppearancePanel overlayId={selected.overlayId} />
+                    )}
+                    {tab === "visibility" && (
+                      <VisibilityPanel overlayId={selected.overlayId} />
+                    )}
+                    {tab === "window" && (
+                      <WindowPanel
+                        overlayId={selected.overlayId}
+                        onActivate={onActivateOverlay}
+                      />
+                    )}
+                  </div>
+                  {/* Live preview column */}
+                  <div className="hidden w-80 flex-none border-l border-border bg-bg p-4 lg:block">
+                    <LivePreview overlayId={selected.overlayId} />
+                  </div>
                 </div>
               </>
             )}
@@ -186,7 +196,6 @@ function ProfileSelector() {
   const [creating, setCreating] = useState(false);
   const [newName, setNewName] = useState("");
   const menuRef = useRef<HTMLDivElement>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Close on click outside
   useEffect(() => {
@@ -228,19 +237,6 @@ function ProfileSelector() {
     a.download = `telemetrylab-profile-${name}.json`;
     a.click();
     URL.revokeObjectURL(url);
-    setOpen(false);
-  };
-
-  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = (ev) => {
-      const json = ev.target?.result as string;
-      store.importProfile(json);
-    };
-    reader.readAsText(file);
-    e.target.value = "";
     setOpen(false);
   };
 
@@ -355,25 +351,11 @@ function ProfileSelector() {
                 </button>
               </form>
             ) : (
-              <div className="flex gap-1">
-                <MenuAction
-                  icon={<Plus className="size-3" />}
-                  label="New profile"
-                  onClick={() => setCreating(true)}
-                />
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".json"
-                  className="hidden"
-                  onChange={handleImport}
-                />
-                <MenuAction
-                  icon={<FileUp className="size-3" />}
-                  label="Import"
-                  onClick={() => fileInputRef.current?.click()}
-                />
-              </div>
+              <MenuAction
+                icon={<Plus className="size-3" />}
+                label="New profile"
+                onClick={() => setCreating(true)}
+              />
             )}
           </div>
         </div>
@@ -537,7 +519,6 @@ const TABS: { id: OverlayTab; label: string }[] = [
   { id: "appearance", label: "Appearance" },
   { id: "visibility", label: "Visibility" },
   { id: "window", label: "Window" },
-  { id: "sources", label: "Browser Source" },
 ];
 
 function OverlayTabBar({

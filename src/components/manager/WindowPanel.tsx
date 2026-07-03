@@ -1,56 +1,81 @@
-import { ExternalLink, Lock, Unlock, Info, AppWindow } from "lucide-react";
-import { useOverlayStore } from "../../stores/useOverlayStore";
-import { getDashboard } from "../../dashboards/registry";
-import { openOverlayWindow } from "../../lib/overlayWindows";
+/**
+ * Window panel — window mode + generic per-window locking.
+ *
+ * Locking is identical for the main window and every popped-out overlay/widget
+ * window: one control, one code path (`useWindowStore.setLock`). This panel lets
+ * the user open the selected overlay in its own window and lock/unlock *any*
+ * open window individually; lock changes propagate to that window immediately.
+ */
+
+import { useState } from "react";
+import { AppWindow, ExternalLink, Info, Lock, Unlock } from "lucide-react";
+import {
+  useWindowStore,
+  WINDOW_LABEL,
+} from "../../stores/useWindowStore";
+import { getDashboard, getWidget } from "../../dashboards/registry";
+import {
+  getRememberedWindows,
+  openOverlayWindow,
+} from "../../lib/overlayWindows";
 
 interface WindowPanelProps {
   overlayId: string;
   onActivate?: (overlayId: string) => void;
 }
 
+/** A window row shown in the lock list. */
+interface WindowRow {
+  label: string;
+  name: string;
+  /** Main window can only be locked while in overlay mode. */
+  lockable: boolean;
+}
+
 export function WindowPanel({ overlayId, onActivate }: WindowPanelProps) {
-  const { overlayMode, locked, setOverlayMode, setLocked } = useOverlayStore();
+  const store = useWindowStore();
+  const { overlayMode, setOverlayMode, setLock, isLocked } = store;
   const dashboard = getDashboard(overlayId);
+  const [, forceRefresh] = useState(0);
+
+  const rows: WindowRow[] = [
+    { label: "main", name: "Main window", lockable: overlayMode },
+    ...getRememberedWindows().map((w) => ({
+      label: `${w.kind}-${w.id}`,
+      name:
+        w.kind === "widget"
+          ? getWidget(w.id)?.title ?? w.label
+          : getDashboard(w.id).label,
+      lockable: true,
+    })),
+  ];
 
   return (
     <div className="space-y-6">
-      {/* Current window state */}
+      {/* Main window mode */}
       <section>
-        <SectionLabel>Window State</SectionLabel>
-        <div className="space-y-2">
-          <ControlRow
-            label="Overlay Mode"
-            description="Makes the window always-on-top with a transparent background, rendering over iRacing."
-          >
-            <ToggleSwitch
-              checked={overlayMode}
-              onChange={setOverlayMode}
-            />
-          </ControlRow>
-
-          <ControlRow
-            label="Locked"
-            description="Enables click-through so all mouse input reaches iRacing. Use Ctrl+Shift+L to toggle quickly."
-            disabled={!overlayMode}
-          >
-            <ToggleSwitch
-              checked={locked}
-              onChange={setLocked}
-              disabled={!overlayMode}
-            />
-          </ControlRow>
-        </div>
+        <SectionLabel>Main Window</SectionLabel>
+        <ControlRow
+          label="Overlay Mode"
+          description="Makes the main window always-on-top with a transparent background, rendering over iRacing."
+        >
+          <ToggleSwitch checked={overlayMode} onChange={setOverlayMode} />
+        </ControlRow>
       </section>
 
-      {/* Quick actions */}
+      {/* This overlay */}
       <section>
-        <SectionLabel>Quick Actions</SectionLabel>
+        <SectionLabel>{dashboard.label}</SectionLabel>
         <div className="grid grid-cols-2 gap-2">
           <ActionButton
             icon={<AppWindow className="size-4" />}
             label="Open in new window"
-            description="Pop this overlay out into its own separate window"
-            onClick={() => openOverlayWindow(overlayId, dashboard.label)}
+            description="Pop this overlay out into its own always-on-top window"
+            onClick={() => {
+              openOverlayWindow(overlayId, dashboard.label);
+              // Give the spawned window a moment to register, then re-list.
+              setTimeout(() => forceRefresh((n) => n + 1), 150);
+            }}
           />
           <ActionButton
             icon={<ExternalLink className="size-4" />}
@@ -58,77 +83,88 @@ export function WindowPanel({ overlayId, onActivate }: WindowPanelProps) {
             description="Switch the main window to this overlay"
             onClick={() => onActivate?.(overlayId)}
           />
-          <ActionButton
-            icon={overlayMode && locked ? <Unlock className="size-4" /> : <Lock className="size-4" />}
-            label={overlayMode && locked ? "Unlock" : "Lock"}
-            description={
-              overlayMode
-                ? "Toggle click-through mode (Ctrl+Shift+L)"
-                : "Enable overlay mode first"
-            }
-            disabled={!overlayMode}
-            onClick={() => setLocked(!locked)}
-          />
         </div>
       </section>
 
-      {/* Window position info */}
+      {/* Per-window locking — one mechanism for every window */}
       <section>
-        <SectionLabel>Position &amp; Size</SectionLabel>
-        <WindowBoundsDisplay />
-      </section>
-
-      {/* Overlay info */}
-      <section>
-        <SectionLabel>Overlay Info</SectionLabel>
-        <div className="rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-xs">
-          <div className="space-y-1.5">
-            <KV label="ID" value={dashboard.id} />
-            <KV label="Label" value={dashboard.label} />
-            <KV
-              label="Type"
-              value={
-                dashboard.Screen
-                  ? "Full-screen overlay"
-                  : "Widget grid"
-              }
+        <SectionLabel>Windows &amp; Locking</SectionLabel>
+        <p className="mb-2 text-[11px] text-muted">
+          Lock a window to make it click-through and immovable — all mouse input
+          passes to iRacing. Use Ctrl+Shift+L to toggle the focused window.
+        </p>
+        <div className="space-y-2">
+          {rows.map((row) => (
+            <WindowLockRow
+              key={row.label}
+              name={row.name}
+              isCurrent={row.label === WINDOW_LABEL}
+              locked={isLocked(row.label)}
+              lockable={row.lockable}
+              onToggle={() => setLock(row.label, !isLocked(row.label))}
             />
-          </div>
+          ))}
         </div>
       </section>
 
-      {/* Multi-window note */}
+      {/* Note */}
       <div className="flex items-start gap-2 rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-xs text-muted">
         <Info className="mt-0.5 size-3.5 shrink-0" />
         <span>
-          <span className="text-text">Open in new window</span> pops this overlay
-          out on its own. On the desktop app it becomes a separate always-on-top
-          window you can position and size independently; in a browser it opens
-          in a new tab. Each window remembers its own layout.
+          Each window remembers its own position, size and lock state. Closing a
+          window keeps that state; reopening restores it exactly.
         </span>
       </div>
     </div>
   );
 }
 
-// ── WindowBoundsDisplay ───────────────────────────────────────────────────────
+// ── WindowLockRow ─────────────────────────────────────────────────────────────
 
-function WindowBoundsDisplay() {
-  // In the future this will show live Tauri window bounds.
-  // For now, show the current viewport size.
-  const w = window.innerWidth;
-  const h = window.innerHeight;
-
+function WindowLockRow({
+  name,
+  isCurrent,
+  locked,
+  lockable,
+  onToggle,
+}: {
+  name: string;
+  isCurrent: boolean;
+  locked: boolean;
+  lockable: boolean;
+  onToggle: () => void;
+}) {
   return (
-    <div className="grid grid-cols-2 gap-2">
-      <div className="rounded-lg border border-border bg-surface-2 px-3 py-2">
-        <div className="text-[10px] uppercase tracking-wide text-muted">Width</div>
-        <div className="mt-0.5 font-mono text-sm text-text">{w}px</div>
+    <div
+      className={[
+        "flex items-center gap-3 rounded-lg border px-3 py-2.5",
+        locked
+          ? "border-accent/40 bg-accent/5"
+          : "border-border bg-surface-2",
+        !lockable && "opacity-50",
+      ]
+        .filter(Boolean)
+        .join(" ")}
+    >
+      {locked ? (
+        <Lock className="size-4 shrink-0 text-accent" />
+      ) : (
+        <Unlock className="size-4 shrink-0 text-muted" />
+      )}
+      <div className="min-w-0 flex-1">
+        <div className="flex items-center gap-1.5 text-xs font-medium text-text">
+          <span className="truncate">{name}</span>
+          {isCurrent && (
+            <span className="rounded bg-surface px-1 text-[9px] uppercase tracking-wide text-muted">
+              this
+            </span>
+          )}
+        </div>
+        <div className="mt-0.5 text-[11px]" style={{ color: locked ? "var(--color-accent)" : "var(--color-muted)" }}>
+          {locked ? "Locked · click-through" : lockable ? "Unlocked" : "Enable overlay mode to lock"}
+        </div>
       </div>
-      <div className="rounded-lg border border-border bg-surface-2 px-3 py-2">
-        <div className="text-[10px] uppercase tracking-wide text-muted">Height</div>
-        <div className="mt-0.5 font-mono text-sm text-text">{h}px</div>
-      </div>
+      <ToggleSwitch checked={locked} onChange={onToggle} disabled={!lockable} />
     </div>
   );
 }
@@ -146,23 +182,14 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 function ControlRow({
   label,
   description,
-  disabled = false,
   children,
 }: {
   label: string;
   description: string;
-  disabled?: boolean;
   children: React.ReactNode;
 }) {
   return (
-    <div
-      className={[
-        "flex items-center gap-3 rounded-lg border border-border bg-surface-2 px-3 py-2.5",
-        disabled && "opacity-40",
-      ]
-        .filter(Boolean)
-        .join(" ")}
-    >
+    <div className="flex items-center gap-3 rounded-lg border border-border bg-surface-2 px-3 py-2.5">
       <div className="flex-1">
         <div className="text-xs font-medium text-text">{label}</div>
         <div className="mt-0.5 text-[11px] text-muted">{description}</div>
@@ -176,42 +203,23 @@ function ActionButton({
   icon,
   label,
   description,
-  disabled = false,
   onClick,
 }: {
   icon: React.ReactNode;
   label: string;
   description: string;
-  disabled?: boolean;
   onClick: () => void;
 }) {
   return (
     <button
       type="button"
-      disabled={disabled}
       onClick={onClick}
-      className={[
-        "flex flex-col gap-1.5 rounded-lg border p-3 text-left transition-colors",
-        disabled
-          ? "border-border bg-surface-2 opacity-40 cursor-not-allowed"
-          : "border-border bg-surface-2 hover:border-accent/40 hover:bg-accent/5",
-      ].join(" ")}
+      className="flex flex-col gap-1.5 rounded-lg border border-border bg-surface-2 p-3 text-left transition-colors hover:border-accent/40 hover:bg-accent/5"
     >
       <span className="text-muted">{icon}</span>
       <span className="text-xs font-medium text-text">{label}</span>
       <span className="text-[10px] text-muted">{description}</span>
     </button>
-  );
-}
-
-function KV({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="flex items-baseline gap-2">
-      <span className="w-12 shrink-0 text-[10px] uppercase tracking-wide text-muted">
-        {label}
-      </span>
-      <span className="font-mono text-text">{value}</span>
-    </div>
   );
 }
 

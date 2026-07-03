@@ -7,9 +7,10 @@ import { DashboardGrid } from "./components/layout/DashboardGrid";
 import { Dock } from "./components/layout/Dock";
 import { ManagerWindow } from "./components/manager/ManagerWindow";
 import {
-  useOverlayStore,
-  initWindowBoundsPersistence,
-} from "./stores/useOverlayStore";
+  useWindowStore,
+  initWindow,
+  WINDOW_LABEL,
+} from "./stores/useWindowStore";
 import { useOverlayConfigStore } from "./stores/useOverlayConfigStore";
 import { useSessionStore } from "./stores/useSessionStore";
 import { restoreOpenWindows } from "./lib/overlayWindows";
@@ -24,7 +25,9 @@ export default function App() {
   const { data, connected, iracingActive } = useTelemetry();
   const layout = useDashboardLayout();
   const [managerOpen, setManagerOpen] = useState(false);
-  const { overlayMode, locked } = useOverlayStore();
+  const windowStore = useWindowStore();
+  const { overlayMode } = windowStore;
+  const locked = windowStore.isLocked(WINDOW_LABEL);
 
   // v0.7.0 overlay config
   const configStore = useOverlayConfigStore();
@@ -67,27 +70,14 @@ export default function App() {
     applyTheme(getTheme(effectiveThemeId), overlayMode);
   }, [effectiveThemeId, overlayMode]);
 
-  // ── Tauri: init window bounds + Ctrl+Shift+L hotkey listener ────────────
+  // ── Tauri: window lifecycle (bounds restore/persist, lock, hotkey) ──────
   useEffect(() => {
-    initWindowBoundsPersistence();
+    // Restores bounds/lock, wires the Ctrl+Shift+L hotkey to the focused window.
+    initWindow();
 
     if (!isTauri) return;
-
     // Re-open the overlay/widget windows the user had open last session.
     restoreOpenWindows();
-
-    let unlisten: (() => void) | undefined;
-    import("@tauri-apps/api/event").then(({ listen }) => {
-      listen("overlay://toggle-lock", () => {
-        useOverlayStore.getState().toggleLock();
-      }).then((fn) => {
-        unlisten = fn;
-      });
-    });
-
-    return () => {
-      unlisten?.();
-    };
   }, []);
 
   // ── Esc closes the overlay manager ──────────────────────────────────────

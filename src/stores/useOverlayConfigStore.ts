@@ -1,18 +1,25 @@
 /**
- * v0.7.0 — Overlay Manager & Configuration store.
+ * Overlay Manager & Configuration store.
  *
  * Owns:
  *  - Named configuration profiles (create / duplicate / rename / delete / switch)
  *  - Per-overlay settings within the active profile:
  *      enabled, appearance (theme, saturation, brightness, opacity), visibility rules
- *  - Global settings: active theme, bridge endpoint, HTTP server config, log level
+ *  - Global settings: active theme, bridge endpoint, mock data, log level
+ *  - The overlay the editor last had selected
  *
- * All state is persisted to localStorage on every mutation.
+ * Every mutation is persisted to localStorage and broadcast over
+ * {@link windowBus}, so an open overlay window updates the instant the editor
+ * changes its config — no save/apply/refresh step. Incoming remote state is
+ * applied without re-persisting or re-broadcasting (localStorage is shared
+ * across same-origin windows), which keeps a single source of truth and avoids
+ * feedback loops.
  */
 
 import { create } from "zustand";
 import { getTheme, applyTheme } from "../themes";
 import { isSingleView } from "../lib/overlayWindows";
+import { broadcast, subscribe } from "../lib/windowBus";
 
 // ── types ────────────────────────────────────────────────────────────────────
 
@@ -51,13 +58,7 @@ export interface GlobalSettings {
   themeId: string;
   /** WebSocket endpoint for the telemetry bridge. */
   bridgeEndpoint: string;
-  /** Local HTTP server port (for browser-source OBS URLs). */
-  httpServerPort: number;
-  httpServerEnabled: boolean;
-  browserSourcesEnabled: boolean;
   logLevel: "debug" | "info" | "warn" | "error";
-  /** Simple token guarding the /overlay/* HTTP endpoints. */
-  authKey: string;
   /**
    * Drive the UI from client-side synthetic telemetry when iRacing / the bridge
    * aren't available. Lets the whole app be used offline for dev, demos and
@@ -91,19 +92,9 @@ function makeDefaultGlobalSettings(): GlobalSettings {
   return {
     themeId: "obsidian",
     bridgeEndpoint: "ws://127.0.0.1:8765",
-    httpServerPort: 9999,
-    httpServerEnabled: false,
-    browserSourcesEnabled: false,
     logLevel: "info",
-    authKey: genKey(),
     mockDataEnabled: false,
   };
-}
-
-function genKey(): string {
-  const a = Math.random().toString(36).slice(2, 10);
-  const b = Math.random().toString(36).slice(2, 10);
-  return a + b;
 }
 
 function makeProfile(id: string, name: string): Profile {
@@ -118,6 +109,8 @@ interface Persisted {
   profiles: Profile[];
   activeProfileId: string;
   globalSettings: GlobalSettings;
+  /** The overlay the editor should reopen on (last selection). */
+  lastOverlayId: string | null;
 }
 
 function loadPersisted(): Persisted {
@@ -125,6 +118,7 @@ function loadPersisted(): Persisted {
     profiles: [makeProfile("default", "Default")],
     activeProfileId: "default",
     globalSettings: makeDefaultGlobalSettings(),
+    lastOverlayId: null,
   };
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
@@ -134,16 +128,32 @@ function loadPersisted(): Persisted {
       profiles: p.profiles?.length ? p.profiles : fallback.profiles,
       activeProfileId: p.activeProfileId ?? fallback.activeProfileId,
       globalSettings: { ...fallback.globalSettings, ...p.globalSettings },
+      lastOverlayId: p.lastOverlayId ?? fallback.lastOverlayId,
     };
   } catch {
     return fallback;
   }
 }
 
+/** True while applying a remote (bus) update, so we don't echo it back out. */
+let applyingRemote = false;
+
+/** Extract just the persisted slice of the store. */
+function snapshot(s: Persisted): Persisted {
+  return {
+    profiles: s.profiles,
+    activeProfileId: s.activeProfileId,
+    globalSettings: s.globalSettings,
+    lastOverlayId: s.lastOverlayId,
+  };
+}
+
 function persist(s: Persisted): void {
   try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(s));
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(snapshot(s)));
   } catch {}
+  // Notify other windows so open overlays react to config changes live.
+  if (!applyingRemote) broadcast("config:changed", snapshot(s));
 }
 
 // ── helpers ───────────────────────────────────────────────────────────────────
@@ -222,9 +232,11 @@ interface OverlayConfigState extends Persisted {
   deleteProfile: (id: string) => void;
   setActiveProfile: (id: string) => void;
 
-  // Profile export/import
+  // Profile export (backup). Import was removed.
   exportProfile: (id: string) => string;
-  importProfile: (json: string) => boolean;
+
+  // Editor selection
+  setLastOverlay: (overlayId: string) => void;
 
   // Per-overlay settings (all scoped to the active profile)
   getOverlaySettings: (overlayId: string) => OverlaySettings;
@@ -241,7 +253,6 @@ interface OverlayConfigState extends Persisted {
   // Global settings
   setGlobalTheme: (themeId: string) => void;
   setGlobalSettings: (patch: Partial<GlobalSettings>) => void;
-  regenerateAuthKey: () => void;
 }
 
 const initial = loadPersisted();
@@ -324,21 +335,12 @@ export const useOverlayConfigStore = create<OverlayConfigState>()((set, get) => 
     return JSON.stringify(p, null, 2);
   },
 
-  importProfile(json) {
-    try {
-      const p = JSON.parse(json) as Profile;
-      if (!p.id || !p.name) return false;
-      const newId = `profile_${Date.now()}`;
-      const imported: Profile = { ...p, id: newId };
-      set((s) => {
-        const profiles = [...s.profiles, imported];
-        persist({ ...s, profiles, activeProfileId: newId });
-        return { profiles, activeProfileId: newId };
-      });
-      return true;
-    } catch {
-      return false;
-    }
+  setLastOverlay(overlayId) {
+    set((s) => {
+      if (s.lastOverlayId === overlayId) return s;
+      persist({ ...s, lastOverlayId: overlayId });
+      return { lastOverlayId: overlayId };
+    });
   },
 
   // ── per-overlay ─────────────────────────────────────────────────────────────
@@ -458,12 +460,30 @@ export const useOverlayConfigStore = create<OverlayConfigState>()((set, get) => 
       return { globalSettings };
     });
   },
-
-  regenerateAuthKey() {
-    set((s) => {
-      const globalSettings = { ...s.globalSettings, authKey: genKey() };
-      persist({ ...s, globalSettings });
-      return { globalSettings };
-    });
-  },
 }));
+
+// ── cross-window config sync ──────────────────────────────────────────────────
+// Another window changed the config: adopt its state so open overlays reflect
+// edits made in the manager immediately. We suppress persist/broadcast while
+// applying (localStorage is already shared) to avoid a feedback loop, and only
+// re-apply the theme when it actually changed.
+
+subscribe("config:changed", (payload) => {
+  const remote = payload as Persisted | undefined;
+  if (!remote || !Array.isArray(remote.profiles)) return;
+  applyingRemote = true;
+  try {
+    const prevThemeId = useOverlayConfigStore.getState().globalSettings.themeId;
+    useOverlayConfigStore.setState({
+      profiles: remote.profiles,
+      activeProfileId: remote.activeProfileId,
+      globalSettings: remote.globalSettings,
+      lastOverlayId: remote.lastOverlayId ?? null,
+    });
+    if (remote.globalSettings.themeId !== prevThemeId) {
+      applyTheme(getTheme(remote.globalSettings.themeId), isOverlayModeActive());
+    }
+  } finally {
+    applyingRemote = false;
+  }
+});

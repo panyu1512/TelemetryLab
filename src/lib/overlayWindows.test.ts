@@ -1,12 +1,20 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
+  currentWindowLabel,
   forgetWindow,
   getRememberedWindows,
   parseOverlayId,
   parseWidgetId,
   rememberWindow,
 } from "./overlayWindows";
+
+describe("currentWindowLabel", () => {
+  it("defaults to the main window when there is no route", () => {
+    // No `window` in the node test env → the primary window label.
+    expect(currentWindowLabel()).toBe("main");
+  });
+});
 
 describe("parseOverlayId", () => {
   it("reads the canonical ?overlay= query param", () => {

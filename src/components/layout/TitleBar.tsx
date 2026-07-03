@@ -1,5 +1,5 @@
 import { Minus, X, Monitor, Lock, Unlock } from "lucide-react";
-import { useOverlayStore } from "../../stores/useOverlayStore";
+import { useWindowStore, WINDOW_LABEL } from "../../stores/useWindowStore";
 
 /** True when running inside the Tauri WebView (vs. a plain browser tab). */
 const isTauri =
@@ -21,7 +21,9 @@ export interface ConnectionStatus {
 
 /** Frameless, draggable title bar with brand, live status, overlay controls, and window buttons. */
 export function TitleBar({ status }: { status: ConnectionStatus }) {
-  const { overlayMode, locked, setOverlayMode, setLocked } = useOverlayStore();
+  const { overlayMode, setOverlayMode, setLock, isLocked } = useWindowStore();
+  const locked = isLocked(WINDOW_LABEL);
+  const setLocked = (v: boolean) => setLock(WINDOW_LABEL, v);
 
   return (
     <header

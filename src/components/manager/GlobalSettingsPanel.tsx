@@ -1,5 +1,4 @@
-import { useState } from "react";
-import { RefreshCw, Info } from "lucide-react";
+import { Info } from "lucide-react";
 import { useOverlayConfigStore } from "../../stores/useOverlayConfigStore";
 import { THEMES } from "../../themes";
 
@@ -58,73 +57,6 @@ export function GlobalSettingsPanel() {
         </SettingsGroup>
       </section>
 
-      {/* HTTP server */}
-      <section>
-        <SectionLabel>HTTP Server (Browser Sources)</SectionLabel>
-        <SettingsGroup>
-          <LabeledField
-            label="HTTP Server"
-            hint="Serves overlay HTML pages for OBS browser sources."
-          >
-            <ToggleRow
-              checked={globalSettings.httpServerEnabled}
-              label={
-                globalSettings.httpServerEnabled
-                  ? "Enabled"
-                  : "Disabled"
-              }
-              onChange={(v) =>
-                store.setGlobalSettings({ httpServerEnabled: v })
-              }
-            />
-          </LabeledField>
-
-          <LabeledField
-            label="Port"
-            hint="Port for the local HTTP server (default 9999)."
-          >
-            <NumberInput
-              value={globalSettings.httpServerPort}
-              min={1024}
-              max={65535}
-              onChange={(v) =>
-                store.setGlobalSettings({ httpServerPort: v })
-              }
-            />
-          </LabeledField>
-
-          <LabeledField
-            label="Browser Sources"
-            hint="Allow external tools (OBS) to access overlay endpoints."
-          >
-            <ToggleRow
-              checked={globalSettings.browserSourcesEnabled}
-              label={
-                globalSettings.browserSourcesEnabled
-                  ? "Enabled"
-                  : "Disabled"
-              }
-              onChange={(v) =>
-                store.setGlobalSettings({ browserSourcesEnabled: v })
-              }
-            />
-          </LabeledField>
-        </SettingsGroup>
-      </section>
-
-      {/* Auth key */}
-      <section>
-        <SectionLabel>Security</SectionLabel>
-        <SettingsGroup>
-          <LabeledField
-            label="Auth Key"
-            hint="Token appended to browser source URLs (?key=…). Regenerating invalidates all existing URLs."
-          >
-            <AuthKeyField />
-          </LabeledField>
-        </SettingsGroup>
-      </section>
-
       {/* Debug */}
       <section>
         <SectionLabel>Debug</SectionLabel>
@@ -155,8 +87,8 @@ export function GlobalSettingsPanel() {
       <div className="flex items-start gap-2 rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-xs text-muted">
         <Info className="mt-0.5 size-3.5 shrink-0" />
         <span>
-          Settings are saved automatically to localStorage and restored on next
-          launch. Use profile export/import to back up your configuration.
+          Settings are saved automatically and restored on next launch. Use
+          profile export to back up your configuration.
         </span>
       </div>
     </div>
@@ -219,29 +151,6 @@ function TextInput({
       placeholder={placeholder}
       onChange={(e) => onChange(e.target.value)}
       className="w-52 rounded-md border border-border bg-surface px-2.5 py-1 text-xs text-text outline-none transition-colors placeholder:text-muted focus:border-accent"
-    />
-  );
-}
-
-function NumberInput({
-  value,
-  min,
-  max,
-  onChange,
-}: {
-  value: number;
-  min: number;
-  max: number;
-  onChange: (v: number) => void;
-}) {
-  return (
-    <input
-      type="number"
-      value={value}
-      min={min}
-      max={max}
-      onChange={(e) => onChange(Number(e.target.value))}
-      className="w-24 rounded-md border border-border bg-surface px-2.5 py-1 text-right text-xs text-text outline-none transition-colors focus:border-accent"
     />
   );
 }
@@ -312,36 +221,5 @@ function ToggleSwitch({
         ].join(" ")}
       />
     </button>
-  );
-}
-
-function AuthKeyField() {
-  const [revealed, setRevealed] = useState(false);
-  const store = useOverlayConfigStore();
-  const key = store.globalSettings.authKey;
-
-  return (
-    <div className="flex items-center gap-1.5">
-      <div className="w-44 overflow-hidden rounded-md border border-border bg-surface px-2.5 py-1 text-xs">
-        <span className="block truncate font-mono text-muted">
-          {revealed ? key : "••••••••••••••••"}
-        </span>
-      </div>
-      <button
-        type="button"
-        onClick={() => setRevealed((r) => !r)}
-        className="rounded-md border border-border bg-surface-2 px-2 py-1 text-[10px] text-muted transition-colors hover:text-text"
-      >
-        {revealed ? "Hide" : "Show"}
-      </button>
-      <button
-        type="button"
-        onClick={store.regenerateAuthKey}
-        title="Regenerate"
-        className="grid size-[26px] place-items-center rounded-md border border-border bg-surface-2 text-muted transition-colors hover:text-text"
-      >
-        <RefreshCw className="size-3" />
-      </button>
-    </div>
   );
 }
