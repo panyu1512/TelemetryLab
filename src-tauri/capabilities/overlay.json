@@ -1,8 +1,8 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "overlay-windows",
-  "description": "Permissions for per-overlay windows spawned via 'Open in new window' (labels overlay-*).",
-  "windows": ["overlay-*"],
+  "description": "Permissions for per-overlay and per-widget windows spawned via 'Open in new window' (labels overlay-* / widget-*).",
+  "windows": ["overlay-*", "widget-*"],
   "permissions": [
     "core:default",
     "core:window:allow-start-dragging",

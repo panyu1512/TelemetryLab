@@ -12,6 +12,7 @@
 
 import { create } from "zustand";
 import { getTheme, applyTheme } from "../themes";
+import { isSingleView } from "../lib/overlayWindows";
 
 // ── types ────────────────────────────────────────────────────────────────────
 
@@ -245,9 +246,17 @@ interface OverlayConfigState extends Persisted {
 
 const initial = loadPersisted();
 
+/** True when the current window is rendering as a transparent overlay. */
+function isOverlayModeActive(): boolean {
+  if (typeof document === "undefined") return false;
+  return (
+    document.documentElement.classList.contains("overlay-mode") || isSingleView()
+  );
+}
+
 // Apply the persisted theme immediately on module load.
 if (typeof window !== "undefined") {
-  applyTheme(getTheme(initial.globalSettings.themeId));
+  applyTheme(getTheme(initial.globalSettings.themeId), isOverlayModeActive());
 }
 
 export const useOverlayConfigStore = create<OverlayConfigState>()((set, get) => ({
@@ -437,7 +446,7 @@ export const useOverlayConfigStore = create<OverlayConfigState>()((set, get) => 
     set((s) => {
       const globalSettings = { ...s.globalSettings, themeId };
       persist({ ...s, globalSettings });
-      applyTheme(getTheme(themeId));
+      applyTheme(getTheme(themeId), isOverlayModeActive());
       return { globalSettings };
     });
   },

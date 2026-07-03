@@ -17,7 +17,22 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # 1. Build the Python sidecar (onefile exe) with PyInstaller.
+      # 1. Build the frontend first so `dist/` exists — the bridge sidecar
+      #    bundles it (bridge.spec) to serve overlays over HTTP for browsers/OBS.
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      - name: Install frontend dependencies
+        run: npm install
+
+      - name: Build frontend
+        run: npm run build
+
+      # 2. Build the Python sidecar (onefile exe) with PyInstaller. This bundles
+      #    the `dist/` built above.
       - name: Setup Python
         uses: actions/setup-python@v5
         with:
@@ -30,23 +45,13 @@ jobs:
           pip install -r requirements.txt
           pyinstaller bridge.spec
 
-      # 2. Place the sidecar where Tauri expects it, with the target-triple name.
+      # 3. Place the sidecar where Tauri expects it, with the target-triple name.
       - name: Stage sidecar for Tauri
         shell: pwsh
         run: |
           New-Item -ItemType Directory -Force -Path src-tauri/binaries | Out-Null
           Copy-Item bridge/dist/iracing-bridge.exe `
             src-tauri/binaries/iracing-bridge-x86_64-pc-windows-msvc.exe -Force
-
-      # 3. Frontend toolchain.
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: "20"
-          cache: "npm"
-
-      - name: Install frontend dependencies
-        run: npm install
 
       # 4. Rust toolchain (+ cache).
       - name: Setup Rust

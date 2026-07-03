@@ -1,6 +1,12 @@
-import { describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
-import { parseOverlayId } from "./overlayWindows";
+import {
+  forgetWindow,
+  getRememberedWindows,
+  parseOverlayId,
+  parseWidgetId,
+  rememberWindow,
+} from "./overlayWindows";
 
 describe("parseOverlayId", () => {
   it("reads the canonical ?overlay= query param", () => {
@@ -42,5 +48,67 @@ describe("parseOverlayId", () => {
   it("treats an empty overlay value as absent", () => {
     expect(parseOverlayId("?overlay=", "")).toBeNull();
     expect(parseOverlayId("?overlay=", "#relative")).toBe("relative");
+  });
+});
+
+describe("parseWidgetId", () => {
+  it("reads ?widget= from the query string", () => {
+    expect(parseWidgetId("?widget=fuel", "")).toBe("fuel");
+  });
+
+  it("falls back to a hash query (#widget=…)", () => {
+    expect(parseWidgetId("", "#widget=speed")).toBe("speed");
+    expect(parseWidgetId("", "#?widget=tyres")).toBe("tyres");
+  });
+
+  it("does not steal the bare overlay hash route", () => {
+    // `#dashboard` selects an overlay, never a widget.
+    expect(parseWidgetId("", "#dashboard")).toBeNull();
+  });
+
+  it("returns null when no widget is selected", () => {
+    expect(parseWidgetId("?overlay=dashboard", "")).toBeNull();
+    expect(parseWidgetId("", "")).toBeNull();
+  });
+});
+
+describe("open-window persistence", () => {
+  // Minimal in-memory localStorage for the node test environment.
+  beforeEach(() => {
+    const store = new Map<string, string>();
+    (globalThis as { localStorage?: unknown }).localStorage = {
+      getItem: (k: string) => store.get(k) ?? null,
+      setItem: (k: string, v: string) => void store.set(k, v),
+      removeItem: (k: string) => void store.delete(k),
+      clear: () => store.clear(),
+    };
+  });
+
+  afterEach(() => {
+    delete (globalThis as { localStorage?: unknown }).localStorage;
+  });
+
+  it("remembers, dedupes and forgets windows", () => {
+    expect(getRememberedWindows()).toEqual([]);
+
+    rememberWindow({ kind: "overlay", id: "standings", label: "Standings" });
+    rememberWindow({ kind: "widget", id: "fuel", label: "Fuel" });
+    // Duplicate kind+id is ignored.
+    rememberWindow({ kind: "overlay", id: "standings", label: "Standings" });
+
+    const list = getRememberedWindows();
+    expect(list).toHaveLength(2);
+    expect(list.map((w) => `${w.kind}:${w.id}`)).toEqual([
+      "overlay:standings",
+      "widget:fuel",
+    ]);
+
+    forgetWindow("overlay", "standings");
+    expect(getRememberedWindows().map((w) => w.id)).toEqual(["fuel"]);
+  });
+
+  it("survives corrupt storage", () => {
+    localStorage.setItem("telemetrylab.open-windows.v1", "{not json");
+    expect(getRememberedWindows()).toEqual([]);
   });
 });

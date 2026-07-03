@@ -15,18 +15,15 @@
  */
 
 import { useEffect } from "react";
-import { GripHorizontal } from "lucide-react";
 import { useBridge } from "../hooks/useBridge";
 import { useTelemetry } from "../hooks/useTelemetry";
 import { useDashboardLayout } from "../hooks/useDashboardLayout";
 import { DashboardGrid } from "./layout/DashboardGrid";
+import { OverlayChrome } from "./OverlayChrome";
 import { getDashboard } from "../dashboards/registry";
 import { useOverlayConfigStore } from "../stores/useOverlayConfigStore";
 import { getTheme, applyTheme } from "../themes";
 import { initWindowBoundsPersistence } from "../stores/useOverlayStore";
-
-const isTauri =
-  typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
 export function OverlayWindow({ id }: { id: string }) {
   // Each overlay window owns its own socket to the bridge.
@@ -51,7 +48,8 @@ export function OverlayWindow({ id }: { id: string }) {
   const effectiveThemeId =
     settings.appearance.themeId ?? config.globalSettings.themeId;
   useEffect(() => {
-    applyTheme(getTheme(effectiveThemeId));
+    // A single-overlay window is always an overlay: transparent background.
+    applyTheme(getTheme(effectiveThemeId), true);
   }, [effectiveThemeId]);
 
   useEffect(() => {
@@ -68,21 +66,7 @@ export function OverlayWindow({ id }: { id: string }) {
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-bg text-text">
-      {/* Drag strip: repositions the frameless desktop window (data-tauri-drag-
-          region). Kept slim and only fully visible on hover so it doesn't
-          clutter an OBS capture; harmless in a plain browser. */}
-      {isTauri && (
-        <div
-          data-tauri-drag-region
-          title="Drag to move this overlay"
-          className="group flex h-5 shrink-0 cursor-grab items-center justify-center opacity-0 transition-opacity hover:opacity-100 active:cursor-grabbing"
-        >
-          <GripHorizontal
-            data-tauri-drag-region
-            className="size-3.5 text-muted"
-          />
-        </div>
-      )}
+      <OverlayChrome kind="overlay" id={id} />
 
       <main
         className="min-h-0 flex-1 overflow-auto p-2 transition-[filter,opacity]"

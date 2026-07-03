@@ -171,13 +171,30 @@ npm run tauri build
 
 ## Viewing overlays in a browser / OBS
 
-Every overlay can be rendered on its own by loading the app with an
-`?overlay=<id>` selector — e.g. `http://localhost:1420/?overlay=standings`.
-Paste that URL into a browser tab, or into **OBS → Sources → Browser Source**,
-to composite a single overlay over your capture (the page renders with a
-transparent background). The Overlay Manager's *Browser Source* tab generates
-ready-to-copy links for each overlay. A hash form (`#overlay=<id>` / `#/<id>`)
-is also accepted for hosts that don't preserve query strings.
+A single view is selected with a URL param: `?overlay=<id>` renders one whole
+overlay, and `?widget=<id>` renders a single telemetry widget (speed, fuel, …).
+Both render with a **transparent background** so they composite over an OBS
+capture or float over the game.
+
+The bridge serves the built frontend over plain HTTP so these URLs work outside
+the desktop app (the Tauri `tauri://localhost` protocol is only reachable inside
+the app's own WebView):
+
+```
+http://127.0.0.1:9999/?overlay=standings   # a whole overlay
+http://127.0.0.1:9999/?widget=fuel          # a single widget
+```
+
+Paste either into a browser tab or **OBS → Sources → Browser Source**. The
+Overlay Manager's *Browser Source* tab generates ready-to-copy links. A hash
+form (`#overlay=<id>` / `#/<id>`) is also accepted for hosts that don't preserve
+query strings.
+
+The HTTP server runs from the bridge and serves the built `dist/` (so run
+`npm run build` first in dev; the packaged sidecar bundles it). Configure it
+with env vars: `BRIDGE_HTTP=0` to disable, `BRIDGE_HTTP_HOST`,
+`BRIDGE_HTTP_PORT` (default `9999`), `BRIDGE_HTTP_ROOT`. During `npm run dev`
+the Vite server at `http://localhost:1420` serves the same URLs with hot reload.
 
 ---
 
