@@ -2,7 +2,12 @@ import { memo } from "react";
 import { Wrench, AlertTriangle } from "lucide-react";
 import { useStandingsRow } from "../../stores/useStandingsStore";
 import { useDriver } from "../../stores/useSessionStore";
-import { gridTemplate, LAP_COLOR, ROW_H } from "./constants";
+import {
+  gridTemplate,
+  LAP_COLOR,
+  ROW_H,
+  type ColumnVisibility,
+} from "./constants";
 import {
   BrandIcon,
   GapCell,
@@ -23,6 +28,8 @@ interface StandingsRowProps {
   zebra: boolean;
   /** Grouped by class ⇒ show gap/interval relative to the class, not overall. */
   classRelative: boolean;
+  /** Which columns to render (must match the header). */
+  isVisible: ColumnVisibility;
 }
 
 /**
@@ -38,6 +45,7 @@ function StandingsRowInner({
   classColor,
   zebra,
   classRelative,
+  isVisible,
 }: StandingsRowProps) {
   const row = useStandingsRow(carIdx);
   const driver = useDriver(carIdx);
@@ -72,14 +80,16 @@ function StandingsRowInner({
           dimmed ? "opacity-40" : "",
         ].join(" ")}
         style={{
-          gridTemplateColumns: gridTemplate(sectorCount),
+          gridTemplateColumns: gridTemplate(sectorCount, isVisible),
           borderLeft: `2px solid ${row?.isClassLeader ? classColor : `${classColor}55`}`,
         }}
       >
         {/* position change */}
-        <div className="flex justify-center">
-          <PosChange value={row?.positionsGainedTotal ?? 0} />
-        </div>
+        {isVisible("change") && (
+          <div className="flex justify-center">
+            <PosChange value={row?.positionsGainedTotal ?? 0} />
+          </div>
+        )}
 
         {/* position */}
         <div className="text-center text-[13px] font-semibold tabular-nums tnum">
@@ -87,12 +97,14 @@ function StandingsRowInner({
         </div>
 
         {/* car number */}
-        <div
-          className="truncate rounded bg-surface-2 text-center text-[11px] font-semibold tabular-nums tnum text-muted"
-          title={`#${driver?.carNumber ?? ""}`}
-        >
-          {driver?.carNumber ?? "—"}
-        </div>
+        {isVisible("num") && (
+          <div
+            className="truncate rounded bg-surface-2 text-center text-[11px] font-semibold tabular-nums tnum text-muted"
+            title={`#${driver?.carNumber ?? ""}`}
+          >
+            {driver?.carNumber ?? "—"}
+          </div>
+        )}
 
         {/* driver + brand */}
         <div className="flex min-w-0 items-center gap-1.5">
@@ -103,42 +115,55 @@ function StandingsRowInner({
         </div>
 
         {/* license + SR */}
-        <div className="flex justify-center">
-          {driver && (
-            <LicenseBadge
-              group={driver.licenseGroup}
-              safetyRating={driver.safetyRating}
-              color={driver.licenseColor}
-            />
-          )}
-        </div>
+        {isVisible("license") && (
+          <div className="flex justify-center">
+            {driver && (
+              <LicenseBadge
+                group={driver.licenseGroup}
+                safetyRating={driver.safetyRating}
+                color={driver.licenseColor}
+              />
+            )}
+          </div>
+        )}
 
         {/* iRating + projected change */}
-        <IRatingCell
-          iRating={driver?.iRating ?? row?.iRating ?? 0}
-          change={row?.iRatingChangeEst ?? 0}
-        />
+        {isVisible("irating") && (
+          <IRatingCell
+            iRating={driver?.iRating ?? row?.iRating ?? 0}
+            change={row?.iRatingChangeEst ?? 0}
+          />
+        )}
 
         {/* gap to leader / interval (class-relative when grouped by class) */}
-        <GapCell value={gapValue ?? null} isLaps={gapIsLaps ?? false} />
-        <IntervalCell value={intervalValue ?? null} />
+        {isVisible("gap") && (
+          <GapCell value={gapValue ?? null} isLaps={gapIsLaps ?? false} />
+        )}
+        {isVisible("interval") && <IntervalCell value={intervalValue ?? null} />}
 
         {/* last / best lap */}
-        <LapCell
-          key={`last-${row?.lastLapTime}`}
-          time={row?.lastLapTime ?? null}
-          color={LAP_COLOR[row?.lastLapStatus ?? "none"]}
-          flash={row?.lastLapStatus === "overall_best"}
-        />
-        <LapCell time={row?.bestLapTime ?? null} color="var(--color-muted)" />
+        {isVisible("last") && (
+          <LapCell
+            key={`last-${row?.lastLapTime}`}
+            time={row?.lastLapTime ?? null}
+            color={LAP_COLOR[row?.lastLapStatus ?? "none"]}
+            flash={row?.lastLapStatus === "overall_best"}
+          />
+        )}
+        {isVisible("best") && (
+          <LapCell time={row?.bestLapTime ?? null} color="var(--color-muted)" />
+        )}
 
         {/* tyre compound + laps */}
-        <TireCell compound={row?.tireCompound ?? null} laps={row?.tireLaps ?? 0} />
+        {isVisible("tire") && (
+          <TireCell compound={row?.tireCompound ?? null} laps={row?.tireLaps ?? 0} />
+        )}
 
         {/* sector deltas */}
-        {Array.from({ length: sectorCount }, (_, i) => (
-          <SectorCell key={i} sector={row?.sectors[i]} />
-        ))}
+        {isVisible("sectors") &&
+          Array.from({ length: sectorCount }, (_, i) => (
+            <SectorCell key={i} sector={row?.sectors[i]} />
+          ))}
 
         {/* state badge */}
         <div className="flex items-center justify-center">

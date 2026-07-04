@@ -23,11 +23,11 @@ import {
   type Profile,
 } from "../../stores/useOverlayConfigStore";
 import { useActiveOverlaysStore } from "../../stores/useActiveOverlaysStore";
-import { useBridgeStore } from "../../stores/useBridgeStore";
 import { AppearancePanel } from "./AppearancePanel";
 import { VisibilityPanel } from "./VisibilityPanel";
 import { WindowPanel } from "./WindowPanel";
 import { LivePreview } from "./LivePreview";
+import { StandingsColumnsPanel } from "./StandingsColumnsPanel";
 import { GlobalSettingsPanel } from "./GlobalSettingsPanel";
 import { DebugPanel } from "./DebugPanel";
 
@@ -198,6 +198,15 @@ function OverlayConfigPage({ overlayId }: { overlayId: string }) {
               <WidgetRow key={w.id} widget={w} />
             ))}
           </div>
+        </ConfigSection>
+      )}
+
+      {overlayId === "standings" && (
+        <ConfigSection
+          title="Columns"
+          description="Choose which timing columns the standings table shows."
+        >
+          <StandingsColumnsPanel />
         </ConfigSection>
       )}
 
@@ -697,33 +706,17 @@ function NavItem({
 // ── ManagerFooter ─────────────────────────────────────────────────────────────
 
 function ManagerFooter() {
-  const { socketConnected, iracingActive } = useBridgeStore();
   const activeCount = useActiveOverlaysStore(
     (s) => s.windows.filter((w) => w.kind === "overlay").length
   );
-
-  let label: string;
-  let color: string;
-  if (!socketConnected) {
-    label = "Connecting to bridge…";
-    color = "var(--color-warning)";
-  } else if (!iracingActive) {
-    label = "Waiting for iRacing…";
-    color = "var(--color-muted)";
-  } else {
-    label = "Live";
-    color = "var(--color-accent)";
-  }
 
   return (
     <footer className="flex h-8 flex-none items-center gap-2 border-t border-border px-4">
       <span
         className="inline-block size-1.5 rounded-full"
-        style={{ background: color }}
+        style={{ background: "var(--color-accent)" }}
       />
-      <span className="text-[11px]" style={{ color }}>
-        {label}
-      </span>
+      <span className="text-[11px] text-muted">Preview · mock data</span>
       <span className="ml-auto text-[11px] text-muted">
         {activeCount === 0
           ? "No overlays open"

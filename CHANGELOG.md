@@ -7,8 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Live preview renders the real overlay for every type.** The manager drives
+  its own stores with the mock feed and renders the actual overlay component
+  (dashboard widgets, standings, relative, fuel) scaled to fit — a faithful,
+  animated miniature — instead of a stylised sample.
+- **Configurable standings columns.** A new Columns section on the standings
+  overlay toggles which timing columns are shown (position/driver/status stay
+  on). Choices persist and broadcast over the bus, so an open standings window
+  updates live.
+
 ### Changed
 
+- **A popped-out widget shows only a close action.** Once a widget has its own
+  window, its dashboard-tile control closes that window rather than offering to
+  open a second one.
 - **The main window is now a dedicated Overlay Manager.** It configures,
   previews, opens, closes and tracks overlays and never behaves as an overlay or
   floating controller. Overlays are opened directly from the manager into their

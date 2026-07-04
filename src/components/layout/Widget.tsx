@@ -1,7 +1,7 @@
-import { EyeOff, ExternalLink } from "lucide-react";
+import { EyeOff, ExternalLink, X } from "lucide-react";
 import type { WidgetDef } from "../../dashboards/registry";
 import type { TelemetryData } from "../../hooks/useTelemetry";
-import { openWidgetWindow } from "../../lib/overlayWindows";
+import { useActiveOverlaysStore } from "../../stores/useActiveOverlaysStore";
 
 /** Class react-grid-layout uses to know where a widget can be grabbed. */
 export const WIDGET_DRAG_HANDLE = "widget-drag-handle";
@@ -22,6 +22,9 @@ interface WidgetProps {
  */
 export function Widget({ def, data, onHide }: WidgetProps) {
   const Icon = def.icon;
+  const isOpen = useActiveOverlaysStore((s) => s.isWidgetOpen(def.id));
+  const openWidget = useActiveOverlaysStore((s) => s.openWidget);
+  const closeWidget = useActiveOverlaysStore((s) => s.closeWidget);
 
   return (
     <section className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-surface p-3.5 transition-colors hover:border-border-strong">
@@ -34,14 +37,27 @@ export function Widget({ def, data, onHide }: WidgetProps) {
         </h3>
 
         <div className="ml-auto flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-          <button
-            type="button"
-            onClick={() => openWidgetWindow(def.id, def.title)}
-            title="Open this widget in its own window"
-            className={`${WIDGET_NO_DRAG} grid size-6 place-items-center rounded-md text-muted transition-colors hover:bg-surface-2 hover:text-accent`}
-          >
-            <ExternalLink className="size-3.5" />
-          </button>
+          {/* Once this widget has its own window, the only action is to close
+              it again — not to open a second one. */}
+          {isOpen ? (
+            <button
+              type="button"
+              onClick={() => closeWidget(def.id)}
+              title="Close this widget's window"
+              className={`${WIDGET_NO_DRAG} grid size-6 place-items-center rounded-md text-accent transition-colors hover:bg-surface-2 hover:text-danger`}
+            >
+              <X className="size-3.5" />
+            </button>
+          ) : (
+            <button
+              type="button"
+              onClick={() => openWidget(def.id, def.title)}
+              title="Open this widget in its own window"
+              className={`${WIDGET_NO_DRAG} grid size-6 place-items-center rounded-md text-muted transition-colors hover:bg-surface-2 hover:text-accent`}
+            >
+              <ExternalLink className="size-3.5" />
+            </button>
+          )}
           <button
             type="button"
             onClick={onHide}
