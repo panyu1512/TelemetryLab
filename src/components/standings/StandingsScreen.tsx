@@ -11,6 +11,7 @@ import {
   COL_HEADER_H,
   ROW_H,
   tableMinWidth,
+  type ColumnVisibility,
 } from "./constants";
 import { ColumnHeader } from "./ColumnHeader";
 import { ClassHeader } from "./ClassHeader";
@@ -40,8 +41,16 @@ export function StandingsScreen() {
   const meta = useStandingsMeta();
   const grouping = useStandingsUiStore((s) => s.grouping);
   const followPlayer = useStandingsUiStore((s) => s.followPlayer);
+  const columns = useStandingsUiStore((s) => s.columns);
   const { items, totalHeight } = useStandingsLayout();
   const classRelative = grouping === "class";
+
+  // Derive the visibility predicate from the column map so its identity changes
+  // when columns change — that re-renders the (memoized) header and rows.
+  const isVisible = useMemo<ColumnVisibility>(
+    () => (id) => columns[id] !== false,
+    [columns]
+  );
 
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
@@ -110,8 +119,8 @@ export function StandingsScreen() {
         {isEmpty ? (
           <EmptyState iracingActive={iracingActive} />
         ) : (
-          <div style={{ minWidth: tableMinWidth(meta.sectorCount) }}>
-            <ColumnHeader sectorCount={meta.sectorCount} />
+          <div style={{ minWidth: tableMinWidth(meta.sectorCount, isVisible) }}>
+            <ColumnHeader sectorCount={meta.sectorCount} isVisible={isVisible} />
             <div
               className="relative"
               style={{ height: totalHeight + 8, marginTop: 2 }}
@@ -135,6 +144,7 @@ export function StandingsScreen() {
                     classColor={classById.get(it.classId)?.color ?? "#666"}
                     zebra={zebra}
                     classRelative={classRelative}
+                    isVisible={isVisible}
                   />
                 );
               })}

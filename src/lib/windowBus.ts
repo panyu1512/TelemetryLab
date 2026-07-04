@@ -21,7 +21,11 @@ const isTauri =
   typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
 
 /** Topics carried over the bus. Kept as a closed union for safety. */
-export type BusTopic = "config:changed" | "window:lock" | "windows:changed";
+export type BusTopic =
+  | "config:changed"
+  | "window:lock"
+  | "windows:changed"
+  | "standings-ui:changed";
 
 /** Unique id for this window, used to ignore our own echoed messages. */
 const ORIGIN = Math.random().toString(36).slice(2);
