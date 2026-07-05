@@ -113,7 +113,7 @@ export function StandingsScreen() {
   const isEmpty = items.length === 0;
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-xl border border-border bg-surface">
+    <div className="flex h-full flex-col overflow-hidden rounded-xl border border-transparent bg-surface">
       <StandingsHeader />
       <div ref={scrollRef} className="relative flex-1 overflow-auto">
         {isEmpty ? (
