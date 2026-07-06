@@ -23,6 +23,7 @@ import {
   type Profile,
 } from "../../stores/useOverlayConfigStore";
 import { useActiveOverlaysStore } from "../../stores/useActiveOverlaysStore";
+import { useWidgetSelectionStore } from "../../stores/useWidgetSelectionStore";
 import { AppearancePanel } from "./AppearancePanel";
 import { VisibilityPanel } from "./VisibilityPanel";
 import { WindowPanel } from "./WindowPanel";
@@ -132,10 +133,7 @@ function OverlayConfigPage({ overlayId }: { overlayId: string }) {
   const settings = store.getOverlaySettings(overlayId);
   const dashboard = getDashboard(overlayId);
   const Icon = dashboard.icon;
-
-  const isOpen = useActiveOverlaysStore((s) => s.isOverlayOpen(overlayId));
-  const openOverlay = useActiveOverlaysStore((s) => s.openOverlay);
-  const closeOverlay = useActiveOverlaysStore((s) => s.closeOverlay);
+  const isWidgetDashboard = dashboard.widgets.length > 0;
 
   return (
     <div className="mx-auto max-w-3xl space-y-8 p-6">
@@ -145,21 +143,13 @@ function OverlayConfigPage({ overlayId }: { overlayId: string }) {
           <Icon className="size-5" />
         </span>
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h1 className="truncate text-base font-semibold text-text">
-              {dashboard.label}
-            </h1>
-            <span
-              className={[
-                "rounded px-1.5 py-0.5 text-[9px] uppercase tracking-wide",
-                isOpen ? "bg-accent/15 text-accent" : "bg-surface-2 text-muted",
-              ].join(" ")}
-            >
-              {isOpen ? "Open" : "Closed"}
-            </span>
-          </div>
+          <h1 className="truncate text-base font-semibold text-text">
+            {dashboard.label}
+          </h1>
           <p className="text-xs text-muted">
-            Configure, preview and open this overlay — all on one page.
+            {isWidgetDashboard
+              ? "Enable widgets, then open them — each in its own window."
+              : "Configure, preview and open this overlay — all on one page."}
           </p>
         </div>
 
@@ -167,31 +157,17 @@ function OverlayConfigPage({ overlayId }: { overlayId: string }) {
           enabled={settings.enabled}
           onChange={(v) => store.setOverlayEnabled(overlayId, v)}
         />
-        {isOpen ? (
-          <button
-            type="button"
-            onClick={() => closeOverlay(overlayId)}
-            className="flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-xs font-medium text-text transition-colors hover:border-danger/50 hover:text-danger"
-          >
-            <PanelTopClose className="size-3.5" />
-            Close window
-          </button>
+        {isWidgetDashboard ? (
+          <DashboardWindowActions dashboard={dashboard} />
         ) : (
-          <button
-            type="button"
-            onClick={() => openOverlay(overlayId, dashboard.label)}
-            className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-bg transition-opacity hover:opacity-90"
-          >
-            <AppWindow className="size-3.5" />
-            Open window
-          </button>
+          <OverlayWindowAction overlayId={overlayId} label={dashboard.label} />
         )}
       </div>
 
-      {dashboard.widgets.length > 0 && (
+      {isWidgetDashboard && (
         <ConfigSection
           title="Widgets"
-          description="Pop out individual widgets into their own windows — one, several, or all."
+          description="Choose which widgets to show. Open windows opens each enabled widget on its own."
         >
           <div className="space-y-2">
             {dashboard.widgets.map((w) => (
@@ -234,25 +210,123 @@ function OverlayConfigPage({ overlayId }: { overlayId: string }) {
   );
 }
 
-/** One widget row with a toggle that opens/closes its own window. */
-function WidgetRow({ widget }: { widget: WidgetDef }) {
-  const open = useActiveOverlaysStore((s) => s.isWidgetOpen(widget.id));
+/** Open/close action for a single-window overlay (standings/relative/fuel). */
+function OverlayWindowAction({
+  overlayId,
+  label,
+}: {
+  overlayId: string;
+  label: string;
+}) {
+  const isOpen = useActiveOverlaysStore((s) => s.isOverlayOpen(overlayId));
+  const openOverlay = useActiveOverlaysStore((s) => s.openOverlay);
+  const closeOverlay = useActiveOverlaysStore((s) => s.closeOverlay);
+
+  return isOpen ? (
+    <button
+      type="button"
+      onClick={() => closeOverlay(overlayId)}
+      className="flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-xs font-medium text-text transition-colors hover:border-danger/50 hover:text-danger"
+    >
+      <PanelTopClose className="size-3.5" />
+      Close window
+    </button>
+  ) : (
+    <button
+      type="button"
+      onClick={() => openOverlay(overlayId, label)}
+      className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-bg transition-opacity hover:opacity-90"
+    >
+      <AppWindow className="size-3.5" />
+      Open window
+    </button>
+  );
+}
+
+/**
+ * Dashboard action: open every *enabled* widget, each in its own window, or
+ * close the ones that are open. Never opens all widgets in a single window.
+ */
+function DashboardWindowActions({ dashboard }: { dashboard: DashboardDef }) {
+  const windows = useActiveOverlaysStore((s) => s.windows);
+  const enabledMap = useWidgetSelectionStore((s) => s.enabled);
   const openWidget = useActiveOverlaysStore((s) => s.openWidget);
   const closeWidget = useActiveOverlaysStore((s) => s.closeWidget);
+
+  const openIds = new Set(
+    windows.filter((w) => w.kind === "widget").map((w) => w.id)
+  );
+  const enabled = dashboard.widgets.filter((w) => enabledMap[w.id] !== false);
+  const open = dashboard.widgets.filter((w) => openIds.has(w.id));
+
+  const openAll = () => enabled.forEach((w) => openWidget(w.id, w.title));
+  const closeAll = () => open.forEach((w) => closeWidget(w.id));
+
+  return (
+    <div className="flex items-center gap-2">
+      {open.length > 0 && (
+        <button
+          type="button"
+          onClick={closeAll}
+          className="flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-xs font-medium text-text transition-colors hover:border-danger/50 hover:text-danger"
+        >
+          <PanelTopClose className="size-3.5" />
+          Close {open.length}
+        </button>
+      )}
+      <button
+        type="button"
+        onClick={openAll}
+        disabled={enabled.length === 0}
+        title={
+          enabled.length === 0
+            ? "Enable at least one widget first"
+            : "Open each enabled widget in its own window"
+        }
+        className={[
+          "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-opacity",
+          enabled.length === 0
+            ? "cursor-not-allowed bg-surface-2 text-muted"
+            : "bg-accent text-bg hover:opacity-90",
+        ].join(" ")}
+      >
+        <AppWindow className="size-3.5" />
+        {open.length > 0 ? "Open windows" : `Open ${enabled.length} window${enabled.length === 1 ? "" : "s"}`}
+      </button>
+    </div>
+  );
+}
+
+/**
+ * A widget row: the toggle **enables/disables** the widget (a selection). It
+ * doesn't open a window on its own — the dashboard's "Open windows" opens the
+ * enabled ones. A dot shows whether that widget currently has a window open.
+ */
+function WidgetRow({ widget }: { widget: WidgetDef }) {
+  const enabled = useWidgetSelectionStore((s) => s.isEnabled(widget.id));
+  const toggle = useWidgetSelectionStore((s) => s.toggle);
+  const open = useActiveOverlaysStore((s) => s.isWidgetOpen(widget.id));
   const Icon = widget.icon;
 
   return (
     <div
       className={[
         "flex items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors",
-        open ? "border-accent/40 bg-accent/5" : "border-border bg-surface-2",
+        enabled ? "border-accent/40 bg-accent/5" : "border-border bg-surface-2",
       ].join(" ")}
     >
       <Icon
-        className={["size-4 shrink-0", open ? "text-accent" : "text-muted"].join(" ")}
+        className={["size-4 shrink-0", enabled ? "text-accent" : "text-muted"].join(" ")}
       />
       <div className="min-w-0 flex-1">
-        <div className="text-xs font-medium text-text">{widget.title}</div>
+        <div className="flex items-center gap-1.5">
+          <span className="text-xs font-medium text-text">{widget.title}</span>
+          {open && (
+            <span className="rounded bg-accent/15 px-1 py-0.5 text-[9px] uppercase tracking-wide text-accent">
+              Open
+            </span>
+          )}
+        </div>
         <div className="mt-0.5 truncate text-[11px] text-muted">
           {widget.description}
         </div>
@@ -260,20 +334,18 @@ function WidgetRow({ widget }: { widget: WidgetDef }) {
       <button
         type="button"
         role="switch"
-        aria-checked={open}
-        title={open ? "Close widget window" : "Open widget window"}
-        onClick={() =>
-          open ? closeWidget(widget.id) : openWidget(widget.id, widget.title)
-        }
+        aria-checked={enabled}
+        title={enabled ? "Disable widget" : "Enable widget"}
+        onClick={() => toggle(widget.id)}
         className={[
           "relative h-5 w-9 shrink-0 rounded-full transition-colors",
-          open ? "bg-accent" : "bg-surface border border-border-strong",
+          enabled ? "bg-accent" : "bg-surface border border-border-strong",
         ].join(" ")}
       >
         <span
           className={[
             "absolute top-0.5 size-4 rounded-full bg-bg transition-[left]",
-            open ? "left-[18px]" : "left-0.5",
+            enabled ? "left-[18px]" : "left-0.5",
           ].join(" ")}
         />
       </button>
@@ -549,9 +621,11 @@ function Sidebar({
 }) {
   const store = useOverlayConfigStore();
   const openWindows = useActiveOverlaysStore((s) => s.windows);
-  const openIds = new Set(
+  const openOverlayIds = new Set(
     openWindows.filter((w) => w.kind === "overlay").map((w) => w.id)
   );
+  // A widget dashboard is "open" when any of its widget windows are open.
+  const anyWidgetOpen = openWindows.some((w) => w.kind === "widget");
 
   return (
     <aside className="flex w-52 flex-none flex-col border-r border-border bg-bg">
@@ -564,6 +638,8 @@ function Sidebar({
           const isSelected =
             selected.kind === "overlay" && selected.overlayId === d.id;
           const settings = store.getOverlaySettings(d.id);
+          const open =
+            d.widgets.length > 0 ? anyWidgetOpen : openOverlayIds.has(d.id);
 
           return (
             <OverlaySidebarItem
@@ -571,7 +647,7 @@ function Sidebar({
               dashboard={d}
               selected={isSelected}
               enabled={settings.enabled}
-              open={openIds.has(d.id)}
+              open={open}
               onSelect={() => onSelect({ kind: "overlay", overlayId: d.id })}
               onToggleEnabled={() =>
                 store.setOverlayEnabled(d.id, !settings.enabled)
@@ -706,9 +782,7 @@ function NavItem({
 // ── ManagerFooter ─────────────────────────────────────────────────────────────
 
 function ManagerFooter() {
-  const activeCount = useActiveOverlaysStore(
-    (s) => s.windows.filter((w) => w.kind === "overlay").length
-  );
+  const openCount = useActiveOverlaysStore((s) => s.windows.length);
 
   return (
     <footer className="flex h-8 flex-none items-center gap-2 border-t border-border px-4">
@@ -718,9 +792,9 @@ function ManagerFooter() {
       />
       <span className="text-[11px] text-muted">Preview · mock data</span>
       <span className="ml-auto text-[11px] text-muted">
-        {activeCount === 0
-          ? "No overlays open"
-          : `${activeCount} overlay${activeCount === 1 ? "" : "s"} open`}
+        {openCount === 0
+          ? "No windows open"
+          : `${openCount} window${openCount === 1 ? "" : "s"} open`}
       </span>
     </footer>
   );

@@ -27,7 +27,7 @@ export function Widget({ def, data, onHide }: WidgetProps) {
   const closeWidget = useActiveOverlaysStore((s) => s.closeWidget);
 
   return (
-    <section className="group flex h-full flex-col overflow-hidden rounded-xl border border-border bg-surface p-3.5 transition-colors hover:border-border-strong">
+    <section className="group flex h-full flex-col overflow-hidden rounded-xl border border-transparent bg-surface p-3.5 transition-colors">
       <header
         className={`${WIDGET_DRAG_HANDLE} mb-3 flex shrink-0 cursor-grab items-center gap-2 active:cursor-grabbing`}
       >

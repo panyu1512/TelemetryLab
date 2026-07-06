@@ -9,6 +9,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Enable widgets, then open them as separate windows.** The dashboard's widget
+  toggles now enable/disable widgets (a persisted selection). "Open windows"
+  opens each *enabled* widget in its own window — never all in one window.
+- **Enlargeable live preview.** An expand control opens the preview in a large,
+  focused modal for a closer look.
 - **Live preview renders the real overlay for every type.** The manager drives
   its own stores with the mock feed and renders the actual overlay component
   (dashboard widgets, standings, relative, fuel) scaled to fit — a faithful,
@@ -20,6 +25,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Popped-out overlay/widget windows have transparent borders** so they float
+  cleanly over the game with no frame.
+- **Dashboard widget toggles are now a selection, not an immediate open.**
+  Toggling enables/disables a widget; the dashboard's "Open windows" then opens
+  the enabled widgets, each in its own window.
 - **A popped-out widget shows only a close action.** Once a widget has its own
   window, its dashboard-tile control closes that window rather than offering to
   open a second one.
