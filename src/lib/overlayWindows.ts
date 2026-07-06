@@ -196,6 +196,11 @@ async function openWindow(
         minHeight: kind === "widget" ? 120 : 200,
         decorations: false,
         transparent: true,
+        // No native window shadow — on a transparent, decoration-less overlay
+        // the OS drop-shadow reads as a rectangular border/halo around the
+        // window when it floats over the game. Killing it makes the window
+        // itself truly borderless; only the widget content paints.
+        shadow: false,
         alwaysOnTop: true,
         resizable: true,
       });
