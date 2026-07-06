@@ -1,22 +1,33 @@
 /**
- * Live preview — a miniature of the *real* overlay being edited.
+ * Live preview — miniatures of the *real* overlays, all at once.
  *
- * It renders the actual overlay component (the dashboard's widget grid, or a
- * full-screen Screen) at a natural size and scales it down to fit, so the
- * preview looks and behaves exactly like the live overlay window. Data comes
- * from the manager's stores, which `App` drives with the mock feed — so gauges
- * sweep, standings scroll and fuel updates without iRacing or the bridge.
+ * {@link LivePreviewStack} renders one preview per entry in `DASHBOARDS`,
+ * stacked vertically and centered in the manager's preview column. Each one
+ * ({@link LivePreviewCard}) mounts the actual overlay component (the dashboard's
+ * widget grid, or a full-screen Screen) so the preview looks and behaves exactly
+ * like the live overlay window. Data comes from the manager's stores, which
+ * `App` drives with the mock feed — so every gauge sweeps, standings scroll and
+ * fuel updates at the same time, without iRacing or the bridge.
  *
- * The selected overlay's settings are read straight from the config store, so
- * every edit (theme, saturation, brightness, opacity) is reflected instantly;
- * the same store mutation also propagates to a real open overlay window over the
- * bus, keeping preview and window in sync. The theme is applied to a scoped
- * container (not the document root) via {@link applyTheme}.
+ * Each overlay's settings are read straight from the config store, so every edit
+ * (theme, saturation, brightness, opacity) is reflected instantly; the same
+ * store mutation also propagates to a real open overlay window over the bus,
+ * keeping preview and window in sync. The theme is applied to a scoped container
+ * (not the document root) via {@link applyTheme}.
+ *
+ * Two scroll levels: the preview column scrolls the whole stack (owned by the
+ * manager), and each preview {@link PreviewStage} scrolls internally — the real
+ * overlay is scaled to fit the preview's width down to a readable minimum, then
+ * any remaining height is reached by scrolling rather than shrinking further.
  */
 
 import { useEffect, useRef, useState } from "react";
 import { Maximize2, X } from "lucide-react";
-import { getDashboard, type DashboardDef } from "../../dashboards/registry";
+import {
+  DASHBOARDS,
+  getDashboard,
+  type DashboardDef,
+} from "../../dashboards/registry";
 import {
   useOverlayConfigStore,
   type OverlayAppearance,
@@ -26,18 +37,55 @@ import { useDashboardLayout } from "../../hooks/useDashboardLayout";
 import { DashboardGrid } from "../layout/DashboardGrid";
 import { applyTheme, getTheme, type Theme } from "../../themes";
 
-interface LivePreviewProps {
+/** Natural width the overlay is rendered at before being scaled to fit. */
+const STAGE_WIDTH = 600;
+/** Natural height the overlay is rendered at; the stage scrolls past the box. */
+const STAGE_HEIGHT = 460;
+/** Don't shrink a preview below this — keep it readable, scroll instead. */
+const MIN_SCALE = 0.45;
+/** Height of each preview box in the stacked column. */
+const CARD_HEIGHT = 184;
+
+/**
+ * Every overlay's live preview, stacked vertically and centered. Meant to live
+ * inside a column that owns the outer (whole-stack) scroll.
+ */
+export function LivePreviewStack() {
+  return (
+    <div className="mx-auto flex w-full max-w-sm flex-col gap-4">
+      <div className="flex items-center justify-between">
+        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted">
+          Live Preview
+        </p>
+        <span className="rounded bg-accent/15 px-1.5 py-0.5 text-[9px] uppercase tracking-wide text-accent">
+          mock data
+        </span>
+      </div>
+
+      {DASHBOARDS.map((d) => (
+        <LivePreviewCard key={d.id} overlayId={d.id} />
+      ))}
+
+      <p className="text-[10px] leading-relaxed text-muted">
+        Every overlay with mock data, live. Reflects config in real time; open
+        windows update instantly. Scroll a preview to see the rest of a tall
+        overlay.
+      </p>
+    </div>
+  );
+}
+
+interface LivePreviewCardProps {
   overlayId: string;
 }
 
-/** Natural width the overlay is rendered at before being scaled to fit. */
-const STAGE_WIDTH = 600;
-
-export function LivePreview({ overlayId }: LivePreviewProps) {
+/** A single overlay's preview: a titled, scrollable miniature. */
+function LivePreviewCard({ overlayId }: LivePreviewCardProps) {
   const store = useOverlayConfigStore();
   const settings = store.getOverlaySettings(overlayId);
   const { appearance, enabled } = settings;
   const dashboard = getDashboard(overlayId);
+  const Icon = dashboard.icon;
 
   const themeId = appearance.themeId ?? store.globalSettings.themeId;
   const theme = getTheme(themeId);
@@ -45,32 +93,31 @@ export function LivePreview({ overlayId }: LivePreviewProps) {
   const [expanded, setExpanded] = useState(false);
 
   return (
-    <div className="flex h-full min-h-0 flex-col">
-      <div className="mb-2 flex items-center justify-between">
-        <p className="text-[10px] font-semibold uppercase tracking-widest text-muted">
-          Live Preview
-        </p>
-        <div className="flex items-center gap-1.5">
-          <span
-            className={[
-              "rounded px-1.5 py-0.5 text-[9px] uppercase tracking-wide",
-              enabled ? "bg-accent/15 text-accent" : "bg-surface-2 text-muted",
-            ].join(" ")}
-          >
-            {enabled ? "Enabled" : "Disabled"}
-          </span>
-          <button
-            type="button"
-            onClick={() => setExpanded(true)}
-            title="Expand preview"
-            className="grid size-5 place-items-center rounded text-muted transition-colors hover:bg-surface-2 hover:text-text"
-          >
-            <Maximize2 className="size-3" />
-          </button>
-        </div>
+    <div className="w-full">
+      <div className="mb-1.5 flex items-center gap-1.5">
+        <Icon className="size-3.5 shrink-0 text-muted" />
+        <span className="min-w-0 flex-1 truncate text-xs font-medium text-text">
+          {dashboard.label}
+        </span>
+        <span
+          className={[
+            "rounded px-1.5 py-0.5 text-[9px] uppercase tracking-wide",
+            enabled ? "bg-accent/15 text-accent" : "bg-surface-2 text-muted",
+          ].join(" ")}
+        >
+          {enabled ? "Enabled" : "Disabled"}
+        </span>
+        <button
+          type="button"
+          onClick={() => setExpanded(true)}
+          title="Expand preview"
+          className="grid size-5 shrink-0 place-items-center rounded text-muted transition-colors hover:bg-surface-2 hover:text-text"
+        >
+          <Maximize2 className="size-3" />
+        </button>
       </div>
 
-      <div className="relative min-h-0 flex-1">
+      <div className="relative" style={{ height: CARD_HEIGHT }}>
         <PreviewSurface
           overlayId={overlayId}
           dashboard={dashboard}
@@ -78,11 +125,6 @@ export function LivePreview({ overlayId }: LivePreviewProps) {
           appearance={appearance}
         />
       </div>
-
-      <p className="mt-2 text-[10px] text-muted">
-        The real overlay with mock data. Reflects config in real time; open
-        windows update instantly.
-      </p>
 
       {expanded && (
         <ExpandedPreview
@@ -189,9 +231,15 @@ const CHECKER =
   "repeating-conic-gradient(rgba(255,255,255,0.04) 0% 25%, transparent 0% 50%) 0 0";
 
 /**
- * Renders the real overlay at {@link STAGE_WIDTH} and CSS-scales it to fill the
- * preview box, giving a faithful miniature. Non-interactive (pointer-events off)
- * so the preview can't be dragged.
+ * Renders the real overlay at {@link STAGE_WIDTH} × {@link STAGE_HEIGHT} and
+ * CSS-scales it to fill the preview box's width, giving a faithful miniature.
+ * The scale is clamped to {@link MIN_SCALE} so a narrow column doesn't shrink
+ * the overlay into illegibility; whatever height that leaves beyond the box is
+ * reached by scrolling this container vertically.
+ *
+ * The scaled content is `pointer-events: none` (so the preview can't be dragged
+ * or its widgets rearranged), while the scroll container keeps pointer events —
+ * a wheel over the preview scrolls it, but clicks never reach the live grid.
  */
 function PreviewStage({
   overlayId,
@@ -201,32 +249,40 @@ function PreviewStage({
   dashboard: DashboardDef;
 }) {
   const boxRef = useRef<HTMLDivElement>(null);
-  const [box, setBox] = useState({ w: 0, h: 0 });
+  const [boxW, setBoxW] = useState(0);
 
   useEffect(() => {
     const el = boxRef.current;
     if (!el) return;
-    const ro = new ResizeObserver(() => {
-      setBox({ w: el.clientWidth, h: el.clientHeight });
-    });
+    const ro = new ResizeObserver(() => setBoxW(el.clientWidth));
     ro.observe(el);
+    setBoxW(el.clientWidth);
     return () => ro.disconnect();
   }, []);
 
-  const scale = box.w > 0 ? box.w / STAGE_WIDTH : 0;
+  const scale =
+    boxW > 0 ? Math.min(1, Math.max(MIN_SCALE, boxW / STAGE_WIDTH)) : 0;
 
   return (
-    <div ref={boxRef} className="pointer-events-none absolute inset-0 overflow-hidden">
+    <div
+      ref={boxRef}
+      className="absolute inset-0 overflow-x-hidden overflow-y-auto"
+    >
       {scale > 0 && (
+        // Reserve the scaled footprint so the container has something to scroll.
         <div
-          style={{
-            width: STAGE_WIDTH,
-            height: box.h / scale,
-            transform: `scale(${scale})`,
-            transformOrigin: "top left",
-          }}
+          style={{ width: STAGE_WIDTH * scale, height: STAGE_HEIGHT * scale }}
         >
-          <RealOverlay overlayId={overlayId} dashboard={dashboard} />
+          <div
+            className="pointer-events-none origin-top-left"
+            style={{
+              width: STAGE_WIDTH,
+              height: STAGE_HEIGHT,
+              transform: `scale(${scale})`,
+            }}
+          >
+            <RealOverlay overlayId={overlayId} dashboard={dashboard} />
+          </div>
         </div>
       )}
     </div>

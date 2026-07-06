@@ -27,7 +27,7 @@ import { useWidgetSelectionStore } from "../../stores/useWidgetSelectionStore";
 import { AppearancePanel } from "./AppearancePanel";
 import { VisibilityPanel } from "./VisibilityPanel";
 import { WindowPanel } from "./WindowPanel";
-import { LivePreview } from "./LivePreview";
+import { LivePreviewStack } from "./LivePreview";
 import { StandingsColumnsPanel } from "./StandingsColumnsPanel";
 import { GlobalSettingsPanel } from "./GlobalSettingsPanel";
 import { DebugPanel } from "./DebugPanel";
@@ -85,9 +85,9 @@ export function OverlayManager() {
               <div className="min-h-0 flex-1 overflow-y-auto">
                 <OverlayConfigPage overlayId={selected.overlayId} />
               </div>
-              {/* Live preview, pinned alongside. */}
-              <div className="hidden w-80 flex-none border-l border-border bg-surface p-4 lg:block">
-                <LivePreview overlayId={selected.overlayId} />
+              {/* Live previews for every overlay, in their own scroll column. */}
+              <div className="hidden w-80 min-h-0 flex-none overflow-y-auto border-l border-border bg-surface p-4 lg:block">
+                <LivePreviewStack />
               </div>
             </div>
           )}

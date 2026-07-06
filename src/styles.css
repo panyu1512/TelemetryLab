@@ -208,6 +208,19 @@ html.overlay-mode {
 }
 
 /*
+ * Real overlay windows drop the "card" chrome — the rounded corners and the
+ * solid surface fill that together read as a hard rectangle floating over the
+ * live game. Only the widget/screen *content* should paint over iRacing, not a
+ * boxed frame around it. Scoped to `overlay-mode`, so the Overlay Manager's
+ * boxed preview and config surfaces (which never carry that class) keep their
+ * framed look. The soft backdrop-blur below is retained for legibility.
+ */
+html.overlay-mode .overlay-card {
+  background: transparent !important;
+  border-radius: 0 !important;
+}
+
+/*
  * Blur all widget-level backgrounds (react-grid-layout items) so the overlay
  * reads as frosted glass above the game.
  */

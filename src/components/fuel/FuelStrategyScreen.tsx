@@ -73,7 +73,7 @@ export function FuelStrategyScreen() {
   const hasFuel = data?.fuelLevel != null;
 
   return (
-    <div className="flex h-full flex-col overflow-hidden rounded-xl border border-transparent bg-surface">
+    <div className="overlay-card flex h-full flex-col overflow-hidden rounded-xl border border-transparent bg-surface">
       <Header
         reservePct={reservePct}
         onReserveChange={setReservePct}
