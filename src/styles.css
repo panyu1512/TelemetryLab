@@ -215,7 +215,8 @@ html.overlay-mode {
  * boxed preview and config surfaces (which never carry that class) keep their
  * framed look. The soft backdrop-blur below is retained for legibility.
  */
-html.overlay-mode .overlay-card {
+html.overlay-mode .overlay-card,
+.overlay-preview .overlay-card {
   background: transparent !important;
   border-radius: 0 !important;
 }

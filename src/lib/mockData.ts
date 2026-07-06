@@ -231,6 +231,9 @@ function emptySectors(): SectorSplit[] {
 export function mockStandings(t: number): StandingsPayload {
   const ordered = [...MOCK_FIELD].sort((a, b) => progress(b, t) - progress(a, t));
   const leaderProg = progress(ordered[0], t);
+  // Track position of the player, so we can express each car's on-track gap
+  // relative to them (drives the Relative screen).
+  const playerProg = progress(MOCK_FIELD[MOCK_PLAYER_IDX], t);
 
   // Overall + per-class positions.
   const overallPos = new Map<number, number>();
@@ -249,6 +252,12 @@ export function mockStandings(t: number): StandingsPayload {
     const pct = prog - lap;
     const gap = (leaderProg - prog) * car.pace; // seconds behind leader
     const pos = overallPos.get(car.idx) ?? null;
+    // Signed on-track gap to the player, wrapped to the nearest ±half-lap and
+    // scaled to seconds. Positive = ahead of the player, negative = behind.
+    const dLaps = prog - playerProg;
+    const relLaps = dLaps - Math.round(dLaps); // → [-0.5, 0.5]
+    const intervalToPlayer =
+      car.idx === MOCK_PLAYER_IDX ? 0 : round(relLaps * car.pace, 3);
     return {
       carIdx: car.idx,
       position: pos,
@@ -265,7 +274,7 @@ export function mockStandings(t: number): StandingsPayload {
       gapToClassLeader: round(Math.max(0, gap), 3),
       classInterval: null,
       classGapIsLaps: false,
-      intervalToPlayer: null,
+      intervalToPlayer,
       estCatchTime: null,
       positionsGainedTotal: 0,
       positionsGainedLastLap: 0,
