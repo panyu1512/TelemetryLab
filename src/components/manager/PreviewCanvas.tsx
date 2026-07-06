@@ -262,12 +262,16 @@ function SingleView({ overlayId, zoom }: { overlayId: string; zoom: Zoom }) {
     return () => ro.disconnect();
   }, []);
 
-  // "Fit" leaves a small margin so the overlay never touches the edges.
+  // Fit the *whole* overlay (its full measured height, not a fixed frame) into
+  // the viewport, leaving a small margin and never upscaling past 100%. A zoom
+  // preset overrides with a fixed scale; anything larger than the viewport is
+  // reachable by scrolling the container.
+  const [stageRef, natH] = useNaturalHeight();
   const fitScale =
     viewport.w > 0
-      ? Math.min((viewport.w - 48) / OVERLAY_W, (viewport.h - 48) / OVERLAY_H)
+      ? Math.min(1, (viewport.w - 48) / OVERLAY_W, (viewport.h - 48) / natH)
       : 0;
-  const scale = zoom === "fit" ? Math.max(0.2, fitScale) : zoom;
+  const scale = zoom === "fit" ? Math.max(0.1, fitScale) : zoom;
 
   return (
     <div
@@ -285,9 +289,9 @@ function SingleView({ overlayId, zoom }: { overlayId: string; zoom: Zoom }) {
         {scale > 0 && (
           <div
             className="shadow-2xl ring-1 ring-white/5"
-            style={{ width: OVERLAY_W * scale, height: OVERLAY_H * scale }}
+            style={{ width: OVERLAY_W * scale, height: natH * scale }}
           >
-            <OverlayStage overlayId={overlayId} scale={scale} />
+            <OverlayStage overlayId={overlayId} scale={scale} stageRef={stageRef} />
           </div>
         )}
       </div>
@@ -337,7 +341,11 @@ function Thumbnail({
   const enabled = useOverlayConfigStore(
     (s) => s.getOverlaySettings(overlayId).enabled
   );
-  const scale = THUMB_W / OVERLAY_W;
+
+  // Fit the whole overlay into the thumbnail (both dimensions) so a tall
+  // dashboard is shrunk to fit rather than clipped.
+  const [stageRef, natH] = useNaturalHeight();
+  const scale = Math.min(THUMB_W / OVERLAY_W, THUMB_H / natH);
 
   // A div (not a <button>): overlays render their own <button>s (Standings /
   // Relative headers), and a button can't legally nest buttons.
@@ -361,11 +369,18 @@ function Thumbnail({
       ].join(" ")}
     >
       <div
-        className="relative w-full overflow-hidden"
+        className="relative flex w-full items-center justify-center overflow-hidden"
         style={{ height: THUMB_H, background: CANVAS_BG }}
       >
-        <div style={{ background: CHECKER, backgroundSize: "14px 14px" }}>
-          <OverlayStage overlayId={overlayId} scale={scale} />
+        <div
+          className="absolute inset-0"
+          style={{ background: CHECKER, backgroundSize: "14px 14px" }}
+        />
+        <div
+          className="relative"
+          style={{ width: OVERLAY_W * scale, height: natH * scale }}
+        >
+          <OverlayStage overlayId={overlayId} scale={scale} stageRef={stageRef} />
         </div>
       </div>
       <div className="flex items-center gap-2 px-3 py-2">
@@ -389,17 +404,44 @@ function Thumbnail({
 // ── overlay stage (shared) ───────────────────────────────────────────────────
 
 /**
- * Renders one overlay at its natural {@link OVERLAY_W}×{@link OVERLAY_H} size and
- * CSS-scales it by `scale`. Non-interactive (pointer-events off) so it can't be
- * dragged or rearranged, and theme-scoped to this element so it doesn't disturb
- * the app root. The parent reserves the scaled footprint.
+ * Measures the natural (untransformed) height of the overlay content, so the
+ * canvas can fit or scroll the *whole* overlay instead of clipping it to a
+ * fixed frame. Returns a ref to attach to the stage element and its live
+ * height. A CSS transform on the observed element doesn't affect the reported
+ * layout height, so this is stable across zoom.
+ */
+function useNaturalHeight(): [React.RefObject<HTMLDivElement>, number] {
+  const ref = useRef<HTMLDivElement>(null);
+  const [height, setHeight] = useState(OVERLAY_H);
+  useLayoutEffect(() => {
+    const el = ref.current;
+    if (!el) return;
+    const read = () => {
+      const h = el.offsetHeight;
+      if (h > 0) setHeight(h);
+    };
+    const ro = new ResizeObserver(read);
+    ro.observe(el);
+    read();
+    return () => ro.disconnect();
+  }, []);
+  return [ref, height];
+}
+
+/**
+ * Renders one overlay at its natural {@link OVERLAY_W} width and content height,
+ * CSS-scaled by `scale`. Non-interactive (pointer-events off) so it can't be
+ * dragged or rearranged, and theme-scoped to `stageRef` so it doesn't disturb
+ * the app root. `stageRef` is provided by the parent, which also measures it.
  */
 function OverlayStage({
   overlayId,
   scale,
+  stageRef,
 }: {
   overlayId: string;
   scale: number;
+  stageRef: React.RefObject<HTMLDivElement>;
 }) {
   const store = useOverlayConfigStore();
   const settings = store.getOverlaySettings(overlayId);
@@ -407,10 +449,9 @@ function OverlayStage({
   const themeId = appearance.themeId ?? store.globalSettings.themeId;
   const theme = getTheme(themeId);
 
-  const stageRef = useRef<HTMLDivElement>(null);
   useEffect(() => {
     if (stageRef.current) applyTheme(theme, true, stageRef.current);
-  }, [theme]);
+  }, [theme, stageRef]);
 
   const filter =
     appearance.saturation !== 100 || appearance.brightness !== 100
@@ -423,7 +464,6 @@ function OverlayStage({
       className="pointer-events-none origin-top-left transition-[filter,opacity]"
       style={{
         width: OVERLAY_W,
-        height: OVERLAY_H,
         transform: `scale(${scale})`,
         filter,
         opacity: appearance.opacity / 100,
@@ -441,17 +481,21 @@ function RealOverlay({ overlayId }: { overlayId: string }) {
   const layout = useDashboardLayout(overlayId);
 
   if (dashboard.Screen) {
+    // Screens are built to fill a window and scroll internally, so give them a
+    // fixed window-height frame (matching the real overlay window).
     const Screen = dashboard.Screen;
     return (
-      <div className="h-full w-full overflow-hidden p-2">
+      <div className="w-full overflow-hidden p-2" style={{ height: OVERLAY_H }}>
         <Screen />
       </div>
     );
   }
 
+  // The widget grid grows to its natural height so nothing is clipped; the
+  // parent measures that height and fits/scrolls it.
   return (
-    <div className="h-full w-full overflow-hidden p-2">
-      <DashboardGrid layout={layout} data={data} />
+    <div className="w-full p-2">
+      <DashboardGrid layout={layout} data={data} autoHeight />
     </div>
   );
 }

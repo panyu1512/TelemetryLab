@@ -15,9 +15,15 @@ import { Widget, WIDGET_DRAG_HANDLE, WIDGET_NO_DRAG } from "./Widget";
 interface DashboardGridProps {
   layout: DashboardLayout;
   data: TelemetryData | null;
+  /**
+   * Let the grid grow to its natural content height instead of filling its
+   * parent. Used by the preview canvas so a tall dashboard can be measured and
+   * shown in full rather than clipped to the parent's height.
+   */
+  autoHeight?: boolean;
 }
 
-export function DashboardGrid({ layout, data }: DashboardGridProps) {
+export function DashboardGrid({ layout, data, autoHeight = false }: DashboardGridProps) {
   const {
     dashboard,
     visibleWidgets,
@@ -100,7 +106,7 @@ export function DashboardGrid({ layout, data }: DashboardGridProps) {
   }
 
   return (
-    <div ref={wrapRef} className="h-full">
+    <div ref={wrapRef} className={autoHeight ? "w-full" : "h-full"}>
       {content}
     </div>
   );
