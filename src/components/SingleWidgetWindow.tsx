@@ -57,7 +57,7 @@ export function SingleWidgetWindow({ id }: { id: string }) {
     <div className="flex h-full w-full flex-col overflow-hidden bg-bg text-text">
       <OverlayChrome kind="widget" id={id} />
 
-      <section className="flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-transparent bg-surface p-3.5">
+      <section className="overlay-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-xl border border-transparent bg-surface p-3.5">
         <header className="mb-3 flex shrink-0 items-center gap-2">
           <def.icon className="size-3.5 text-muted" strokeWidth={2} />
           <h3 className="select-none text-[11px] font-medium uppercase tracking-wider text-muted">

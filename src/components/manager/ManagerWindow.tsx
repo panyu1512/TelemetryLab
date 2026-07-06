@@ -27,7 +27,7 @@ import { useWidgetSelectionStore } from "../../stores/useWidgetSelectionStore";
 import { AppearancePanel } from "./AppearancePanel";
 import { VisibilityPanel } from "./VisibilityPanel";
 import { WindowPanel } from "./WindowPanel";
-import { LivePreview } from "./LivePreview";
+import { PreviewCanvas } from "./PreviewCanvas";
 import { StandingsColumnsPanel } from "./StandingsColumnsPanel";
 import { GlobalSettingsPanel } from "./GlobalSettingsPanel";
 import { DebugPanel } from "./DebugPanel";
@@ -81,13 +81,20 @@ export function OverlayManager() {
         <div className="flex min-h-0 flex-1 flex-col">
           {selected.kind === "overlay" && (
             <div className="flex min-h-0 flex-1">
-              {/* One scrolling page with every setting for this overlay. */}
-              <div className="min-h-0 flex-1 overflow-y-auto">
+              {/* One scrolling page with every setting for this overlay. On
+                  large screens it's a fixed-width panel so the preview canvas
+                  gets the rest of the space; on small screens it takes over. */}
+              <div className="min-h-0 flex-1 overflow-y-auto lg:w-[480px] lg:flex-none">
                 <OverlayConfigPage overlayId={selected.overlayId} />
               </div>
-              {/* Live preview, pinned alongside. */}
-              <div className="hidden w-80 flex-none border-l border-border bg-surface p-4 lg:block">
-                <LivePreview overlayId={selected.overlayId} />
+              {/* Preview Canvas: the workspace fills the remaining space. */}
+              <div className="hidden min-w-0 flex-1 border-l border-border lg:block">
+                <PreviewCanvas
+                  overlayId={selected.overlayId}
+                  onSelect={(overlayId) =>
+                    selectItem({ kind: "overlay", overlayId })
+                  }
+                />
               </div>
             </div>
           )}
@@ -142,7 +149,7 @@ function OverlayConfigPage({ overlayId }: { overlayId: string }) {
         <span className="grid size-9 place-items-center rounded-xl bg-accent/10 text-accent">
           <Icon className="size-5" />
         </span>
-        <div className="min-w-0 flex-1">
+        <div className="min-w-[8rem] flex-1">
           <h1 className="truncate text-base font-semibold text-text">
             {dashboard.label}
           </h1>
