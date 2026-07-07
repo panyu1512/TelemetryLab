@@ -20,7 +20,13 @@
  * preview matches how the real always-on-top window paints over the game.
  */
 
-import { useEffect, useLayoutEffect, useRef, useState } from "react";
+import {
+  useCallback,
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+} from "react";
 import {
   Maximize2,
   Minimize2,
@@ -247,9 +253,60 @@ const CANVAS_BG = "#0d0d0d";
 const CHECKER =
   "repeating-conic-gradient(rgba(255,255,255,0.03) 0% 25%, transparent 0% 50%) 0 0";
 
+type Size = { w: number; h: number };
+
+const BASE: Size = { w: OVERLAY_W, h: OVERLAY_H };
+/** Never let a runaway measurement blow the stage up unboundedly. */
+const MAX_STAGE = 2400;
+
+/**
+ * The natural size the overlay needs to show *everything* — its own layout box,
+ * grown by however much any internal scroll container (a standings table wider
+ * than the window, a screen taller than its frame) overflows. Sizing the stage
+ * to this means the overlay's internal scrollbars never engage, so the canvas
+ * (via fit/zoom/pan) is the single place the whole overlay is inspected — no
+ * hidden, unreachable content.
+ */
+function neededSize(el: HTMLElement, current: Size): Size {
+  let w = el.scrollWidth;
+  let h = el.scrollHeight;
+  for (const c of el.querySelectorAll<HTMLElement>("*")) {
+    const cs = getComputedStyle(c);
+    if (cs.overflowX === "auto" || cs.overflowX === "scroll") {
+      w = Math.max(w, current.w + (c.scrollWidth - c.clientWidth));
+    }
+    if (cs.overflowY === "auto" || cs.overflowY === "scroll") {
+      h = Math.max(h, current.h + (c.scrollHeight - c.clientHeight));
+    }
+  }
+  return {
+    w: Math.min(MAX_STAGE, Math.ceil(w)),
+    h: Math.min(MAX_STAGE, Math.ceil(h)),
+  };
+}
+
+/**
+ * Grow-only size state for one overlay. Starts at the default window size and
+ * expands (never shrinks) until the overlay's content fits without any internal
+ * scrolling. Returns the size and a `grow` callback the stage feeds measurements
+ * into.
+ */
+function useOverlaySize(): [Size, (needed: Size) => void] {
+  const [size, setSize] = useState<Size>(BASE);
+  const grow = useCallback((needed: Size) => {
+    setSize((prev) =>
+      needed.w > prev.w + 0.5 || needed.h > prev.h + 0.5
+        ? { w: Math.max(prev.w, needed.w), h: Math.max(prev.h, needed.h) }
+        : prev
+    );
+  }, []);
+  return [size, grow];
+}
+
 function SingleView({ overlayId, zoom }: { overlayId: string; zoom: Zoom }) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const [viewport, setViewport] = useState({ w: 0, h: 0 });
+  const [size, grow] = useOverlaySize();
 
   useLayoutEffect(() => {
     const el = viewportRef.current;
@@ -262,16 +319,15 @@ function SingleView({ overlayId, zoom }: { overlayId: string; zoom: Zoom }) {
     return () => ro.disconnect();
   }, []);
 
-  // Fit the *whole* overlay (its full measured height, not a fixed frame) into
-  // the viewport, leaving a small margin and never upscaling past 100%. A zoom
-  // preset overrides with a fixed scale; anything larger than the viewport is
-  // reachable by scrolling the container.
-  const [stageRef, natH] = useNaturalHeight();
+  // Fit the *whole* overlay (its full measured size, both axes) into the
+  // viewport, leaving a margin and never upscaling past 100%. A zoom preset
+  // overrides with a fixed scale; anything larger than the viewport is reachable
+  // by scrolling/panning the container.
   const fitScale =
     viewport.w > 0
-      ? Math.min(1, (viewport.w - 48) / OVERLAY_W, (viewport.h - 48) / natH)
+      ? Math.min(1, (viewport.w - 48) / size.w, (viewport.h - 48) / size.h)
       : 0;
-  const scale = zoom === "fit" ? Math.max(0.1, fitScale) : zoom;
+  const scale = zoom === "fit" ? Math.max(0.08, fitScale) : zoom;
 
   return (
     <div
@@ -289,9 +345,14 @@ function SingleView({ overlayId, zoom }: { overlayId: string; zoom: Zoom }) {
         {scale > 0 && (
           <div
             className="shadow-2xl ring-1 ring-white/5"
-            style={{ width: OVERLAY_W * scale, height: natH * scale }}
+            style={{ width: size.w * scale, height: size.h * scale }}
           >
-            <OverlayStage overlayId={overlayId} scale={scale} stageRef={stageRef} />
+            <OverlayStage
+              overlayId={overlayId}
+              scale={scale}
+              size={size}
+              onGrow={grow}
+            />
           </div>
         )}
       </div>
@@ -342,10 +403,10 @@ function Thumbnail({
     (s) => s.getOverlaySettings(overlayId).enabled
   );
 
-  // Fit the whole overlay into the thumbnail (both dimensions) so a tall
-  // dashboard is shrunk to fit rather than clipped.
-  const [stageRef, natH] = useNaturalHeight();
-  const scale = Math.min(THUMB_W / OVERLAY_W, THUMB_H / natH);
+  // Fit the whole overlay into the thumbnail (both dimensions) so a wide or
+  // tall overlay is shrunk to fit rather than clipped.
+  const [size, grow] = useOverlaySize();
+  const scale = Math.min(THUMB_W / size.w, THUMB_H / size.h);
 
   // A div (not a <button>): overlays render their own <button>s (Standings /
   // Relative headers), and a button can't legally nest buttons.
@@ -378,9 +439,14 @@ function Thumbnail({
         />
         <div
           className="relative"
-          style={{ width: OVERLAY_W * scale, height: natH * scale }}
+          style={{ width: size.w * scale, height: size.h * scale }}
         >
-          <OverlayStage overlayId={overlayId} scale={scale} stageRef={stageRef} />
+          <OverlayStage
+            overlayId={overlayId}
+            scale={scale}
+            size={size}
+            onGrow={grow}
+          />
         </div>
       </div>
       <div className="flex items-center gap-2 px-3 py-2">
@@ -404,44 +470,24 @@ function Thumbnail({
 // ── overlay stage (shared) ───────────────────────────────────────────────────
 
 /**
- * Measures the natural (untransformed) height of the overlay content, so the
- * canvas can fit or scroll the *whole* overlay instead of clipping it to a
- * fixed frame. Returns a ref to attach to the stage element and its live
- * height. A CSS transform on the observed element doesn't affect the reported
- * layout height, so this is stable across zoom.
- */
-function useNaturalHeight(): [React.RefObject<HTMLDivElement>, number] {
-  const ref = useRef<HTMLDivElement>(null);
-  const [height, setHeight] = useState(OVERLAY_H);
-  useLayoutEffect(() => {
-    const el = ref.current;
-    if (!el) return;
-    const read = () => {
-      const h = el.offsetHeight;
-      if (h > 0) setHeight(h);
-    };
-    const ro = new ResizeObserver(read);
-    ro.observe(el);
-    read();
-    return () => ro.disconnect();
-  }, []);
-  return [ref, height];
-}
-
-/**
- * Renders one overlay at its natural {@link OVERLAY_W} width and content height,
- * CSS-scaled by `scale`. Non-interactive (pointer-events off) so it can't be
- * dragged or rearranged, and theme-scoped to `stageRef` so it doesn't disturb
- * the app root. `stageRef` is provided by the parent, which also measures it.
+ * Renders one overlay at the given natural `size`, CSS-scaled by `scale`.
+ * Measures the content (via {@link neededSize}) and reports any growth up
+ * through `onGrow`, so the parent can enlarge the stage until nothing is
+ * clipped. Non-interactive (pointer-events off) so it can't be dragged or
+ * rearranged, and theme-scoped so it doesn't disturb the app root. A CSS
+ * transform on an ancestor doesn't affect the measured layout size, so this is
+ * stable across zoom.
  */
 function OverlayStage({
   overlayId,
   scale,
-  stageRef,
+  size,
+  onGrow,
 }: {
   overlayId: string;
   scale: number;
-  stageRef: React.RefObject<HTMLDivElement>;
+  size: Size;
+  onGrow: (needed: Size) => void;
 }) {
   const store = useOverlayConfigStore();
   const settings = store.getOverlaySettings(overlayId);
@@ -449,9 +495,29 @@ function OverlayStage({
   const themeId = appearance.themeId ?? store.globalSettings.themeId;
   const theme = getTheme(themeId);
 
+  const themeRef = useRef<HTMLDivElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+
   useEffect(() => {
-    if (stageRef.current) applyTheme(theme, true, stageRef.current);
-  }, [theme, stageRef]);
+    if (themeRef.current) applyTheme(theme, true, themeRef.current);
+  }, [theme]);
+
+  // Measure the content and grow the stage until its internal scrollers fit.
+  useLayoutEffect(() => {
+    const el = contentRef.current;
+    if (!el) return;
+    const recompute = () => onGrow(neededSize(el, size));
+    const ro = new ResizeObserver(recompute);
+    ro.observe(el);
+    // Watch the internal scroll containers too, so a change in their content
+    // (more rows, wider columns) re-triggers the grow pass.
+    for (const c of el.querySelectorAll<HTMLElement>("*")) {
+      const cs = getComputedStyle(c);
+      if (/(auto|scroll)/.test(cs.overflowX + cs.overflowY)) ro.observe(c);
+    }
+    recompute();
+    return () => ro.disconnect();
+  }, [overlayId, size.w, size.h, onGrow]);
 
   const filter =
     appearance.saturation !== 100 || appearance.brightness !== 100
@@ -460,38 +526,46 @@ function OverlayStage({
 
   return (
     <div
-      ref={stageRef}
+      ref={themeRef}
       className="pointer-events-none origin-top-left transition-[filter,opacity]"
       style={{
-        width: OVERLAY_W,
         transform: `scale(${scale})`,
         filter,
         opacity: appearance.opacity / 100,
       }}
     >
-      <RealOverlay overlayId={overlayId} />
+      <div ref={contentRef} style={{ width: size.w }}>
+        <RealOverlay overlayId={overlayId} height={size.h} />
+      </div>
     </div>
   );
 }
 
 /** The actual overlay body — a Screen, or the dashboard's widget grid. */
-function RealOverlay({ overlayId }: { overlayId: string }) {
+function RealOverlay({
+  overlayId,
+  height,
+}: {
+  overlayId: string;
+  height: number;
+}) {
   const dashboard = getDashboard(overlayId);
   const data = useTelemetryStore((s) => s.telemetry);
   const layout = useDashboardLayout(overlayId);
 
   if (dashboard.Screen) {
-    // Screens are built to fill a window and scroll internally, so give them a
-    // fixed window-height frame (matching the real overlay window).
+    // Screens fill a window and scroll internally. Give them a frame at the
+    // (growing) stage height so their own scrollbars never engage — the parent
+    // enlarges `height` until all rows/columns fit.
     const Screen = dashboard.Screen;
     return (
-      <div className="w-full overflow-hidden p-2" style={{ height: OVERLAY_H }}>
+      <div className="w-full overflow-hidden p-2" style={{ height }}>
         <Screen />
       </div>
     );
   }
 
-  // The widget grid grows to its natural height so nothing is clipped; the
+  // The widget grid grows to its natural height, so nothing is clipped; the
   // parent measures that height and fits/scrolls it.
   return (
     <div className="w-full p-2">
