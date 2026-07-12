@@ -266,12 +266,48 @@ html.overlay-mode .overlay-card,
 }
 
 /*
- * Blur all widget-level backgrounds (react-grid-layout items) so the overlay
- * reads as frosted glass above the game.
+ * Blur all widget-level backgrounds (react-grid-layout items, and the card of
+ * a popped-out single-widget window) so the overlay reads as frosted glass
+ * above the game.
  */
-html.overlay-mode .react-grid-item > * {
+html.overlay-mode .react-grid-item > *,
+html.overlay-mode .widget-frame > .overlay-card {
   backdrop-filter: blur(16px) saturate(1.15);
   -webkit-backdrop-filter: blur(16px) saturate(1.15);
+}
+
+/*
+ * Frameless overlay windows are invisible until they aren't: while the cursor
+ * is over an (unlocked) overlay window, a hairline ring traces the window's
+ * bounds and the drag chrome fades in, so the window is findable, movable and
+ * resizable — and it all disappears again the moment the mouse leaves.
+ */
+html.overlay-mode:not(.overlay-locked) #root::after {
+  content: "";
+  position: fixed;
+  inset: 1px;
+  z-index: 60;
+  pointer-events: none;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  transition: border-color 140ms ease;
+}
+html.overlay-mode:not(.overlay-locked) body:hover #root::after {
+  border-color: color-mix(in srgb, var(--color-primary) 60%, transparent);
+}
+html.overlay-mode:not(.overlay-locked) body:hover .overlay-chrome {
+  opacity: 1;
+}
+
+/*
+ * Overlay windows never show scrollbars — a scrollbar floating over the game
+ * reads as debris. Content still scrolls (wheel/drag); only the bar is hidden.
+ */
+html.overlay-mode * {
+  scrollbar-width: none;
+}
+html.overlay-mode *::-webkit-scrollbar {
+  display: none;
 }
 
 /*
@@ -282,6 +318,36 @@ html.overlay-mode .react-grid-item > * {
 html.overlay-locked * {
   pointer-events: none !important;
   cursor: default !important;
+}
+
+/* --- responsive widget cards ---------------------------------------------- */
+
+/*
+ * Widget cards adapt to the box they're given. The card queries its *frame*
+ * (the react-grid-layout item in a dashboard, or the window itself for a
+ * popped-out widget — both have explicit sizes, so size containment is safe):
+ * padding and the header gap scale fluidly, and when the card gets too small
+ * for chrome the header title yields the room to the data.
+ */
+.react-grid-item,
+.widget-frame {
+  container-type: size;
+}
+.widget-card {
+  padding: clamp(0.45rem, 4cqmin, 0.875rem);
+}
+.widget-card > header {
+  margin-bottom: clamp(0.3rem, 3.5cqmin, 0.75rem);
+}
+@container (max-height: 7rem) {
+  .widget-card > header .widget-title {
+    display: none;
+  }
+}
+@container (max-width: 9rem) {
+  .widget-card > header .widget-title {
+    display: none;
+  }
 }
 
 /* --- react-grid-layout theming ------------------------------------------- */

@@ -17,7 +17,7 @@ export function OverlayChrome({ kind, id }: { kind: WindowKind; id: string }) {
     <div
       data-tauri-drag-region
       title="Drag to move this window"
-      className="group relative flex h-5 shrink-0 cursor-grab items-center justify-center opacity-0 transition-opacity hover:opacity-100 active:cursor-grabbing"
+      className="overlay-chrome group relative flex h-5 shrink-0 cursor-grab items-center justify-center opacity-0 transition-opacity hover:opacity-100 active:cursor-grabbing"
     >
       <GripHorizontal data-tauri-drag-region className="size-3.5 text-muted" />
       <button

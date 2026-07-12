@@ -54,13 +54,13 @@ export function SingleWidgetWindow({ id }: { id: string }) {
   const Body = def.Component;
 
   return (
-    <div className="flex h-full w-full flex-col overflow-hidden bg-bg text-text">
+    <div className="widget-frame flex h-full w-full flex-col overflow-hidden bg-bg text-text">
       <OverlayChrome kind="widget" id={id} />
 
-      <section className="overlay-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-border/60 bg-surface p-3.5">
-        <header className="mb-3 flex shrink-0 items-center gap-2">
-          <def.icon className="size-3.5 text-faint" strokeWidth={2} />
-          <h3 className="select-none text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">
+      <section className="overlay-card widget-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-border/60 bg-surface">
+        <header className="flex shrink-0 items-center gap-2">
+          <def.icon className="size-3.5 shrink-0 text-faint" strokeWidth={2} />
+          <h3 className="widget-title select-none truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">
             {def.title}
           </h3>
         </header>

@@ -16,12 +16,14 @@ interface DashboardGridProps {
   layout: DashboardLayout;
   data: TelemetryData | null;
   /**
-   * Let the grid grow to its natural content height instead of filling its
-   * parent. Used by the preview canvas so a tall dashboard can be measured and
-   * shown in full rather than clipped to the parent's height.
+   * Let the grid grow to its natural content height (at the default row
+   * height) instead of scaling rows to fill its parent.
    */
   autoHeight?: boolean;
 }
+
+/** Rows never collapse below this, however small the window gets. */
+const MIN_ROW_HEIGHT = 34;
 
 export function DashboardGrid({ layout, data, autoHeight = false }: DashboardGridProps) {
   const {
@@ -32,21 +34,40 @@ export function DashboardGrid({ layout, data, autoHeight = false }: DashboardGri
     toggleWidget,
   } = layout;
 
-  // Measure our own width and feed it to react-grid-layout. The bundled
+  // Measure our own size and feed it to react-grid-layout. The bundled
   // WidthProvider HOC fails to report a width inside this flex/overflow layout,
   // which collapses colWidth and breaks horizontal positioning + resizing.
   const wrapRef = useRef<HTMLDivElement>(null);
-  const [width, setWidth] = useState(0);
+  const [size, setSize] = useState({ width: 0, height: 0 });
   useEffect(() => {
     const el = wrapRef.current;
     if (!el) return;
     const ro = new ResizeObserver(([entry]) => {
-      setWidth(entry.contentRect.width);
+      setSize({
+        width: entry.contentRect.width,
+        height: entry.contentRect.height,
+      });
     });
     ro.observe(el);
-    setWidth(el.clientWidth);
+    setSize({ width: el.clientWidth, height: el.clientHeight });
     return () => ro.disconnect();
   }, []);
+  const width = size.width;
+
+  // Scale rows so the arrangement fills the window vertically — the dashboard
+  // is responsive to its window instead of overflowing into a scrollbar, and
+  // the widgets' container-query typography scales with it.
+  const totalRows = useMemo(
+    () => Math.max(2, ...gridLayout.map((it) => it.y + it.h)),
+    [gridLayout]
+  );
+  const rowHeight =
+    autoHeight || size.height <= 0
+      ? GRID_ROW_HEIGHT
+      : Math.max(
+          MIN_ROW_HEIGHT,
+          (size.height - GRID_MARGIN * (totalRows + 1)) / totalRows
+        );
 
   const byId = useMemo(
     () => new Map(visibleWidgets.map((d) => [d.id, d])),
@@ -81,7 +102,7 @@ export function DashboardGrid({ layout, data, autoHeight = false }: DashboardGri
         width={width}
         layout={gridLayout}
         cols={GRID_COLS}
-        rowHeight={GRID_ROW_HEIGHT}
+        rowHeight={rowHeight}
         margin={[GRID_MARGIN, GRID_MARGIN]}
         containerPadding={[0, 0]}
         isDraggable

@@ -27,12 +27,12 @@ export function Widget({ def, data, onHide }: WidgetProps) {
   const closeWidget = useActiveOverlaysStore((s) => s.closeWidget);
 
   return (
-    <section className="overlay-card group flex h-full flex-col overflow-hidden rounded-card border border-border/60 bg-surface p-3.5 transition-colors">
+    <section className="overlay-card widget-card group flex h-full flex-col overflow-hidden rounded-card border border-border/60 bg-surface transition-colors">
       <header
-        className={`${WIDGET_DRAG_HANDLE} mb-3 flex shrink-0 cursor-grab items-center gap-2 active:cursor-grabbing`}
+        className={`${WIDGET_DRAG_HANDLE} flex shrink-0 cursor-grab items-center gap-2 active:cursor-grabbing`}
       >
-        <Icon className="size-3.5 text-faint" strokeWidth={2} />
-        <h3 className="select-none text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">
+        <Icon className="size-3.5 shrink-0 text-faint" strokeWidth={2} />
+        <h3 className="widget-title select-none truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">
           {def.title}
         </h3>
 
