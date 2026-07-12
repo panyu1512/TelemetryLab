@@ -54,7 +54,7 @@ export interface Profile {
 }
 
 export interface GlobalSettings {
-  /** Active color theme id (falls back to "obsidian" if unknown). */
+  /** Active color theme id (falls back to "carbon" if unknown). */
   themeId: string;
   /** WebSocket endpoint for the telemetry bridge. */
   bridgeEndpoint: string;
@@ -90,7 +90,7 @@ export const DEFAULT_OVERLAY_SETTINGS: OverlaySettings = {
 
 function makeDefaultGlobalSettings(): GlobalSettings {
   return {
-    themeId: "obsidian",
+    themeId: "carbon",
     bridgeEndpoint: "ws://127.0.0.1:8765",
     logLevel: "info",
     mockDataEnabled: false,

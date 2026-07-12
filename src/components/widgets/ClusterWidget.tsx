@@ -47,7 +47,7 @@ export function ClusterWidget({ data }: { data: TelemetryData | null }) {
       <div className="flex shrink-0 items-center justify-between gap-2">
         <ShiftLights frac={rpmFrac} />
         <span
-          className="tnum shrink-0 text-muted"
+          className="tnum shrink-0 text-faint"
           style={{ fontSize: "clamp(0.7rem, 9cqmin, 1rem)" }}
         >
           <span className="font-semibold text-text">{num(data?.rpm)}</span> rpm
@@ -57,7 +57,13 @@ export function ClusterWidget({ data }: { data: TelemetryData | null }) {
       <Bar
         value={rpmFrac}
         height={6}
-        color="linear-gradient(90deg, var(--color-accent), var(--color-warning) 70%, var(--color-danger))"
+        color={
+          rpmFrac >= 0.95
+            ? "var(--color-danger)"
+            : rpmFrac >= 0.85
+              ? "var(--color-warning)"
+              : "var(--color-accent)"
+        }
       />
 
       <div className="flex min-h-0 flex-1 items-center justify-around gap-2">
@@ -66,13 +72,13 @@ export function ClusterWidget({ data }: { data: TelemetryData | null }) {
         </div>
         <div className="flex shrink-0 flex-col items-center">
           <span
-            className="tnum font-bold leading-none text-accent"
+            className="tnum font-bold leading-none text-text"
             style={{ fontSize: "clamp(1.5rem, 40cqh, 5rem)" }}
           >
             {gearLabel(data?.gear)}
           </span>
           <span
-            className="uppercase tracking-wider text-muted"
+            className="font-medium uppercase tracking-[0.12em] text-faint"
             style={{ fontSize: "clamp(0.5rem, 7cqmin, 0.65rem)" }}
           >
             Gear

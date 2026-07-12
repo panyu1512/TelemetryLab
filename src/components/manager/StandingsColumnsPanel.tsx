@@ -6,6 +6,7 @@
 
 import { useStandingsUiStore } from "../../stores/useStandingsUiStore";
 import { CONFIGURABLE_COLUMNS } from "../../components/standings/constants";
+import { Checkbox } from "../ui/controls";
 
 export function StandingsColumnsPanel() {
   const columns = useStandingsUiStore((s) => s.columns);
@@ -25,18 +26,23 @@ export function StandingsColumnsPanel() {
             <label
               key={col.id}
               className={[
-                "flex cursor-pointer items-center gap-2.5 rounded-lg border px-3 py-2 transition-colors",
+                "flex cursor-pointer items-center gap-2.5 rounded-card border px-3 py-2 transition-colors",
                 visible
-                  ? "border-accent/40 bg-accent/5"
-                  : "border-border bg-surface-2 hover:border-border-strong",
+                  ? "border-border bg-surface"
+                  : "border-border/60 bg-transparent hover:border-border",
               ].join(" ")}
             >
               <Checkbox checked={visible} onChange={() => toggleColumn(col.id)} />
               <span className="min-w-0">
-                <span className="block truncate text-xs font-medium text-text">
+                <span
+                  className={[
+                    "block truncate text-xs font-medium",
+                    visible ? "text-text" : "text-faint",
+                  ].join(" ")}
+                >
                   {col.name}
                 </span>
-                <span className="block text-[10px] uppercase tracking-wide text-muted">
+                <span className="block text-[10px] uppercase tracking-wide text-faint">
                   {col.label || "—"}
                 </span>
               </span>
@@ -46,7 +52,7 @@ export function StandingsColumnsPanel() {
       </div>
 
       <div className="flex items-center justify-between">
-        <p className="text-[11px] text-muted">
+        <p className="text-[11px] text-faint">
           Position, driver and status are always shown.
         </p>
         {hiddenCount > 0 && (
@@ -60,43 +66,5 @@ export function StandingsColumnsPanel() {
         )}
       </div>
     </div>
-  );
-}
-
-function Checkbox({
-  checked,
-  onChange,
-}: {
-  checked: boolean;
-  onChange: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="checkbox"
-      aria-checked={checked}
-      onClick={(e) => {
-        e.preventDefault();
-        onChange();
-      }}
-      className={[
-        "flex size-4 shrink-0 items-center justify-center rounded border transition-colors",
-        checked
-          ? "border-accent bg-accent/20 text-accent"
-          : "border-border-strong bg-surface text-transparent",
-      ].join(" ")}
-    >
-      {checked && (
-        <svg
-          viewBox="0 0 10 8"
-          className="size-2.5"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth={1.8}
-        >
-          <path d="M1 4l3 3 5-6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      )}
-    </button>
   );
 }

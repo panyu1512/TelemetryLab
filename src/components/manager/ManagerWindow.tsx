@@ -31,6 +31,7 @@ import { PreviewCanvas } from "./PreviewCanvas";
 import { StandingsColumnsPanel } from "./StandingsColumnsPanel";
 import { GlobalSettingsPanel } from "./GlobalSettingsPanel";
 import { DebugPanel } from "./DebugPanel";
+import { Button, IconButton, ToggleSwitch } from "../ui/controls";
 
 // ── types ─────────────────────────────────────────────────────────────────────
 
@@ -100,21 +101,23 @@ export function OverlayManager() {
           )}
 
           {selected.kind === "global" && (
-            <div className="flex-1 overflow-y-auto p-6">
+            <div className="flex-1 overflow-y-auto p-8">
               <div className="mx-auto max-w-3xl">
-                <h2 className="mb-4 text-sm font-semibold text-text">
-                  Global Settings
-                </h2>
+                <PageTitle
+                  title="Global Settings"
+                  subtitle="Defaults that apply to every overlay and the telemetry bridge."
+                />
                 <GlobalSettingsPanel />
               </div>
             </div>
           )}
 
           {selected.kind === "debug" && (
-            <div className="flex min-h-0 flex-1 flex-col p-6">
-              <h2 className="mb-4 text-sm font-semibold text-text">
-                Debug &amp; Diagnostics
-              </h2>
+            <div className="flex min-h-0 flex-1 flex-col p-8">
+              <PageTitle
+                title="Debug & Diagnostics"
+                subtitle="Bridge connection, live session snapshot and log stream."
+              />
               <div className="min-h-0 flex-1">
                 <DebugPanel />
               </div>
@@ -124,6 +127,17 @@ export function OverlayManager() {
       </div>
 
       <ManagerFooter />
+    </div>
+  );
+}
+
+function PageTitle({ title, subtitle }: { title: string; subtitle: string }) {
+  return (
+    <div className="mb-6">
+      <h2 className="text-base font-semibold tracking-tight text-text">
+        {title}
+      </h2>
+      <p className="mt-0.5 text-xs text-muted">{subtitle}</p>
     </div>
   );
 }
@@ -146,11 +160,11 @@ function OverlayConfigPage({ overlayId }: { overlayId: string }) {
     <div className="mx-auto max-w-3xl space-y-8 p-6">
       {/* Page header */}
       <div className="flex flex-wrap items-center gap-3">
-        <span className="grid size-9 place-items-center rounded-xl bg-accent/10 text-accent">
+        <span className="grid size-10 place-items-center rounded-card border border-border bg-surface text-muted">
           <Icon className="size-5" />
         </span>
         <div className="min-w-[8rem] flex-1">
-          <h1 className="truncate text-base font-semibold text-text">
+          <h1 className="truncate text-base font-semibold tracking-tight text-text">
             {dashboard.label}
           </h1>
           <p className="text-xs text-muted">
@@ -230,23 +244,21 @@ function OverlayWindowAction({
   const closeOverlay = useActiveOverlaysStore((s) => s.closeOverlay);
 
   return isOpen ? (
-    <button
-      type="button"
+    <Button
+      variant="danger"
+      icon={<PanelTopClose className="size-3.5" />}
       onClick={() => closeOverlay(overlayId)}
-      className="flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-xs font-medium text-text transition-colors hover:border-danger/50 hover:text-danger"
     >
-      <PanelTopClose className="size-3.5" />
       Close window
-    </button>
+    </Button>
   ) : (
-    <button
-      type="button"
+    <Button
+      variant="primary"
+      icon={<AppWindow className="size-3.5" />}
       onClick={() => openOverlay(overlayId, label)}
-      className="flex items-center gap-1.5 rounded-lg bg-accent px-3 py-1.5 text-xs font-medium text-bg transition-opacity hover:opacity-90"
     >
-      <AppWindow className="size-3.5" />
       Open window
-    </button>
+    </Button>
   );
 }
 
@@ -272,34 +284,29 @@ function DashboardWindowActions({ dashboard }: { dashboard: DashboardDef }) {
   return (
     <div className="flex items-center gap-2">
       {open.length > 0 && (
-        <button
-          type="button"
+        <Button
+          variant="danger"
+          icon={<PanelTopClose className="size-3.5" />}
           onClick={closeAll}
-          className="flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-xs font-medium text-text transition-colors hover:border-danger/50 hover:text-danger"
         >
-          <PanelTopClose className="size-3.5" />
           Close {open.length}
-        </button>
+        </Button>
       )}
-      <button
-        type="button"
-        onClick={openAll}
+      <Button
+        variant="primary"
+        icon={<AppWindow className="size-3.5" />}
         disabled={enabled.length === 0}
         title={
           enabled.length === 0
             ? "Enable at least one widget first"
             : "Open each enabled widget in its own window"
         }
-        className={[
-          "flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-xs font-medium transition-opacity",
-          enabled.length === 0
-            ? "cursor-not-allowed bg-surface-2 text-muted"
-            : "bg-accent text-bg hover:opacity-90",
-        ].join(" ")}
+        onClick={openAll}
       >
-        <AppWindow className="size-3.5" />
-        {open.length > 0 ? "Open windows" : `Open ${enabled.length} window${enabled.length === 1 ? "" : "s"}`}
-      </button>
+        {open.length > 0
+          ? "Open windows"
+          : `Open ${enabled.length} window${enabled.length === 1 ? "" : "s"}`}
+      </Button>
     </div>
   );
 }
@@ -318,44 +325,41 @@ function WidgetRow({ widget }: { widget: WidgetDef }) {
   return (
     <div
       className={[
-        "flex items-center gap-3 rounded-lg border px-3 py-2.5 transition-colors",
-        enabled ? "border-accent/40 bg-accent/5" : "border-border bg-surface-2",
+        "flex items-center gap-3 rounded-card border px-3 py-2.5 transition-colors",
+        enabled
+          ? "border-border bg-surface"
+          : "border-border/60 bg-transparent",
       ].join(" ")}
     >
       <Icon
-        className={["size-4 shrink-0", enabled ? "text-accent" : "text-muted"].join(" ")}
+        className={["size-4 shrink-0", enabled ? "text-muted" : "text-faint"].join(" ")}
       />
       <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs font-medium text-text">{widget.title}</span>
+        <div className="flex items-center gap-2">
+          <span
+            className={[
+              "text-xs font-medium",
+              enabled ? "text-text" : "text-faint",
+            ].join(" ")}
+          >
+            {widget.title}
+          </span>
           {open && (
-            <span className="rounded bg-accent/15 px-1 py-0.5 text-[9px] uppercase tracking-wide text-accent">
+            <span className="flex items-center gap-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-primary">
+              <span className="size-1 rounded-full bg-primary" />
               Open
             </span>
           )}
         </div>
-        <div className="mt-0.5 truncate text-[11px] text-muted">
+        <div className="mt-0.5 truncate text-[11px] text-faint">
           {widget.description}
         </div>
       </div>
-      <button
-        type="button"
-        role="switch"
-        aria-checked={enabled}
+      <ToggleSwitch
+        checked={enabled}
+        onChange={() => toggle(widget.id)}
         title={enabled ? "Disable widget" : "Enable widget"}
-        onClick={() => toggle(widget.id)}
-        className={[
-          "relative h-5 w-9 shrink-0 rounded-full transition-colors",
-          enabled ? "bg-accent" : "bg-surface border border-border-strong",
-        ].join(" ")}
-      >
-        <span
-          className={[
-            "absolute top-0.5 size-4 rounded-full bg-bg transition-[left]",
-            enabled ? "left-[18px]" : "left-0.5",
-          ].join(" ")}
-        />
-      </button>
+      />
     </div>
   );
 }
@@ -372,7 +376,9 @@ function ConfigSection({
   return (
     <section className="border-t border-border pt-6">
       <div className="mb-4">
-        <h2 className="text-sm font-semibold text-text">{title}</h2>
+        <h2 className="text-sm font-semibold tracking-tight text-text">
+          {title}
+        </h2>
         <p className="mt-0.5 text-xs text-muted">{description}</p>
       </div>
       {children}
@@ -393,24 +399,17 @@ function EnableToggle({
       role="switch"
       aria-checked={enabled}
       onClick={() => onChange(!enabled)}
-      className="flex items-center gap-2 rounded-lg border border-border bg-surface-2 px-2.5 py-1.5 transition-colors hover:border-border-strong"
+      className="flex items-center gap-2 rounded-ctl border border-border bg-surface-2 px-2.5 py-1.5 transition-colors hover:border-border-strong"
     >
-      <span className="text-xs font-medium text-text">
-        {enabled ? "Enabled" : "Disabled"}
-      </span>
       <span
         className={[
-          "relative h-4 w-7 shrink-0 rounded-full transition-colors",
-          enabled ? "bg-accent" : "bg-surface border border-border-strong",
+          "text-xs font-medium",
+          enabled ? "text-text" : "text-faint",
         ].join(" ")}
       >
-        <span
-          className={[
-            "absolute top-0.5 size-3 rounded-full bg-bg transition-[left]",
-            enabled ? "left-[14px]" : "left-0.5",
-          ].join(" ")}
-        />
+        {enabled ? "Enabled" : "Disabled"}
       </span>
+      <ToggleSwitch size="sm" checked={enabled} onChange={onChange} />
     </button>
   );
 }
@@ -420,15 +419,9 @@ function EnableToggle({
 function ManagerHeader() {
   return (
     <header className="flex h-12 flex-none items-center gap-4 border-b border-border px-4">
-      <div className="flex items-center gap-2">
-        <span className="text-[11px] uppercase tracking-widest text-muted">
-          iRacing Telemetry
-        </span>
-        <span className="text-muted/40">·</span>
-        <span className="text-sm font-semibold text-text">
-          Overlay Manager
-        </span>
-      </div>
+      <span className="text-sm font-semibold tracking-tight text-text">
+        Overlay Manager
+      </span>
 
       <div className="ml-auto flex items-center gap-2">
         <ProfileSelector />
@@ -498,25 +491,31 @@ function ProfileSelector() {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-3 py-1.5 text-xs transition-colors hover:border-border-strong"
+        className="flex items-center gap-2 rounded-ctl border border-border bg-surface-2 px-3 py-1.5 text-xs transition-colors hover:border-border-strong"
       >
-        <span className="max-w-32 truncate text-text">
+        <span className="text-[10px] font-semibold uppercase tracking-wide text-faint">
+          Profile
+        </span>
+        <span className="max-w-32 truncate font-medium text-text">
           {activeProfile?.name ?? "Default"}
         </span>
-        <ChevronDown className="size-3 text-muted" />
+        <ChevronDown className="size-3 text-faint" />
       </button>
 
       {open && (
-        <div className="absolute right-0 top-full z-10 mt-1 w-64 overflow-hidden rounded-xl border border-border bg-surface shadow-2xl">
+        <div
+          className="absolute right-0 top-full z-10 mt-1.5 w-64 overflow-hidden rounded-panel border border-border bg-surface"
+          style={{ boxShadow: "var(--shadow-float)" }}
+        >
           {/* Profile list */}
           <div className="max-h-52 overflow-y-auto p-1">
             {profiles.map((p) => (
               <div
                 key={p.id}
                 className={[
-                  "group flex items-center gap-1 rounded-lg px-2 py-1.5 transition-colors",
+                  "group flex items-center gap-1 rounded-ctl px-2 py-1.5 transition-colors",
                   p.id === activeProfileId
-                    ? "bg-accent/10 text-accent"
+                    ? "bg-primary/10 text-primary"
                     : "hover:bg-surface-2",
                 ].join(" ")}
               >
@@ -533,13 +532,13 @@ function ProfileSelector() {
                       value={renameValue}
                       onChange={(e) => setRenameValue(e.target.value)}
                       onBlur={commitRename}
-                      className="flex-1 rounded border border-accent bg-bg px-1.5 py-0.5 text-xs text-text outline-none"
+                      className="flex-1 rounded-ctl border border-primary bg-bg px-1.5 py-0.5 text-xs text-text outline-none"
                     />
                   </form>
                 ) : (
                   <button
                     type="button"
-                    className="flex-1 truncate text-left text-xs"
+                    className="flex-1 truncate text-left text-xs font-medium"
                     onClick={() => {
                       store.setActiveProfile(p.id);
                       setOpen(false);
@@ -551,23 +550,27 @@ function ProfileSelector() {
 
                 {/* Profile actions (shown on hover) */}
                 <div className="hidden shrink-0 items-center gap-0.5 group-hover:flex">
-                  <IconBtn
+                  <IconButton
+                    size="sm"
                     icon={<Pencil className="size-2.5" />}
                     title="Rename"
                     onClick={() => startRename(p)}
                   />
-                  <IconBtn
+                  <IconButton
+                    size="sm"
                     icon={<Copy className="size-2.5" />}
                     title="Duplicate"
                     onClick={() => store.duplicateProfile(p.id, `${p.name} copy`)}
                   />
-                  <IconBtn
+                  <IconButton
+                    size="sm"
                     icon={<FileDown className="size-2.5" />}
                     title="Export"
                     onClick={() => handleExport(p.id)}
                   />
                   {profiles.length > 1 && (
-                    <IconBtn
+                    <IconButton
+                      size="sm"
                       icon={<Trash2 className="size-2.5" />}
                       title="Delete"
                       danger
@@ -594,11 +597,11 @@ function ProfileSelector() {
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   onBlur={commitCreate}
-                  className="flex-1 rounded border border-accent bg-bg px-1.5 py-0.5 text-xs text-text outline-none placeholder:text-muted"
+                  className="flex-1 rounded-ctl border border-primary bg-bg px-1.5 py-0.5 text-xs text-text outline-none placeholder:text-faint"
                 />
                 <button
                   type="submit"
-                  className="grid size-5 place-items-center rounded bg-accent/20 text-accent"
+                  className="grid size-5 place-items-center rounded-ctl bg-primary/20 text-primary"
                 >
                   <Check className="size-3" />
                 </button>
@@ -635,37 +638,39 @@ function Sidebar({
   const anyWidgetOpen = openWindows.some((w) => w.kind === "widget");
 
   return (
-    <aside className="flex w-52 flex-none flex-col border-r border-border bg-bg">
+    <aside className="flex w-56 flex-none flex-col border-r border-border bg-bg">
       {/* Overlay catalog */}
-      <div className="flex-1 overflow-y-auto p-2">
-        <p className="mb-1.5 px-2 text-[10px] font-semibold uppercase tracking-widest text-muted">
+      <div className="flex-1 overflow-y-auto p-3">
+        <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">
           Overlays
         </p>
-        {DASHBOARDS.map((d) => {
-          const isSelected =
-            selected.kind === "overlay" && selected.overlayId === d.id;
-          const settings = store.getOverlaySettings(d.id);
-          const open =
-            d.widgets.length > 0 ? anyWidgetOpen : openOverlayIds.has(d.id);
+        <div className="space-y-0.5">
+          {DASHBOARDS.map((d) => {
+            const isSelected =
+              selected.kind === "overlay" && selected.overlayId === d.id;
+            const settings = store.getOverlaySettings(d.id);
+            const open =
+              d.widgets.length > 0 ? anyWidgetOpen : openOverlayIds.has(d.id);
 
-          return (
-            <OverlaySidebarItem
-              key={d.id}
-              dashboard={d}
-              selected={isSelected}
-              enabled={settings.enabled}
-              open={open}
-              onSelect={() => onSelect({ kind: "overlay", overlayId: d.id })}
-              onToggleEnabled={() =>
-                store.setOverlayEnabled(d.id, !settings.enabled)
-              }
-            />
-          );
-        })}
+            return (
+              <OverlaySidebarItem
+                key={d.id}
+                dashboard={d}
+                selected={isSelected}
+                enabled={settings.enabled}
+                open={open}
+                onSelect={() => onSelect({ kind: "overlay", overlayId: d.id })}
+                onToggleEnabled={() =>
+                  store.setOverlayEnabled(d.id, !settings.enabled)
+                }
+              />
+            );
+          })}
+        </div>
       </div>
 
       {/* Bottom nav */}
-      <div className="border-t border-border p-2">
+      <div className="space-y-0.5 border-t border-border p-3">
         <NavItem
           icon={<Settings className="size-3.5" />}
           label="Global Settings"
@@ -702,25 +707,32 @@ function OverlaySidebarItem({
   return (
     <div
       className={[
-        "group flex items-center gap-2 rounded-lg px-2 py-2 transition-colors",
+        "group flex items-center gap-2 rounded-ctl px-2 py-2 transition-colors",
         selected
-          ? "bg-accent/10 text-accent"
+          ? "bg-surface-2 text-text"
           : enabled
-            ? "text-text hover:bg-surface-2"
-            : "text-muted hover:bg-surface-2",
+            ? "text-muted hover:bg-surface hover:text-text"
+            : "text-faint hover:bg-surface",
       ].join(" ")}
     >
       <button
         type="button"
-        className="flex min-w-0 flex-1 items-center gap-2 text-left"
+        className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
         onClick={onSelect}
       >
+        {/* Selected rail */}
+        <span
+          className={[
+            "h-4 w-0.5 shrink-0 rounded-full transition-colors",
+            selected ? "bg-primary" : "bg-transparent",
+          ].join(" ")}
+        />
         <span className="relative shrink-0">
           <Icon className="size-3.5" />
           {/* Active-window indicator dot. */}
           {open && (
             <span
-              className="absolute -right-1 -top-1 size-1.5 rounded-full bg-accent ring-2 ring-bg"
+              className="absolute -right-1 -top-1 size-1.5 rounded-full bg-primary ring-2 ring-bg"
               title="Window open"
             />
           )}
@@ -729,31 +741,12 @@ function OverlaySidebarItem({
       </button>
 
       {/* Enable/disable toggle */}
-      <button
-        type="button"
-        role="switch"
-        aria-checked={enabled}
-        onClick={(e) => {
-          e.stopPropagation();
-          onToggleEnabled();
-        }}
+      <ToggleSwitch
+        size="sm"
+        checked={enabled}
+        onChange={onToggleEnabled}
         title={enabled ? "Disable overlay" : "Enable overlay"}
-        className={[
-          "relative h-4 w-7 shrink-0 rounded-full transition-colors",
-          enabled
-            ? selected
-              ? "bg-accent"
-              : "bg-accent/60"
-            : "bg-surface-2 border border-border-strong",
-        ].join(" ")}
-      >
-        <span
-          className={[
-            "absolute top-0.5 size-3 rounded-full bg-bg transition-[left]",
-            enabled ? "left-[14px]" : "left-0.5",
-          ].join(" ")}
-        />
-      </button>
+      />
     </div>
   );
 }
@@ -774,10 +767,10 @@ function NavItem({
       type="button"
       onClick={onClick}
       className={[
-        "flex w-full items-center gap-2 rounded-lg px-2 py-2 text-xs transition-colors",
+        "flex w-full items-center gap-2.5 rounded-ctl px-2.5 py-2 text-xs font-medium transition-colors",
         selected
-          ? "bg-accent/10 text-accent"
-          : "text-muted hover:bg-surface-2 hover:text-text",
+          ? "bg-surface-2 text-text"
+          : "text-muted hover:bg-surface hover:text-text",
       ].join(" ")}
     >
       {icon}
@@ -792,13 +785,10 @@ function ManagerFooter() {
   const openCount = useActiveOverlaysStore((s) => s.windows.length);
 
   return (
-    <footer className="flex h-8 flex-none items-center gap-2 border-t border-border px-4">
-      <span
-        className="inline-block size-1.5 rounded-full"
-        style={{ background: "var(--color-accent)" }}
-      />
-      <span className="text-[11px] text-muted">Preview · mock data</span>
-      <span className="ml-auto text-[11px] text-muted">
+    <footer className="flex h-8 flex-none items-center gap-2 border-t border-border bg-surface px-4">
+      <span className="inline-block size-1.5 rounded-full bg-primary" />
+      <span className="text-[11px] text-faint">Preview · mock data</span>
+      <span className="ml-auto text-[11px] tabular-nums text-faint">
         {openCount === 0
           ? "No windows open"
           : `${openCount} window${openCount === 1 ? "" : "s"} open`}
@@ -808,37 +798,6 @@ function ManagerFooter() {
 }
 
 // ── utility components ────────────────────────────────────────────────────────
-
-function IconBtn({
-  icon,
-  title,
-  danger = false,
-  onClick,
-}: {
-  icon: React.ReactNode;
-  title: string;
-  danger?: boolean;
-  onClick: () => void;
-}) {
-  return (
-    <button
-      type="button"
-      title={title}
-      onClick={(e) => {
-        e.stopPropagation();
-        onClick();
-      }}
-      className={[
-        "grid size-5 place-items-center rounded transition-colors",
-        danger
-          ? "text-muted hover:bg-danger/15 hover:text-danger"
-          : "text-muted hover:bg-surface hover:text-text",
-      ].join(" ")}
-    >
-      {icon}
-    </button>
-  );
-}
 
 function MenuAction({
   icon,
@@ -853,7 +812,7 @@ function MenuAction({
     <button
       type="button"
       onClick={onClick}
-      className="flex flex-1 items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-xs text-muted transition-colors hover:bg-surface-2 hover:text-text"
+      className="flex w-full items-center justify-center gap-1.5 rounded-ctl px-2 py-1.5 text-xs font-medium text-muted transition-colors hover:bg-surface-2 hover:text-text"
     >
       {icon}
       {label}

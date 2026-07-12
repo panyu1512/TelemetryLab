@@ -73,7 +73,7 @@ export function FuelStrategyScreen() {
   const hasFuel = data?.fuelLevel != null;
 
   return (
-    <div className="overlay-card flex h-full flex-col overflow-hidden rounded-xl border border-transparent bg-surface">
+    <div className="overlay-card flex h-full flex-col overflow-hidden rounded-card border border-border/60 bg-surface">
       <Header
         reservePct={reservePct}
         onReserveChange={setReservePct}
@@ -129,17 +129,17 @@ function Header({
 }) {
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border px-3 py-1.5">
-      <span className="flex items-center gap-1.5 text-sm font-semibold text-text">
-        <Fuel className="size-4 text-accent" />
+      <span className="flex items-center gap-1.5 text-sm font-semibold tracking-tight text-text">
+        <Fuel className="size-4 text-muted" />
         Fuel &amp; Strategy
       </span>
-      <span className="text-xs text-muted">
+      <span className="text-xs text-faint">
         {track ?? "—"}
         {config ? ` · ${config}` : ""}
       </span>
 
       <div className="ml-auto flex items-center gap-1.5">
-        <span className="text-[11px] uppercase tracking-wide text-muted">Reserve</span>
+        <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-faint">Reserve</span>
         <Stepper
           value={`${reservePct}%`}
           onDec={() => onReserveChange(Math.max(0, reservePct - 1))}
@@ -165,7 +165,7 @@ function FuelBar({ strategy }: { strategy: FuelStrategy }) {
   const fill = low ? "var(--color-danger)" : "var(--color-accent)";
 
   return (
-    <section className="rounded-lg border border-border bg-surface-2 p-2.5">
+    <section className="rounded-card border border-border bg-surface-2 p-2.5">
       <div className="mb-2 flex items-end justify-between">
         <Metric
           label="In tank"
@@ -227,11 +227,11 @@ function PredictionRow({
 
   return (
     <section
-      className="flex items-center gap-2.5 rounded-lg border px-2.5 py-2"
+      className="flex items-center gap-2.5 rounded-card border px-2.5 py-2"
       style={{ borderColor: `${meta.color}44`, background: `${meta.color}12` }}
     >
       <div
-        className="grid size-8 shrink-0 place-items-center rounded-lg"
+        className="grid size-8 shrink-0 place-items-center rounded-ctl"
         style={{ background: `${meta.color}22`, color: meta.color }}
       >
         <meta.Icon className="size-4" />
@@ -265,7 +265,7 @@ function StrategyCard({ strategy }: { strategy: FuelStrategy }) {
       : null;
 
   return (
-    <section className="rounded-lg border border-border bg-surface-2 p-2.5">
+    <section className="rounded-card border border-border bg-surface-2 p-2.5">
       <SectionTitle icon={Flag}>Current stint</SectionTitle>
 
       <div className="mb-1 flex items-baseline justify-between">
@@ -341,7 +341,7 @@ function FuelSaveCard({ strategy }: { strategy: FuelStrategy }) {
   const finishing = finishesOnFuel === true || !saveNeededPct;
 
   return (
-    <section className="rounded-lg border border-border bg-surface-2 p-2.5">
+    <section className="rounded-card border border-border bg-surface-2 p-2.5">
       <SectionTitle icon={Leaf}>Fuel save</SectionTitle>
       {finishing ? (
         <p className="text-xs text-muted">
@@ -388,7 +388,7 @@ function PlansCard({
   if (plans.length === 0) return null;
 
   return (
-    <section className="rounded-lg border border-border bg-surface-2">
+    <section className="rounded-card border border-border bg-surface-2">
       <button
         type="button"
         onClick={onToggle}
@@ -418,16 +418,16 @@ function PlanRow({ plan, primary }: { plan: StintPlan; primary: boolean }) {
   return (
     <div
       className={[
-        "flex items-center gap-3 rounded-md border px-3 py-2",
+        "flex items-center gap-3 rounded-ctl border px-3 py-2",
         primary
-          ? "border-accent/30 bg-accent/5"
+          ? "border-primary/30 bg-primary/5"
           : "border-border bg-surface",
       ].join(" ")}
     >
       <span
         className={[
-          "rounded px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
-          primary ? "bg-accent/15 text-accent" : "bg-surface-2 text-muted",
+          "rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
+          primary ? "bg-primary/15 text-primary" : "bg-surface-2 text-muted",
         ].join(" ")}
       >
         {plan.label}
@@ -445,7 +445,7 @@ function PlanRow({ plan, primary }: { plan: StintPlan; primary: boolean }) {
         )}
       </span>
       {primary && (
-        <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-accent">
+        <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-primary">
           Best
         </span>
       )}
@@ -469,7 +469,7 @@ function PitFuelControl({
   const current = pitFuel ?? Math.min(max, 40);
 
   return (
-    <section className="rounded-lg border border-border bg-surface-2 p-2.5">
+    <section className="rounded-card border border-border bg-surface-2 p-2.5">
       <div className="flex items-center justify-between">
         <SectionTitle icon={Droplet} noMargin>
           Pit fuel
@@ -479,7 +479,7 @@ function PitFuelControl({
             type="checkbox"
             checked={pitFuel == null}
             onChange={(e) => onChange(e.target.checked ? null : current)}
-            className="accent-[var(--color-accent)]"
+            className="accent-[var(--color-primary)]"
           />
           Auto (fill as needed)
         </label>
@@ -506,7 +506,7 @@ function PitFuelControl({
 
 function OutOfFuelAlert() {
   return (
-    <div className="flex items-center gap-2 rounded-lg border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
+    <div className="flex items-center gap-2 rounded-card border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
       <TriangleAlert className="size-4 shrink-0" />
       <span>
         <span className="font-semibold">Out of fuel.</span> Pit immediately — the
@@ -520,8 +520,8 @@ function EmptyState({ iracingActive }: { iracingActive: boolean }) {
   return (
     <div className="grid h-full place-items-center">
       <div className="flex max-w-sm flex-col items-center gap-3 text-center">
-        <div className="grid size-12 place-items-center rounded-xl border border-border bg-surface-2">
-          <Radio className="size-6 text-muted" />
+        <div className="grid size-12 place-items-center rounded-card border border-border bg-surface-2">
+          <Radio className="size-6 text-faint" />
         </div>
         <h2 className="text-base font-semibold text-text">No fuel data</h2>
         <p className="text-sm leading-relaxed text-muted">
@@ -557,7 +557,7 @@ function Metric({
         </span>
         {unit && <span className="text-[11px] text-muted">{unit}</span>}
       </div>
-      <span className="mt-0.5 text-[10px] uppercase tracking-wider text-muted">
+      <span className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-faint">
         {label}
       </span>
     </div>
@@ -575,7 +575,7 @@ function SectionTitle({
 }) {
   return (
     <span
-      className={`flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-widest text-muted ${
+      className={`flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-faint ${
         noMargin ? "" : "mb-2"
       }`}
     >
@@ -594,7 +594,7 @@ function KeyValue({
 }) {
   return (
     <div>
-      <div className="text-[10px] uppercase tracking-wide text-muted">{label}</div>
+      <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-faint">{label}</div>
       <div className="mt-0.5 text-sm font-medium text-text">{children}</div>
     </div>
   );

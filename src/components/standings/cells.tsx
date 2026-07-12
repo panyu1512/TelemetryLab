@@ -15,7 +15,7 @@ import { LAP_COLOR, SECTOR_COLOR } from "./constants";
 
 export function PosChange({ value }: { value: number }) {
   if (!value) {
-    return <span className="text-[10px] leading-none text-muted/40">·</span>;
+    return <span className="text-[10px] leading-none text-faint/50">·</span>;
   }
   const up = value > 0;
   const Icon = up ? ChevronUp : ChevronDown;
@@ -351,7 +351,7 @@ export function LapCell({
 
 export function SectorCell({ sector }: { sector: SectorSplit | undefined }) {
   if (!sector || sector.lastTime == null) {
-    return <span className="text-center text-[10px] text-muted/30">·</span>;
+    return <span className="text-center text-[10px] text-faint/40">·</span>;
   }
   const color = SECTOR_COLOR[sector.status] ?? "var(--color-muted)";
   // Purple/green sectors read as the achievement (show the time); yellow/red
@@ -422,7 +422,7 @@ export function TireCell({
   laps: number;
 }) {
   if (compound == null) {
-    return <span className="text-center text-[10px] text-muted/30">·</span>;
+    return <span className="text-center text-[10px] text-faint/40">·</span>;
   }
   const label = COMPOUND_LABEL[compound] ?? String(compound);
   const color = COMPOUND_COLOR[compound] ?? "var(--color-muted)";
@@ -436,7 +436,7 @@ export function TireCell({
       >
         {label}
       </span>
-      <span className="text-[9px] tabular-nums" style={{ color: "rgba(136,136,136,0.7)" }} title={`${laps} laps on tyres`}>
+      <span className="text-[9px] tabular-nums" style={{ color: "var(--color-faint)" }} title={`${laps} laps on tyres`}>
         {laps}
       </span>
     </div>

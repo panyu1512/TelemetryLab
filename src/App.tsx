@@ -44,7 +44,7 @@ export default function App() {
 
   const status: ConnectionStatus = {
     label: "Preview · mock data",
-    color: "var(--color-accent)",
+    color: "var(--color-primary)",
   };
 
   return (

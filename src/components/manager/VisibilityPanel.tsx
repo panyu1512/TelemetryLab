@@ -1,6 +1,7 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useOverlayConfigStore } from "../../stores/useOverlayConfigStore";
 import { useSessionStore } from "../../stores/useSessionStore";
+import { Checkbox, SectionLabel } from "../ui/controls";
 
 interface VisibilityPanelProps {
   overlayId: string;
@@ -22,10 +23,8 @@ export function VisibilityPanel({ overlayId }: VisibilityPanelProps) {
   return (
     <div className="space-y-6">
       <section>
-        <p className="mb-1 text-[10px] font-semibold uppercase tracking-widest text-muted">
-          Hide When
-        </p>
-        <p className="mb-4 text-xs text-muted">
+        <SectionLabel>Hide When</SectionLabel>
+        <p className="mb-4 text-xs leading-relaxed text-muted">
           Overlay automatically hides (with a fade transition) when the selected
           conditions are active. Use the override toggle to force-show during
           testing.
@@ -66,11 +65,9 @@ export function VisibilityPanel({ overlayId }: VisibilityPanelProps) {
 
       {/* Current session state readout */}
       <section>
-        <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted">
-          Current Session
-        </p>
+        <SectionLabel>Current Session</SectionLabel>
         {session ? (
-          <div className="space-y-1.5 rounded-lg border border-border bg-surface-2 p-3 text-xs">
+          <div className="space-y-1.5 rounded-card border border-border bg-surface p-3 text-xs">
             <Row label="State" value={session.sessionStateLabel} />
             <Row label="Type" value={session.sessionType} />
             {flags.length > 0 && (
@@ -87,7 +84,7 @@ export function VisibilityPanel({ overlayId }: VisibilityPanelProps) {
             )}
           </div>
         ) : (
-          <div className="rounded-lg border border-border bg-surface-2 px-3 py-4 text-center text-xs text-muted">
+          <div className="rounded-card border border-border bg-surface px-3 py-4 text-center text-xs text-faint">
             No active session · start iRacing or the mock bridge.
           </div>
         )}
@@ -117,57 +114,29 @@ function VisibilityRule({
   currentlyActive: boolean;
 }) {
   return (
-    <label className="flex cursor-pointer items-start gap-3 rounded-lg border border-border bg-surface-2 px-3 py-2.5 transition-colors hover:border-border-strong">
-      <Checkbox checked={checked} onChange={onChange} />
+    <label className="flex cursor-pointer items-start gap-3 rounded-card border border-border bg-surface px-3 py-2.5 transition-colors hover:border-border-strong">
+      <span className="mt-0.5">
+        <Checkbox checked={checked} onChange={onChange} />
+      </span>
       <span className="flex-1">
         <span className="flex items-center gap-2">
           <span className="text-xs font-medium text-text">{label}</span>
           {currentlyActive && (
-            <span className="rounded bg-warning/15 px-1 py-0.5 text-[9px] uppercase tracking-wide text-warning">
+            <span className="rounded-full bg-warning/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-warning">
               Active now
             </span>
           )}
         </span>
-        <span className="mt-0.5 block text-[11px] text-muted">{description}</span>
+        <span className="mt-0.5 block text-[11px] leading-relaxed text-faint">
+          {description}
+        </span>
       </span>
       {checked ? (
         <EyeOff className="mt-0.5 size-3.5 shrink-0 text-muted" />
       ) : (
-        <Eye className="mt-0.5 size-3.5 shrink-0 text-muted/40" />
+        <Eye className="mt-0.5 size-3.5 shrink-0 text-faint/50" />
       )}
     </label>
-  );
-}
-
-function Checkbox({
-  checked,
-  onChange,
-}: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="checkbox"
-      aria-checked={checked}
-      onClick={(e) => {
-        e.preventDefault();
-        onChange(!checked);
-      }}
-      className={[
-        "mt-0.5 flex size-4 shrink-0 items-center justify-center rounded border transition-colors",
-        checked
-          ? "border-accent bg-accent/20 text-accent"
-          : "border-border-strong bg-surface text-transparent",
-      ].join(" ")}
-    >
-      {checked && (
-        <svg viewBox="0 0 10 8" className="size-2.5" fill="none" stroke="currentColor" strokeWidth={1.8}>
-          <path d="M1 4l3 3 5-6" strokeLinecap="round" strokeLinejoin="round" />
-        </svg>
-      )}
-    </button>
   );
 }
 
@@ -180,17 +149,17 @@ function Row({
 }) {
   return (
     <div className="flex items-start gap-2">
-      <span className="w-14 shrink-0 text-[10px] uppercase tracking-wide text-muted">
+      <span className="w-14 shrink-0 text-[10px] uppercase tracking-wide text-faint">
         {label}
       </span>
-      <span className="text-text">{value}</span>
+      <span className="text-muted">{value}</span>
     </div>
   );
 }
 
 function FlagBadge({ flag }: { flag: string }) {
   return (
-    <span className="rounded bg-surface px-1 py-0.5 text-[9px] uppercase tracking-wide text-muted">
+    <span className="rounded-full bg-surface-2 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted">
       {flag.replace(/_/g, " ")}
     </span>
   );
@@ -216,10 +185,10 @@ function VisibilityStatus({ overlayId }: { overlayId: string }) {
   return (
     <div
       className={[
-        "flex items-center gap-2 rounded-lg border px-3 py-2 text-xs",
+        "flex items-center gap-2 rounded-card border px-3 py-2 text-xs font-medium",
         wouldHide
           ? "border-warning/30 bg-warning/10 text-warning"
-          : "border-accent/20 bg-accent/5 text-accent",
+          : "border-accent/25 bg-accent/5 text-accent",
       ].join(" ")}
     >
       <span

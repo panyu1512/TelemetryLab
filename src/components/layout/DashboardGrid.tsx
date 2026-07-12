@@ -64,7 +64,7 @@ export function DashboardGrid({ layout, data, autoHeight = false }: DashboardGri
       <Placeholder
         title={`${dashboard.label} is on the roadmap`}
         body={`This screen ships in ${dashboard.milestone ?? "a future release"}. The layout and overlay it lives in are ready today.`}
-        icon={<Sparkles className="size-6 text-accent" />}
+        icon={<Sparkles className="size-6 text-primary" />}
       />
     );
   } else if (visibleWidgets.length === 0) {
@@ -124,7 +124,7 @@ function Placeholder({
   return (
     <div className="grid h-full place-items-center">
       <div className="flex max-w-sm flex-col items-center gap-3 text-center">
-        <div className="grid size-12 place-items-center rounded-xl border border-border bg-surface">
+        <div className="grid size-12 place-items-center rounded-card border border-border bg-surface">
           {icon}
         </div>
         <h2 className="text-base font-semibold text-text">{title}</h2>

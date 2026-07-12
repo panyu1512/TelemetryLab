@@ -25,7 +25,7 @@ export function ColumnHeader({
 }) {
   return (
     <div
-      className="sticky top-0 z-10 grid items-center gap-x-1 border-b border-border bg-bg/95 px-1 text-[9px] font-medium uppercase tracking-wider text-muted backdrop-blur"
+      className="sticky top-0 z-10 grid items-center gap-x-1 border-b border-border bg-bg/95 px-1 text-[9px] font-semibold uppercase tracking-[0.12em] text-faint backdrop-blur"
       style={{
         height: COL_HEADER_H,
         gridTemplateColumns: gridTemplate(sectorCount, isVisible),

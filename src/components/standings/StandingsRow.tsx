@@ -73,9 +73,9 @@ function StandingsRowInner({
         className={[
           "grid h-full items-center gap-x-1 rounded-sm px-1 text-xs",
           row?.isPlayer
-            ? "bg-accent/10 ring-1 ring-inset ring-accent/30"
+            ? "bg-primary/10 ring-1 ring-inset ring-primary/35"
             : zebra
-              ? "bg-surface/40"
+              ? "bg-surface-2/40"
               : "",
           dimmed ? "opacity-40" : "",
         ].join(" ")}
@@ -99,7 +99,7 @@ function StandingsRowInner({
         {/* car number */}
         {isVisible("num") && (
           <div
-            className="truncate rounded bg-surface-2 text-center text-[11px] font-semibold tabular-nums tnum text-muted"
+            className="truncate rounded-[4px] bg-surface-2 text-center text-[11px] font-semibold tabular-nums tnum text-muted"
             title={`#${driver?.carNumber ?? ""}`}
           >
             {driver?.carNumber ?? "—"}

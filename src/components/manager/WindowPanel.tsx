@@ -11,6 +11,7 @@ import { Info, Lock, Unlock } from "lucide-react";
 import { useWindowStore } from "../../stores/useWindowStore";
 import { useActiveOverlaysStore } from "../../stores/useActiveOverlaysStore";
 import { getWindowState } from "../../lib/windowState";
+import { InfoNote, SectionLabel, ToggleSwitch } from "../ui/controls";
 
 interface WindowPanelProps {
   overlayId: string;
@@ -30,12 +31,12 @@ export function WindowPanel({ overlayId }: WindowPanelProps) {
       {/* Lock */}
       <div
         className={[
-          "flex items-center gap-3 rounded-lg border px-3 py-2.5",
-          locked ? "border-accent/40 bg-accent/5" : "border-border bg-surface-2",
+          "flex items-center gap-3 rounded-card border px-3 py-2.5 transition-colors",
+          locked ? "border-primary/40 bg-primary/5" : "border-border bg-surface",
         ].join(" ")}
       >
         {locked ? (
-          <Lock className="size-4 shrink-0 text-accent" />
+          <Lock className="size-4 shrink-0 text-primary" />
         ) : (
           <Unlock className="size-4 shrink-0 text-muted" />
         )}
@@ -43,7 +44,9 @@ export function WindowPanel({ overlayId }: WindowPanelProps) {
           <div className="text-xs font-medium text-text">Lock window</div>
           <div
             className="mt-0.5 text-[11px]"
-            style={{ color: locked ? "var(--color-accent)" : "var(--color-muted)" }}
+            style={{
+              color: locked ? "var(--color-primary)" : "var(--color-faint)",
+            }}
           >
             {locked
               ? "Locked · click-through, can't be moved (Ctrl+Shift+L)"
@@ -64,69 +67,30 @@ export function WindowPanel({ overlayId }: WindowPanelProps) {
             <Metric label="H" value={`${bounds.height}`} />
           </div>
         ) : (
-          <div className="rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-[11px] text-muted">
+          <div className="rounded-card border border-border bg-surface px-3 py-2.5 text-[11px] text-faint">
             Not saved yet — open the window and move or resize it once.
           </div>
         )}
       </section>
 
       {/* Note */}
-      <div className="flex items-start gap-2 rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-xs text-muted">
-        <Info className="mt-0.5 size-3.5 shrink-0" />
-        <span>
-          This overlay's window remembers its own position, size and lock state.
-          {isOpen
-            ? " Changes apply to the open window immediately."
-            : " They'll be restored the next time you open it."}
-        </span>
-      </div>
+      <InfoNote icon={<Info className="mt-0.5 size-3.5 shrink-0 text-primary" />}>
+        This overlay's window remembers its own position, size and lock state.
+        {isOpen
+          ? " Changes apply to the open window immediately."
+          : " They'll be restored the next time you open it."}
+      </InfoNote>
     </div>
   );
 }
 
 // ── helpers ───────────────────────────────────────────────────────────────────
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted">
-      {children}
-    </p>
-  );
-}
-
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div className="rounded-lg border border-border bg-surface-2 px-2.5 py-2">
-      <div className="text-[10px] uppercase tracking-wide text-muted">{label}</div>
-      <div className="mt-0.5 font-mono text-sm text-text">{value}</div>
+    <div className="rounded-card border border-border bg-surface px-2.5 py-2">
+      <div className="text-[10px] uppercase tracking-wide text-faint">{label}</div>
+      <div className="tnum mt-0.5 text-sm font-medium text-text">{value}</div>
     </div>
-  );
-}
-
-function ToggleSwitch({
-  checked,
-  onChange,
-}: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      onClick={() => onChange(!checked)}
-      className={[
-        "relative h-5 w-9 shrink-0 rounded-full transition-colors",
-        checked ? "bg-accent" : "bg-surface border border-border-strong",
-      ].join(" ")}
-    >
-      <span
-        className={[
-          "absolute top-0.5 size-4 rounded-full bg-bg transition-[left]",
-          checked ? "left-[18px]" : "left-0.5",
-        ].join(" ")}
-      />
-    </button>
   );
 }

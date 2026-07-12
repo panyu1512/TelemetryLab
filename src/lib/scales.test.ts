@@ -15,23 +15,23 @@ describe("heatColor", () => {
   });
 
   it("clamps below the range to the cold stop (blue)", () => {
-    expect(heatColor(HEAT_MIN - 20)).toBe("rgb(59 130 246)");
-    expect(heatColor(HEAT_MIN)).toBe("rgb(59 130 246)");
+    expect(heatColor(HEAT_MIN - 20)).toBe("rgb(77 156 248)");
+    expect(heatColor(HEAT_MIN)).toBe("rgb(77 156 248)");
   });
 
   it("clamps above the range to the hot stop (red)", () => {
-    expect(heatColor(HEAT_MAX + 20)).toBe("rgb(239 68 68)");
-    expect(heatColor(HEAT_MAX)).toBe("rgb(239 68 68)");
+    expect(heatColor(HEAT_MAX + 20)).toBe("rgb(244 86 79)");
+    expect(heatColor(HEAT_MAX)).toBe("rgb(244 86 79)");
   });
 
   it("hits the optimal stop exactly (accent green)", () => {
-    expect(heatColor(78)).toBe("rgb(0 255 136)");
+    expect(heatColor(78)).toBe("rgb(47 214 127)");
   });
 
   it("interpolates between stops", () => {
-    // Midway between 78 (0,255,136) and 90 (249,115,22) → componentwise mean.
+    // Midway between 78 (47,214,127) and 90 (240,154,60) → componentwise mean.
     const c = heatColor(84);
-    expect(c).toBe("rgb(125 185 79)");
+    expect(c).toBe("rgb(144 184 94)");
   });
 
   it("produces a valid rgb string across the whole band", () => {

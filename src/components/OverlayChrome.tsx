@@ -24,7 +24,7 @@ export function OverlayChrome({ kind, id }: { kind: WindowKind; id: string }) {
         type="button"
         onClick={() => closeCurrentWindow(kind, id)}
         title="Close this window"
-        className="absolute right-1 grid size-4 place-items-center rounded text-muted transition-colors hover:bg-danger hover:text-bg"
+        className="absolute right-1 grid size-4 place-items-center rounded text-muted transition-colors hover:bg-danger hover:text-white"
       >
         <X className="size-3" />
       </button>

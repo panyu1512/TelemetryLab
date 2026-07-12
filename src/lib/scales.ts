@@ -9,10 +9,10 @@ type RGB = [number, number, number];
  * colors — a wider scale put the whole working range on the same green.
  */
 const HEAT_STOPS: Array<[number, RGB]> = [
-  [55, [59, 130, 246]], // cold — blue
-  [78, [0, 255, 136]], // optimal — accent green
-  [90, [249, 115, 22]], // hot — orange
-  [105, [239, 68, 68]], // overheating — red
+  [55, [77, 156, 248]], // cold — informational blue
+  [78, [47, 214, 127]], // optimal — accent green
+  [90, [240, 154, 60]], // hot — orange
+  [105, [244, 86, 79]], // overheating — red
 ];
 
 /** The temperature window the heat scale covers, for normalizing bars. */

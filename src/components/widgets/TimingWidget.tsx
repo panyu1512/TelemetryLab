@@ -23,7 +23,7 @@ export function TimingWidget({ data }: { data: TelemetryData | null }) {
         {cells.map(([label, t, color]) => (
           <div key={label} className="flex min-w-0 flex-col gap-1">
             <span
-              className="truncate uppercase tracking-wider text-muted"
+              className="truncate font-medium uppercase tracking-[0.12em] text-faint"
               style={{ fontSize: LABEL_FONT }}
             >
               {label}
@@ -39,7 +39,7 @@ export function TimingWidget({ data }: { data: TelemetryData | null }) {
       </div>
       <div className="flex shrink-0 items-center justify-center gap-2 border-t border-border pt-2">
         <span
-          className="uppercase tracking-wider text-muted"
+          className="font-medium uppercase tracking-[0.12em] text-faint"
           style={{ fontSize: LABEL_FONT }}
         >
           Δ vs best
