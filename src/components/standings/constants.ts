@@ -122,7 +122,7 @@ export const SECTOR_COLOR: Record<string, string> = {
   personal_best: "var(--color-accent)",
   slower: "var(--color-warning)",
   much_slower: "var(--color-danger)",
-  none: "var(--color-muted)",
+  none: "var(--color-faint)",
 };
 
 /** Lap-status → highlight color for the last-lap cell. */
@@ -130,5 +130,5 @@ export const LAP_COLOR: Record<string, string> = {
   overall_best: "var(--color-sector-purple)",
   personal_best: "var(--color-accent)",
   normal: "var(--color-text)",
-  none: "var(--color-muted)",
+  none: "var(--color-faint)",
 };

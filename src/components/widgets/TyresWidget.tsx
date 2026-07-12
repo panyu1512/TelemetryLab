@@ -18,7 +18,7 @@ function Corner({ name, tyre }: { name: string; tyre: TyreData | undefined }) {
     >
       <div className="flex items-baseline justify-between gap-1">
         <span
-          className="uppercase tracking-wider text-muted"
+          className="font-medium uppercase tracking-[0.12em] text-faint"
           style={{ fontSize: "clamp(0.5rem, 5cqmin, 0.65rem)" }}
         >
           {name}

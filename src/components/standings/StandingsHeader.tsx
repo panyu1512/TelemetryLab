@@ -47,10 +47,10 @@ export function StandingsHeader() {
             style={{ background: fc, boxShadow: `0 0 8px ${fc}` }}
           />
         )}
-        <span className="text-sm font-semibold text-text">
+        <span className="text-sm font-semibold tracking-tight text-text">
           {session?.sessionType || "Session"}
         </span>
-        <span className="text-xs text-muted">
+        <span className="text-xs text-faint">
           {session?.track.name ?? "—"}
           {session?.track.config ? ` · ${session.track.config}` : ""}
         </span>
@@ -120,9 +120,9 @@ function SegBtn({
       onClick={onClick}
       aria-pressed={active}
       title={title}
-      className={`grid size-7 place-items-center rounded-md transition-colors ${
+      className={`grid size-7 place-items-center rounded-ctl transition-colors ${
         active
-          ? "bg-accent/15 text-accent"
+          ? "bg-primary/15 text-primary"
           : "text-muted hover:bg-surface-2 hover:text-text"
       }`}
     >

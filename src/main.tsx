@@ -4,6 +4,7 @@ import App from "./App";
 import { OverlayWindow } from "./components/OverlayWindow";
 import { SingleWidgetWindow } from "./components/SingleWidgetWindow";
 import { getOverlayRoute, getWidgetRoute } from "./lib/overlayWindows";
+import "@fontsource-variable/inter";
 import "./styles.css";
 
 // `?widget=<id>` renders a single telemetry widget; `?overlay=<id>` renders one

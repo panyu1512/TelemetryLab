@@ -83,7 +83,7 @@ export function DebugPanel() {
       <section>
         <SectionLabel>Session Snapshot</SectionLabel>
         {session ? (
-          <div className="grid grid-cols-2 gap-x-6 gap-y-1 rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-xs">
+          <div className="grid grid-cols-2 gap-x-6 gap-y-1 rounded-card border border-border bg-surface px-3 py-2.5 text-xs">
             <KV k="Type" v={session.sessionType} />
             <KV k="State" v={session.sessionStateLabel} />
             <KV k="Track" v={`${session.track.name} – ${session.track.config}`} />
@@ -103,7 +103,7 @@ export function DebugPanel() {
       {telemetry && (
         <section>
           <SectionLabel>Telemetry (last frame)</SectionLabel>
-          <div className="grid grid-cols-4 gap-x-4 gap-y-1 rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-xs">
+          <div className="grid grid-cols-4 gap-x-4 gap-y-1 rounded-card border border-border bg-surface px-3 py-2.5 text-xs">
             <KV k="Speed" v={`${telemetry.speedKmh ?? "—"} km/h`} />
             <KV k="RPM" v={String(Math.round(telemetry.rpm ?? 0))} />
             <KV k="Gear" v={String(telemetry.gear ?? "—")} />
@@ -129,9 +129,9 @@ export function DebugPanel() {
                 type="button"
                 onClick={() => setFilter(lv)}
                 className={[
-                  "rounded px-2 py-0.5 text-[10px] uppercase transition-colors",
+                  "rounded-ctl px-2 py-0.5 text-[10px] font-medium uppercase transition-colors",
                   filter === lv
-                    ? "bg-accent/15 text-accent"
+                    ? "bg-primary/15 text-primary"
                     : "text-muted hover:text-text",
                 ].join(" ")}
               >
@@ -146,8 +146,8 @@ export function DebugPanel() {
               onClick={() => setAutoScroll((a) => !a)}
               title={autoScroll ? "Disable auto-scroll" : "Enable auto-scroll"}
               className={[
-                "grid size-6 place-items-center rounded text-muted transition-colors hover:text-text",
-                autoScroll && "bg-accent/10 text-accent",
+                "grid size-6 place-items-center rounded-ctl text-muted transition-colors hover:text-text",
+                autoScroll && "bg-primary/10 text-primary",
               ]
                 .filter(Boolean)
                 .join(" ")}
@@ -173,7 +173,7 @@ export function DebugPanel() {
           </div>
         </div>
 
-        <div className="min-h-0 flex-1 overflow-y-auto rounded-lg border border-border bg-bg font-mono">
+        <div className="min-h-0 flex-1 overflow-y-auto rounded-card border border-border bg-bg font-mono">
           {filtered.length === 0 ? (
             <div className="flex h-full items-center justify-center text-xs text-muted">
               No log entries yet. Bridge messages will appear here.
@@ -196,7 +196,7 @@ export function DebugPanel() {
 
 function SectionLabel({ children }: { children: React.ReactNode }) {
   return (
-    <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted">
+    <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">
       {children}
     </p>
   );
@@ -204,7 +204,7 @@ function SectionLabel({ children }: { children: React.ReactNode }) {
 
 function SectionLabelInline({ children }: { children: React.ReactNode }) {
   return (
-    <span className="text-[10px] font-semibold uppercase tracking-widest text-muted">
+    <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">
       {children}
     </span>
   );
@@ -220,17 +220,17 @@ function StatusTile({
   ok: boolean;
 }) {
   return (
-    <div className="rounded-lg border border-border bg-surface-2 px-3 py-2">
+    <div className="rounded-card border border-border bg-surface px-3 py-2">
       <div className="mb-1 flex items-center gap-1.5">
         <span
           className="inline-block size-1.5 rounded-full"
-          style={{ background: ok ? "var(--color-accent)" : "var(--color-muted)" }}
+          style={{ background: ok ? "var(--color-accent)" : "var(--color-faint)" }}
         />
-        <span className="text-[10px] uppercase tracking-wide text-muted">{label}</span>
+        <span className="text-[10px] uppercase tracking-wide text-faint">{label}</span>
       </div>
       <span
         className="text-xs font-medium"
-        style={{ color: ok ? "var(--color-text)" : "var(--color-muted)" }}
+        style={{ color: ok ? "var(--color-text)" : "var(--color-faint)" }}
       >
         {value}
       </span>
@@ -241,17 +241,17 @@ function StatusTile({
 function KV({ k, v }: { k: string; v: string }) {
   return (
     <div className="flex items-baseline gap-1.5">
-      <span className="w-14 shrink-0 text-[10px] uppercase tracking-wide text-muted">
+      <span className="w-14 shrink-0 text-[10px] uppercase tracking-wide text-faint">
         {k}
       </span>
-      <span className="truncate text-text">{v}</span>
+      <span className="truncate text-muted">{v}</span>
     </div>
   );
 }
 
 function EmptyState({ msg }: { msg: string }) {
   return (
-    <div className="rounded-lg border border-border bg-surface-2 px-3 py-4 text-center text-xs text-muted">
+    <div className="rounded-card border border-border bg-surface px-3 py-4 text-center text-xs text-faint">
       {msg}
     </div>
   );

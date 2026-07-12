@@ -1,9 +1,11 @@
+import { RotateCcw } from "lucide-react";
 import { THEMES, getTheme } from "../../themes";
 import {
   useOverlayConfigStore,
   type OverlayAppearance,
   DEFAULT_APPEARANCE,
 } from "../../stores/useOverlayConfigStore";
+import { SectionLabel } from "../ui/controls";
 
 interface AppearancePanelProps {
   overlayId: string;
@@ -16,7 +18,6 @@ export function AppearancePanel({ overlayId }: AppearancePanelProps) {
   const globalThemeId = store.globalSettings.themeId;
 
   const effectiveThemeId = appearance.themeId ?? globalThemeId;
-  const effectiveTheme = getTheme(effectiveThemeId);
 
   return (
     <div className="space-y-6">
@@ -40,37 +41,44 @@ export function AppearancePanel({ overlayId }: AppearancePanelProps) {
                   )
                 }
                 className={[
-                  "relative flex items-center gap-3 rounded-lg border px-3 py-2.5 text-left transition-colors",
+                  "relative flex items-center gap-3 rounded-card border px-3 py-2.5 text-left transition-colors",
                   isActive
-                    ? "border-accent bg-accent/10"
-                    : "border-border bg-surface-2 hover:border-border-strong",
+                    ? "border-primary bg-primary/5 ring-1 ring-primary/40"
+                    : "border-border bg-surface hover:border-border-strong",
                 ].join(" ")}
               >
-                {/* Color swatch */}
+                {/* Palette swatch: base surface + the three signal hues. */}
                 <span
-                  className="size-7 shrink-0 rounded-md border border-white/10"
-                  style={{
-                    background: `linear-gradient(135deg, ${t.colors.bg} 40%, ${t.colors.accent} 100%)`,
-                  }}
-                />
+                  className="flex size-8 shrink-0 flex-col justify-end gap-1 overflow-hidden rounded-ctl border border-white/10 p-1"
+                  style={{ background: t.colors.bg }}
+                >
+                  <span className="flex gap-0.5">
+                    <span
+                      className="h-1 flex-1 rounded-full"
+                      style={{ background: t.colors.primary }}
+                    />
+                    <span
+                      className="h-1 flex-1 rounded-full"
+                      style={{ background: t.colors.accent }}
+                    />
+                  </span>
+                  <span
+                    className="h-1.5 rounded-sm"
+                    style={{ background: t.colors.surface2 }}
+                  />
+                </span>
                 <span className="min-w-0">
                   <span className="block text-xs font-medium text-text">
                     {t.name}
                   </span>
-                  <span className="block truncate text-[10px] text-muted">
+                  <span className="block truncate text-[10px] text-faint">
                     {t.description}
                   </span>
                 </span>
                 {isGlobalInherited && (
-                  <span className="ml-auto shrink-0 rounded bg-surface px-1 text-[9px] uppercase tracking-wide text-muted">
-                    global
+                  <span className="ml-auto shrink-0 rounded-full bg-surface-2 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-faint">
+                    Global
                   </span>
-                )}
-                {isActive && !isGlobalInherited && appearance.themeId && (
-                  <span
-                    className="absolute right-2 top-2 size-2 rounded-full"
-                    style={{ background: effectiveTheme.colors.accent }}
-                  />
                 )}
               </button>
             );
@@ -100,7 +108,6 @@ export function AppearancePanel({ overlayId }: AppearancePanelProps) {
           defaultValue={DEFAULT_APPEARANCE.saturation}
           unit="%"
           onChange={(v) => store.setOverlaySaturation(overlayId, v)}
-          accentColor={effectiveTheme.colors.accent}
         />
         <SliderRow
           label="Brightness"
@@ -110,7 +117,6 @@ export function AppearancePanel({ overlayId }: AppearancePanelProps) {
           defaultValue={DEFAULT_APPEARANCE.brightness}
           unit="%"
           onChange={(v) => store.setOverlayBrightness(overlayId, v)}
-          accentColor={effectiveTheme.colors.accent}
         />
         <SliderRow
           label="Opacity"
@@ -120,7 +126,6 @@ export function AppearancePanel({ overlayId }: AppearancePanelProps) {
           defaultValue={DEFAULT_APPEARANCE.opacity}
           unit="%"
           onChange={(v) => store.setOverlayOpacity(overlayId, v)}
-          accentColor={effectiveTheme.colors.accent}
         />
 
         {isModified(appearance) && (
@@ -151,14 +156,6 @@ function isModified(a: OverlayAppearance): boolean {
 
 // ── sub-components ─────────────────────────────────────────────────────────────
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted">
-      {children}
-    </p>
-  );
-}
-
 function SliderRow({
   label,
   value,
@@ -167,7 +164,6 @@ function SliderRow({
   defaultValue,
   unit,
   onChange,
-  accentColor,
 }: {
   label: string;
   value: number;
@@ -176,21 +172,20 @@ function SliderRow({
   defaultValue: number;
   unit: string;
   onChange: (v: number) => void;
-  accentColor: string;
 }) {
   return (
     <div className="space-y-1.5">
       <div className="flex items-center justify-between">
-        <span className="text-xs text-text">{label}</span>
+        <span className="text-xs font-medium text-text">{label}</span>
         <div className="flex items-center gap-2">
           {value !== defaultValue && (
             <button
               type="button"
               onClick={() => onChange(defaultValue)}
-              className="text-[10px] text-muted hover:text-text"
+              className="grid size-4 place-items-center text-faint hover:text-text"
               title="Reset"
             >
-              ↺
+              <RotateCcw className="size-3" />
             </button>
           )}
           <span className="w-10 text-right text-xs tabular-nums text-muted">
@@ -207,10 +202,9 @@ function SliderRow({
         max={max}
         value={value}
         onChange={(e) => onChange(Number(e.target.value))}
-        style={{ accentColor }}
+        style={{ accentColor: "var(--color-primary)" }}
         className="h-1.5 w-full cursor-pointer"
       />
     </div>
   );
 }
-

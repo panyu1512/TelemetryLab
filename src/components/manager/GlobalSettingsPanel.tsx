@@ -1,6 +1,13 @@
 import { Info } from "lucide-react";
 import { useOverlayConfigStore } from "../../stores/useOverlayConfigStore";
 import { THEMES } from "../../themes";
+import {
+  InfoNote,
+  SectionLabel,
+  SelectInput,
+  TextInput,
+  ToggleSwitch,
+} from "../ui/controls";
 
 export function GlobalSettingsPanel() {
   const store = useOverlayConfigStore();
@@ -84,30 +91,19 @@ export function GlobalSettingsPanel() {
       </section>
 
       {/* Config info */}
-      <div className="flex items-start gap-2 rounded-lg border border-border bg-surface-2 px-3 py-2.5 text-xs text-muted">
-        <Info className="mt-0.5 size-3.5 shrink-0" />
-        <span>
-          Settings are saved automatically and restored on next launch. Use
-          profile export to back up your configuration.
-        </span>
-      </div>
+      <InfoNote icon={<Info className="mt-0.5 size-3.5 shrink-0 text-primary" />}>
+        Settings are saved automatically and restored on next launch. Use
+        profile export to back up your configuration.
+      </InfoNote>
     </div>
   );
 }
 
 // ── layout helpers ─────────────────────────────────────────────────────────────
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="mb-2 text-[10px] font-semibold uppercase tracking-widest text-muted">
-      {children}
-    </p>
-  );
-}
-
 function SettingsGroup({ children }: { children: React.ReactNode }) {
   return (
-    <div className="divide-y divide-border overflow-hidden rounded-lg border border-border">
+    <div className="divide-y divide-border overflow-hidden rounded-card border border-border">
       {children}
     </div>
   );
@@ -123,59 +119,13 @@ function LabeledField({
   children: React.ReactNode;
 }) {
   return (
-    <div className="flex items-start gap-4 bg-surface-2 px-3 py-2.5">
+    <div className="flex items-start gap-4 bg-surface px-4 py-3">
       <div className="min-w-0 flex-1">
         <div className="text-xs font-medium text-text">{label}</div>
-        {hint && <div className="mt-0.5 text-[11px] text-muted">{hint}</div>}
+        {hint && <div className="mt-0.5 text-[11px] leading-relaxed text-faint">{hint}</div>}
       </div>
       <div className="shrink-0">{children}</div>
     </div>
-  );
-}
-
-// ── input primitives ──────────────────────────────────────────────────────────
-
-function TextInput({
-  value,
-  placeholder,
-  onChange,
-}: {
-  value: string;
-  placeholder?: string;
-  onChange: (v: string) => void;
-}) {
-  return (
-    <input
-      type="text"
-      value={value}
-      placeholder={placeholder}
-      onChange={(e) => onChange(e.target.value)}
-      className="w-52 rounded-md border border-border bg-surface px-2.5 py-1 text-xs text-text outline-none transition-colors placeholder:text-muted focus:border-accent"
-    />
-  );
-}
-
-function SelectInput({
-  value,
-  options,
-  onChange,
-}: {
-  value: string;
-  options: { value: string; label: string }[];
-  onChange: (v: string) => void;
-}) {
-  return (
-    <select
-      value={value}
-      onChange={(e) => onChange(e.target.value)}
-      className="rounded-md border border-border bg-surface px-2.5 py-1 text-xs text-text outline-none transition-colors focus:border-accent"
-    >
-      {options.map((o) => (
-        <option key={o.value} value={o.value}>
-          {o.label}
-        </option>
-      ))}
-    </select>
   );
 }
 
@@ -193,33 +143,5 @@ function ToggleRow({
       <span className="text-xs text-muted">{label}</span>
       <ToggleSwitch checked={checked} onChange={onChange} />
     </div>
-  );
-}
-
-function ToggleSwitch({
-  checked,
-  onChange,
-}: {
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <button
-      type="button"
-      role="switch"
-      aria-checked={checked}
-      onClick={() => onChange(!checked)}
-      className={[
-        "relative h-5 w-9 shrink-0 rounded-full transition-colors",
-        checked ? "bg-accent" : "bg-surface border border-border-strong",
-      ].join(" ")}
-    >
-      <span
-        className={[
-          "absolute top-0.5 size-4 rounded-full bg-bg transition-[left]",
-          checked ? "left-[18px]" : "left-0.5",
-        ].join(" ")}
-      />
-    </button>
   );
 }

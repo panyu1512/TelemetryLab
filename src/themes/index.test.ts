@@ -30,20 +30,24 @@ function fakeEl() {
 describe("applyTheme", () => {
   it("uses solid backgrounds outside overlay mode", () => {
     const el = fakeEl() as HTMLElement & { props: Map<string, string> };
-    applyTheme(getTheme("obsidian"), false, el);
-    expect(el.props.get("--color-bg")).toBe("#0a0a0a");
-    expect(el.props.get("--color-surface")).toBe("#141414");
+    applyTheme(getTheme("carbon"), false, el);
+    expect(el.props.get("--color-bg")).toBe("#111418");
+    expect(el.props.get("--color-surface")).toBe("#1a1e24");
   });
 
   it("makes the background transparent + surfaces translucent in overlay mode", () => {
     // This is the fix for the black-overlay bug: applyTheme owns the inline
     // vars, and inline vars beat the overlay-mode stylesheet rules.
     const el = fakeEl() as HTMLElement & { props: Map<string, string> };
-    applyTheme(getTheme("obsidian"), true, el);
+    applyTheme(getTheme("carbon"), true, el);
     expect(el.props.get("--color-bg")).toBe("transparent");
     expect(el.props.get("--bg")).toBe("transparent");
     expect(el.props.get("--color-surface")).toContain("rgba(");
     // Text/accent stay solid so content is readable over the game.
-    expect(el.props.get("--color-text")).toBe("#e6e6e6");
+    expect(el.props.get("--color-text")).toBe("#ffffff");
+  });
+
+  it("falls back to the default theme for an unknown id", () => {
+    expect(getTheme("obsidian").id).toBe("carbon");
   });
 });

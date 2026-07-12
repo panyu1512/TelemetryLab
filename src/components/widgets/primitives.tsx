@@ -66,7 +66,7 @@ export function StatTile({
       </div>
       {label && (
         <span
-          className="truncate uppercase tracking-wider text-muted"
+          className="truncate font-medium uppercase tracking-[0.12em] text-faint"
           style={{ fontSize: LABEL_FONT }}
         >
           {label}
@@ -207,7 +207,7 @@ export function Gauge({
             </span>
             {unit && (
               <span
-                className="uppercase tracking-wider text-muted"
+                className="font-medium uppercase tracking-[0.12em] text-faint"
                 style={GAUGE_UNIT_STYLE}
               >
                 {unit}

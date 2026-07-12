@@ -57,7 +57,7 @@ function fmtGap(v: number | null): string {
 function ColHeader() {
   return (
     <div
-      className="sticky top-0 z-10 grid items-center gap-x-1 border-b border-border bg-surface px-2 text-[10px] font-semibold uppercase tracking-wider text-muted"
+      className="sticky top-0 z-10 grid items-center gap-x-1 border-b border-border bg-surface px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-faint"
       style={{ gridTemplateColumns: GRID, height: 26 }}
     >
       <div className="text-center">P</div>
@@ -77,7 +77,7 @@ function Separator({ label }: { label: string }) {
   return (
     <div className="flex items-center gap-2 px-2 py-1">
       <div className="h-px flex-1 bg-border" />
-      <span className="text-[9px] font-bold uppercase tracking-widest text-muted/60">
+      <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-faint">
         {label}
       </span>
       <div className="h-px flex-1 bg-border" />
@@ -124,7 +124,7 @@ function RowInner({
   const dimmed = !isPlayer && (entry.isRetired || !entry.isInWorld);
 
   const gapColor = isPlayer
-    ? "var(--color-accent)"
+    ? "var(--color-primary)"
     : isBehind
       ? "var(--color-danger)"
       : "var(--color-text)";
@@ -133,7 +133,7 @@ function RowInner({
     <div
       className={[
         "grid items-center gap-x-1 px-2 text-xs",
-        isPlayer ? "rounded-sm bg-accent/10 ring-1 ring-inset ring-accent/30" : "",
+        isPlayer ? "rounded-sm bg-primary/10 ring-1 ring-inset ring-primary/35" : "",
         dimmed ? "opacity-35" : "",
       ]
         .filter(Boolean)
@@ -150,7 +150,7 @@ function RowInner({
       </div>
 
       {/* car number */}
-      <div className="truncate rounded bg-surface-2 text-center text-[11px] font-semibold tabular-nums tnum text-muted">
+      <div className="truncate rounded-[4px] bg-surface-2 text-center text-[11px] font-semibold tabular-nums tnum text-muted">
         {driver?.carNumber ?? "—"}
       </div>
 
@@ -158,7 +158,7 @@ function RowInner({
       <div className="flex min-w-0 items-center gap-1.5">
         <span
           className="truncate text-[12px]"
-          style={{ color: isPlayer ? "var(--color-accent)" : "var(--color-text)" }}
+          style={{ color: isPlayer ? "var(--color-primary)" : "var(--color-text)" }}
         >
           {driver?.userName ?? `Car ${entry.carIdx}`}
         </span>
@@ -225,8 +225,8 @@ function EmptyState({ iracingActive }: { iracingActive: boolean }) {
   return (
     <div className="grid h-full place-items-center">
       <div className="flex max-w-sm flex-col items-center gap-3 text-center">
-        <div className="grid size-12 place-items-center rounded-xl border border-border bg-surface-2">
-          <Radio className="size-6 text-muted" />
+        <div className="grid size-12 place-items-center rounded-card border border-border bg-surface-2">
+          <Radio className="size-6 text-faint" />
         </div>
         <h2 className="text-base font-semibold text-text">No relative data</h2>
         <p className="text-sm leading-relaxed text-muted">
@@ -251,21 +251,21 @@ function RelativeHeader({ window: n, onWindowChange }: HeaderProps) {
 
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border px-3 py-2">
-      <span className="text-sm font-semibold text-text">Relative</span>
-      <span className="text-xs text-muted">
+      <span className="text-sm font-semibold tracking-tight text-text">Relative</span>
+      <span className="text-xs text-faint">
         {session?.track.name ?? "—"}
         {session?.track.config ? ` · ${session.track.config}` : ""}
       </span>
 
       <div className="ml-auto flex items-center gap-1.5">
-        <span className="text-[11px] text-muted">
+        <span className="tnum text-[11px] text-muted">
           ±{n}
         </span>
         <button
           type="button"
           onClick={() => onWindowChange(Math.max(3, n - 1))}
           disabled={n <= 3}
-          className="grid size-6 place-items-center rounded text-muted transition-colors hover:bg-surface-2 hover:text-text disabled:opacity-30"
+          className="grid size-6 place-items-center rounded-ctl text-muted transition-colors hover:bg-surface-2 hover:text-text disabled:opacity-30"
           title="Show fewer cars"
         >
           <Minus className="size-3" />
@@ -274,7 +274,7 @@ function RelativeHeader({ window: n, onWindowChange }: HeaderProps) {
           type="button"
           onClick={() => onWindowChange(Math.min(10, n + 1))}
           disabled={n >= 10}
-          className="grid size-6 place-items-center rounded text-muted transition-colors hover:bg-surface-2 hover:text-text disabled:opacity-30"
+          className="grid size-6 place-items-center rounded-ctl text-muted transition-colors hover:bg-surface-2 hover:text-text disabled:opacity-30"
           title="Show more cars"
         >
           <Plus className="size-3" />
@@ -341,7 +341,7 @@ export function RelativeScreen() {
   const isEmpty = order.length === 0;
 
   return (
-    <div className="overlay-card flex h-full flex-col overflow-hidden rounded-xl border border-transparent bg-surface">
+    <div className="overlay-card flex h-full flex-col overflow-hidden rounded-card border border-border/60 bg-surface">
       <RelativeHeader window={windowSize} onWindowChange={setWindowSize} />
 
       {isEmpty ? (

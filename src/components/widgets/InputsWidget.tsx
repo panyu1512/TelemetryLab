@@ -4,8 +4,7 @@ import { num } from "../../lib/format";
 
 const TRACE_POINTS = 300;
 
-const THROTTLE_FILL =
-  "repeating-linear-gradient(45deg, var(--color-accent-dim) 0 6px, var(--color-accent) 6px 12px)";
+const THROTTLE_FILL = "var(--color-accent)";
 
 /* -------------------------------------------------------------------------- */
 /*  Rolling throttle / brake trace                                            */
@@ -100,7 +99,7 @@ function VBar({
         />
       </div>
       <span
-        className="uppercase tracking-wider text-muted"
+        className="font-medium uppercase tracking-[0.12em] text-faint"
         style={{ fontSize: "clamp(0.45rem, 5cqmin, 0.6rem)" }}
       >
         {label}
@@ -122,7 +121,7 @@ function SteeringIndicator({ deg }: { deg: number | null | undefined }) {
   return (
     <div className="flex shrink-0 items-center gap-2">
       <span
-        className="shrink-0 uppercase tracking-wider text-muted"
+        className="shrink-0 font-medium uppercase tracking-[0.12em] text-faint"
         style={{ fontSize: "clamp(0.45rem, 5cqmin, 0.65rem)" }}
       >
         Steer

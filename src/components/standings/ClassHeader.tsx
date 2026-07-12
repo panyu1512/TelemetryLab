@@ -46,7 +46,7 @@ export function ClassHeader({
         >
           {group.shortName || "Class"}
         </span>
-        <span className="shrink-0 rounded bg-surface-2 px-1 text-[9px] uppercase text-muted">
+        <span className="shrink-0 rounded-full bg-surface-2 px-1.5 text-[9px] font-medium uppercase text-muted">
           {group.carCount} cars
         </span>
         <span className="shrink-0 text-[10px] text-muted">
@@ -79,9 +79,9 @@ export function ClassHeader({
         onClick={() => setClassFilter(soloed ? null : group.carClassId)}
         aria-pressed={soloed}
         title={soloed ? "Show all classes" : "Show only this class"}
-        className={`grid size-6 shrink-0 place-items-center rounded-md transition-colors ${
+        className={`grid size-6 shrink-0 place-items-center rounded-ctl transition-colors ${
           soloed
-            ? "bg-accent/15 text-accent"
+            ? "bg-primary/15 text-primary"
             : "text-muted hover:bg-surface-2 hover:text-text"
         }`}
       >

@@ -7,6 +7,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Complete UI/UX design refactor.** A new motorsport-grade design system
+  replaces the terminal-style neon look while preserving all functionality:
+  - **New token set** — graphite neutrals (`#111418` background, `#1A1E24`
+    surfaces, `#20252D` cards, `#2C323B` borders), a three-step text scale
+    (white / `#BAC2CC` secondary / `#6F7883` tertiary), and a fixed radius
+    scale (6 px controls, 10 px cards, 12 px panels).
+  - **Color always communicates meaning** — green is reserved for positive
+    status (personal best, faster, healthy), red for critical, yellow for
+    caution, purple for overall-best telemetry, and a new **blue `primary`
+    token** carries all interactive/informational chrome (selection, toggles,
+    focus, the player's row). Decorative accent usage was removed.
+  - **Inter typography** — the UI now uses the Inter variable font (bundled via
+    `@fontsource-variable/inter`) with tabular numerals for all telemetry
+    values; monospace is kept only for logs.
+  - **Shared control primitives** (`components/ui/controls.tsx`) — one
+    ToggleSwitch, Checkbox, Button, IconButton, Segmented control, input and
+    section-label implementation used across the whole manager.
+  - **Four new restrained themes** — Carbon (default), Midnight, Graphite and
+    Endurance — replacing Obsidian/Neon/Classic Dark/Midnight. Stored theme ids
+    fall back to Carbon.
+  - **Refined overlay glass** — slightly stronger frosted blur with saturation,
+    tuned surface alphas, and a soft text shadow in overlay mode so type stays
+    readable over bright track, white cars and HDR skies.
+  - **Calmer telemetry graphics** — the tyre heat scale and rev bar now use the
+    palette's status hues; the rev bar shifts green → yellow → red by zone
+    instead of a gradient.
+
 ### Added
 
 - **Enable widgets, then open them as separate windows.** The dashboard's widget

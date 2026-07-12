@@ -135,12 +135,12 @@ function CanvasToolbar({
 }) {
   return (
     <div className="flex flex-none flex-wrap items-center gap-2 border-b border-border bg-surface px-3 py-2">
-      <p className="mr-1 text-[10px] font-semibold uppercase tracking-widest text-muted">
+      <p className="mr-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">
         Preview
       </p>
 
       {/* Mode toggle */}
-      <div className="flex items-center rounded-lg border border-border bg-surface-2 p-0.5">
+      <div className="flex items-center gap-0.5 rounded-lg border border-border bg-bg p-0.5">
         <SegBtn active={mode === "single"} onClick={() => onMode("single")}>
           <Square className="size-3.5" />
           Single
@@ -161,7 +161,7 @@ function CanvasToolbar({
         {mode === "single" && (
           <>
             {/* Zoom presets */}
-            <div className="flex items-center rounded-lg border border-border bg-surface-2 p-0.5">
+            <div className="flex items-center gap-0.5 rounded-lg border border-border bg-bg p-0.5">
               {ZOOM_PRESETS.map((z) => (
                 <SegBtn key={z} active={zoom === z} onClick={() => onZoom(z)}>
                   {z === "fit" ? "Fit" : `${Math.round(z * 100)}%`}
@@ -177,7 +177,7 @@ function CanvasToolbar({
           type="button"
           onClick={onToggleFullscreen}
           title={fullscreen ? "Exit fullscreen (Esc)" : "Fullscreen preview"}
-          className="grid size-7 place-items-center rounded-lg border border-border bg-surface-2 text-muted transition-colors hover:border-border-strong hover:text-text"
+          className="grid size-7 place-items-center rounded-ctl border border-border bg-surface-2 text-muted transition-colors hover:border-border-strong hover:text-text"
         >
           {fullscreen ? (
             <Minimize2 className="size-3.5" />
@@ -213,7 +213,7 @@ function OpenWindowButton({
           ? "Close the detached overlay window"
           : "Open a detached window at the real overlay size"
       }
-      className="flex items-center gap-1.5 rounded-lg border border-border bg-surface-2 px-2.5 py-1 text-xs font-medium text-text transition-colors hover:border-border-strong"
+      className="flex items-center gap-1.5 rounded-ctl border border-border bg-surface-2 px-2.5 py-1 text-xs font-medium text-text transition-colors hover:border-border-strong"
     >
       <AppWindow className="size-3.5" />
       {isOpen ? "Close window" : "Detach"}
@@ -235,10 +235,10 @@ function SegBtn({
       type="button"
       onClick={onClick}
       className={[
-        "flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-medium transition-colors",
+        "flex items-center gap-1.5 rounded-ctl px-2 py-1 text-[11px] font-medium transition-colors",
         active
-          ? "bg-accent text-bg"
-          : "text-muted hover:bg-surface hover:text-text",
+          ? "bg-surface-2 text-text shadow-sm"
+          : "text-muted hover:text-text",
       ].join(" ")}
     >
       {children}
@@ -423,9 +423,9 @@ function Thumbnail({
       }}
       title={`Preview ${dashboard.label}`}
       className={[
-        "group flex cursor-pointer flex-col overflow-hidden rounded-xl border bg-surface text-left transition-colors",
+        "group flex cursor-pointer flex-col overflow-hidden rounded-panel border bg-surface text-left transition-colors",
         selected
-          ? "border-accent ring-1 ring-accent"
+          ? "border-primary ring-1 ring-primary/50"
           : "border-border hover:border-border-strong",
       ].join(" ")}
     >
@@ -456,8 +456,8 @@ function Thumbnail({
         </span>
         <span
           className={[
-            "rounded px-1.5 py-0.5 text-[9px] uppercase tracking-wide",
-            enabled ? "bg-accent/15 text-accent" : "bg-surface-2 text-muted",
+            "rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide",
+            enabled ? "bg-accent/15 text-accent" : "bg-surface-2 text-faint",
           ].join(" ")}
         >
           {enabled ? "On" : "Off"}

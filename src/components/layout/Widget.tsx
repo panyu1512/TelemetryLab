@@ -27,12 +27,12 @@ export function Widget({ def, data, onHide }: WidgetProps) {
   const closeWidget = useActiveOverlaysStore((s) => s.closeWidget);
 
   return (
-    <section className="overlay-card group flex h-full flex-col overflow-hidden rounded-xl border border-transparent bg-surface p-3.5 transition-colors">
+    <section className="overlay-card group flex h-full flex-col overflow-hidden rounded-card border border-border/60 bg-surface p-3.5 transition-colors">
       <header
         className={`${WIDGET_DRAG_HANDLE} mb-3 flex shrink-0 cursor-grab items-center gap-2 active:cursor-grabbing`}
       >
-        <Icon className="size-3.5 text-muted" strokeWidth={2} />
-        <h3 className="select-none text-[11px] font-medium uppercase tracking-wider text-muted">
+        <Icon className="size-3.5 text-faint" strokeWidth={2} />
+        <h3 className="select-none text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">
           {def.title}
         </h3>
 
@@ -44,7 +44,7 @@ export function Widget({ def, data, onHide }: WidgetProps) {
               type="button"
               onClick={() => closeWidget(def.id)}
               title="Close this widget's window"
-              className={`${WIDGET_NO_DRAG} grid size-6 place-items-center rounded-md text-accent transition-colors hover:bg-surface-2 hover:text-danger`}
+              className={`${WIDGET_NO_DRAG} grid size-6 place-items-center rounded-ctl text-primary transition-colors hover:bg-surface-2 hover:text-danger`}
             >
               <X className="size-3.5" />
             </button>
@@ -53,7 +53,7 @@ export function Widget({ def, data, onHide }: WidgetProps) {
               type="button"
               onClick={() => openWidget(def.id, def.title)}
               title="Open this widget in its own window"
-              className={`${WIDGET_NO_DRAG} grid size-6 place-items-center rounded-md text-muted transition-colors hover:bg-surface-2 hover:text-accent`}
+              className={`${WIDGET_NO_DRAG} grid size-6 place-items-center rounded-ctl text-muted transition-colors hover:bg-surface-2 hover:text-primary`}
             >
               <ExternalLink className="size-3.5" />
             </button>
@@ -62,7 +62,7 @@ export function Widget({ def, data, onHide }: WidgetProps) {
             type="button"
             onClick={onHide}
             title="Hide widget"
-            className={`${WIDGET_NO_DRAG} grid size-6 place-items-center rounded-md text-muted transition-colors hover:bg-surface-2 hover:text-danger`}
+            className={`${WIDGET_NO_DRAG} grid size-6 place-items-center rounded-ctl text-muted transition-colors hover:bg-surface-2 hover:text-danger`}
           >
             <EyeOff className="size-3.5" />
           </button>

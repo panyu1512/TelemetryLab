@@ -113,7 +113,7 @@ export function StandingsScreen() {
   const isEmpty = items.length === 0;
 
   return (
-    <div className="overlay-card flex h-full flex-col overflow-hidden rounded-xl border border-transparent bg-surface">
+    <div className="overlay-card flex h-full flex-col overflow-hidden rounded-card border border-border/60 bg-surface">
       <StandingsHeader />
       <div ref={scrollRef} className="relative flex-1 overflow-auto">
         {isEmpty ? (
@@ -160,8 +160,8 @@ function EmptyState({ iracingActive }: { iracingActive: boolean }) {
   return (
     <div className="grid h-full place-items-center">
       <div className="flex max-w-sm flex-col items-center gap-3 text-center">
-        <div className="grid size-12 place-items-center rounded-xl border border-border bg-surface-2">
-          <Flag className="size-6 text-muted" />
+        <div className="grid size-12 place-items-center rounded-card border border-border bg-surface-2">
+          <Flag className="size-6 text-faint" />
         </div>
         <h2 className="text-base font-semibold text-text">No field yet</h2>
         <p className="text-sm leading-relaxed text-muted">

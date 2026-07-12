@@ -6,12 +6,20 @@ export interface ThemeColors {
   surface2: string;
   border: string;
   borderStrong: string;
+  /** Positive status: personal best, faster, healthy. */
   accent: string;
   accentDim: string;
+  /** Interactive & informational: selection, focus, links. */
+  primary: string;
+  primaryDim: string;
   text: string;
+  /** Secondary text: labels, captions, supporting copy. */
   muted: string;
+  /** Tertiary / disabled text. */
+  faint: string;
   danger: string;
   warning: string;
+  /** Special telemetry: overall-best laps and sectors. */
   sectorPurple: string;
 }
 
@@ -22,81 +30,98 @@ export interface Theme {
   colors: ThemeColors;
 }
 
+/*
+ * Every theme keeps the same restrained philosophy: cool dark neutrals, white
+ * primary type, and accents reserved for status. Themes vary the temperature
+ * of the neutrals and the exact accent hues — never the meaning of a color.
+ */
 export const THEMES: readonly Theme[] = [
   {
-    id: "obsidian",
-    name: "Obsidian",
-    description: "Default · dark green accent on near-black",
+    id: "carbon",
+    name: "Carbon",
+    description: "Default · graphite neutrals, racing green + signal blue",
     colors: {
-      bg: "#0a0a0a",
-      surface: "#141414",
-      surface2: "#1b1b1b",
-      border: "#222222",
-      borderStrong: "#333333",
-      accent: "#00ff88",
-      accentDim: "#00cc6e",
-      text: "#e6e6e6",
-      muted: "#888888",
-      danger: "#ff4d4d",
-      warning: "#ffcc00",
-      sectorPurple: "#b061ff",
-    },
-  },
-  {
-    id: "neon",
-    name: "Neon",
-    description: "Electric magenta on deep navy",
-    colors: {
-      bg: "#05050f",
-      surface: "#0e0e1e",
-      surface2: "#141428",
-      border: "#1c1c38",
-      borderStrong: "#26264a",
-      accent: "#ff00ff",
-      accentDim: "#cc00cc",
-      text: "#f0f0ff",
-      muted: "#7070a0",
-      danger: "#ff3355",
-      warning: "#ffaa00",
-      sectorPurple: "#8855ff",
-    },
-  },
-  {
-    id: "classic-dark",
-    name: "Classic Dark",
-    description: "Cool sapphire accent on charcoal",
-    colors: {
-      bg: "#0a0a14",
-      surface: "#12121e",
-      surface2: "#1a1a2c",
-      border: "#22223a",
-      borderStrong: "#2a2a4a",
-      accent: "#4488ff",
-      accentDim: "#2266cc",
-      text: "#e0e4f0",
-      muted: "#7080a0",
-      danger: "#ff4444",
-      warning: "#ffaa22",
-      sectorPurple: "#aa55ff",
+      bg: "#111418",
+      surface: "#1a1e24",
+      surface2: "#20252d",
+      border: "#2c323b",
+      borderStrong: "#3a424d",
+      accent: "#2fd67f",
+      accentDim: "#1fa862",
+      primary: "#4d9cf8",
+      primaryDim: "#2f7cd6",
+      text: "#ffffff",
+      muted: "#bac2cc",
+      faint: "#6f7883",
+      danger: "#f4564f",
+      warning: "#f0b53c",
+      sectorPurple: "#b07ef7",
     },
   },
   {
     id: "midnight",
     name: "Midnight",
-    description: "Warm amber on pitch black",
+    description: "Deep blue-black for night racing",
     colors: {
-      bg: "#080808",
-      surface: "#111111",
-      surface2: "#181818",
-      border: "#202020",
-      borderStrong: "#303030",
-      accent: "#ff8800",
-      accentDim: "#cc6600",
-      text: "#ede8e0",
-      muted: "#887868",
-      danger: "#ff4422",
-      warning: "#ffcc00",
-      sectorPurple: "#cc44ff",
+      bg: "#0c0f16",
+      surface: "#131826",
+      surface2: "#1a2030",
+      border: "#252d40",
+      borderStrong: "#323c52",
+      accent: "#34d88a",
+      accentDim: "#23a868",
+      primary: "#5ea2ff",
+      primaryDim: "#3d82e0",
+      text: "#f2f6ff",
+      muted: "#aab6c8",
+      faint: "#68748a",
+      danger: "#f45b5b",
+      warning: "#efb84a",
+      sectorPurple: "#a98cf8",
+    },
+  },
+  {
+    id: "graphite",
+    name: "Graphite",
+    description: "Pure neutral grays · minimum color, maximum focus",
+    colors: {
+      bg: "#101010",
+      surface: "#181818",
+      surface2: "#1f1f1f",
+      border: "#2b2b2b",
+      borderStrong: "#3a3a3a",
+      accent: "#3ecf83",
+      accentDim: "#2aa265",
+      primary: "#8f98a3",
+      primaryDim: "#6f7883",
+      text: "#ffffff",
+      muted: "#b8bcc2",
+      faint: "#6e7278",
+      danger: "#ef5350",
+      warning: "#e6ae3d",
+      sectorPurple: "#ab84f0",
+    },
+  },
+  {
+    id: "endurance",
+    name: "Endurance",
+    description: "Warm graphite with amber accents for long stints",
+    colors: {
+      bg: "#131211",
+      surface: "#1c1a18",
+      surface2: "#242120",
+      border: "#322e2b",
+      borderStrong: "#423d39",
+      accent: "#3fd487",
+      accentDim: "#2ba366",
+      primary: "#e8a33d",
+      primaryDim: "#c4842a",
+      text: "#fdfaf6",
+      muted: "#c6bfb6",
+      faint: "#7d766e",
+      danger: "#f25a4e",
+      warning: "#f0b53c",
+      sectorPurple: "#b78bf5",
     },
   },
 ] as const;
@@ -113,8 +138,11 @@ const THEME_PROPS = [
   "--color-border-strong",
   "--color-accent",
   "--color-accent-dim",
+  "--color-primary",
+  "--color-primary-dim",
   "--color-text",
   "--color-muted",
+  "--color-faint",
   "--color-danger",
   "--color-warning",
   "--color-sector-purple",
@@ -162,10 +190,10 @@ export function applyTheme(
   const c = theme.colors;
   // Backgrounds/surfaces: solid normally, transparent/translucent in overlay.
   const bg = overlay ? "transparent" : c.bg;
-  const surface = overlay ? hexToRgba(c.surface, 0.62) : c.surface;
-  const surface2 = overlay ? hexToRgba(c.surface2, 0.62) : c.surface2;
-  const border = overlay ? hexToRgba(c.border, 0.45) : c.border;
-  const borderStrong = overlay ? hexToRgba(c.borderStrong, 0.45) : c.borderStrong;
+  const surface = overlay ? hexToRgba(c.surface, 0.66) : c.surface;
+  const surface2 = overlay ? hexToRgba(c.surface2, 0.66) : c.surface2;
+  const border = overlay ? hexToRgba(c.border, 0.5) : c.border;
+  const borderStrong = overlay ? hexToRgba(c.borderStrong, 0.5) : c.borderStrong;
 
   el.style.setProperty("--color-bg", bg);
   el.style.setProperty("--color-surface", surface);
@@ -174,8 +202,11 @@ export function applyTheme(
   el.style.setProperty("--color-border-strong", borderStrong);
   el.style.setProperty("--color-accent", c.accent);
   el.style.setProperty("--color-accent-dim", c.accentDim);
+  el.style.setProperty("--color-primary", c.primary);
+  el.style.setProperty("--color-primary-dim", c.primaryDim);
   el.style.setProperty("--color-text", c.text);
   el.style.setProperty("--color-muted", c.muted);
+  el.style.setProperty("--color-faint", c.faint);
   el.style.setProperty("--color-danger", c.danger);
   el.style.setProperty("--color-warning", c.warning);
   el.style.setProperty("--color-sector-purple", c.sectorPurple);
