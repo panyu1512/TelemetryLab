@@ -35,8 +35,9 @@ export function Widget({ def, data, onHide }: WidgetProps) {
         <h3 className="widget-title select-none truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">
           {def.title}
         </h3>
+        <span className="header-rule" aria-hidden />
 
-        <div className="ml-auto flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
+        <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
           {/* Once this widget has its own window, the only action is to close
               it again — not to open a second one. */}
           {isOpen ? (

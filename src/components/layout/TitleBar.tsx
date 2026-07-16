@@ -40,8 +40,17 @@ export function TitleBar({ status }: { status: ConnectionStatus }) {
   return (
     <header
       data-tauri-drag-region
-      className="flex h-11 flex-none items-center gap-3 border-b border-border bg-surface px-4"
+      className="relative flex h-11 flex-none items-center gap-3 border-b border-border bg-surface px-4"
     >
+      {/* Signature speed stripe: the brand mark's two hues, racing off-edge. */}
+      <span
+        aria-hidden
+        className="absolute bottom-[-1px] left-0 h-px w-44"
+        style={{
+          background:
+            "linear-gradient(90deg, var(--color-primary), var(--color-accent) 65%, transparent)",
+        }}
+      />
       {/* Brand */}
       <div
         data-tauri-drag-region

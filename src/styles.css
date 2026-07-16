@@ -165,6 +165,40 @@ a {
     border-color 220ms ease;
 }
 
+/* --- signature details ----------------------------------------------------- */
+
+/*
+ * Blueprint dot grid: an ultra-subtle technical texture for the manager's
+ * chrome (never for overlays over the game). Sits under panels and cards.
+ */
+.bg-blueprint {
+  background-image: radial-gradient(
+    rgb(255 255 255 / 0.032) 1px,
+    transparent 1px
+  );
+  background-size: 22px 22px;
+}
+
+/*
+ * Glass top-light: a hairline highlight along a card's top edge that makes
+ * the surface read as machined glass. Only for framed cards — real overlay
+ * windows are frameless, so the strip rule below removes it there.
+ */
+.overlay-card {
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05);
+}
+
+/*
+ * Header rule: a hairline that fades out to the right, finishing a widget or
+ * section title the way timing graphics underline a caption.
+ */
+.header-rule {
+  height: 1px;
+  flex: 1 1 auto;
+  min-width: 0.75rem;
+  background: linear-gradient(90deg, var(--color-border), transparent);
+}
+
 /* --- standings / timing screen ------------------------------------------- */
 
 /* Brand icon: the SVG child fills the container height and auto-sizes its
@@ -263,6 +297,7 @@ html.overlay-mode .overlay-card,
   background: transparent !important;
   border-color: transparent !important;
   border-radius: 0 !important;
+  box-shadow: none !important;
 }
 
 /*

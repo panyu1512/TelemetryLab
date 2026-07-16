@@ -5,6 +5,7 @@ import { Bar, Gauge } from "./primitives";
 
 const SHIFT_LIGHTS = 8;
 
+/** A rev strip of round LEDs, like a wheel display: green → yellow → red. */
 function ShiftLights({ frac }: { frac: number }) {
   const lit = Math.round(frac * SHIFT_LIGHTS);
   const atRedline = frac >= 0.97;
@@ -24,11 +25,13 @@ function ShiftLights({ frac }: { frac: number }) {
         return (
           <span
             key={i}
-            className="h-1.5 min-w-0 flex-1 rounded-sm transition-colors"
+            className="aspect-square min-w-0 flex-1 rounded-full transition-colors"
             style={{
-              maxWidth: 12,
+              maxWidth: 11,
               background: on ? color : "var(--color-surface-2)",
-              boxShadow: on ? `0 0 6px ${color}` : undefined,
+              boxShadow: on
+                ? `0 0 5px ${color}`
+                : "inset 0 0 0 1px var(--color-border)",
             }}
           />
         );

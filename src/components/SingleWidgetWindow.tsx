@@ -63,6 +63,7 @@ export function SingleWidgetWindow({ id }: { id: string }) {
           <h3 className="widget-title select-none truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">
             {def.title}
           </h3>
+          <span className="header-rule" aria-hidden />
         </header>
         <div
           className="min-h-0 flex-1 overflow-hidden"
