@@ -638,7 +638,7 @@ function Sidebar({
   const anyWidgetOpen = openWindows.some((w) => w.kind === "widget");
 
   return (
-    <aside className="flex w-56 flex-none flex-col border-r border-border bg-bg">
+    <aside className="flex w-56 flex-none flex-col border-r border-border">
       {/* Overlay catalog */}
       <div className="flex-1 overflow-y-auto p-3">
         <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">

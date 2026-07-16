@@ -16,7 +16,7 @@ export function FuelWidget({ data }: { data: TelemetryData | null }) {
           : "var(--color-text)";
 
   return (
-    <div className="flex h-full flex-col justify-center gap-2">
+    <div className="flex h-full flex-col justify-center gap-1.5">
       <div className="flex items-start justify-between">
         <StatTile value={num(data?.fuelLevel, 1)} unit="L" label="In tank" />
         <StatTile
@@ -30,7 +30,7 @@ export function FuelWidget({ data }: { data: TelemetryData | null }) {
       <Bar value={data?.fuelLevelPct} />
       <div
         className="flex items-center justify-between gap-1 text-muted"
-        style={{ fontSize: "clamp(0.55rem, 6cqmin, 0.75rem)" }}
+        style={{ fontSize: "clamp(0.5rem, 6cqmin, 0.75rem)" }}
       >
         <span className="tnum">{pct(data?.fuelLevelPct)}%</span>
         <span className="tnum truncate">

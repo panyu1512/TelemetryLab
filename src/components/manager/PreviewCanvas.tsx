@@ -59,6 +59,25 @@ type Zoom = 0.5 | 0.75 | 1 | "fit";
 
 const ZOOM_PRESETS: Zoom[] = [0.5, 0.75, 1, "fit"];
 
+/**
+ * Stand-ins for what's behind a live overlay. Checker shows transparency;
+ * the other two approximate on-track scenes (dark cockpit/asphalt and a
+ * bright, hazy day) so readability can be judged before going in-sim.
+ */
+type Backdrop = "checker" | "asphalt" | "daylight";
+
+const BACKDROPS: Record<Backdrop, { label: string; css: string }> = {
+  checker: { label: "Checker", css: "" },
+  asphalt: {
+    label: "Asphalt",
+    css: "linear-gradient(165deg, #3e434a 0%, #2b2e33 40%, #1a1c1f 100%)",
+  },
+  daylight: {
+    label: "Daylight",
+    css: "linear-gradient(180deg, #c3d2e4 0%, #a8b8c6 38%, #7b8577 62%, #565c50 100%)",
+  },
+};
+
 interface PreviewCanvasProps {
   /** The overlay focused in Single mode (driven by the sidebar selection). */
   overlayId: string;
@@ -69,6 +88,7 @@ interface PreviewCanvasProps {
 export function PreviewCanvas({ overlayId, onSelect }: PreviewCanvasProps) {
   const [mode, setMode] = useState<Mode>("single");
   const [zoom, setZoom] = useState<Zoom>("fit");
+  const [backdrop, setBackdrop] = useState<Backdrop>("checker");
   const [fullscreen, setFullscreen] = useState(false);
 
   const dashboard = getDashboard(overlayId);
@@ -94,13 +114,20 @@ export function PreviewCanvas({ overlayId, onSelect }: PreviewCanvasProps) {
         onMode={setMode}
         zoom={zoom}
         onZoom={setZoom}
+        backdrop={backdrop}
+        onBackdrop={setBackdrop}
         fullscreen={fullscreen}
         onToggleFullscreen={() => setFullscreen((f) => !f)}
         dashboard={dashboard}
       />
 
       {mode === "single" ? (
-        <SingleView key={overlayId} overlayId={overlayId} zoom={zoom} />
+        <SingleView
+          key={overlayId}
+          overlayId={overlayId}
+          zoom={zoom}
+          backdrop={backdrop}
+        />
       ) : (
         <GridView
           selectedId={overlayId}
@@ -121,6 +148,8 @@ function CanvasToolbar({
   onMode,
   zoom,
   onZoom,
+  backdrop,
+  onBackdrop,
   fullscreen,
   onToggleFullscreen,
   dashboard,
@@ -129,6 +158,8 @@ function CanvasToolbar({
   onMode: (m: Mode) => void;
   zoom: Zoom;
   onZoom: (z: Zoom) => void;
+  backdrop: Backdrop;
+  onBackdrop: (b: Backdrop) => void;
   fullscreen: boolean;
   onToggleFullscreen: () => void;
   dashboard: DashboardDef;
@@ -160,6 +191,18 @@ function CanvasToolbar({
       <div className="ml-auto flex items-center gap-2">
         {mode === "single" && (
           <>
+            {/* Backdrop: judge readability against different scenes */}
+            <div className="flex items-center gap-0.5 rounded-lg border border-border bg-bg p-0.5">
+              {(Object.keys(BACKDROPS) as Backdrop[]).map((b) => (
+                <SegBtn
+                  key={b}
+                  active={backdrop === b}
+                  onClick={() => onBackdrop(b)}
+                >
+                  {BACKDROPS[b].label}
+                </SegBtn>
+              ))}
+            </div>
             {/* Zoom presets */}
             <div className="flex items-center gap-0.5 rounded-lg border border-border bg-bg p-0.5">
               {ZOOM_PRESETS.map((z) => (
@@ -303,7 +346,15 @@ function useOverlaySize(): [Size, (needed: Size) => void] {
   return [size, grow];
 }
 
-function SingleView({ overlayId, zoom }: { overlayId: string; zoom: Zoom }) {
+function SingleView({
+  overlayId,
+  zoom,
+  backdrop,
+}: {
+  overlayId: string;
+  zoom: Zoom;
+  backdrop: Backdrop;
+}) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const [viewport, setViewport] = useState({ w: 0, h: 0 });
   const [size, grow] = useOverlaySize();
@@ -335,12 +386,16 @@ function SingleView({ overlayId, zoom }: { overlayId: string; zoom: Zoom }) {
       className="min-h-0 flex-1 overflow-auto"
       style={{ background: CANVAS_BG }}
     >
-      {/* Grid backdrop + centering wrapper. `min-h/w-full` centers a small
+      {/* Backdrop + centering wrapper. `min-h/w-full` centers a small
           overlay; when it's larger than the viewport the wrapper grows to the
           overlay's size so the top-left stays reachable while scrolling. */}
       <div
         className="flex min-h-full min-w-full items-center justify-center p-6"
-        style={{ background: CHECKER, backgroundSize: "18px 18px" }}
+        style={
+          backdrop === "checker"
+            ? { background: CHECKER, backgroundSize: "18px 18px" }
+            : { background: BACKDROPS[backdrop].css }
+        }
       >
         {scale > 0 && (
           <div
@@ -565,11 +620,12 @@ function RealOverlay({
     );
   }
 
-  // The widget grid grows to its natural height, so nothing is clipped; the
-  // parent measures that height and fits/scrolls it.
+  // The widget grid is responsive: it scales its rows to fill the stage
+  // exactly like a real overlay window fills its bounds, so the preview is
+  // true-to-life with no dead space or clipped bottom.
   return (
-    <div className="w-full p-2">
-      <DashboardGrid layout={layout} data={data} autoHeight />
+    <div className="w-full overflow-hidden p-2" style={{ height }}>
+      <DashboardGrid layout={layout} data={data} />
     </div>
   );
 }

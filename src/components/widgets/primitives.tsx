@@ -23,13 +23,13 @@ interface StatTileProps {
  * `container-type` — the widget body sets it (see Widget.tsx).
  */
 const VALUE_FONT: Record<NonNullable<StatTileProps["size"]>, string> = {
-  md: "clamp(0.9rem, 13cqmin, 1.6rem)",
-  lg: "clamp(1rem, 16cqmin, 2.1rem)",
-  xl: "clamp(1.1rem, 20cqmin, 2.8rem)",
+  md: "clamp(0.72rem, 13cqmin, 1.6rem)",
+  lg: "clamp(0.8rem, 16cqmin, 2.1rem)",
+  xl: "clamp(0.9rem, 20cqmin, 2.8rem)",
 };
 
-const LABEL_FONT = "clamp(0.5rem, 6cqmin, 0.65rem)";
-const UNIT_FONT = "clamp(0.55rem, 6cqmin, 0.75rem)";
+const LABEL_FONT = "clamp(0.45rem, 6cqmin, 0.65rem)";
+const UNIT_FONT = "clamp(0.5rem, 6cqmin, 0.75rem)";
 
 const ALIGN = {
   start: "items-start text-left",
@@ -50,7 +50,7 @@ export function StatTile({
     <div className={`flex min-w-0 flex-col gap-0.5 ${ALIGN[align]}`}>
       <div className="flex max-w-full items-baseline gap-1">
         <span
-          className={`tnum truncate font-semibold leading-none ${color ? "" : "text-text"}`}
+          className={`tnum truncate font-semibold leading-none tracking-tight ${color ? "" : "text-text"}`}
           style={{ fontSize: VALUE_FONT[size], color }}
         >
           {value}
@@ -155,6 +155,9 @@ const GAUGE_UNIT_STYLE: CSSProperties = {
  * size (give it a square box). The centered readout scales with the widget via
  * container-query units.
  */
+/** Major graduation marks along the arc — what makes it read as an instrument. */
+const GAUGE_TICKS = 10;
+
 export function Gauge({
   value,
   max,
@@ -171,6 +174,8 @@ export function Gauge({
       : Math.max(0, Math.min(1, (value - min) / (max - min)));
   const c = 50;
   const r = (100 - thickness) / 2;
+  const tickOuter = r - thickness / 2 - 2;
+  const tickInner = tickOuter - 4.5;
 
   return (
     <div className="relative h-full w-full">
@@ -179,6 +184,24 @@ export function Gauge({
         preserveAspectRatio="xMidYMid meet"
         className="absolute inset-0 h-full w-full"
       >
+        {/* Graduations, inside the arc */}
+        {Array.from({ length: GAUGE_TICKS }).map((_, i) => {
+          const a = GAUGE_START + (GAUGE_SPAN * i) / (GAUGE_TICKS - 1);
+          const p0 = polar(c, c, tickInner, a);
+          const p1 = polar(c, c, tickOuter, a);
+          return (
+            <line
+              key={i}
+              x1={p0.x}
+              y1={p0.y}
+              x2={p1.x}
+              y2={p1.y}
+              stroke="var(--color-border-strong)"
+              strokeWidth={1.2}
+              strokeLinecap="round"
+            />
+          );
+        })}
         <path
           d={arcPath(c, c, r, GAUGE_START, GAUGE_START + GAUGE_SPAN)}
           fill="none"

@@ -48,7 +48,7 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-full flex-col bg-bg text-text">
+    <div className="bg-blueprint flex h-full flex-col bg-bg text-text">
       <TitleBar status={status} />
       <OverlayManager />
     </div>
