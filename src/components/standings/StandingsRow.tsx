@@ -8,6 +8,7 @@ import {
   ROW_H,
   type ColumnVisibility,
 } from "./constants";
+import { CountryFlag } from "../ui/CountryFlag";
 import {
   BrandIcon,
   GapCell,
@@ -106,13 +107,29 @@ function StandingsRowInner({
           </div>
         )}
 
-        {/* driver + brand */}
-        <div className="flex min-w-0 items-center gap-1.5">
+        {/* country flag */}
+        {isVisible("country") && (
+          <div className="flex justify-center">
+            <CountryFlag
+              code={driver?.countryCode ?? ""}
+              name={driver?.countryName}
+            />
+          </div>
+        )}
+
+        {/* driver */}
+        <div className="flex min-w-0 items-center">
           <span className="truncate text-[12px] text-text">
             {driver?.userName ?? `Car ${carIdx}`}
           </span>
-          <BrandIcon make={driver?.carMake ?? ""} />
         </div>
+
+        {/* car brand */}
+        {isVisible("brand") && (
+          <div className="flex justify-center">
+            <BrandIcon make={driver?.carMake ?? ""} />
+          </div>
+        )}
 
         {/* license + SR */}
         {isVisible("license") && (

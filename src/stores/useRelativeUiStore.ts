@@ -1,0 +1,110 @@
+import { create } from "zustand";
+import { broadcast, subscribe } from "../lib/windowBus";
+
+/**
+ * View preferences for the relative screen, mirroring how
+ * {@link useStandingsUiStore} works: presentation choices only, persisted to
+ * localStorage so they survive reloads, and broadcast over the window bus so
+ * changing an option in the manager updates an open relative overlay window
+ * live (and vice-versa).
+ */
+
+export const RELATIVE_WINDOW_MIN = 3;
+export const RELATIVE_WINDOW_MAX = 10;
+
+export interface RelativeUiState {
+  /** Show the car-brand icon next to each driver. */
+  showBrand: boolean;
+  /** Show each driver's country flag. */
+  showCountry: boolean;
+  /** Cars shown per side (ahead/behind). */
+  windowSize: number;
+  setShowBrand: (v: boolean) => void;
+  setShowCountry: (v: boolean) => void;
+  setWindowSize: (n: number) => void;
+}
+
+const STORAGE_KEY = "telemetrylab.relative.ui.v1";
+
+interface Persisted {
+  showBrand: boolean;
+  showCountry: boolean;
+  windowSize: number;
+}
+
+const DEFAULTS: Persisted = {
+  showBrand: true,
+  showCountry: true,
+  windowSize: 5,
+};
+
+function clampWindow(n: number): number {
+  return Math.max(RELATIVE_WINDOW_MIN, Math.min(RELATIVE_WINDOW_MAX, n));
+}
+
+function load(): Persisted {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return DEFAULTS;
+    const parsed = JSON.parse(raw) as Partial<Persisted>;
+    return {
+      ...DEFAULTS,
+      ...parsed,
+      windowSize: clampWindow(parsed.windowSize ?? DEFAULTS.windowSize),
+    };
+  } catch {
+    return DEFAULTS;
+  }
+}
+
+function persist(state: Persisted): void {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch {
+    // Storage may be unavailable (private mode); prefs just won't persist.
+  }
+}
+
+/** True while applying a remote (bus) update, so we don't echo it back out. */
+let applyingRemote = false;
+
+export const useRelativeUiStore = create<RelativeUiState>((set, get) => {
+  const save = () => {
+    const { showBrand, showCountry, windowSize } = get();
+    const snapshot: Persisted = { showBrand, showCountry, windowSize };
+    persist(snapshot);
+    if (!applyingRemote) broadcast("relative-ui:changed", snapshot);
+  };
+  return {
+    ...load(),
+    setShowBrand: (showBrand) => {
+      set({ showBrand });
+      save();
+    },
+    setShowCountry: (showCountry) => {
+      set({ showCountry });
+      save();
+    },
+    setWindowSize: (n) => {
+      set({ windowSize: clampWindow(n) });
+      save();
+    },
+  };
+});
+
+// Adopt relative-view changes made in another window (e.g. the manager) so an
+// open relative overlay updates live.
+subscribe("relative-ui:changed", (payload) => {
+  const remote = payload as Partial<Persisted> | undefined;
+  if (!remote || typeof remote !== "object") return;
+  applyingRemote = true;
+  try {
+    useRelativeUiStore.setState({
+      showBrand: remote.showBrand ?? DEFAULTS.showBrand,
+      showCountry: remote.showCountry ?? DEFAULTS.showCountry,
+      windowSize: clampWindow(remote.windowSize ?? DEFAULTS.windowSize),
+    });
+  } finally {
+    applyingRemote = false;
+  }
+});

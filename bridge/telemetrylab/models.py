@@ -48,6 +48,8 @@ class DriverEntry:
     license_color: str  # hex "#rrggbb" for badge tinting
     car_class_color: str  # hex "#rrggbb" for multi-class grouping
     club_name: str
+    country_code: str  # ISO alpha-3 from FlairShortName (e.g. "ESP"), "" if unset
+    country_name: str  # e.g. "Spain", from FlairName
     division: int
     incident_count: int
     is_pace_car: bool
@@ -77,6 +79,8 @@ class DriverEntry:
             "licenseColor": self.license_color,
             "carClassColor": self.car_class_color,
             "clubName": self.club_name,
+            "countryCode": self.country_code,
+            "countryName": self.country_name,
             "division": self.division,
             "incidentCount": self.incident_count,
             "isPaceCar": self.is_pace_car,

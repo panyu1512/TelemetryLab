@@ -10,6 +10,7 @@ import {
   CLASS_HEADER_H,
   COL_HEADER_H,
   ROW_H,
+  fitColumns,
   tableMinWidth,
   type ColumnVisibility,
 } from "./constants";
@@ -45,16 +46,10 @@ export function StandingsScreen() {
   const { items, totalHeight } = useStandingsLayout();
   const classRelative = grouping === "class";
 
-  // Derive the visibility predicate from the column map so its identity changes
-  // when columns change — that re-renders the (memoized) header and rows.
-  const isVisible = useMemo<ColumnVisibility>(
-    () => (id) => columns[id] !== false,
-    [columns]
-  );
-
   const scrollRef = useRef<HTMLDivElement>(null);
   const [scrollTop, setScrollTop] = useState(0);
   const [viewH, setViewH] = useState(600);
+  const [viewW, setViewW] = useState(0);
 
   // Track scroll + viewport size for windowing (rAF-coalesced).
   useEffect(() => {
@@ -65,16 +60,29 @@ export function StandingsScreen() {
       cancelAnimationFrame(raf);
       raf = requestAnimationFrame(() => setScrollTop(el.scrollTop));
     };
-    const ro = new ResizeObserver(([e]) => setViewH(e.contentRect.height));
+    const ro = new ResizeObserver(([e]) => {
+      setViewH(e.contentRect.height);
+      setViewW(e.contentRect.width);
+    });
     el.addEventListener("scroll", onScroll, { passive: true });
     ro.observe(el);
     setViewH(el.clientHeight);
+    setViewW(el.clientWidth);
     return () => {
       el.removeEventListener("scroll", onScroll);
       ro.disconnect();
       cancelAnimationFrame(raf);
     };
   }, []);
+
+  // Derive the visibility predicate from the column map (identity changes when
+  // columns change — that re-renders the memoized header and rows), then narrow
+  // it to what actually fits the window so the table adapts instead of always
+  // growing a horizontal scrollbar.
+  const isVisible = useMemo<ColumnVisibility>(() => {
+    const chosen: ColumnVisibility = (id) => columns[id] !== false;
+    return fitColumns(viewW, meta.sectorCount, chosen);
+  }, [columns, viewW, meta.sectorCount]);
 
   const classById = useMemo(
     () => new Map(classes.map((c) => [c.carClassId, c])),

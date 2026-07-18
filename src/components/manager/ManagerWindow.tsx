@@ -29,6 +29,7 @@ import { VisibilityPanel } from "./VisibilityPanel";
 import { WindowPanel } from "./WindowPanel";
 import { PreviewCanvas } from "./PreviewCanvas";
 import { StandingsColumnsPanel } from "./StandingsColumnsPanel";
+import { RelativeOptionsPanel } from "./RelativeOptionsPanel";
 import { GlobalSettingsPanel } from "./GlobalSettingsPanel";
 import { DebugPanel } from "./DebugPanel";
 import { Button, IconButton, ToggleSwitch } from "../ui/controls";
@@ -204,6 +205,15 @@ function OverlayConfigPage({ overlayId }: { overlayId: string }) {
           description="Choose which timing columns the standings table shows."
         >
           <StandingsColumnsPanel />
+        </ConfigSection>
+      )}
+
+      {overlayId === "relative" && (
+        <ConfigSection
+          title="Options"
+          description="What each row of the relative shows."
+        >
+          <RelativeOptionsPanel />
         </ConfigSection>
       )}
 

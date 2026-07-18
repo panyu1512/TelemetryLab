@@ -68,6 +68,26 @@ _FIRST = [
     "Leo",
     "Mia",
 ]
+# (FlairName, FlairShortName) pairs, mirroring iRacing's driver flair fields.
+_COUNTRIES = [
+    ("Spain", "ESP"),
+    ("United Kingdom", "GBR"),
+    ("Portugal", "PRT"),
+    ("Italy", "ITA"),
+    ("Sweden", "SWE"),
+    ("Japan", "JPN"),
+    ("Germany", "DEU"),
+    ("Egypt", "EGY"),
+    ("Mexico", "MEX"),
+    ("France", "FRA"),
+    ("Netherlands", "NLD"),
+    ("United States", "USA"),
+    ("Brazil", "BRA"),
+    ("Australia", "AUS"),
+    ("Finland", "FIN"),
+    ("Belgium", "BEL"),
+]
+
 _LAST = [
     "Ferrer",
     "Farrow",
@@ -96,6 +116,7 @@ class MockCar:
         self.user_id = 100000 + idx
         self.name = f"{rng.choice(_FIRST)} {rng.choice(_LAST)}"
         self.is_ai = idx != 0 and rng.random() < 0.5
+        self.country_name, self.country_code = rng.choice(_COUNTRIES)
         self.irating = max(600, int(rng.gauss(2200 if klass is CLASS_GT3 else 1600, 700)))
         sr = round(rng.uniform(1.5, 4.99), 2)
         grp = "A" if sr > 4 else "B" if sr > 3 else "C" if sr > 2 else "D"
@@ -137,6 +158,8 @@ class MockCar:
             "LicColor": 0x00FF88,
             "IsSpectator": 0,
             "ClubName": "Iberia",
+            "FlairName": self.country_name,
+            "FlairShortName": self.country_code,
             "DivisionName": str((self.idx % 5) + 1),
             "CarIsPaceCar": 0,
             "CarIsAI": 1 if self.is_ai else 0,

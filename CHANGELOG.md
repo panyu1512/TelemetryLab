@@ -7,7 +7,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Driver country flags.** The bridge now forwards each driver's country flair
+  (`FlairName`/`FlairShortName`) as `countryName`/`countryCode`, and the
+  standings and relative overlays can show a country flag (bundled SVG flags,
+  so they render on Windows too) next to every driver — toggleable per overlay.
+- **Car-brand toggles.** The manufacturer icon is now its own standings column
+  and a relative option, both of which can be enabled/disabled (standings:
+  *Columns* panel; relative: new *Options* panel in the manager, which also
+  hosts a persisted "cars per side" setting).
+
 ### Changed
+
+- **Responsive standings & relative tables.** Both overlays now measure their
+  window and drop optional columns in priority order when space runs out, so a
+  narrow overlay shows a clean pos/driver/gap core instead of growing a
+  horizontal scrollbar. User-hidden columns are always respected.
+- **Bigger dashboard previews.** The manager's preview for the widget dashboard
+  now renders every enabled widget as its own full-width card, stacked one
+  above the other — matching the real one-window-per-widget model — instead of
+  a miniature grid.
 
 - **Complete UI/UX design refactor.** A new motorsport-grade design system
   replaces the terminal-style neon look while preserving all functionality:

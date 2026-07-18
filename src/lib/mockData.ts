@@ -31,6 +31,21 @@ const CLASS_GT4 = { id: 85, short: "GT4", color: "#4d9dff", baseLap: 150 };
 
 const FIRST = ["Kike", "Matt", "Ana", "Luca", "Sven", "Yuki", "Pia", "Omar", "Nils", "Rui", "Ivo", "Zoe"];
 const LAST = ["Ferrer", "Farrow", "Silva", "Rossi", "Berg", "Tanaka", "Costa", "Vega", "Moreau", "Klein", "Novak", "Reyes"];
+/** [name, alpha-3 code] pairs, aligned with FIRST/LAST by index. */
+const COUNTRIES: Array<[string, string]> = [
+  ["Spain", "ESP"],
+  ["United Kingdom", "GBR"],
+  ["Portugal", "PRT"],
+  ["Italy", "ITA"],
+  ["Sweden", "SWE"],
+  ["Japan", "JPN"],
+  ["Germany", "DEU"],
+  ["Egypt", "EGY"],
+  ["France", "FRA"],
+  ["Netherlands", "NLD"],
+  ["United States", "USA"],
+  ["Brazil", "BRA"],
+];
 
 interface MockCar {
   idx: number;
@@ -143,7 +158,7 @@ function driverEntry(car: MockCar): DriverEntry {
     carClassId: car.klass.id,
     carClassShortName: car.klass.short,
     carPath: car.klass.short.toLowerCase(),
-    carMake: "",
+    carMake: car.klass === CLASS_GT3 ? "Audi" : "McLaren",
     carModel: car.klass === CLASS_GT3 ? "Audi R8 LMS EVO II" : "McLaren 570S GT4",
     carScreenName: car.klass === CLASS_GT3 ? "Audi R8 LMS EVO II" : "McLaren 570S GT4",
     iRating: car.iRating,
@@ -155,6 +170,8 @@ function driverEntry(car: MockCar): DriverEntry {
     licenseColor: "#00ff88",
     carClassColor: car.klass.color,
     clubName: "Iberia",
+    countryName: COUNTRIES[car.idx % COUNTRIES.length][0],
+    countryCode: COUNTRIES[car.idx % COUNTRIES.length][1],
     division: (car.idx % 5) + 1,
     incidentCount: car.idx % 4,
     isPaceCar: false,
