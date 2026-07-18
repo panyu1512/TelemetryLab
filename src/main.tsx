@@ -5,6 +5,7 @@ import { OverlayWindow } from "./components/OverlayWindow";
 import { SingleWidgetWindow } from "./components/SingleWidgetWindow";
 import { getOverlayRoute, getWidgetRoute } from "./lib/overlayWindows";
 import "@fontsource-variable/inter";
+import "flag-icons/css/flag-icons.min.css";
 import "./styles.css";
 
 // `?widget=<id>` renders a single telemetry widget; `?overlay=<id>` renders one

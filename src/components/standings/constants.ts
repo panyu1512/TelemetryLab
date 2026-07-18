@@ -17,7 +17,9 @@ export type StandingsColumnId =
   | "change"
   | "pos"
   | "num"
+  | "country"
   | "driver"
+  | "brand"
   | "license"
   | "irating"
   | "gap"
@@ -53,7 +55,9 @@ export const STANDINGS_COLUMNS: readonly ColumnDef[] = [
   { id: "change", label: "Δ", name: "Position change", width: "1.6rem", px: 26, align: "center" },
   { id: "pos", label: "Pos", name: "Position", width: "2rem", px: 32, align: "center", always: true },
   { id: "num", label: "#", name: "Car number", width: "2.4rem", px: 38, align: "center" },
-  { id: "driver", label: "Driver", name: "Driver", width: "minmax(9rem, 1fr)", px: 144, align: "left", always: true },
+  { id: "country", label: "Nat", name: "Country flag", width: "1.6rem", px: 26, align: "center" },
+  { id: "driver", label: "Driver", name: "Driver", width: "minmax(8rem, 1fr)", px: 128, align: "left", always: true },
+  { id: "brand", label: "Car", name: "Car brand", width: "1.7rem", px: 27, align: "center" },
   { id: "license", label: "Lic", name: "License / SR", width: "3.2rem", px: 51, align: "center" },
   { id: "irating", label: "iR", name: "iRating", width: "4.4rem", px: 70, align: "right" },
   { id: "gap", label: "Gap", name: "Gap to leader", width: "3.4rem", px: 54, align: "right" },
@@ -109,11 +113,49 @@ export function tableMinWidth(
   sectorCount: number,
   isVisible: ColumnVisibility
 ): number {
-  const px = visibleColumns(sectorCount, isVisible).reduce(
-    (sum, c) => sum + c.col.px,
-    0
-  );
-  return px + 16;
+  const cols = visibleColumns(sectorCount, isVisible);
+  const px = cols.reduce((sum, c) => sum + c.col.px, 0);
+  // + the 4px inter-column gaps (gap-x-1) and the row's horizontal padding.
+  return px + Math.max(0, cols.length - 1) * 4 + 16;
+}
+
+/**
+ * Auto-hide order (first dropped → last) when the window is too narrow for the
+ * user's chosen columns. Position, driver, interval, last lap and status are
+ * never auto-dropped — that set is the smallest useful timing table.
+ */
+const RESPONSIVE_DROP_ORDER: StandingsColumnId[] = [
+  "sectors",
+  "change",
+  "tire",
+  "license",
+  "irating",
+  "country",
+  "num",
+  "brand",
+  "best",
+  "gap",
+];
+
+/**
+ * Narrow the visible-column set to what fits in `width` CSS pixels, dropping
+ * optional columns in {@link RESPONSIVE_DROP_ORDER} until the minimum table
+ * width fits (or there is nothing left to drop). The user's own hidden columns
+ * stay hidden; a zero/unknown width leaves the set untouched.
+ */
+export function fitColumns(
+  width: number,
+  sectorCount: number,
+  isVisible: ColumnVisibility
+): ColumnVisibility {
+  if (width <= 0) return isVisible;
+  const dropped = new Set<StandingsColumnId>();
+  const effective: ColumnVisibility = (id) => isVisible(id) && !dropped.has(id);
+  for (const id of RESPONSIVE_DROP_ORDER) {
+    if (tableMinWidth(sectorCount, effective) <= width) break;
+    dropped.add(id);
+  }
+  return effective;
 }
 
 /** Sector-status → CSS color token. Drives purple/green/yellow/red. */

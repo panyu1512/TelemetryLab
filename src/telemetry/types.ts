@@ -98,6 +98,10 @@ export interface DriverEntry {
   licenseColor: string;
   carClassColor: string;
   clubName: string;
+  /** ISO alpha-3 country code from the driver's flair (e.g. "ESP"), "" if unset. */
+  countryCode: string;
+  /** Country display name (e.g. "Spain"), "" if unset. */
+  countryName: string;
   division: number;
   incidentCount: number;
   isPaceCar: boolean;

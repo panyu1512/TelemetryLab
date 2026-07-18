@@ -149,6 +149,8 @@ def parse_drivers(driver_info: dict[str, Any], category: str) -> list[DriverEntr
                 license_color=_hex_color(d.get("LicColor")),
                 car_class_color=_hex_color(d.get("CarClassColor")),
                 club_name=str(d.get("ClubName", "") or ""),
+                country_code=str(d.get("FlairShortName", "") or "").upper(),
+                country_name=str(d.get("FlairName", "") or ""),
                 division=_int(d.get("DivisionName"), 0),
                 incident_count=_int(d.get("CurDriverIncidentCount"), 0),
                 is_pace_car=_bool(d.get("CarIsPaceCar"))

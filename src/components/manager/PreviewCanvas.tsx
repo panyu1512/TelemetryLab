@@ -38,10 +38,14 @@ import {
   DASHBOARDS,
   getDashboard,
   type DashboardDef,
+  type WidgetDef,
+  type WidgetSize,
 } from "../../dashboards/registry";
 import { useOverlayConfigStore } from "../../stores/useOverlayConfigStore";
 import { useActiveOverlaysStore } from "../../stores/useActiveOverlaysStore";
+import { useWidgetSelectionStore } from "../../stores/useWidgetSelectionStore";
 import { useTelemetryStore } from "../../stores/useTelemetryStore";
+import type { TelemetryData } from "../../hooks/useTelemetry";
 import { useDashboardLayout } from "../../hooks/useDashboardLayout";
 import { DashboardGrid } from "../layout/DashboardGrid";
 import { applyTheme, getTheme } from "../../themes";
@@ -122,12 +126,23 @@ export function PreviewCanvas({ overlayId, onSelect }: PreviewCanvasProps) {
       />
 
       {mode === "single" ? (
-        <SingleView
-          key={overlayId}
-          overlayId={overlayId}
-          zoom={zoom}
-          backdrop={backdrop}
-        />
+        dashboard.widgets.length > 0 ? (
+          // Widget dashboards preview as a stack of full-size widget cards —
+          // one above the other, like the individual windows they open into —
+          // instead of a miniature grid.
+          <WidgetStackView
+            key={overlayId}
+            overlayId={overlayId}
+            backdrop={backdrop}
+          />
+        ) : (
+          <SingleView
+            key={overlayId}
+            overlayId={overlayId}
+            zoom={zoom}
+            backdrop={backdrop}
+          />
+        )
       ) : (
         <GridView
           selectedId={overlayId}
@@ -203,14 +218,16 @@ function CanvasToolbar({
                 </SegBtn>
               ))}
             </div>
-            {/* Zoom presets */}
-            <div className="flex items-center gap-0.5 rounded-lg border border-border bg-bg p-0.5">
-              {ZOOM_PRESETS.map((z) => (
-                <SegBtn key={z} active={zoom === z} onClick={() => onZoom(z)}>
-                  {z === "fit" ? "Fit" : `${Math.round(z * 100)}%`}
-                </SegBtn>
-              ))}
-            </div>
+            {/* Zoom presets (the widget stack sizes itself, so none there) */}
+            {dashboard.widgets.length === 0 && (
+              <div className="flex items-center gap-0.5 rounded-lg border border-border bg-bg p-0.5">
+                {ZOOM_PRESETS.map((z) => (
+                  <SegBtn key={z} active={zoom === z} onClick={() => onZoom(z)}>
+                    {z === "fit" ? "Fit" : `${Math.round(z * 100)}%`}
+                  </SegBtn>
+                ))}
+              </div>
+            )}
             {dashboard.widgets.length === 0 && (
               <OpenWindowButton overlayId={dashboard.id} label={dashboard.label} />
             )}
@@ -412,6 +429,132 @@ function SingleView({
         )}
       </div>
     </div>
+  );
+}
+
+// ── widget stack view ─────────────────────────────────────────────────────────
+
+/**
+ * Per-widget preview height, matched to each widget's default footprint so a
+ * tall widget (cluster, tyres) previews taller than a compact readout. Far
+ * larger than the old in-grid tiles — each card gets the room a real widget
+ * window would.
+ */
+const STACK_HEIGHT: Record<WidgetSize, number> = {
+  sm: 200,
+  md: 220,
+  lg: 260,
+  xl: 300,
+};
+
+function widgetPreviewHeight(def: WidgetDef): number {
+  const h = def.defaultLayout?.h;
+  if (h != null) return Math.min(340, Math.max(200, h * 110));
+  return STACK_HEIGHT[def.defaultSize];
+}
+
+/**
+ * The preview for a widget dashboard: every *enabled* widget rendered as its
+ * own full-width card, stacked vertically — mirroring how each widget opens in
+ * its own window. Cards render the live mock feed, scoped to the overlay's
+ * theme + appearance like the single-overlay stage.
+ */
+function WidgetStackView({
+  overlayId,
+  backdrop,
+}: {
+  overlayId: string;
+  backdrop: Backdrop;
+}) {
+  const dashboard = getDashboard(overlayId);
+  const store = useOverlayConfigStore();
+  const { appearance } = store.getOverlaySettings(overlayId);
+  const themeId = appearance.themeId ?? store.globalSettings.themeId;
+  const theme = getTheme(themeId);
+  const enabledMap = useWidgetSelectionStore((s) => s.enabled);
+  const data = useTelemetryStore((s) => s.telemetry);
+
+  const themeRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (themeRef.current) applyTheme(theme, true, themeRef.current);
+  }, [theme]);
+
+  const enabled = dashboard.widgets.filter((w) => enabledMap[w.id] !== false);
+  const disabledCount = dashboard.widgets.length - enabled.length;
+
+  const filter =
+    appearance.saturation !== 100 || appearance.brightness !== 100
+      ? `saturate(${appearance.saturation}%) brightness(${appearance.brightness}%)`
+      : undefined;
+
+  return (
+    <div
+      className="min-h-0 flex-1 overflow-y-auto"
+      style={{ background: CANVAS_BG }}
+    >
+      <div
+        className="min-h-full p-6"
+        style={
+          backdrop === "checker"
+            ? { background: CHECKER, backgroundSize: "18px 18px" }
+            : { background: BACKDROPS[backdrop].css }
+        }
+      >
+        <div
+          ref={themeRef}
+          className="mx-auto flex w-full max-w-[560px] flex-col gap-4 transition-[filter,opacity]"
+          style={{ filter, opacity: appearance.opacity / 100 }}
+        >
+          {enabled.map((def) => (
+            <WidgetPreviewCard key={def.id} def={def} data={data} />
+          ))}
+        </div>
+
+        {enabled.length === 0 && (
+          <p className="mx-auto max-w-sm pt-10 text-center text-sm text-muted">
+            No widgets enabled — turn some on in the config panel to preview
+            them here.
+          </p>
+        )}
+        {disabledCount > 0 && (
+          <p className="mx-auto max-w-[560px] pt-4 text-center text-[11px] text-faint">
+            {disabledCount} disabled widget{disabledCount === 1 ? "" : "s"} not
+            shown — enable {disabledCount === 1 ? "it" : "them"} in the config
+            panel to preview.
+          </p>
+        )}
+      </div>
+    </div>
+  );
+}
+
+/** One stacked widget card, with the same chrome as a real widget window. */
+function WidgetPreviewCard({
+  def,
+  data,
+}: {
+  def: WidgetDef;
+  data: TelemetryData | null;
+}) {
+  return (
+    <section
+      className="overlay-card widget-card pointer-events-none flex flex-col overflow-hidden rounded-card border border-border/60 bg-surface shadow-2xl ring-1 ring-white/5"
+      style={{ height: widgetPreviewHeight(def) }}
+    >
+      <header className="flex shrink-0 items-center gap-2">
+        <def.icon className="size-3.5 shrink-0 text-faint" strokeWidth={2} />
+        <h3 className="widget-title select-none truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">
+          {def.title}
+        </h3>
+        <span className="header-rule" aria-hidden />
+      </header>
+      <div
+        className="min-h-0 flex-1 overflow-hidden"
+        style={{ containerType: "size" }}
+      >
+        <def.Component data={data} />
+      </div>
+    </section>
   );
 }
 

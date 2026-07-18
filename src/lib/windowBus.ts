@@ -25,7 +25,8 @@ export type BusTopic =
   | "config:changed"
   | "window:lock"
   | "windows:changed"
-  | "standings-ui:changed";
+  | "standings-ui:changed"
+  | "relative-ui:changed";
 
 /** Unique id for this window, used to ignore our own echoed messages. */
 const ORIGIN = Math.random().toString(36).slice(2);
