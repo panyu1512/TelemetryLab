@@ -70,6 +70,13 @@ const ZOOM_PRESETS: Zoom[] = [0.5, 0.75, 1, "fit"];
  */
 type Backdrop = "checker" | "asphalt" | "daylight";
 
+/*
+ * These are raw literals on purpose, and the one place in the app that is
+ * exempt from the token rule in `design.md`: they stand in for *the game
+ * behind the overlay*, not for app chrome. Theming them would defeat the whole
+ * point of the backdrop switcher, which exists to check that a widget stays
+ * legible against scenes the design system does not control.
+ */
 const BACKDROPS: Record<Backdrop, { label: string; css: string }> = {
   checker: { label: "Checker", css: "" },
   asphalt: {
@@ -181,7 +188,7 @@ function CanvasToolbar({
 }) {
   return (
     <div className="flex flex-none flex-wrap items-center gap-2 border-b border-border bg-surface px-3 py-2">
-      <p className="mr-1 text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">
+      <p className="mr-1 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-faint">
         Preview
       </p>
 

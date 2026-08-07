@@ -10,6 +10,7 @@ import {
   clearLog,
   subscribeLog,
 } from "../../lib/debugLog";
+import { SectionLabel } from "../ui/controls";
 
 function useLogs() {
   const [, tick] = useState(0);
@@ -194,17 +195,10 @@ export function DebugPanel() {
 
 // ── sub-components ─────────────────────────────────────────────────────────────
 
-function SectionLabel({ children }: { children: React.ReactNode }) {
-  return (
-    <p className="mb-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">
-      {children}
-    </p>
-  );
-}
-
+/** The inline variant of the shared `SectionLabel`, for use inside a flex row. */
 function SectionLabelInline({ children }: { children: React.ReactNode }) {
   return (
-    <span className="text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">
+    <span className="font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-faint">
       {children}
     </span>
   );
@@ -226,7 +220,7 @@ function StatusTile({
           className="inline-block size-1.5 rounded-full"
           style={{ background: ok ? "var(--color-accent)" : "var(--color-faint)" }}
         />
-        <span className="text-[10px] uppercase tracking-wide text-faint">{label}</span>
+        <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-faint">{label}</span>
       </div>
       <span
         className="text-xs font-medium"
@@ -241,7 +235,7 @@ function StatusTile({
 function KV({ k, v }: { k: string; v: string }) {
   return (
     <div className="flex items-baseline gap-1.5">
-      <span className="w-14 shrink-0 text-[10px] uppercase tracking-wide text-faint">
+      <span className="w-14 shrink-0 font-mono text-[10px] uppercase tracking-[0.12em] text-faint">
         {k}
       </span>
       <span className="truncate text-muted">{v}</span>

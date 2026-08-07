@@ -42,7 +42,7 @@ export function StandingsColumnsPanel() {
                 >
                   {col.name}
                 </span>
-                <span className="block text-[10px] uppercase tracking-wide text-faint">
+                <span className="block font-mono text-[10px] uppercase tracking-[0.12em] text-faint">
                   {col.label || "—"}
                 </span>
               </span>

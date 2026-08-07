@@ -76,7 +76,7 @@ export function AppearancePanel({ overlayId }: AppearancePanelProps) {
                   </span>
                 </span>
                 {isGlobalInherited && (
-                  <span className="ml-auto shrink-0 rounded-full bg-surface-2 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-faint">
+                  <span className="ml-auto shrink-0 whitespace-nowrap rounded-full bg-surface-2 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.12em] text-faint">
                     Global
                   </span>
                 )}

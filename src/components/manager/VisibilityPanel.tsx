@@ -122,7 +122,7 @@ function VisibilityRule({
         <span className="flex items-center gap-2">
           <span className="text-xs font-medium text-text">{label}</span>
           {currentlyActive && (
-            <span className="rounded-full bg-warning/15 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-warning">
+            <span className="whitespace-nowrap rounded-full bg-warning/15 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.12em] text-warning">
               Active now
             </span>
           )}
@@ -131,10 +131,12 @@ function VisibilityRule({
           {description}
         </span>
       </span>
+      {/* `faint` is already the floor that clears 4.5:1 — thinning it further
+          with an opacity modifier put this icon under 2:1. */}
       {checked ? (
         <EyeOff className="mt-0.5 size-3.5 shrink-0 text-muted" />
       ) : (
-        <Eye className="mt-0.5 size-3.5 shrink-0 text-faint/50" />
+        <Eye className="mt-0.5 size-3.5 shrink-0 text-faint" />
       )}
     </label>
   );
@@ -149,7 +151,7 @@ function Row({
 }) {
   return (
     <div className="flex items-start gap-2">
-      <span className="w-14 shrink-0 text-[10px] uppercase tracking-wide text-faint">
+      <span className="w-14 shrink-0 font-mono text-[10px] uppercase tracking-[0.12em] text-faint">
         {label}
       </span>
       <span className="text-muted">{value}</span>
@@ -159,7 +161,7 @@ function Row({
 
 function FlagBadge({ flag }: { flag: string }) {
   return (
-    <span className="rounded-full bg-surface-2 px-1.5 py-0.5 text-[9px] font-medium uppercase tracking-wide text-muted">
+    <span className="whitespace-nowrap rounded-full bg-surface-2 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.12em] text-muted">
       {flag.replace(/_/g, " ")}
     </span>
   );
