@@ -1,4 +1,10 @@
-/** Named design-token bundles that drive all color/style in the app. */
+/**
+ * Named design-token bundles that drive all color/style in the app.
+ *
+ * Every value is OKLCH. The channels are perceptual, so a token can be lifted
+ * to clear a contrast target without dragging its hue along, and the four
+ * themes below stay comparable to each other channel-by-channel.
+ */
 
 export interface ThemeColors {
   bg: string;
@@ -12,10 +18,24 @@ export interface ThemeColors {
   /** Interactive & informational: selection, focus, links. */
   primary: string;
   primaryDim: string;
+  /**
+   * Text drawn on top of ANY filled status color — primary, danger, accent.
+   * Every accent here is light and every paper dark, so white-on-accent lands
+   * at 2.2–2.9:1; dark ink on the same fill reads at 6.5–8.7:1. Filled
+   * controls must use this, never white.
+   */
+  onAccent: string;
+  /**
+   * The keyboard focus ring. Deliberately its own token rather than an alias
+   * of `primary`: a theme whose interactive hue sits near `warning` needs to
+   * move one without moving the other.
+   */
+  focus: string;
   text: string;
   /** Secondary text: labels, captions, supporting copy. */
   muted: string;
-  /** Tertiary / disabled text. */
+  /** Tertiary / disabled text. Held at L≈61% — the floor that clears 4.5:1
+   *  against `surface`, since it carries 10–11 px labels on cards. */
   faint: string;
   danger: string;
   warning: string;
@@ -41,21 +61,23 @@ export const THEMES: readonly Theme[] = [
     name: "Carbon",
     description: "Default · graphite neutrals, racing green + signal blue",
     colors: {
-      bg: "#111418",
-      surface: "#1a1e24",
-      surface2: "#20252d",
-      border: "#2c323b",
-      borderStrong: "#3a424d",
-      accent: "#2fd67f",
-      accentDim: "#1fa862",
-      primary: "#4d9cf8",
-      primaryDim: "#2f7cd6",
-      text: "#ffffff",
-      muted: "#bac2cc",
-      faint: "#6f7883",
-      danger: "#f4564f",
-      warning: "#f0b53c",
-      sectorPurple: "#b07ef7",
+      bg: "oklch(19% 0.0094 256)",
+      surface: "oklch(23.4% 0.0131 258)",
+      surface2: "oklch(26.3% 0.0167 260)",
+      border: "oklch(31.5% 0.0182 258)",
+      borderStrong: "oklch(37.6% 0.0217 256)",
+      accent: "oklch(77.4% 0.181 154)",
+      accentDim: "oklch(64.6% 0.1526 155)",
+      primary: "oklch(68.6% 0.1569 254)",
+      primaryDim: "oklch(58.5% 0.1568 255)",
+      onAccent: "oklch(19% 0.0094 256)",
+      focus: "oklch(68.6% 0.1569 254)",
+      text: "oklch(100% 0 0)",
+      muted: "oklch(81.1% 0.0166 254)",
+      faint: "oklch(62% 0.021 256)",
+      danger: "oklch(66.5% 0.195 26)",
+      warning: "oklch(80.7% 0.1472 81)",
+      sectorPurple: "oklch(69.4% 0.1763 301)",
     },
   },
   {
@@ -63,21 +85,23 @@ export const THEMES: readonly Theme[] = [
     name: "Midnight",
     description: "Deep blue-black for night racing",
     colors: {
-      bg: "#0c0f16",
-      surface: "#131826",
-      surface2: "#1a2030",
-      border: "#252d40",
-      borderStrong: "#323c52",
-      accent: "#34d88a",
-      accentDim: "#23a868",
-      primary: "#5ea2ff",
-      primaryDim: "#3d82e0",
-      text: "#f2f6ff",
-      muted: "#aab6c8",
-      faint: "#68748a",
-      danger: "#f45b5b",
-      warning: "#efb84a",
-      sectorPurple: "#a98cf8",
+      bg: "oklch(16.9% 0.0155 267)",
+      surface: "oklch(21.1% 0.0289 269)",
+      surface2: "oklch(24.6% 0.0319 268)",
+      border: "oklch(29.9% 0.0365 267)",
+      borderStrong: "oklch(35.7% 0.0407 265)",
+      accent: "oklch(78.2% 0.1725 157)",
+      accentDim: "oklch(64.8% 0.146 156)",
+      primary: "oklch(70.9% 0.1534 257)",
+      primaryDim: "oklch(60.9% 0.1589 257)",
+      onAccent: "oklch(16.9% 0.0155 267)",
+      focus: "oklch(70.9% 0.1534 257)",
+      text: "oklch(97.3% 0.0128 267)",
+      muted: "oklch(77.3% 0.029 258)",
+      faint: "oklch(60.7% 0.0369 261)",
+      danger: "oklch(67.3% 0.1884 24)",
+      warning: "oklch(81.3% 0.1392 82)",
+      sectorPurple: "oklch(71.1% 0.1552 295)",
     },
   },
   {
@@ -85,43 +109,54 @@ export const THEMES: readonly Theme[] = [
     name: "Graphite",
     description: "Pure neutral grays · minimum color, maximum focus",
     colors: {
-      bg: "#101010",
-      surface: "#181818",
-      surface2: "#1f1f1f",
-      border: "#2b2b2b",
-      borderStrong: "#3a3a3a",
-      accent: "#3ecf83",
-      accentDim: "#2aa265",
-      primary: "#8f98a3",
-      primaryDim: "#6f7883",
-      text: "#ffffff",
-      muted: "#b8bcc2",
-      faint: "#6e7278",
-      danger: "#ef5350",
-      warning: "#e6ae3d",
-      sectorPurple: "#ab84f0",
+      bg: "oklch(17.3% 0 0)",
+      surface: "oklch(20.9% 0 0)",
+      surface2: "oklch(23.9% 0 0)",
+      border: "oklch(28.9% 0 0)",
+      borderStrong: "oklch(34.8% 0 0)",
+      accent: "oklch(76% 0.1641 156)",
+      accentDim: "oklch(63.2% 0.1388 156)",
+      primary: "oklch(67.6% 0.0193 253)",
+      primaryDim: "oklch(56.9% 0.0201 253)",
+      onAccent: "oklch(17.3% 0 0)",
+      focus: "oklch(67.6% 0.0193 253)",
+      text: "oklch(100% 0 0)",
+      muted: "oklch(79.4% 0.0096 258)",
+      faint: "oklch(60.6% 0.0116 262)",
+      danger: "oklch(65.4% 0.1926 25)",
+      warning: "oklch(78.4% 0.1405 81)",
+      sectorPurple: "oklch(69.5% 0.1574 299)",
     },
   },
   {
+    /*
+     * Endurance's interactive hue used to sit 8° from `warning` at nearly the
+     * same lightness — "you can click this" and "caution" were, in practice,
+     * the same color, in a system whose whole premise is that a color means
+     * one thing. Pulled to copper (45°), which holds the warm identity and
+     * puts 36° between interactive and caution.
+     */
     id: "endurance",
     name: "Endurance",
-    description: "Warm graphite with amber accents for long stints",
+    description: "Warm graphite with copper accents for long stints",
     colors: {
-      bg: "#131211",
-      surface: "#1c1a18",
-      surface2: "#242120",
-      border: "#322e2b",
-      borderStrong: "#423d39",
-      accent: "#3fd487",
-      accentDim: "#2ba366",
-      primary: "#e8a33d",
-      primaryDim: "#c4842a",
-      text: "#fdfaf6",
-      muted: "#c6bfb6",
-      faint: "#7d766e",
-      danger: "#f25a4e",
-      warning: "#f0b53c",
-      sectorPurple: "#b78bf5",
+      bg: "oklch(18.3% 0.0026 68)",
+      surface: "oklch(21.9% 0.005 68)",
+      surface2: "oklch(25.1% 0.0049 39)",
+      border: "oklch(30.4% 0.0079 59)",
+      borderStrong: "oklch(36.4% 0.0097 61)",
+      accent: "oklch(77.4% 0.1667 156)",
+      accentDim: "oklch(63.6% 0.1389 156)",
+      primary: "oklch(70% 0.15 45)",
+      primaryDim: "oklch(62% 0.145 44)",
+      onAccent: "oklch(18.3% 0.0026 68)",
+      focus: "oklch(70% 0.15 45)",
+      text: "oklch(98.6% 0.0062 75)",
+      muted: "oklch(80.8% 0.0148 74)",
+      faint: "oklch(61.4% 0.0146 71)",
+      danger: "oklch(66.6% 0.1891 28)",
+      warning: "oklch(80.7% 0.1472 81)",
+      sectorPurple: "oklch(72.1% 0.1549 302)",
     },
   },
 ] as const;
@@ -140,6 +175,8 @@ const THEME_PROPS = [
   "--color-accent-dim",
   "--color-primary",
   "--color-primary-dim",
+  "--color-on-accent",
+  "--color-focus",
   "--color-text",
   "--color-muted",
   "--color-faint",
@@ -156,19 +193,21 @@ const THEME_PROPS = [
   "--muted",
   "--danger",
   "--warning",
+  "--focus",
 ] as const;
 
-/** Convert a `#rrggbb` / `#rgb` hex color to an `rgba()` string at `alpha`. */
-export function hexToRgba(hex: string, alpha: number): string {
-  let h = hex.replace("#", "").trim();
-  if (h.length === 3) {
-    h = h[0] + h[0] + h[1] + h[1] + h[2] + h[2];
-  }
-  const r = parseInt(h.slice(0, 2), 16);
-  const g = parseInt(h.slice(2, 4), 16);
-  const b = parseInt(h.slice(4, 6), 16);
-  if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) return hex;
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+/**
+ * Apply `alpha` to an OKLCH color string using CSS's relative-alpha syntax —
+ * `oklch(L C H)` becomes `oklch(L C H / alpha)`.
+ *
+ * Anything that isn't a plain `oklch(…)` value (notably the literal
+ * `transparent`) is returned unchanged, so callers can pass a color through
+ * without first checking its shape.
+ */
+export function withAlpha(color: string, alpha: number): string {
+  const match = /^oklch\(([^/)]+)\)$/i.exec(color.trim());
+  if (!match) return color;
+  return `oklch(${match[1].trim()} / ${alpha})`;
 }
 
 /**
@@ -190,10 +229,10 @@ export function applyTheme(
   const c = theme.colors;
   // Backgrounds/surfaces: solid normally, transparent/translucent in overlay.
   const bg = overlay ? "transparent" : c.bg;
-  const surface = overlay ? hexToRgba(c.surface, 0.66) : c.surface;
-  const surface2 = overlay ? hexToRgba(c.surface2, 0.66) : c.surface2;
-  const border = overlay ? hexToRgba(c.border, 0.5) : c.border;
-  const borderStrong = overlay ? hexToRgba(c.borderStrong, 0.5) : c.borderStrong;
+  const surface = overlay ? withAlpha(c.surface, 0.66) : c.surface;
+  const surface2 = overlay ? withAlpha(c.surface2, 0.66) : c.surface2;
+  const border = overlay ? withAlpha(c.border, 0.5) : c.border;
+  const borderStrong = overlay ? withAlpha(c.borderStrong, 0.5) : c.borderStrong;
 
   el.style.setProperty("--color-bg", bg);
   el.style.setProperty("--color-surface", surface);
@@ -204,6 +243,8 @@ export function applyTheme(
   el.style.setProperty("--color-accent-dim", c.accentDim);
   el.style.setProperty("--color-primary", c.primary);
   el.style.setProperty("--color-primary-dim", c.primaryDim);
+  el.style.setProperty("--color-on-accent", c.onAccent);
+  el.style.setProperty("--color-focus", c.focus);
   el.style.setProperty("--color-text", c.text);
   el.style.setProperty("--color-muted", c.muted);
   el.style.setProperty("--color-faint", c.faint);
@@ -220,6 +261,7 @@ export function applyTheme(
   el.style.setProperty("--muted", c.muted);
   el.style.setProperty("--danger", c.danger);
   el.style.setProperty("--warning", c.warning);
+  el.style.setProperty("--focus", c.focus);
 }
 
 /** Revert to stylesheet defaults by removing all inline overrides. */
