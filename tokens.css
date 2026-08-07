@@ -1,0 +1,108 @@
+/* Hallmark · genre: modern-minimal · macrostructure: Workbench
+ * design-system: design.md · designed-as-app
+ * theme: custom (tuned) · vibe: "cool graphite instrument panel, signal blue"
+ * paper oklch(19% 0.0094 256) dark · display grotesk-sans (Inter) · accent cool (254°)
+ */
+
+/*
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  TelemetryLab — portable design tokens
+ *
+ *  This file is an EXPORT, not the running source. The live tokens are declared
+ *  in `src/styles.css` inside Tailwind v4's `@theme` block, so that each one
+ *  also generates a utility class (`--color-primary` → `bg-primary`). The four
+ *  runtime themes in `src/themes/index.ts` overwrite the colour tokens inline
+ *  on `<html>` when the user switches theme.
+ *
+ *  Do NOT `@import` this file into the app — you would get two declarations of
+ *  every token. It exists so the system can be lifted into another project, a
+ *  Figma variables import, or a docs site.
+ *
+ *  The values below are the Carbon (default) theme. For the other three, read
+ *  `THEMES` in `src/themes/index.ts` — the token *names* are identical across
+ *  all four; only the values move.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+:root {
+  /* ── Colour ──────────────────────────────────────────────────────────────
+     Neutrals are cool graphite (blue-tinted) so panels sit naturally over
+     iRacing footage instead of reading as warm grey boxes. Accents are never
+     decorative — each one carries exactly one meaning. */
+
+  /* Paper / surfaces — elevation reads through lightness, not shadow */
+  --color-bg: oklch(19% 0.0094 256);
+  --color-surface: oklch(23.4% 0.0131 258);
+  --color-surface-2: oklch(26.3% 0.0167 260);
+  --color-border: oklch(31.5% 0.0182 258);
+  --color-border-strong: oklch(37.6% 0.0217 256);
+
+  /* Ink — a three-step scale. `faint` is pinned at L 62%: the floor that
+     clears 4.5:1 against `surface`, because it carries 10–11 px labels. */
+  --color-text: oklch(100% 0 0);
+  --color-muted: oklch(81.1% 0.0166 254);
+  --color-faint: oklch(62% 0.021 256);
+
+  /* Status — one colour, one meaning */
+  --color-accent: oklch(77.4% 0.181 154); /* positive: PB, faster, healthy */
+  --color-accent-dim: oklch(64.6% 0.1526 155);
+  --color-danger: oklch(66.5% 0.195 26); /* critical: slower, overheating */
+  --color-warning: oklch(80.7% 0.1472 81); /* caution: pit soon, yellow flag */
+  --color-primary: oklch(68.6% 0.1569 254); /* interactive / informational */
+  --color-primary-dim: oklch(58.5% 0.1568 255);
+  --color-sector-purple: oklch(69.4% 0.1763 301); /* overall-best lap/sector */
+
+  /* Text on top of ANY filled status colour. Every accent here is light and
+     every paper dark, so white-on-accent measures 2.2–2.9:1; this reads at
+     6.5–8.7:1. Filled controls must use it — never white. */
+  --color-on-accent: oklch(19% 0.0094 256);
+
+  /* Focus ring. Its own token, not an alias of `primary`, so a theme whose
+     interactive hue nears `warning` can move one without the other. Clears
+     3:1 against both `bg` and `surface`. */
+  --color-focus: oklch(68.6% 0.1569 254);
+
+  /* ── Type ────────────────────────────────────────────────────────────────
+     A single-family system: Inter carries display and body alike. Mono is the
+     third voice, reserved for measured values, coordinates, counts, log lines
+     and status readouts — instrument nomenclature, never prose. */
+  --font-sans: "Inter Variable", Inter, "SF Pro Display", -apple-system,
+    "Segoe UI", system-ui, sans-serif;
+  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
+    "Liberation Mono", monospace;
+
+  /* ── Space ───────────────────────────────────────────────────────────────
+     4-point scale. The app consumes this through Tailwind's default spacing
+     utilities (`--spacing: 0.25rem`); these names exist for portability. */
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs: 0.75rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2rem;
+  --space-xl: 3rem;
+  --space-2xl: 4.5rem;
+
+  /* ── Radius ──────────────────────────────────────────────────────────────
+     Tight radii: this is an instrument panel, not a consumer app. */
+  --radius-ctl: 6px;
+  --radius-card: 10px;
+  --radius-panel: 12px;
+
+  /* ── Elevation ───────────────────────────────────────────────────────────
+     Tight and dark. On dark surfaces a soft coloured halo reads as glow, not
+     height — height comes from a brighter surface. */
+  --shadow-raise: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 12px rgb(0 0 0 / 0.25);
+  --shadow-float: 0 4px 8px rgb(0 0 0 / 0.35), 0 12px 32px rgb(0 0 0 / 0.4);
+
+  /* ── Motion ──────────────────────────────────────────────────────────────
+     Three easings, three durations. No bare `ease`, no overshoot on UI state.
+     Under `prefers-reduced-motion` the two short durations collapse to 0 and
+     spatial movement becomes a ≤150 ms opacity change. */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-instant: 80ms;
+  --dur-short: 140ms;
+  --dur-mid: 220ms;
+}

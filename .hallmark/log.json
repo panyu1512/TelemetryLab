@@ -1,0 +1,15 @@
+[
+  {
+    "date": "2026-08-08",
+    "scope": "app",
+    "macrostructure": "Workbench",
+    "theme": "custom",
+    "theme_axes": "dark / grotesk-sans / cool",
+    "vibe": "cool graphite instrument panel, signal blue",
+    "genre": "modern-minimal",
+    "nav": "N3 side-rail",
+    "footer": "Ft2 inline",
+    "enrichment": "none",
+    "brief": "TelemetryLab · Overlay Manager redesign + locked design system (design.md)"
+  }
+]

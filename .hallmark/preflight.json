@@ -1,0 +1,12 @@
+{
+  "date": "2026-08-08",
+  "framework": "Vite 6 + React 18 + TypeScript, Tauri v2 shell",
+  "fontStack": "Inter Variable (@fontsource-variable/inter) + system mono",
+  "palette": "OKLCH tokens in a Tailwind v4 @theme block (src/styles.css), mirrored by 4 runtime themes in src/themes/index.ts",
+  "spacing": "Tailwind v4 default 4-point scale",
+  "motion": "motion-cut — no framer-motion/gsap/lenis/lottie; hand-rolled keyframes only",
+  "icons": "lucide-react, flag-icons",
+  "designSystem": "design.md (locked 2026-08-08)",
+  "preserved": ["Inter + mono pairing", "status-colour semantics", "dark cool-graphite direction", "routes and component ownership"],
+  "introduced": ["OKLCH token layer", "--color-on-accent and --color-focus", "named easings + durations", "8-state control contract", "design.md + tokens.css"]
+}
