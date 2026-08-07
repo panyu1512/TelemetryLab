@@ -104,8 +104,10 @@ function TitleBarBtn({
   children: React.ReactNode;
 }) {
   const base = "grid h-7 w-8 place-items-center rounded-ctl transition-colors";
+  // `on-accent`, not white: `danger` is a light red, so a white glyph on it
+  // sits near 2.9:1 — the same failure the filled buttons had.
   const cls = closeBtn
-    ? `${base} text-muted hover:bg-danger hover:text-white`
+    ? `${base} text-muted hover:bg-danger hover:text-on-accent`
     : `${base} text-muted hover:bg-surface-2 hover:text-text`;
 
   return (
