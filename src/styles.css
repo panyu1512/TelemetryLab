@@ -1,3 +1,11 @@
+/* Hallmark · genre: modern-minimal · macrostructure: Workbench
+ * design-system: design.md · designed-as-app
+ * theme: custom (tuned) · vibe: "cool graphite instrument panel, signal blue"
+ * paper oklch(19% 0.0094 256) dark · display grotesk-sans (Inter) · accent cool (254°)
+ * nav: N3 side-rail · footer: Ft2 inline · enrichment: none (typography only)
+ * pre-emit critique: P5 H4 E5 S5 R5 V4
+ */
+
 @import "tailwindcss";
 
 /*
@@ -15,6 +23,10 @@
  *  Neutrals are cool graphite (blue-tinted) so panels sit naturally over
  *  iRacing footage instead of reading as warm gray boxes.
  *
+ *  Colors are OKLCH: perceptually uniform, so lifting a token's lightness to
+ *  hit a contrast target doesn't drag its hue, and the four runtime themes in
+ *  `themes/index.ts` stay comparable channel-by-channel.
+ *
  *  Declared in Tailwind's `@theme` so every token also generates a utility
  *  (e.g. `--color-primary` → `bg-primary`, `text-primary`) while remaining
  *  available as a raw CSS variable (`var(--color-primary)`).
@@ -22,27 +34,40 @@
  */
 @theme {
   /* Base neutrals */
-  --color-bg: #111418;
-  --color-surface: #1a1e24;
-  --color-surface-2: #20252d;
-  --color-border: #2c323b;
-  --color-border-strong: #3a424d;
+  --color-bg: oklch(19% 0.0094 256);
+  --color-surface: oklch(23.4% 0.0131 258);
+  --color-surface-2: oklch(26.3% 0.0167 260);
+  --color-border: oklch(31.5% 0.0182 258);
+  --color-border-strong: oklch(37.6% 0.0217 256);
 
-  /* Typography colors */
-  --color-text: #ffffff;
-  --color-muted: #bac2cc; /* secondary text */
-  --color-faint: #6f7883; /* disabled / tertiary text */
+  /* Typography colors. `faint` sits at L 62% — the floor that clears 4.5:1
+     against `surface`, since it carries 10–11 px labels on cards. */
+  --color-text: oklch(100% 0 0);
+  --color-muted: oklch(81.1% 0.0166 254); /* secondary text */
+  --color-faint: oklch(62% 0.021 256); /* disabled / tertiary text */
 
   /* Status accents — never decorative */
-  --color-accent: #2fd67f; /* positive */
-  --color-accent-dim: #1fa862;
-  --color-danger: #f4564f; /* critical */
-  --color-warning: #f0b53c; /* caution */
-  --color-primary: #4d9cf8; /* interactive / informational */
-  --color-primary-dim: #2f7cd6;
-  --color-sector-purple: #b07ef7; /* special telemetry: overall best */
+  --color-accent: oklch(77.4% 0.181 154); /* positive */
+  --color-accent-dim: oklch(64.6% 0.1526 155);
+  --color-danger: oklch(66.5% 0.195 26); /* critical */
+  --color-warning: oklch(80.7% 0.1472 81); /* caution */
+  --color-primary: oklch(68.6% 0.1569 254); /* interactive / informational */
+  --color-primary-dim: oklch(58.5% 0.1568 255);
+  --color-sector-purple: oklch(69.4% 0.1763 301); /* overall best */
 
-  /* Typography */
+  /* The text color to use on top of ANY filled status color. Every accent in
+     this system is light and every paper is dark, so white-on-accent lands at
+     2.2–2.9:1 — far under 4.5:1. Dark ink on the fill reads at 6.5–8.7:1. */
+  --color-on-accent: oklch(19% 0.0094 256);
+
+  /* The focus ring. A dedicated token rather than an alias of `primary`, so a
+     theme whose interactive hue collides with `warning` can move one without
+     moving the other. Must clear 3:1 against both `bg` and `surface`. */
+  --color-focus: oklch(68.6% 0.1569 254);
+
+  /* Typography. Two faces: Inter carries display *and* body (a single-family
+     system), and mono is the third voice — reserved for measured values,
+     coordinates, counts and status readouts, never for prose. */
   --font-sans: "Inter Variable", Inter, "SF Pro Display", -apple-system,
     "Segoe UI", system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
@@ -53,9 +78,23 @@
   --radius-card: 10px;
   --radius-panel: 12px;
 
-  /* Elevation */
+  /* Elevation. On dark surfaces height reads through *lightness*, not glow —
+     these shadows only anchor a floating layer, they never halo it. */
   --shadow-raise: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 12px rgb(0 0 0 / 0.25);
   --shadow-float: 0 4px 8px rgb(0 0 0 / 0.35), 0 12px 32px rgb(0 0 0 / 0.4);
+
+  /* Motion. Three named easings and three durations — no bare `ease`, no
+     overshoot on UI state. Overriding Tailwind's transition defaults means
+     every existing `transition-colors` in the app inherits the curve without
+     restating it at each call site. */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-instant: 80ms;
+  --dur-short: 140ms;
+  --dur-mid: 220ms;
+  --default-transition-timing-function: var(--ease-out);
+  --default-transition-duration: var(--dur-short);
 }
 
 /*
@@ -73,6 +112,7 @@
   --muted: var(--color-muted);
   --danger: var(--color-danger);
   --warning: var(--color-warning);
+  --focus: var(--color-focus);
 
   color-scheme: dark;
   font-family: var(--font-sans);
@@ -107,10 +147,20 @@ a {
   font-feature-settings: "tnum", "cv05";
 }
 
-/* Consistent focus treatment for keyboard navigation. */
+/*
+ * Consistent focus treatment for keyboard navigation.
+ *
+ * The 2 px offset puts the ring on the page background rather than against the
+ * control's own fill, so it stays legible even on a `primary`-filled button
+ * (where a `primary` ring would otherwise vanish into the fill).
+ *
+ * Never transitioned: a ring that fades in leaves keyboard users with no
+ * indicator for the length of the transition.
+ */
 :focus-visible {
-  outline: 2px solid var(--color-primary);
-  outline-offset: 1px;
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+  border-radius: inherit;
 }
 
 /* Thin, unobtrusive scrollbars for the dark UI. */
@@ -160,9 +210,29 @@ a {
  */
 :root {
   transition:
-    background-color 220ms ease,
-    color 220ms ease,
-    border-color 220ms ease;
+    background-color var(--dur-mid) var(--ease-out),
+    color var(--dur-mid) var(--ease-out),
+    border-color var(--dur-mid) var(--ease-out);
+}
+
+/*
+ * Reduced motion: spatial movement collapses to a short opacity crossfade.
+ * Color transitions survive — they carry state, not decoration — but nothing
+ * translates, and nothing takes longer than 150 ms.
+ */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 150ms !important;
+  }
+  :root {
+    --dur-instant: 0ms;
+    --dur-short: 0ms;
+    --dur-mid: 150ms;
+  }
 }
 
 /* --- signature details ----------------------------------------------------- */
@@ -267,11 +337,11 @@ html.overlay-mode {
      (or an OBS capture) stays visible behind the overlay. The alpha is tuned
      low enough to see through, but paired with the backdrop-blur below the
      widgets still read clearly over asphalt, sky, grass and HDR glare. */
-  --color-bg: rgba(17, 20, 24, 0.01);
-  --color-surface: rgba(20, 24, 29, 0.66);
-  --color-surface-2: rgba(28, 33, 40, 0.66);
-  --color-border: rgba(44, 50, 59, 0.5);
-  --color-border-strong: rgba(58, 66, 77, 0.5);
+  --color-bg: oklch(19% 0.0094 256 / 0.01);
+  --color-surface: oklch(23.4% 0.0131 258 / 0.66);
+  --color-surface-2: oklch(26.3% 0.0167 260 / 0.66);
+  --color-border: oklch(31.5% 0.0182 258 / 0.5);
+  --color-border-strong: oklch(37.6% 0.0217 256 / 0.5);
 }
 
 /*

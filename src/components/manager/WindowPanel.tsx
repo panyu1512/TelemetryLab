@@ -11,7 +11,7 @@ import { Info, Lock, Unlock } from "lucide-react";
 import { useWindowStore } from "../../stores/useWindowStore";
 import { useActiveOverlaysStore } from "../../stores/useActiveOverlaysStore";
 import { getWindowState } from "../../lib/windowState";
-import { InfoNote, SectionLabel, ToggleSwitch } from "../ui/controls";
+import { InfoNote, Readout, SectionLabel, ToggleSwitch } from "../ui/controls";
 
 interface WindowPanelProps {
   overlayId: string;
@@ -61,10 +61,10 @@ export function WindowPanel({ overlayId }: WindowPanelProps) {
         <SectionLabel>Position &amp; Size</SectionLabel>
         {bounds ? (
           <div className="grid grid-cols-4 gap-2">
-            <Metric label="X" value={`${bounds.x}`} />
-            <Metric label="Y" value={`${bounds.y}`} />
-            <Metric label="W" value={`${bounds.width}`} />
-            <Metric label="H" value={`${bounds.height}`} />
+            <Readout label="X" value={`${bounds.x}`} unit="px" />
+            <Readout label="Y" value={`${bounds.y}`} unit="px" />
+            <Readout label="W" value={`${bounds.width}`} unit="px" />
+            <Readout label="H" value={`${bounds.height}`} unit="px" />
           </div>
         ) : (
           <div className="rounded-card border border-border bg-surface px-3 py-2.5 text-[11px] text-faint">
@@ -80,17 +80,6 @@ export function WindowPanel({ overlayId }: WindowPanelProps) {
           ? " Changes apply to the open window immediately."
           : " They'll be restored the next time you open it."}
       </InfoNote>
-    </div>
-  );
-}
-
-// ── helpers ───────────────────────────────────────────────────────────────────
-
-function Metric({ label, value }: { label: string; value: string }) {
-  return (
-    <div className="rounded-card border border-border bg-surface px-2.5 py-2">
-      <div className="text-[10px] uppercase tracking-wide text-faint">{label}</div>
-      <div className="tnum mt-0.5 text-sm font-medium text-text">{value}</div>
     </div>
   );
 }

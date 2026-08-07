@@ -83,11 +83,19 @@ export function OverlayManager() {
         <div className="flex min-h-0 flex-1 flex-col">
           {selected.kind === "overlay" && (
             <div className="flex min-h-0 flex-1">
-              {/* One scrolling page with every setting for this overlay. On
-                  large screens it's a fixed-width panel so the preview canvas
-                  gets the rest of the space; on small screens it takes over. */}
-              <div className="min-h-0 flex-1 overflow-y-auto lg:w-[480px] lg:flex-none">
-                <OverlayConfigPage overlayId={selected.overlayId} />
+              {/* Every setting for this overlay on one page. On large screens
+                  it's a fixed-width column so the preview canvas gets the rest
+                  of the space; on small screens it takes over.
+
+                  The control head is pinned outside the scroll container: the
+                  one action that matters here — open or close this overlay's
+                  window — must stay reachable when the Manager is opened onto
+                  a half-scrolled panel mid-session. */}
+              <div className="flex min-h-0 flex-1 flex-col lg:w-[480px] lg:flex-none">
+                <OverlayControlHead overlayId={selected.overlayId} />
+                <div className="min-h-0 flex-1 overflow-y-auto">
+                  <OverlayConfigSections overlayId={selected.overlayId} />
+                </div>
               </div>
               {/* Preview Canvas: the workspace fills the remaining space. */}
               <div className="hidden min-w-0 flex-1 border-l border-border lg:block">
@@ -146,32 +154,48 @@ function PageTitle({ title, subtitle }: { title: string; subtitle: string }) {
 // ── OverlayConfigPage ─────────────────────────────────────────────────────────
 
 /**
- * The full configuration for a single overlay, stacked inline on one page:
- * a header (name + enable), then Appearance, Visibility and Window sections —
- * everything visible and editable without switching tabs or opening dialogs.
+ * The pinned control head for the selected overlay: what it is, whether it's
+ * enabled, whether it currently has a window, and the open/close action.
+ *
+ * This band never scrolls. Everything below it is tuning; this is the part you
+ * came for.
  */
-function OverlayConfigPage({ overlayId }: { overlayId: string }) {
+function OverlayControlHead({ overlayId }: { overlayId: string }) {
   const store = useOverlayConfigStore();
   const settings = store.getOverlaySettings(overlayId);
   const dashboard = getDashboard(overlayId);
   const Icon = dashboard.icon;
   const isWidgetDashboard = dashboard.widgets.length > 0;
 
+  const openWindows = useActiveOverlaysStore((s) => s.windows);
+  const widgetIds = new Set(dashboard.widgets.map((w) => w.id));
+  const openCount = isWidgetDashboard
+    ? openWindows.filter((w) => w.kind === "widget" && widgetIds.has(w.id))
+        .length
+    : openWindows.filter((w) => w.kind === "overlay" && w.id === overlayId)
+        .length;
+
   return (
-    <div className="mx-auto max-w-3xl space-y-8 p-6">
-      {/* Page header */}
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="grid size-10 place-items-center rounded-card border border-border bg-surface text-muted">
+    <div className="flex-none border-b border-border bg-surface/40 px-6 py-4">
+      <div className="mx-auto flex max-w-3xl flex-wrap items-center gap-3">
+        <span className="grid size-10 shrink-0 place-items-center rounded-card border border-border bg-surface text-muted">
           <Icon className="size-5" />
         </span>
         <div className="min-w-[8rem] flex-1">
           <h1 className="truncate text-base font-semibold tracking-tight text-text">
             {dashboard.label}
           </h1>
-          <p className="text-xs text-muted">
-            {isWidgetDashboard
-              ? "Enable widgets, then open them — each in its own window."
-              : "Configure, preview and open this overlay — all on one page."}
+          {/* The status line is mono: it reports machine state, not prose. */}
+          <p className="tnum mt-0.5 font-mono text-[11px] tracking-tight">
+            <span className={settings.enabled ? "text-muted" : "text-faint"}>
+              {settings.enabled ? "enabled" : "disabled"}
+            </span>
+            <span className="text-faint"> · </span>
+            <span className={openCount > 0 ? "text-primary" : "text-faint"}>
+              {openCount === 0
+                ? "no window"
+                : `${openCount} window${openCount === 1 ? "" : "s"} open`}
+            </span>
           </p>
         </div>
 
@@ -185,7 +209,20 @@ function OverlayConfigPage({ overlayId }: { overlayId: string }) {
           <OverlayWindowAction overlayId={overlayId} label={dashboard.label} />
         )}
       </div>
+    </div>
+  );
+}
 
+/**
+ * Everything below the control head: the tuning sections, stacked inline on
+ * one scrolling page — no dialogs, no tabs.
+ */
+function OverlayConfigSections({ overlayId }: { overlayId: string }) {
+  const dashboard = getDashboard(overlayId);
+  const isWidgetDashboard = dashboard.widgets.length > 0;
+
+  return (
+    <div className="mx-auto max-w-3xl px-6 pb-10 pt-6">
       {isWidgetDashboard && (
         <ConfigSection
           title="Widgets"
@@ -355,8 +392,8 @@ function WidgetRow({ widget }: { widget: WidgetDef }) {
             {widget.title}
           </span>
           {open && (
-            <span className="flex items-center gap-1 rounded-full bg-primary/10 px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide text-primary">
-              <span className="size-1 rounded-full bg-primary" />
+            <span className="flex items-center gap-1 whitespace-nowrap rounded-full bg-primary/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.12em] text-primary">
+              <span aria-hidden className="size-1 rounded-full bg-primary" />
               Open
             </span>
           )}
@@ -374,6 +411,15 @@ function WidgetRow({ widget }: { widget: WidgetDef }) {
   );
 }
 
+/**
+ * A tuning section.
+ *
+ * The divider is a rule that runs from the heading and fades out to the right
+ * — the same `.header-rule` idiom the widget headers use — rather than a
+ * full-width border above every block. It reads as a panel legend instead of
+ * a stack of identical horizontal bands, and it ties the Manager's chrome to
+ * the vocabulary the overlays already speak.
+ */
 function ConfigSection({
   title,
   description,
@@ -384,18 +430,28 @@ function ConfigSection({
   children: React.ReactNode;
 }) {
   return (
-    <section className="border-t border-border pt-6">
+    <section className="pt-8 first:pt-0">
       <div className="mb-4">
-        <h2 className="text-sm font-semibold tracking-tight text-text">
-          {title}
-        </h2>
-        <p className="mt-0.5 text-xs text-muted">{description}</p>
+        <div className="flex items-center gap-3">
+          <h2 className="whitespace-nowrap text-sm font-semibold tracking-tight text-text">
+            {title}
+          </h2>
+          <span className="header-rule" aria-hidden />
+        </div>
+        <p className="mt-1 max-w-prose text-xs text-muted">{description}</p>
       </div>
       {children}
     </section>
   );
 }
 
+/**
+ * The enable switch in the control head.
+ *
+ * Draws its own track rather than wrapping a `ToggleSwitch`: nesting one
+ * button inside another is invalid markup, and it left the label and the
+ * switch as two separate tab stops for the same single control.
+ */
 function EnableToggle({
   enabled,
   onChange,
@@ -409,7 +465,7 @@ function EnableToggle({
       role="switch"
       aria-checked={enabled}
       onClick={() => onChange(!enabled)}
-      className="flex items-center gap-2 rounded-ctl border border-border bg-surface-2 px-2.5 py-1.5 transition-colors hover:border-border-strong"
+      className="flex items-center gap-2 whitespace-nowrap rounded-ctl border border-border bg-surface-2 px-2.5 py-1.5 transition-colors hover:border-border-strong active:brightness-95"
     >
       <span
         className={[
@@ -419,7 +475,22 @@ function EnableToggle({
       >
         {enabled ? "Enabled" : "Disabled"}
       </span>
-      <ToggleSwitch size="sm" checked={enabled} onChange={onChange} />
+      <span
+        aria-hidden
+        className={[
+          "relative h-4 w-7 shrink-0 rounded-full transition-colors",
+          enabled
+            ? "bg-primary"
+            : "border border-border-strong bg-surface",
+        ].join(" ")}
+      >
+        <span
+          className={[
+            "absolute top-0.5 size-3 rounded-full bg-text shadow-sm transition-[left]",
+            enabled ? "left-[14px]" : "left-0.5",
+          ].join(" ")}
+        />
+      </span>
     </button>
   );
 }
@@ -501,9 +572,11 @@ function ProfileSelector() {
       <button
         type="button"
         onClick={() => setOpen((o) => !o)}
-        className="flex items-center gap-2 rounded-ctl border border-border bg-surface-2 px-3 py-1.5 text-xs transition-colors hover:border-border-strong"
+        aria-haspopup="menu"
+        aria-expanded={open}
+        className="flex items-center gap-2 whitespace-nowrap rounded-ctl border border-border bg-surface-2 px-3 py-1.5 text-xs transition-colors hover:border-border-strong active:brightness-95"
       >
-        <span className="text-[10px] font-semibold uppercase tracking-wide text-faint">
+        <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-faint">
           Profile
         </span>
         <span className="max-w-32 truncate font-medium text-text">
@@ -542,7 +615,7 @@ function ProfileSelector() {
                       value={renameValue}
                       onChange={(e) => setRenameValue(e.target.value)}
                       onBlur={commitRename}
-                      className="flex-1 rounded-ctl border border-primary bg-bg px-1.5 py-0.5 text-xs text-text outline-none"
+                      className="flex-1 rounded-ctl border border-primary bg-bg px-1.5 py-0.5 text-xs text-text"
                     />
                   </form>
                 ) : (
@@ -607,7 +680,7 @@ function ProfileSelector() {
                   value={newName}
                   onChange={(e) => setNewName(e.target.value)}
                   onBlur={commitCreate}
-                  className="flex-1 rounded-ctl border border-primary bg-bg px-1.5 py-0.5 text-xs text-text outline-none placeholder:text-faint"
+                  className="flex-1 rounded-ctl border border-primary bg-bg px-1.5 py-0.5 text-xs text-text placeholder:text-faint"
                 />
                 <button
                   type="submit"
@@ -651,7 +724,7 @@ function Sidebar({
     <aside className="flex w-56 flex-none flex-col border-r border-border">
       {/* Overlay catalog */}
       <div className="flex-1 overflow-y-auto p-3">
-        <p className="mb-2 px-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">
+        <p className="mb-2 px-2 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-faint">
           Overlays
         </p>
         <div className="space-y-0.5">
@@ -714,10 +787,27 @@ function OverlaySidebarItem({
   onToggleEnabled: () => void;
 }) {
   const Icon = dashboard.icon;
+
+  /*
+   * The rail carries *liveness*, not selection — the two used to share it, so
+   * a blue bar could mean either "you're looking at this" or "this is on
+   * screen right now". Selection is the filled row; the rail is a three-state
+   * readout you can take in without reading a single word:
+   *
+   *   transparent  → disabled
+   *   border       → enabled, no window
+   *   primary      → window open over the game
+   */
+  const rail = open
+    ? "bg-primary"
+    : enabled
+      ? "bg-border-strong"
+      : "bg-transparent";
+
   return (
     <div
       className={[
-        "group flex items-center gap-2 rounded-ctl px-2 py-2 transition-colors",
+        "group flex items-center gap-2 rounded-ctl py-2 pl-1 pr-2 transition-colors",
         selected
           ? "bg-surface-2 text-text"
           : enabled
@@ -729,25 +819,23 @@ function OverlaySidebarItem({
         type="button"
         className="flex min-w-0 flex-1 items-center gap-2.5 text-left"
         onClick={onSelect}
+        aria-current={selected ? "page" : undefined}
       >
-        {/* Selected rail */}
         <span
+          aria-hidden
           className={[
-            "h-4 w-0.5 shrink-0 rounded-full transition-colors",
-            selected ? "bg-primary" : "bg-transparent",
+            "h-5 w-[3px] shrink-0 rounded-full transition-colors",
+            rail,
           ].join(" ")}
         />
-        <span className="relative shrink-0">
-          <Icon className="size-3.5" />
-          {/* Active-window indicator dot. */}
-          {open && (
-            <span
-              className="absolute -right-1 -top-1 size-1.5 rounded-full bg-primary ring-2 ring-bg"
-              title="Window open"
-            />
-          )}
-        </span>
+        <Icon className="size-3.5 shrink-0" />
         <span className="truncate text-xs font-medium">{dashboard.label}</span>
+        {/* The rail is the glanceable channel; this is the same fact spelled
+            out for screen readers and for anyone who can't rely on color. */}
+        <span className="sr-only">
+          {enabled ? "enabled" : "disabled"}
+          {open ? ", window open" : ""}
+        </span>
       </button>
 
       {/* Enable/disable toggle */}
@@ -791,17 +879,38 @@ function NavItem({
 
 // ── ManagerFooter ─────────────────────────────────────────────────────────────
 
+/**
+ * The status strip: one mono line of what the Manager actually knows.
+ *
+ * Deliberately *not* a bridge-connection readout. The Manager never opens a
+ * bridge — it drives its own stores from `MockFeed` so the preview can render
+ * real overlay components offline (see `App`). `useBridgeStore` therefore
+ * always reports "connected, session active" in this window, which would make
+ * a connection indicator here permanently green and permanently meaningless.
+ * The overlay windows each own a real connection; Debug & Diagnostics is where
+ * that state is genuinely reported.
+ *
+ * What this strip can honestly say is how much is armed and how much is on
+ * screen — which is also the pair worth knowing at a glance mid-session.
+ */
 function ManagerFooter() {
   const openCount = useActiveOverlaysStore((s) => s.windows.length);
+  const enabledCount = useOverlayConfigStore(
+    (s) => DASHBOARDS.filter((d) => s.getOverlaySettings(d.id).enabled).length
+  );
 
   return (
     <footer className="flex h-8 flex-none items-center gap-2 border-t border-border bg-surface px-4">
-      <span className="inline-block size-1.5 rounded-full bg-primary" />
-      <span className="text-[11px] text-faint">Preview · mock data</span>
-      <span className="ml-auto text-[11px] tabular-nums text-faint">
+      <span aria-hidden className="inline-block size-1.5 shrink-0 rounded-full bg-primary" />
+      <span className="truncate font-mono text-[11px] tracking-tight text-faint">
+        preview · mock data
+      </span>
+      <span className="tnum ml-auto shrink-0 font-mono text-[11px] text-faint">
+        {enabledCount}/{DASHBOARDS.length} enabled
+        <span className="mx-1.5 text-border-strong">·</span>
         {openCount === 0
-          ? "No windows open"
-          : `${openCount} window${openCount === 1 ? "" : "s"} open`}
+          ? "no windows"
+          : `${openCount} window${openCount === 1 ? "" : "s"}`}
       </span>
     </footer>
   );
