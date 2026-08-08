@@ -84,13 +84,25 @@ export const MOCK_FIELD: MockCar[] = Array.from({ length: MOCK_FIELD_SIZE }, (_,
   };
 });
 
-function lapTime(car: MockCar, t: number): number {
-  return car.pace + car.wobble * Math.sin(t * 0.03 + car.idx);
-}
-
 /** Total laps completed (float): integer part = lap, fraction = lapDistPct. */
 function progress(car: MockCar, t: number): number {
   return car.phase + t / car.pace;
+}
+
+/**
+ * This car's most recently *completed* lap time.
+ *
+ * Keyed on the lap index rather than on `t` directly, which matters more than
+ * it looks: a completed lap time only changes when a lap completes. An earlier
+ * version varied it continuously with `t`, so at 10 Hz every car's last lap,
+ * lap grade and sector splits changed on every tick — which remounted the
+ * animated timing cells (they are keyed on their value to replay the sector-pop
+ * and lap-flash animations only on a real change) and made the whole table
+ * visibly blink.
+ */
+function lapTime(car: MockCar, t: number): number {
+  const lap = Math.floor(progress(car, t));
+  return car.pace + car.wobble * Math.sin(lap * 1.7 + car.idx);
 }
 
 // ── player telemetry ───────────────────────────────────────────────────────
@@ -254,7 +266,10 @@ function sectorBest(car: MockCar, i: number): number {
  * what a flat "lap × share" split cannot show.
  */
 function sectorLast(car: MockCar, t: number, i: number): number {
-  const swing = car.wobble * 0.5 * Math.sin(t * 0.045 + car.idx + i * 2.1);
+  // Per completed lap, like `lapTime` — see the note there on why this must not
+  // vary continuously.
+  const lap = Math.floor(progress(car, t));
+  const swing = car.wobble * 0.5 * Math.sin(lap * 2.3 + car.idx + i * 2.1);
   return sectorBest(car, i) + Math.max(-0.45, swing);
 }
 
