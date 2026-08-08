@@ -318,6 +318,26 @@ a {
   }
 }
 
+/*
+ * Timing-table row glide. Rows are positioned by `translateY`, so a change of
+ * running order slides a row to its new slot instead of teleporting it.
+ *
+ * This lives in CSS rather than an inline style for two reasons: it has to sit
+ * on the token scale (`--dur-mid`/`--ease-out`, not a bespoke 320 ms curve), and
+ * a row travelling across the table is *spatial* motion, which § Motion collapses
+ * outright under reduced motion rather than merely shortening. The row still
+ * lands at the right offset — it just stops animating on the way.
+ */
+.row-glide {
+  transition: transform var(--dur-mid) var(--ease-out);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .row-glide {
+    transition: none;
+  }
+}
+
 /* --- overlay mode --------------------------------------------------------- */
 
 /*

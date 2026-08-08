@@ -9,8 +9,38 @@
  */
 
 export const ROW_H = 30;
-export const CLASS_HEADER_H = 34;
-export const COL_HEADER_H = 28;
+
+/**
+ * Height of the column-label line printed *inside* the class leader's row.
+ *
+ * There is deliberately no persistent column-header band: on a six-row Relative
+ * a 28 px band was over 13 % of the overlay spent on labels a returning user
+ * stopped reading in their first session (`design.md` § Dense tabular overlays,
+ * rule 3). The labels instead live in the top slice of a row that has to exist
+ * anyway, so they cost no height at all.
+ */
+export const COL_LABEL_H = 9;
+
+/**
+ * Vertical gap between class groups, in place of a labelled band. A gap reads
+ * pre-attentively, costs a third of what a band cost, and needs nothing
+ * clickable (rule 2).
+ */
+export const CLASS_GAP = 10;
+
+/**
+ * Per-class-group background tones, as `[base, zebra]` utility pairs, indexed by
+ * the group's position in the field.
+ *
+ * This is the "tone shift" half of rule 2: consecutive class groups sit at
+ * slightly different lightness, so a class boundary reads as a change of ground
+ * rather than needing a label. Zebra tint is the only banding the rules allow,
+ * so the shift rides on it instead of introducing a new device.
+ */
+export const GROUP_TONE: readonly (readonly [base: string, zebra: string])[] = [
+  ["", "bg-surface-2/40"],
+  ["bg-surface-2/15", "bg-surface-2/55"],
+];
 
 /** Every column in the timing table, in render order. */
 export type StandingsColumnId =
@@ -38,7 +68,13 @@ interface ColumnDef {
   name: string;
   /** CSS grid width (per column; for `sectors`, per sector). */
   width: string;
-  /** Approx px width, used to compute the min table width. */
+  /**
+   * Approx px width, used to compute the min table width.
+   *
+   * For the flexible `driver` column this is a *target*, not a floor: the
+   * column itself can shrink to nothing, but a table narrower than the sum of
+   * these drops an optional column instead of crushing the name (rule 6).
+   */
   px: number;
   /** Header/label text alignment. */
   align: "left" | "center" | "right";
@@ -56,7 +92,11 @@ export const STANDINGS_COLUMNS: readonly ColumnDef[] = [
   { id: "pos", label: "Pos", name: "Position", width: "2rem", px: 32, align: "center", always: true },
   { id: "num", label: "#", name: "Car number", width: "2.4rem", px: 38, align: "center" },
   { id: "country", label: "Nat", name: "Country flag", width: "1.6rem", px: 26, align: "center" },
-  { id: "driver", label: "Driver", name: "Driver", width: "minmax(8rem, 1fr)", px: 128, align: "left", always: true },
+  // `minmax(0, 1fr)`, not `minmax(8rem, 1fr)`: the name absorbs all slack and is
+  // the only column allowed to truncate. An 8rem floor made the grid overflow
+  // its container instead, which is how fixed columns ended up holding empty
+  // space while `Francois Sieg…` clipped (rule 6).
+  { id: "driver", label: "Driver", name: "Driver", width: "minmax(0, 1fr)", px: 128, align: "left", always: true },
   { id: "brand", label: "Car", name: "Car brand", width: "1.7rem", px: 27, align: "center" },
   { id: "license", label: "Lic", name: "License / SR", width: "3.2rem", px: 51, align: "center" },
   { id: "irating", label: "iR", name: "iRating", width: "4.4rem", px: 70, align: "right" },

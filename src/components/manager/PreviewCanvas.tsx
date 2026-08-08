@@ -762,6 +762,10 @@ function RealOverlay({
     // Screens fill a window and scroll internally. Give them a frame at the
     // (growing) stage height so their own scrollbars never engage — the parent
     // enlarges `height` until all rows/columns fit.
+    //
+    // A screen renders identically here and over footage: it has one form, with
+    // no chrome and nothing clickable, so the preview cannot drift from the
+    // thing it previews.
     const Screen = dashboard.Screen;
     return (
       <div className="w-full overflow-hidden p-2" style={{ height }}>

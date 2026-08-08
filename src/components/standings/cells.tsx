@@ -75,10 +75,12 @@ export function LicenseBadge({
   safetyRating: number;
   color: string;
 }) {
+  // Coloured ink, no chip: the fastest-lap cell holds this surface's only fill
+  // (`design.md` § Dense tabular overlays, rule 5).
   return (
     <span
-      className="inline-flex items-center rounded px-1 text-[10px] font-semibold leading-tight tnum"
-      style={{ background: `${color}22`, color }}
+      className="inline-flex items-center text-[10px] font-semibold leading-tight tnum"
+      style={{ color }}
       title={`${group} ${safetyRating.toFixed(2)}`}
     >
       {group}
@@ -330,11 +332,32 @@ export function LapCell({
   time,
   color,
   flash,
+  fill,
+  fillTitle,
 }: {
   time: number | null;
   color?: string;
   flash?: boolean;
+  /**
+   * Paint the cell as a filled chip in this colour. Rationed to one meaning per
+   * surface (`design.md` § Dense tabular overlays, rule 5) — on Standings that
+   * is the fastest lap and nothing else. Filled ink is always `on-accent`
+   * (§ Theme, rule 1), never the fill colour's own foreground.
+   */
+  fill?: string;
+  fillTitle?: string;
 }) {
+  if (fill) {
+    return (
+      <span
+        className={`justify-self-end rounded-[3px] px-1 text-right text-[11px] font-semibold tabular-nums tnum ${flash ? "sec-flash" : ""}`}
+        style={{ background: fill, color: "var(--color-on-accent)" }}
+        title={fillTitle}
+      >
+        {lapTime(time)}
+      </span>
+    );
+  }
   return (
     <span
       className={`text-right text-[11px] tabular-nums tnum ${flash ? "sec-flash" : ""}`}
@@ -444,12 +467,3 @@ export function TireCell({
 }
 
 export { LAP_COLOR };
-
-/* -------------------------------------------------------------------------- */
-/*  Class collapse chevron                                                     */
-/* -------------------------------------------------------------------------- */
-
-export function CollapseChevron({ collapsed }: { collapsed: boolean }) {
-  const Icon = collapsed ? ChevronDown : ChevronUp;
-  return <Icon className="size-3.5 text-muted" />;
-}

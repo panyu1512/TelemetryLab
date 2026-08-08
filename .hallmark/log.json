@@ -1,6 +1,27 @@
 [
   {
     "date": "2026-08-08",
+    "scope": "overlay-component",
+    "verb": "redesign",
+    "macrostructure": "none (overlay component)",
+    "theme": "custom (unchanged — no tokens added)",
+    "studied": "no (applies the preceding study)",
+    "enrichment": "none",
+    "brief": "TelemetryLab · Standings + Relative brought onto § Dense tabular overlays: in-row column labels, quiet class separation, fill rationed to the fastest-lap cell, identity colour quarantined to the left border."
+  },
+  {
+    "date": "2026-08-08",
+    "scope": "overlay-component",
+    "verb": "study",
+    "macrostructure": "none (overlay component)",
+    "theme": "custom (unchanged — amendment only, no tokens added)",
+    "studied": "yes",
+    "dna_source": "image (public reference, third-party timing overlay)",
+    "enrichment": "none",
+    "brief": "TelemetryLab · design.md amendment: dense tabular overlays + identity-vs-status colour axis. No code emitted."
+  },
+  {
+    "date": "2026-08-08",
     "scope": "app",
     "macrostructure": "Workbench",
     "theme": "custom",

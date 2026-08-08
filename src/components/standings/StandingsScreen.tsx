@@ -7,16 +7,11 @@ import {
 } from "../../stores/useStandingsStore";
 import { useStandingsUiStore } from "../../stores/useStandingsUiStore";
 import {
-  CLASS_HEADER_H,
-  COL_HEADER_H,
   ROW_H,
   fitColumns,
   tableMinWidth,
   type ColumnVisibility,
 } from "./constants";
-import { ColumnHeader } from "./ColumnHeader";
-import { ClassHeader } from "./ClassHeader";
-import { StandingsHeader } from "./StandingsHeader";
 import { StandingsRow } from "./StandingsRow";
 import { useStandingsLayout } from "./useStandingsLayout";
 
@@ -26,15 +21,19 @@ const OVERSCAN = 320;
 /**
  * The v0.4 standings / timing screen.
  *
- * Composition:
- *   StandingsHeader  — session + view controls (low-frequency store reads)
- *   ColumnHeader     — sticky column labels
- *   virtualized body — class headers + rows, absolutely positioned by offset
+ * The screen is **rows and nothing else**: no title bar, no session strip, no
+ * controls. It is read at a glance while the user is driving, so every pixel
+ * goes to the field. Everything configurable about it lives in the Overlay
+ * Manager, which is the surface built for configuring.
  *
- * Rendering budget: the body only mounts the items on screen (windowed by
- * scroll offset), each row subscribes to just its own entry, and reorders
- * animate purely via CSS transforms. That keeps 100+ cars at 60 Hz telemetry
- * comfortably inside a 60 fps frame.
+ * That also means no column-header band — the labels print inside each class
+ * leader's row (`design.md` § Dense tabular overlays, rule 3) — and no class
+ * band: classes are separated by a gap plus a tone shift (rule 2).
+ *
+ * Rendering budget: the body only mounts the rows on screen (windowed by scroll
+ * offset), each row subscribes to just its own entry, and reorders animate
+ * purely via CSS transforms. That keeps 100+ cars at 60 Hz telemetry comfortably
+ * inside a 60 fps frame.
  */
 export function StandingsScreen() {
   const iracingActive = useBridgeStore((s) => s.iracingActive);
@@ -89,23 +88,38 @@ export function StandingsScreen() {
     [classes]
   );
 
-  // Window the item list to what's near the viewport.
+  // Who holds a fastest lap: one car per class, plus the single car whose class
+  // best is also the field best. This drives the surface's only filled cell
+  // (`design.md` § Dense tabular overlays, rule 5), so it is resolved once here
+  // rather than being re-derived per row.
+  const fastestByCar = useMemo(() => {
+    const map = new Map<number, "class" | "overall">();
+    let bestTime = Infinity;
+    let bestCar: number | null = null;
+    for (const c of classes) {
+      if (c.fastestLapCarIdx == null || c.fastestLap == null) continue;
+      map.set(c.fastestLapCarIdx, "class");
+      if (c.fastestLap < bestTime) {
+        bestTime = c.fastestLap;
+        bestCar = c.fastestLapCarIdx;
+      }
+    }
+    if (bestCar != null) map.set(bestCar, "overall");
+    return map;
+  }, [classes]);
+
+  // Window the row list to what's near the viewport.
   const visible = useMemo(() => {
     const min = scrollTop - OVERSCAN;
     const max = scrollTop + viewH + OVERSCAN;
-    return items.filter((it) => {
-      const h = it.type === "class-header" ? CLASS_HEADER_H : ROW_H;
-      return it.top + h >= min && it.top <= max;
-    });
+    return items.filter((it) => it.top + ROW_H >= min && it.top <= max);
   }, [items, scrollTop, viewH]);
 
   // Follow the player: keep their row roughly centered when it moves, but only
   // when it has drifted far enough that a nudge is warranted (avoids fighting).
   const playerTop = useMemo(() => {
     if (meta.playerCarIdx < 0) return null;
-    const it = items.find(
-      (i) => i.type === "row" && i.carIdx === meta.playerCarIdx
-    );
+    const it = items.find((i) => i.carIdx === meta.playerCarIdx);
     return it ? it.top : null;
   }, [items, meta.playerCarIdx]);
 
@@ -122,27 +136,16 @@ export function StandingsScreen() {
 
   return (
     <div className="overlay-card flex h-full flex-col overflow-hidden rounded-card border border-border/60 bg-surface">
-      <StandingsHeader />
       <div ref={scrollRef} className="relative flex-1 overflow-auto">
         {isEmpty ? (
           <EmptyState iracingActive={iracingActive} />
         ) : (
           <div style={{ minWidth: tableMinWidth(meta.sectorCount, isVisible) }}>
-            <ColumnHeader sectorCount={meta.sectorCount} isVisible={isVisible} />
             <div
               className="relative"
-              style={{ height: totalHeight + 8, marginTop: 2 }}
+              style={{ height: totalHeight + 8, marginTop: 6 }}
             >
               {visible.map((it) => {
-                if (it.type === "class-header") {
-                  const group = classById.get(it.classId);
-                  return group ? (
-                    <ClassHeader key={it.key} group={group} top={it.top} />
-                  ) : null;
-                }
-                // Zebra by index within the (already ordered) visible set is
-                // unstable during reorders; derive it from the offset instead.
-                const zebra = Math.round((it.top - COL_HEADER_H) / ROW_H) % 2 === 1;
                 return (
                   <StandingsRow
                     key={it.key}
@@ -150,9 +153,12 @@ export function StandingsScreen() {
                     top={it.top}
                     sectorCount={meta.sectorCount}
                     classColor={classById.get(it.classId)?.color ?? "#666"}
-                    zebra={zebra}
+                    zebra={it.zebra}
                     classRelative={classRelative}
                     isVisible={isVisible}
+                    labelled={it.leader}
+                    tone={it.tone}
+                    fastest={fastestByCar.get(it.carIdx) ?? null}
                   />
                 );
               })}
