@@ -45,10 +45,23 @@ iRacing connecting/disconnecting, set `MOCK_DISCONNECT_EVERY` in
 > No sim handy? Turn on **Mock Data** in the Overlay Manager → *Global Settings*
 > and the whole UI runs on built-in synthetic telemetry — no bridge required.
 
+## The site
+
+A static download page lives in [`site/`](site/) — plain HTML and two
+stylesheets, no build step. Serve the folder:
+
+```bash
+python3 -m http.server 4173 --directory site   # → http://localhost:4173
+```
+
+Its product screenshots are generated from this app on the mock feed; see
+[`site/README.md`](site/README.md) to re-shoot them after a UI change.
+
 ## Project layout
 
 ```
 .
+├── site/                     # Static marketing / download page (no build step)
 ├── src/                      # React frontend (Vite + TypeScript)
 │   ├── components/
 │   ├── telemetry/            # Wire protocol, typed models, WS connection

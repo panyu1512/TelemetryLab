@@ -1,24 +1,38 @@
 [
   {
     "date": "2026-08-08",
+    "scope": "marketing-site",
+    "macrostructure": "Split Studio",
+    "theme": "the locked system (design.md) \u2014 diversification inverted, not rotated",
+    "theme_axes": "dark / grotesk-sans / cool",
+    "vibe": "cool graphite instrument panel, signal blue",
+    "genre": "modern-minimal",
+    "nav": "N9 edge-aligned",
+    "footer": "Ft5 statement",
+    "sections": "H2 split diptych \u00b7 5 Split Studio rows \u00b7 F3 tabular spec sheet \u00b7 S5 bottom-anchored label \u00b7 requirements \u00b7 CTA",
+    "enrichment": "real product captures (no illustration, no re-drawn chrome)",
+    "brief": "TelemetryLab \u00b7 site/ \u2014 free + open-source download page, donation link, product captures as the only proof"
+  },
+  {
+    "date": "2026-08-08",
     "scope": "overlay-component",
     "verb": "redesign",
     "macrostructure": "none (overlay component)",
-    "theme": "custom (unchanged — no tokens added)",
+    "theme": "custom (unchanged \u2014 no tokens added)",
     "studied": "no (applies the preceding study)",
     "enrichment": "none",
-    "brief": "TelemetryLab · Standings + Relative brought onto § Dense tabular overlays: in-row column labels, quiet class separation, fill rationed to the fastest-lap cell, identity colour quarantined to the left border."
+    "brief": "TelemetryLab \u00b7 Standings + Relative brought onto \u00a7 Dense tabular overlays: in-row column labels, quiet class separation, fill rationed to the fastest-lap cell, identity colour quarantined to the left border."
   },
   {
     "date": "2026-08-08",
     "scope": "overlay-component",
     "verb": "study",
     "macrostructure": "none (overlay component)",
-    "theme": "custom (unchanged — amendment only, no tokens added)",
+    "theme": "custom (unchanged \u2014 amendment only, no tokens added)",
     "studied": "yes",
     "dna_source": "image (public reference, third-party timing overlay)",
     "enrichment": "none",
-    "brief": "TelemetryLab · design.md amendment: dense tabular overlays + identity-vs-status colour axis. No code emitted."
+    "brief": "TelemetryLab \u00b7 design.md amendment: dense tabular overlays + identity-vs-status colour axis. No code emitted."
   },
   {
     "date": "2026-08-08",
@@ -31,6 +45,6 @@
     "nav": "N3 side-rail",
     "footer": "Ft2 inline",
     "enrichment": "none",
-    "brief": "TelemetryLab · Overlay Manager redesign + locked design system (design.md)"
+    "brief": "TelemetryLab \u00b7 Overlay Manager redesign + locked design system (design.md)"
   }
 ]
