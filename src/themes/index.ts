@@ -167,6 +167,7 @@ export function getTheme(id: string): Theme {
 
 const THEME_PROPS = [
   "--color-bg",
+  "--color-timing-bg",
   "--color-surface",
   "--color-surface-2",
   "--color-border",
@@ -233,8 +234,16 @@ export function applyTheme(
   const surface2 = overlay ? withAlpha(c.surface2, 0.66) : c.surface2;
   const border = overlay ? withAlpha(c.border, 0.5) : c.border;
   const borderStrong = overlay ? withAlpha(c.borderStrong, 0.5) : c.borderStrong;
+  // The timing surfaces' own near-black paper (see `--color-timing-bg` in
+  // styles.css). Over live footage it stays *opaque enough to read as its own
+  // panel* rather than following the other surfaces down to 0.66 glass — a
+  // 30 px row of 12 px type has no room to lose contrast to a bright sky.
+  const timingBg = overlay
+    ? "rgb(0 0 0 / 0.82)"
+    : `color-mix(in oklab, ${c.bg} 30%, #000)`;
 
   el.style.setProperty("--color-bg", bg);
+  el.style.setProperty("--color-timing-bg", timingBg);
   el.style.setProperty("--color-surface", surface);
   el.style.setProperty("--color-surface-2", surface2);
   el.style.setProperty("--color-border", border);
