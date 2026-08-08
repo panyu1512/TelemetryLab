@@ -3,11 +3,14 @@ import { Wrench, AlertTriangle } from "lucide-react";
 import { useStandingsRow } from "../../stores/useStandingsStore";
 import { useDriver } from "../../stores/useSessionStore";
 import {
+  COL_LABEL_H,
+  GROUP_TONE,
   gridTemplate,
   LAP_COLOR,
   ROW_H,
   type ColumnVisibility,
 } from "./constants";
+import { ColumnLabels } from "./ColumnLabels";
 import { CountryFlag } from "../ui/CountryFlag";
 import {
   BrandIcon,
@@ -29,15 +32,30 @@ interface StandingsRowProps {
   zebra: boolean;
   /** Grouped by class ⇒ show gap/interval relative to the class, not overall. */
   classRelative: boolean;
-  /** Which columns to render (must match the header). */
+  /** Which columns to render (must match the labels). */
   isVisible: ColumnVisibility;
+  /**
+   * First row of its class group: prints the column labels in its top slice, so
+   * the table needs no header band (`design.md` § Dense tabular overlays, r. 3).
+   */
+  labelled: boolean;
+  /** Class-group tone index into {@link GROUP_TONE} (rule 2's tone shift). */
+  tone: number;
+  /**
+   * Whether this car holds the fastest lap in its class, or in the whole field.
+   * The *only* filled cell on this surface (rule 5) — everything else that needs
+   * colour gets coloured text.
+   */
+  fastest: "class" | "overall" | null;
 }
 
 /**
  * One field row. Subscribes to *only* its own timing entry (fast, 10 Hz) and its
  * own roster entry (slow, rare), so a tick that moves three cars re-renders
- * three rows — not the field. Absolutely positioned by `translateY(top)` with a
- * CSS transition, so a change of `top` (a position swap) animates the glide.
+ * three rows — not the field. Absolutely positioned by `translateY(top)`; the
+ * `.row-glide` class supplies the transition, so a change of `top` (a position
+ * swap) animates the glide on the token scale and switches off entirely under
+ * reduced motion.
  */
 function StandingsRowInner({
   carIdx,
@@ -47,6 +65,9 @@ function StandingsRowInner({
   zebra,
   classRelative,
   isVisible,
+  labelled,
+  tone,
+  fastest,
 }: StandingsRowProps) {
   const row = useStandingsRow(carIdx);
   const driver = useDriver(carIdx);
@@ -61,30 +82,39 @@ function StandingsRowInner({
     : row?.gapIsLaps;
   const intervalValue = classRelative ? row?.classInterval : row?.interval;
 
+  // Class-group tone shift, with the zebra phase riding on it (rule 2). The
+  // player's row overrides both: "this is you" is `primary` as the row's ground
+  // (§ Two colour systems, rule 3).
+  const [toneBase, toneZebra] = GROUP_TONE[tone % GROUP_TONE.length];
+
   return (
     <div
-      className="absolute inset-x-0 will-change-transform"
-      style={{
-        height: ROW_H,
-        transform: `translateY(${top}px)`,
-        transition: "transform 320ms cubic-bezier(0.22, 1, 0.36, 1)",
-      }}
+      className="row-glide absolute inset-x-0 will-change-transform"
+      style={{ height: ROW_H, transform: `translateY(${top}px)` }}
     >
       <div
         className={[
-          "grid h-full items-center gap-x-1 rounded-sm px-1 text-xs",
+          "relative grid h-full items-center gap-x-1 rounded-sm px-1 text-xs",
           row?.isPlayer
             ? "bg-primary/10 ring-1 ring-inset ring-primary/35"
             : zebra
-              ? "bg-surface-2/40"
-              : "",
+              ? toneZebra
+              : toneBase,
           dimmed ? "opacity-40" : "",
-        ].join(" ")}
+        ]
+          .filter(Boolean)
+          .join(" ")}
         style={{
           gridTemplateColumns: gridTemplate(sectorCount, isVisible),
           borderLeft: `2px solid ${row?.isClassLeader ? classColor : `${classColor}55`}`,
+          // Clear the in-row column labels rather than centring under them.
+          paddingTop: labelled ? COL_LABEL_H : undefined,
         }}
       >
+        {labelled && (
+          <ColumnLabels sectorCount={sectorCount} isVisible={isVisible} />
+        )}
+
         {/* position change */}
         {isVisible("change") && (
           <div className="flex justify-center">
@@ -97,10 +127,12 @@ function StandingsRowInner({
           {row?.classPosition ?? row?.position ?? "—"}
         </div>
 
-        {/* car number */}
+        {/* car number — no pill: fill is rationed to the fastest-lap cell
+            (rule 5), and `muted` is the floor for a car number (§ Deliberately
+            not adopted). */}
         {isVisible("num") && (
           <div
-            className="truncate rounded-[4px] bg-surface-2 text-center text-[11px] font-semibold tabular-nums tnum text-muted"
+            className="truncate text-center text-[11px] font-semibold tabular-nums tnum text-muted"
             title={`#${driver?.carNumber ?? ""}`}
           >
             {driver?.carNumber ?? "—"}
@@ -167,8 +199,27 @@ function StandingsRowInner({
             flash={row?.lastLapStatus === "overall_best"}
           />
         )}
+        {/* The one filled cell on this surface: the fastest lap, purple when it
+            leads the field and accent when it only leads the class (rule 5). */}
         {isVisible("best") && (
-          <LapCell time={row?.bestLapTime ?? null} color="var(--color-muted)" />
+          <LapCell
+            time={row?.bestLapTime ?? null}
+            color="var(--color-muted)"
+            fill={
+              fastest === "overall"
+                ? "var(--color-sector-purple)"
+                : fastest === "class"
+                  ? "var(--color-accent)"
+                  : undefined
+            }
+            fillTitle={
+              fastest === "overall"
+                ? "Fastest lap of the session"
+                : fastest === "class"
+                  ? "Fastest lap in class"
+                  : undefined
+            }
+          />
         )}
 
         {/* tyre compound + laps */}
@@ -186,7 +237,7 @@ function StandingsRowInner({
         <div className="flex items-center justify-center">
           {inPit ? (
             <span
-              className="rounded bg-warning/20 px-1 text-[8px] font-bold uppercase text-warning"
+              className="text-warning"
               title={row?.isInPitStall ? "In pit stall" : "On pit road"}
             >
               <Wrench className="size-3" />

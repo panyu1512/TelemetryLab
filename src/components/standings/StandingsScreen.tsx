@@ -6,15 +6,14 @@ import {
   useStandingsMeta,
 } from "../../stores/useStandingsStore";
 import { useStandingsUiStore } from "../../stores/useStandingsUiStore";
+import { useSurface } from "../ui/SurfaceContext";
 import {
   CLASS_HEADER_H,
-  COL_HEADER_H,
   ROW_H,
   fitColumns,
   tableMinWidth,
   type ColumnVisibility,
 } from "./constants";
-import { ColumnHeader } from "./ColumnHeader";
 import { ClassHeader } from "./ClassHeader";
 import { StandingsHeader } from "./StandingsHeader";
 import { StandingsRow } from "./StandingsRow";
@@ -28,8 +27,12 @@ const OVERSCAN = 320;
  *
  * Composition:
  *   StandingsHeader  — session + view controls (low-frequency store reads)
- *   ColumnHeader     — sticky column labels
  *   virtualized body — class headers + rows, absolutely positioned by offset
+ *
+ * There is no column-header band: the labels print inside each class leader's
+ * row (`design.md` § Dense tabular overlays, rule 3). On the over-footage form
+ * the interactive `ClassHeader` gives way to a gap plus a tone shift (rule 2),
+ * which is what `useSurface()` selects between.
  *
  * Rendering budget: the body only mounts the items on screen (windowed by
  * scroll offset), each row subscribes to just its own entry, and reorders
@@ -43,7 +46,8 @@ export function StandingsScreen() {
   const grouping = useStandingsUiStore((s) => s.grouping);
   const followPlayer = useStandingsUiStore((s) => s.followPlayer);
   const columns = useStandingsUiStore((s) => s.columns);
-  const { items, totalHeight } = useStandingsLayout();
+  const quiet = useSurface() === "overlay";
+  const { items, totalHeight } = useStandingsLayout(quiet);
   const classRelative = grouping === "class";
 
   const scrollRef = useRef<HTMLDivElement>(null);
@@ -89,6 +93,26 @@ export function StandingsScreen() {
     [classes]
   );
 
+  // Who holds a fastest lap: one car per class, plus the single car whose class
+  // best is also the field best. This drives the surface's only filled cell
+  // (`design.md` § Dense tabular overlays, rule 5), so it is resolved once here
+  // rather than being re-derived per row.
+  const fastestByCar = useMemo(() => {
+    const map = new Map<number, "class" | "overall">();
+    let bestTime = Infinity;
+    let bestCar: number | null = null;
+    for (const c of classes) {
+      if (c.fastestLapCarIdx == null || c.fastestLap == null) continue;
+      map.set(c.fastestLapCarIdx, "class");
+      if (c.fastestLap < bestTime) {
+        bestTime = c.fastestLap;
+        bestCar = c.fastestLapCarIdx;
+      }
+    }
+    if (bestCar != null) map.set(bestCar, "overall");
+    return map;
+  }, [classes]);
+
   // Window the item list to what's near the viewport.
   const visible = useMemo(() => {
     const min = scrollTop - OVERSCAN;
@@ -128,7 +152,6 @@ export function StandingsScreen() {
           <EmptyState iracingActive={iracingActive} />
         ) : (
           <div style={{ minWidth: tableMinWidth(meta.sectorCount, isVisible) }}>
-            <ColumnHeader sectorCount={meta.sectorCount} isVisible={isVisible} />
             <div
               className="relative"
               style={{ height: totalHeight + 8, marginTop: 2 }}
@@ -140,9 +163,6 @@ export function StandingsScreen() {
                     <ClassHeader key={it.key} group={group} top={it.top} />
                   ) : null;
                 }
-                // Zebra by index within the (already ordered) visible set is
-                // unstable during reorders; derive it from the offset instead.
-                const zebra = Math.round((it.top - COL_HEADER_H) / ROW_H) % 2 === 1;
                 return (
                   <StandingsRow
                     key={it.key}
@@ -150,9 +170,12 @@ export function StandingsScreen() {
                     top={it.top}
                     sectorCount={meta.sectorCount}
                     classColor={classById.get(it.classId)?.color ?? "#666"}
-                    zebra={zebra}
+                    zebra={it.zebra}
                     classRelative={classRelative}
                     isVisible={isVisible}
+                    labelled={it.leader}
+                    tone={it.tone}
+                    fastest={fastestByCar.get(it.carIdx) ?? null}
                   />
                 );
               })}

@@ -59,7 +59,10 @@ const REL_COLUMNS: { id: RelColumnId; width: string; px: number }[] = [
   { id: "pos", width: "2.2rem", px: 35 },
   { id: "num", width: "2.4rem", px: 38 },
   { id: "country", width: "1.6rem", px: 26 },
-  { id: "driver", width: "minmax(6.5rem, 1fr)", px: 104 },
+  // `minmax(0, 1fr)`: the name absorbs all slack and is the only column allowed
+  // to truncate (`design.md` § Dense tabular overlays, rule 6). `px` stays a
+  // target, so a narrow overlay drops a column before crushing the name.
+  { id: "driver", width: "minmax(0, 1fr)", px: 104 },
   { id: "brand", width: "1.7rem", px: 27 },
   { id: "class", width: "3rem", px: 48 },
   { id: "gap", width: "4.6rem", px: 74 },
@@ -148,7 +151,25 @@ const REL_HEADER_LABEL: Record<RelColumnId, string> = {
   hint: "",
 };
 
-function ColHeader({
+/** Height of the label line printed inside the table's first row. */
+const REL_LABEL_H = 9;
+
+function alignOf(id: RelColumnId): string {
+  if (id === "gap" || id === "last") return "text-right";
+  if (id === "driver") return "text-left";
+  return "text-center";
+}
+
+/**
+ * Column labels, printed in the top slice of the table's first row rather than
+ * in a band of their own (`design.md` § Dense tabular overlays, rule 3). A
+ * persistent 26 px band was over 12 % of a six-row Relative spent on labels the
+ * user stops reading after their first session; out of flow, these cost nothing.
+ *
+ * Kept — rather than dropped entirely, as the reference does — because `2.2`,
+ * `A3.6` and `3.9k` are undecodable on a first run (§ Deliberately not adopted).
+ */
+function ColumnLabels({
   isOn,
   template,
 }: {
@@ -157,20 +178,12 @@ function ColHeader({
 }) {
   return (
     <div
-      className="sticky top-0 z-10 grid items-center gap-x-1 border-b border-border bg-surface px-2 text-[10px] font-semibold uppercase tracking-[0.12em] text-faint"
-      style={{ gridTemplateColumns: template, height: 26 }}
+      aria-hidden
+      className="pointer-events-none absolute inset-x-0 top-0 grid items-start gap-x-1 px-2 font-mono text-[8px] font-semibold uppercase leading-none tracking-[0.14em] text-faint"
+      style={{ gridTemplateColumns: template, height: REL_LABEL_H }}
     >
       {REL_COLUMNS.filter((c) => isOn(c.id)).map((c) => (
-        <div
-          key={c.id}
-          className={
-            c.id === "gap" || c.id === "last"
-              ? "text-right"
-              : c.id === "driver"
-                ? ""
-                : "text-center"
-          }
-        >
+        <div key={c.id} className={`truncate ${alignOf(c.id)}`}>
           {REL_HEADER_LABEL[c.id]}
         </div>
       ))}
@@ -180,14 +193,16 @@ function ColHeader({
 
 // ─── Separator ───────────────────────────────────────────────────────────────
 
+/**
+ * Marks the you/behind boundary with whitespace and a micro-label — no rule.
+ * Rule 1 bans row separators outright: at this density a hairline costs more
+ * attention than it returns, and the primary-tinted player row plus the sign of
+ * the gap already carry the boundary.
+ */
 function Separator({ label }: { label: string }) {
   return (
-    <div className="flex items-center gap-2 px-2 py-1">
-      <div className="h-px flex-1 bg-border" />
-      <span className="text-[9px] font-semibold uppercase tracking-[0.16em] text-faint">
-        {label}
-      </span>
-      <div className="h-px flex-1 bg-border" />
+    <div className="px-2 pt-1.5 pb-0.5 font-mono text-[8px] font-semibold uppercase leading-none tracking-[0.16em] text-faint">
+      {label}
     </div>
   );
 }
@@ -203,6 +218,8 @@ interface RowProps {
   isOn: RelVisibility;
   template: string;
   isPlayer?: boolean;
+  /** First row of the table: carries the column labels (rule 3). */
+  labelled?: boolean;
 }
 
 function RowInner({
@@ -214,6 +231,7 @@ function RowInner({
   isOn,
   template,
   isPlayer = false,
+  labelled = false,
 }: RowProps) {
   const gap = entry.intervalToPlayer;
   const isBehind = !isPlayer && (gap ?? 0) < 0;
@@ -234,16 +252,16 @@ function RowInner({
   const isDiffClass = !isPlayer && entry.carClassId !== playerClassId;
   const dimmed = !isPlayer && (entry.isRetired || !entry.isInWorld);
 
-  const gapColor = isPlayer
-    ? "var(--color-primary)"
-    : isBehind
-      ? "var(--color-danger)"
-      : "var(--color-text)";
+  // "This is you" is the row's ground (`bg-primary/10` + ring), never its ink —
+  // tinting the value too would put an identity colour and a status colour in the
+  // same glyph (§ Two colour systems, rule 3). So the player's own gap, which is
+  // always 0.0s, reads as plain text.
+  const gapColor = isBehind ? "var(--color-danger)" : "var(--color-text)";
 
   return (
     <div
       className={[
-        "grid items-center gap-x-1 px-2 text-xs",
+        "relative grid items-center gap-x-1 px-2 text-xs",
         isPlayer ? "rounded-sm bg-primary/10 ring-1 ring-inset ring-primary/35" : "",
         dimmed ? "opacity-35" : "",
       ]
@@ -252,17 +270,23 @@ function RowInner({
       style={{
         gridTemplateColumns: template,
         height: ROW_H,
+        // The 2 px left border is this surface's single carrier of car-class
+        // colour (§ Two colour systems, rule 2).
         borderLeft: `2px solid ${isPlayer ? classColor : `${classColor}55`}`,
+        // Clear the in-row column labels rather than centring under them.
+        paddingTop: labelled ? REL_LABEL_H : undefined,
       }}
     >
+      {labelled && <ColumnLabels isOn={isOn} template={template} />}
+
       {/* overall position */}
       <div className="text-center text-[12px] font-semibold tabular-nums tnum text-muted">
         {entry.position ?? "—"}
       </div>
 
-      {/* car number */}
+      {/* car number — no pill (rule 5), `muted` floor (§ Deliberately not adopted) */}
       {isOn("num") && (
-        <div className="truncate rounded-[4px] bg-surface-2 text-center text-[11px] font-semibold tabular-nums tnum text-muted">
+        <div className="truncate text-center text-[11px] font-semibold tabular-nums tnum text-muted">
           {driver?.carNumber ?? "—"}
         </div>
       )}
@@ -277,12 +301,10 @@ function RowInner({
         </div>
       )}
 
-      {/* driver name */}
+      {/* driver name — plain `text` even for the player; the row's ground says
+          "you" (§ Two colour systems, rule 3) */}
       <div className="flex min-w-0 items-center">
-        <span
-          className="truncate text-[12px]"
-          style={{ color: isPlayer ? "var(--color-primary)" : "var(--color-text)" }}
-        >
+        <span className="truncate text-[12px] text-text">
           {driver?.userName ?? `Car ${entry.carIdx}`}
         </span>
       </div>
@@ -294,17 +316,13 @@ function RowInner({
         </div>
       )}
 
-      {/* class badge */}
+      {/* class badge — a label, not a second carrier of the class colour. The
+          left border already carries identity; tinting, filling or outlining a
+          badge with the same arbitrary hue puts it back in competition with the
+          status colours in the same row (§ Two colour systems, rule 2). */}
       {isOn("class") && (
         <div className="flex justify-center">
-          <span
-            className="rounded px-1 py-px text-[9px] font-bold uppercase leading-tight"
-            style={{
-              background: `${classColor}1a`,
-              color: classColor,
-              border: `1px solid ${classColor}44`,
-            }}
-          >
+          <span className="font-mono text-[9px] font-bold uppercase leading-tight tracking-[0.06em] text-muted">
             {driver?.carClassShortName ?? "?"}
           </span>
         </div>
@@ -503,16 +521,18 @@ export function RelativeScreen() {
         <EmptyState iracingActive={iracingActive} />
       ) : (
         <div className="flex flex-1 flex-col overflow-auto">
-          <ColHeader isOn={isOn} template={template} />
-
+          {/* No column-header band: the labels ride in the first row's top slice
+              (rule 3). The first row is the furthest car ahead, or the player
+              when nobody is ahead of them. */}
           <div className="flex flex-col gap-0.5 p-1">
             {/* Cars ahead — furthest at top, closest just above player */}
-            {ahead.map((entry) => (
+            {ahead.map((entry, i) => (
               <Row
                 key={entry.carIdx}
                 entry={entry}
                 driver={driversByIdx.get(entry.carIdx)}
                 classColor={classColorMap.get(entry.carClassId) ?? "#666666"}
+                labelled={i === 0}
                 {...rowProps}
               />
             ))}
@@ -526,6 +546,7 @@ export function RelativeScreen() {
                 entry={player}
                 driver={driversByIdx.get(player.carIdx)}
                 classColor={playerClassColor}
+                labelled={ahead.length === 0}
                 {...rowProps}
                 isPlayer
               />

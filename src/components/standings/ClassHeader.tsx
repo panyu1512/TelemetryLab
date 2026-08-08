@@ -46,7 +46,9 @@ export function ClassHeader({
         >
           {group.shortName || "Class"}
         </span>
-        <span className="shrink-0 rounded-full bg-surface-2 px-1.5 text-[9px] font-medium uppercase text-muted">
+        {/* No pill: fill on this surface is spent on the fastest-lap cell and
+            nothing else (`design.md` § Dense tabular overlays, rule 5). */}
+        <span className="shrink-0 font-mono text-[9px] font-medium uppercase tracking-[0.12em] text-muted">
           {group.carCount} cars
         </span>
         <span className="shrink-0 text-[10px] text-muted">
