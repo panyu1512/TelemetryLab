@@ -53,23 +53,27 @@ export function IRatingCell({
     // (rule 4). The tint binds them into a chip; the value keeps `text` and only
     // the delta takes status colour, so the number itself never has to be read
     // as a status.
+    //
+    // The chip fills its column rather than hugging its contents, and the delta
+    // sits in a fixed-width slot. A chip sized to `3.7k ▲29` and one sized to
+    // `1.9k` are different widths in the same column, which turns a quiet
+    // grouping device into a ragged edge running down the table — and it puts
+    // the ratings themselves on different verticals, which is the one thing a
+    // column of numbers must never do.
     <div
-      className="tnum flex w-fit items-baseline gap-1 justify-self-end rounded-[3px] px-1 py-0.5"
+      className="tnum flex w-full items-baseline justify-end gap-1 rounded-[3px] px-1 py-0.5"
       style={{ background: "rgb(255 255 255 / 0.05)" }}
     >
       <span className="text-[12px] font-semibold text-text">
         {iRating > 0 ? (iRating / 1000).toFixed(1) + "k" : "—"}
       </span>
-      {change !== 0 && (
-        <span
-          className="text-[10px] font-bold leading-none"
-          style={{ color: delta }}
-          title="Projected iRating change (estimate)"
-        >
-          {up ? "▲" : "▼"}
-          {Math.abs(change)}
-        </span>
-      )}
+      <span
+        className="w-[1.9rem] shrink-0 text-right text-[10px] font-bold leading-none"
+        style={{ color: change !== 0 ? delta : "transparent" }}
+        title={change !== 0 ? "Projected iRating change (estimate)" : undefined}
+      >
+        {change !== 0 ? `${up ? "▲" : "▼"}${Math.abs(change)}` : "·"}
+      </span>
     </div>
   );
 }

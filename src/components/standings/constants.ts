@@ -46,10 +46,18 @@ export const CLASS_GAP = 10;
  * have nowhere else to go — they are per-class, so the session strip cannot
  * hold them, and per-group, so no row can.
  *
- * 26 px, not the 34 the old class header cost: it carries a chip and three
- * micro-label pairs, which is a strip's geometry rather than a row's.
+ * 30 px, not the 34 the old class header cost: it carries a chip and three
+ * micro-label pairs, which is a strip's geometry rather than a row's — but it
+ * is a *heading*, and one set flush against the row under it reads as a first
+ * row rather than as the thing that opens the group.
  */
-export const CLASS_BAND_H = 26;
+export const CLASS_BAND_H = 30;
+
+/**
+ * Space between a class band and the first row of its group. Small, but it is
+ * what separates "this heads the group" from "this is the group's first entry".
+ */
+export const BAND_GAP = 4;
 
 /**
  * Per-class-group background tones, as `[base, zebra]` utility pairs, indexed by

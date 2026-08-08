@@ -2,7 +2,7 @@ import { memo } from "react";
 import type { ClassStanding } from "../../telemetry/types";
 import { kilo, lapTime } from "../../lib/format";
 import { readableInk } from "../../lib/contrast";
-import { CLASS_BAND_H } from "./constants";
+
 
 /**
  * The band that opens a class group.
@@ -43,12 +43,14 @@ function ClassBandInner({
 
   return (
     <div
-      className="flex items-center gap-3 overflow-hidden rounded-sm bg-white/[0.045] pr-2"
+      className="flex h-full items-center gap-3 overflow-hidden rounded-sm bg-white/[0.045] pr-2"
       style={{
-        height: CLASS_BAND_H,
-        // The band's leading edge carries the class colour at full strength,
-        // the same device as the row's 3 px border one scale up — see
-        // § Two colour systems, rule 2.
+        // The band's leading edge carries the class colour at full strength: the
+        // row's 3 px left border, one scale up (§ Two colour systems, rule 2).
+        // Being the same device, it has to sit at the same x — so the band's
+        // wrapper carries no horizontal padding, and the chip's own `ml-1`
+        // matches the row's `px-1`, putting chip and position column on one
+        // vertical.
         borderLeft: `3px solid ${color}`,
       }}
     >
@@ -57,7 +59,7 @@ function ClassBandInner({
           than one of this palette's (uniformly light) status colours, the ink is
           measured off the fill instead of assuming `on-accent`. */}
       <span
-        className="ml-1.5 shrink-0 rounded-[3px] px-1.5 py-0.5 font-mono text-[11px] font-bold uppercase leading-none tracking-[0.08em]"
+        className="ml-1 shrink-0 rounded-[3px] px-1.5 py-1 font-mono text-[11px] font-bold uppercase leading-none tracking-[0.08em]"
         style={{ background: color, color: readableInk(color) }}
       >
         {shortName || "—"}

@@ -4,7 +4,7 @@ import {
   useStandingsOrder,
 } from "../../stores/useStandingsStore";
 import { useStandingsUiStore } from "../../stores/useStandingsUiStore";
-import { CLASS_BAND_H, CLASS_GAP, ROW_H } from "./constants";
+import { BAND_GAP, CLASS_BAND_H, CLASS_GAP, ROW_H } from "./constants";
 
 /**
  * Flatten the grouped field into an absolutely-positioned item list.
@@ -108,7 +108,7 @@ export function useStandingsLayout(): StandingsLayout {
           top,
           classId: c.carClassId,
         });
-        top += CLASS_BAND_H;
+        top += CLASS_BAND_H + BAND_GAP;
       }
       c.order.forEach((carIdx, i) => {
         items.push({
