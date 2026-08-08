@@ -9,6 +9,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Session strip on the timing overlays.** Standings and Relative now carry a
+  one-line readout above the field: session type tinted by the active flag,
+  lap, session time (or laps) remaining, your incident count, track and air
+  temperature, strength of field and the local clock. Every field is a mono
+  micro-label plus a bold value — no icon quizzes. In a timed race the lap
+  field projects the race distance from time remaining ÷ estimated lap
+  (`6/≈36`) instead of showing a bare counter. Fields drop right-to-left as the
+  overlay narrows, and the strip can be turned off per screen from the Overlay
+  Manager. It is a readout, never a control: nothing on a timing surface can
+  still be aimed at.
+- **Column labels are now a per-screen toggle, off by default.** The
+  `POS # NAT DRIVER …` line on Standings and the `P # DRIVER CL GAP LAST` line
+  on Relative are gone unless you switch them on. They cost no height — they
+  ride out of flow in a row that has to exist anyway — but the cost of a label
+  you have already learned is the glance spent skipping it, which on these
+  screens is the expensive kind.
+- **Class bands on the standings.** Each class group now opens with a band
+  carrying that class's own numbers — its colour chip and name, car count,
+  strength of field and fastest lap (purple when it also leads the session).
+  Those values are per-class, so the session strip cannot hold them and no row
+  can either. The band has nothing to click, appears only when the field is
+  grouped by class, and can be turned off from the Overlay Manager.
 - **Driver country flags.** The bridge now forwards each driver's country flair
   (`FlairName`/`FlairShortName`) as `countryName`/`countryCode`, and the
   standings and relative overlays can show a country flag (bundled SVG flags,
@@ -18,8 +40,54 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   *Columns* panel; relative: new *Options* panel in the manager, which also
   hosts a persisted "cars per side" setting).
 
+### Fixed
+
+- **The timing table no longer blinks.** The mock's lap times and sector splits
+  varied continuously with elapsed time, so at 10 Hz every car's last lap, lap
+  grade and sectors changed on every tick — which remounted the animated timing
+  cells (keyed on their value so the sector-pop and lap-flash animations replay
+  only on a real change) and made the whole table flicker. They are now keyed on
+  the completed lap, which is also what real telemetry does.
+- **The mock field now exercises the timing surface.** It previously emitted
+  `normal` for every lap grade, empty sector splits, null intervals and zero
+  position change, so purple/green laps, sector deltas, the interval column,
+  position arrows and the pit/off-track column were all invisible without a
+  live iRacing session. Everything added stays a pure function of elapsed time.
+
 ### Changed
 
+- **Timing overlays redrawn for peripheral vision.** Standings and Relative now
+  paint on their own near-black paper (`--color-timing-bg`, themed, and kept
+  opaque over live footage where every other overlay card drops to glass), and
+  their type runs one step larger and one weight heavier than the rest of the
+  app: 13 px semibold driver names, 12 px semibold values, 14 px bold
+  positions, on 32/34 px rows. Zebra banding moved from graphite tints to plain
+  white alpha so it reads identically in all four themes.
+- **Manufacturer marks at 17 px in near-white**, up from 13 px in 55 % grey —
+  at the old size an Audi's four rings and a Porsche crest resolved to the same
+  smudge in exactly the viewing conditions these screens are built for. An
+  unknown make now prints its first three letters in the same ink instead of a
+  grey pill.
+- **Compound cells read as single tokens.** The licence badge, the iRating pair
+  and the position-change indicator are now tinted chips — the same hue as
+  their ink, at low alpha — because each is two values read together or not at
+  all. A tint is deliberately not a fill: the fastest-lap cell still holds the
+  surface's only filled background.
+- **A graded lap is ruled, not recoloured.** The last-lap cell keeps white
+  digits and takes a green underline for a personal best, so the number stays
+  readable *as a time* — which is what the driver is actually comparing.
+  A session-best lap still colours its digits purple.
+- **The class band is set apart from its group and shares the field's left
+  margin.** It is 30 px with a 4 px gap before the first row — a heading flush
+  against the row under it reads as that group's first entry — and its coloured
+  leading edge now sits on the same vertical as the rows' left borders, since
+  they are the same device at two scales.
+- **iRating chips are sized by their column, not their contents.** A chip
+  hugging `3.7k ▲29` and one hugging `1.9k` were different widths in the same
+  column, which put the ratings on different verticals.
+- **The class-colour left border is 3 px**, up from 2. On the new near-black
+  paper a 2 px hairline of an arbitrary hue was the first thing to vanish in
+  peripheral vision.
 - **Responsive standings & relative tables.** Both overlays now measure their
   window and drop optional columns in priority order when space runs out, so a
   narrow overlay shows a clean pos/driver/gap core instead of growing a

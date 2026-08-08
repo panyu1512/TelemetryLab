@@ -8,6 +8,7 @@ import {
   sectorTime,
 } from "../../lib/format";
 import { LAP_COLOR, SECTOR_COLOR } from "./constants";
+import { tint } from "../../lib/contrast";
 
 /* -------------------------------------------------------------------------- */
 /*  Position-change arrow (▲2 / ▼1) — gain since the green flag                */
@@ -19,13 +20,16 @@ export function PosChange({ value }: { value: number }) {
   }
   const up = value > 0;
   const Icon = up ? ChevronUp : ChevronDown;
+  const color = up ? "var(--color-accent)" : "var(--color-danger)";
+  // A *tint*, not a fill: same hue behind ink of that hue, which groups the
+  // arrow with its count without spending the surface's one fill (rule 5).
   return (
     <span
-      className="flex items-center justify-center gap-px text-[10px] font-semibold leading-none tnum"
-      style={{ color: up ? "var(--color-accent)" : "var(--color-danger)" }}
+      className="flex items-center justify-center gap-px rounded-[3px] px-0.5 py-0.5 text-[11px] font-bold leading-none tnum"
+      style={{ color, background: tint(color, 0.14) }}
       title={`${up ? "Gained" : "Lost"} ${Math.abs(value)} since start`}
     >
-      <Icon className="size-2.5" strokeWidth={3} />
+      <Icon className="size-3" strokeWidth={3.5} />
       {Math.abs(value)}
     </span>
   );
@@ -43,21 +47,33 @@ export function IRatingCell({
   change: number;
 }) {
   const up = change > 0;
+  const delta = up ? "var(--color-accent)" : "var(--color-danger)";
   return (
-    <div className="flex items-baseline justify-end gap-1 tnum">
-      <span className="text-[11px] text-text/90">
+    // Rating and its projected change are one compound cell in two voices
+    // (rule 4). The tint binds them into a chip; the value keeps `text` and only
+    // the delta takes status colour, so the number itself never has to be read
+    // as a status.
+    //
+    // The chip fills its column rather than hugging its contents, and the delta
+    // sits in a fixed-width slot. A chip sized to `3.7k ▲29` and one sized to
+    // `1.9k` are different widths in the same column, which turns a quiet
+    // grouping device into a ragged edge running down the table — and it puts
+    // the ratings themselves on different verticals, which is the one thing a
+    // column of numbers must never do.
+    <div
+      className="tnum flex w-full items-baseline justify-end gap-1 rounded-[3px] px-1 py-0.5"
+      style={{ background: "rgb(255 255 255 / 0.05)" }}
+    >
+      <span className="text-[12px] font-semibold text-text">
         {iRating > 0 ? (iRating / 1000).toFixed(1) + "k" : "—"}
       </span>
-      {change !== 0 && (
-        <span
-          className="text-[9px] font-semibold leading-none"
-          style={{ color: up ? "var(--color-accent)" : "var(--color-danger)" }}
-          title="Projected iRating change (estimate)"
-        >
-          {up ? "▲" : "▼"}
-          {Math.abs(change)}
-        </span>
-      )}
+      <span
+        className="w-[1.9rem] shrink-0 text-right text-[10px] font-bold leading-none"
+        style={{ color: change !== 0 ? delta : "transparent" }}
+        title={change !== 0 ? "Projected iRating change (estimate)" : undefined}
+      >
+        {change !== 0 ? `${up ? "▲" : "▼"}${Math.abs(change)}` : "·"}
+      </span>
     </div>
   );
 }
@@ -75,12 +91,14 @@ export function LicenseBadge({
   safetyRating: number;
   color: string;
 }) {
-  // Coloured ink, no chip: the fastest-lap cell holds this surface's only fill
-  // (`design.md` § Dense tabular overlays, rule 5).
+  // A tinted chip, not a fill: the fastest-lap cell still holds this surface's
+  // only fill (`design.md` § Dense tabular overlays, rule 5). The tint groups
+  // the class letter and the safety rating into one token — they are read
+  // together or not at all — at a fraction of a fill's weight.
   return (
     <span
-      className="inline-flex items-center text-[10px] font-semibold leading-tight tnum"
-      style={{ color }}
+      className="tnum inline-flex items-center rounded-[3px] px-1 py-0.5 text-[11px] font-bold leading-none"
+      style={{ color, background: tint(color, 0.16) }}
       title={`${group} ${safetyRating.toFixed(2)}`}
     >
       {group}
@@ -275,26 +293,48 @@ const BRAND_ICONS: Record<string, () => JSX.Element> = {
 BRAND_ICONS.VW = BRAND_ICONS.Volkswagen;
 BRAND_ICONS["Mercedes-AMG"] = BRAND_ICONS.Mercedes;
 
-export function BrandIcon({ make }: { make: string }) {
+/**
+ * Default brand-mark height. 17 px rather than the previous 13: these marks are
+ * how a driver identifies a car at a glance in a multi-make field, and at 13 px
+ * a Porsche crest and an Audi's four rings resolved to the same grey smudge in
+ * peripheral vision.
+ */
+export const BRAND_ICON_H = 17;
+
+export function BrandIcon({
+  make,
+  height = BRAND_ICON_H,
+}: {
+  make: string;
+  /** Override the mark height in px (the width follows from the viewBox). */
+  height?: number;
+}) {
   if (!make) return null;
   const Icon = BRAND_ICONS[make];
   if (Icon) {
     // .brand-icon CSS rule: > svg { height: 100%; width: auto; display: block; }
-    // inline-flex default (align-items: stretch) lets height:100% resolve to 13px.
+    // inline-flex default (align-items: stretch) lets height:100% resolve.
+    //
+    // Near-white, not the old 55%-alpha grey. A manufacturer mark is *identity*
+    // and identity on this surface has exactly one coloured carrier, the left
+    // border (§ Two colour systems, rule 2) — so the mark reads in the row's own
+    // ink, at full strength, and simply gets out of the way of the coloured
+    // status values instead of competing with them from half-brightness.
     return (
       <span
-        className="brand-icon shrink-0 inline-flex"
-        style={{ height: 13, color: "rgba(230,230,230,0.55)" }}
+        className="brand-icon inline-flex shrink-0"
+        style={{ height, color: "rgba(255,255,255,0.94)" }}
         title={make}
       >
         <Icon />
       </span>
     );
   }
-  // Unknown brand: plain muted pill with first 3 letters.
+  // Unknown brand: the make's first three letters in the same ink as a mark —
+  // no pill, since fill is rationed to the fastest-lap cell (rule 5).
   return (
     <span
-      className="shrink-0 rounded bg-surface-2 px-1 text-[9px] uppercase tracking-wide text-muted"
+      className="shrink-0 font-mono text-[10px] font-bold uppercase leading-none tracking-[0.06em] text-text/90"
       title={make}
     >
       {make.slice(0, 3)}
@@ -314,7 +354,7 @@ export function GapCell({
   isLaps: boolean;
 }) {
   return (
-    <span className="text-right text-[11px] tabular-nums text-text/80 tnum">
+    <span className="text-right text-[12px] font-semibold tabular-nums text-text tnum">
       {fmtGap(value, isLaps)}
     </span>
   );
@@ -322,7 +362,7 @@ export function GapCell({
 
 export function IntervalCell({ value }: { value: number | null }) {
   return (
-    <span className="text-right text-[11px] tabular-nums text-text/80 tnum">
+    <span className="text-right text-[12px] font-semibold tabular-nums text-text tnum">
       {fmtInterval(value)}
     </span>
   );
@@ -331,12 +371,23 @@ export function IntervalCell({ value }: { value: number | null }) {
 export function LapCell({
   time,
   color,
+  underline,
   flash,
   fill,
   fillTitle,
 }: {
   time: number | null;
   color?: string;
+  /**
+   * Rule the value with this colour.
+   *
+   * A lap that is a personal best has to stay *readable as a time* first — it
+   * is the number the driver is actually comparing — so grading it by recolouring
+   * the digits trades legibility for the grade. An underline carries the grade
+   * in the same glyph box without touching the digits, which is why the last-lap
+   * cell now keeps white ink and takes a green rule instead of turning green.
+   */
+  underline?: string;
   flash?: boolean;
   /**
    * Paint the cell as a filled chip in this colour. Rationed to one meaning per
@@ -350,7 +401,7 @@ export function LapCell({
   if (fill) {
     return (
       <span
-        className={`justify-self-end rounded-[3px] px-1 text-right text-[11px] font-semibold tabular-nums tnum ${flash ? "sec-flash" : ""}`}
+        className={`justify-self-end rounded-[3px] px-1.5 py-0.5 text-right text-[12px] font-bold tabular-nums tnum ${flash ? "sec-flash" : ""}`}
         style={{ background: fill, color: "var(--color-on-accent)" }}
         title={fillTitle}
       >
@@ -360,8 +411,18 @@ export function LapCell({
   }
   return (
     <span
-      className={`text-right text-[11px] tabular-nums tnum ${flash ? "sec-flash" : ""}`}
-      style={{ color: color ?? "var(--color-text)" }}
+      className={`text-right text-[12px] font-semibold tabular-nums tnum ${flash ? "sec-flash" : ""}`}
+      style={{
+        color: color ?? "var(--color-text)",
+        ...(underline
+          ? {
+              textDecoration: "underline",
+              textDecorationColor: underline,
+              textDecorationThickness: 2,
+              textUnderlineOffset: 3,
+            }
+          : null),
+      }}
     >
       {lapTime(time)}
     </span>
@@ -386,7 +447,7 @@ export function SectorCell({ sector }: { sector: SectorSplit | undefined }) {
   return (
     <span
       key={`${sector.status}-${sector.lastTime}`}
-      className="sec-cell text-center text-[10px] font-medium tabular-nums tnum"
+      className="sec-cell text-center text-[11px] font-semibold tabular-nums tnum"
       style={{ color }}
       title={`S${sector.index + 1}: ${sectorTime(sector.lastTime)}${
         sector.bestTime != null ? ` (best ${sectorTime(sector.bestTime)})` : ""
@@ -453,13 +514,13 @@ export function TireCell({
     <div className="flex items-center justify-center gap-0.5">
       <TireCompoundIcon compound={compound} />
       <span
-        className="text-[9px] font-bold leading-none"
+        className="text-[10px] font-bold leading-none"
         style={{ color }}
         title={`Compound ${label}`}
       >
         {label}
       </span>
-      <span className="text-[9px] tabular-nums" style={{ color: "var(--color-faint)" }} title={`${laps} laps on tyres`}>
+      <span className="text-[10px] font-semibold tabular-nums tnum" style={{ color: "var(--color-muted)" }} title={`${laps} laps on tyres`}>
         {laps}
       </span>
     </div>

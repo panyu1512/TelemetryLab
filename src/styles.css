@@ -46,6 +46,16 @@
   --color-muted: oklch(81.1% 0.0166 254); /* secondary text */
   --color-faint: oklch(62% 0.021 256); /* disabled / tertiary text */
 
+  /* The ground the dense timing surfaces paint on.
+   *
+   * Standings and Relative are read in peripheral vision at speed, so they get
+   * a darker paper than the rest of the app: near-black, still carrying the
+   * theme's hue, so bold white type sits on the highest-contrast ground the
+   * palette can give it. `applyTheme` recomputes it per theme (and drops it to
+   * a translucent black over live footage); this literal is the Carbon value,
+   * so the surface is right before any theme is applied. */
+  --color-timing-bg: color-mix(in oklab, oklch(19% 0.0094 256) 30%, #000);
+
   /* Status accents — never decorative */
   --color-accent: oklch(77.4% 0.181 154); /* positive */
   --color-accent-dim: oklch(64.6% 0.1526 155);
@@ -271,6 +281,27 @@ a {
 
 /* --- standings / timing screen ------------------------------------------- */
 
+/*
+ * The dense timing surfaces (Standings, Relative) paint on their own near-black
+ * paper rather than the app's `surface` graphite. These are the only screens
+ * read in peripheral vision at 200 km/h, so their type is bolder and larger
+ * than anywhere else in the app, and bold white type wants the darkest ground
+ * the palette can give it. See `--color-timing-bg`.
+ */
+.timing-surface {
+  background: var(--color-timing-bg);
+}
+
+/*
+ * The session strip's baseline: a hairline under the readout, so the strip
+ * reads as the table's masthead rather than as a first row. This is *not* the
+ * row separator rule 1 bans — it separates the strip from the field, which is
+ * exactly the boundary that needs to be unambiguous.
+ */
+.timing-strip {
+  box-shadow: inset 0 -1px 0 rgb(255 255 255 / 0.08);
+}
+
 /* Brand icon: the SVG child fills the container height and auto-sizes its
  * width from the viewBox aspect ratio. The container uses align-items:stretch
  * (inline-flex default) so height:100% on the SVG resolves correctly. */
@@ -388,6 +419,18 @@ html.overlay-mode .overlay-card,
   border-color: transparent !important;
   border-radius: 0 !important;
   box-shadow: none !important;
+}
+
+/*
+ * …with one exception: the timing surfaces keep their own paper over the game.
+ * The rule above drops every overlay card to transparent glass, which is right
+ * for a gauge but wrong for a 30 px row of 12 px type — a white car or a sunlit
+ * kerb passing under the table would take the field with it. Declared *after*
+ * the transparency rule, at equal specificity, so it wins.
+ */
+html.overlay-mode .timing-surface,
+.overlay-preview .timing-surface {
+  background: var(--color-timing-bg) !important;
 }
 
 /*

@@ -4,10 +4,12 @@
  * Shows the N cars physically nearest to the player on track, sorted by
  * signed relative time gap (positive = ahead, negative = behind).
  *
- * The screen is **rows and nothing else**: no title bar and nothing clickable.
- * It is read at a glance while the user is driving, so every pixel goes to the
- * field. The window size (3–10 per side) and the brand/country column options
- * are all set from the Overlay Manager and persisted in
+ * The screen is **rows and a readout, and nothing else**: no title bar, nothing
+ * clickable. It is read at a glance while the user is driving, so every pixel
+ * goes to the field — including the optional session strip above it, which is a
+ * readout the driver cannot interact with (`design.md` § Dense tabular overlays,
+ * rule 7). The window size (3–10 per side), the brand/country column options and
+ * the strip itself are all set from the Overlay Manager and persisted in
  * {@link useRelativeUiStore}, which broadcasts them so an open overlay updates
  * live.
  *
@@ -37,11 +39,19 @@ import { useRelativeUiStore } from "../../stores/useRelativeUiStore";
 import type { DriverEntry, StandingsEntry } from "../../telemetry/types";
 import { lapTime } from "../../lib/format";
 import { BrandIcon } from "../standings/cells";
+import { LAP_UNDERLINE } from "../standings/constants";
 import { CountryFlag } from "../ui/CountryFlag";
+import { SessionStrip } from "../timing/SessionStrip";
 
 // ─── Layout constants ────────────────────────────────────────────────────────
 
-const ROW_H = 32;
+/**
+ * Row height. 34 rather than 32: this surface's type went up a step and to
+ * semibold/bold throughout — it is read in peripheral vision while the driver's
+ * eyes belong to the track — and the taller row is what keeps 13 px names off
+ * the rows above and below.
+ */
+const ROW_H = 34;
 
 /** Every column the relative table can show, in render order. */
 type RelColumnId =
@@ -56,18 +66,18 @@ type RelColumnId =
   | "hint";
 
 const REL_COLUMNS: { id: RelColumnId; width: string; px: number }[] = [
-  { id: "pos", width: "2.2rem", px: 35 },
-  { id: "num", width: "2.4rem", px: 38 },
-  { id: "country", width: "1.6rem", px: 26 },
+  { id: "pos", width: "2.3rem", px: 37 },
+  { id: "num", width: "2.5rem", px: 40 },
+  { id: "country", width: "1.7rem", px: 27 },
   // `minmax(0, 1fr)`: the name absorbs all slack and is the only column allowed
   // to truncate (`design.md` § Dense tabular overlays, rule 6). `px` stays a
   // target, so a narrow overlay drops a column before crushing the name.
-  { id: "driver", width: "minmax(0, 1fr)", px: 104 },
-  { id: "brand", width: "1.7rem", px: 27 },
-  { id: "class", width: "3rem", px: 48 },
-  { id: "gap", width: "4.6rem", px: 74 },
-  { id: "last", width: "4.8rem", px: 77 },
-  { id: "hint", width: "1.6rem", px: 26 },
+  { id: "driver", width: "minmax(0, 1fr)", px: 112 },
+  { id: "brand", width: "2rem", px: 32 },
+  { id: "class", width: "3.2rem", px: 51 },
+  { id: "gap", width: "4.8rem", px: 77 },
+  { id: "last", width: "5rem", px: 80 },
+  { id: "hint", width: "1.8rem", px: 29 },
 ];
 
 /** Auto-hide order (first dropped) when the window gets too narrow. */
@@ -152,7 +162,7 @@ const REL_HEADER_LABEL: Record<RelColumnId, string> = {
 };
 
 /** Height of the label line printed inside the table's first row. */
-const REL_LABEL_H = 9;
+const REL_LABEL_H = 10;
 
 function alignOf(id: RelColumnId): string {
   if (id === "gap" || id === "last") return "text-right";
@@ -179,7 +189,7 @@ function ColumnLabels({
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute inset-x-0 top-0 grid items-start gap-x-1 px-2 font-mono text-[8px] font-semibold uppercase leading-none tracking-[0.14em] text-faint"
+      className="pointer-events-none absolute inset-x-0 top-0 grid items-start gap-x-1 px-2 font-mono text-[9px] font-semibold uppercase leading-none tracking-[0.14em] text-faint"
       style={{ gridTemplateColumns: template, height: REL_LABEL_H }}
     >
       {REL_COLUMNS.filter((c) => isOn(c.id)).map((c) => (
@@ -201,7 +211,7 @@ function ColumnLabels({
  */
 function Separator({ label }: { label: string }) {
   return (
-    <div className="px-2 pt-1.5 pb-0.5 font-mono text-[8px] font-semibold uppercase leading-none tracking-[0.16em] text-faint">
+    <div className="px-2 pt-1.5 pb-0.5 font-mono text-[9px] font-bold uppercase leading-none tracking-[0.18em] text-faint">
       {label}
     </div>
   );
@@ -272,7 +282,9 @@ function RowInner({
         height: ROW_H,
         // The 2 px left border is this surface's single carrier of car-class
         // colour (§ Two colour systems, rule 2).
-        borderLeft: `2px solid ${isPlayer ? classColor : `${classColor}55`}`,
+        // 3 px, up from 2: on near-black paper a 2 px hairline of an arbitrary
+        // hue was the first thing to go in peripheral vision.
+        borderLeft: `3px solid ${isPlayer ? classColor : `${classColor}66`}`,
         // Clear the in-row column labels rather than centring under them.
         paddingTop: labelled ? REL_LABEL_H : undefined,
       }}
@@ -280,13 +292,13 @@ function RowInner({
       {labelled && <ColumnLabels isOn={isOn} template={template} />}
 
       {/* overall position */}
-      <div className="text-center text-[12px] font-semibold tabular-nums tnum text-muted">
+      <div className="text-center text-[14px] font-bold tabular-nums tnum text-muted">
         {entry.position ?? "—"}
       </div>
 
       {/* car number — no pill (rule 5), `muted` floor (§ Deliberately not adopted) */}
       {isOn("num") && (
-        <div className="truncate text-center text-[11px] font-semibold tabular-nums tnum text-muted">
+        <div className="truncate text-center text-[12px] font-bold tabular-nums tnum text-muted">
           {driver?.carNumber ?? "—"}
         </div>
       )}
@@ -304,7 +316,7 @@ function RowInner({
       {/* driver name — plain `text` even for the player; the row's ground says
           "you" (§ Two colour systems, rule 3) */}
       <div className="flex min-w-0 items-center">
-        <span className="truncate text-[12px] text-text">
+        <span className="truncate text-[13px] font-semibold text-text">
           {driver?.userName ?? `Car ${entry.carIdx}`}
         </span>
       </div>
@@ -322,7 +334,7 @@ function RowInner({
           status colours in the same row (§ Two colour systems, rule 2). */}
       {isOn("class") && (
         <div className="flex justify-center">
-          <span className="font-mono text-[9px] font-bold uppercase leading-tight tracking-[0.06em] text-muted">
+          <span className="font-mono text-[10px] font-bold uppercase leading-tight tracking-[0.06em] text-muted">
             {driver?.carClassShortName ?? "?"}
           </span>
         </div>
@@ -330,15 +342,29 @@ function RowInner({
 
       {/* signed relative gap */}
       <div
-        className="text-right text-[12px] font-semibold tabular-nums tnum"
+        className="text-right text-[13px] font-bold tabular-nums tnum"
         style={{ color: gapColor }}
       >
         {isPlayer ? "0.0s" : `${fmtGap(gap)}s`}
       </div>
 
-      {/* last lap */}
+      {/* last lap, ruled rather than recoloured when it grades — the digits are
+          what the driver compares, so the grade rides underneath them
+          (`design.md` § Dense tabular overlays, rule 10) */}
       {isOn("last") && (
-        <div className="text-right text-[11px] tabular-nums tnum text-muted">
+        <div
+          className="text-right text-[12px] font-semibold tabular-nums tnum text-muted"
+          style={
+            LAP_UNDERLINE[entry.lastLapStatus]
+              ? {
+                  textDecoration: "underline",
+                  textDecorationColor: LAP_UNDERLINE[entry.lastLapStatus],
+                  textDecorationThickness: 2,
+                  textUnderlineOffset: 3,
+                }
+              : undefined
+          }
+        >
           {lapTime(entry.lastLapTime)}
         </div>
       )}
@@ -347,14 +373,14 @@ function RowInner({
       <div className="flex items-center justify-center">
         {isPlayer && (entry.onPitRoad || entry.isInPitStall) ? (
           <span title="On pit road">
-            <Wrench className="size-3 text-warning" />
+            <Wrench className="size-3.5 text-warning" />
           </span>
         ) : showAlert ? (
           <span
             title={`Closing at ${closingRate!.toFixed(1)}s/lap${isDiffClass ? " · different class" : ""}`}
           >
             <Zap
-              className="size-3"
+              className="size-3.5"
               style={{
                 color: isDiffClass
                   ? "var(--color-danger)"
@@ -402,6 +428,8 @@ export function RelativeScreen() {
   const windowSize = useRelativeUiStore((s) => s.windowSize);
   const showBrand = useRelativeUiStore((s) => s.showBrand);
   const showCountry = useRelativeUiStore((s) => s.showCountry);
+  const showSessionStrip = useRelativeUiStore((s) => s.showSessionStrip);
+  const showColumnLabels = useRelativeUiStore((s) => s.showColumnLabels);
 
   // Measure our own width so the column set can adapt to the window.
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -467,19 +495,22 @@ export function RelativeScreen() {
   const isEmpty = order.length === 0;
 
   const rowProps = { playerLastLap, playerClassId, isOn, template };
+  // The first row of the table carries the labels when they are on: the
+  // furthest car ahead, or the player when nobody is ahead of them.
+  const labelRow = showColumnLabels;
 
   return (
     <div
       ref={bodyRef}
-      className="overlay-card @container flex h-full flex-col overflow-hidden rounded-card border border-border/60 bg-surface"
+      className="overlay-card timing-surface @container flex h-full flex-col overflow-hidden rounded-card border border-border/60"
     >
+      {showSessionStrip && !isEmpty && <SessionStrip width={width} />}
       {isEmpty ? (
         <EmptyState iracingActive={iracingActive} />
       ) : (
         <div className="flex flex-1 flex-col overflow-auto">
-          {/* No column-header band: the labels ride in the first row's top slice
-              (rule 3). The first row is the furthest car ahead, or the player
-              when nobody is ahead of them. */}
+          {/* No column-header band ever: when labels are on at all they ride in
+              the first row's top slice, out of flow (rule 3). */}
           <div className="flex flex-col gap-0.5 p-1">
             {/* Cars ahead — furthest at top, closest just above player */}
             {ahead.map((entry, i) => (
@@ -488,7 +519,7 @@ export function RelativeScreen() {
                 entry={entry}
                 driver={driversByIdx.get(entry.carIdx)}
                 classColor={classColorMap.get(entry.carClassId) ?? "#666666"}
-                labelled={i === 0}
+                labelled={labelRow && i === 0}
                 {...rowProps}
               />
             ))}
@@ -502,7 +533,7 @@ export function RelativeScreen() {
                 entry={player}
                 driver={driversByIdx.get(player.carIdx)}
                 classColor={playerClassColor}
-                labelled={ahead.length === 0}
+                labelled={labelRow && ahead.length === 0}
                 {...rowProps}
                 isPlayer
               />

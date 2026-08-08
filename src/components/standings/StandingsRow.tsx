@@ -7,6 +7,7 @@ import {
   GROUP_TONE,
   gridTemplate,
   LAP_COLOR,
+  LAP_UNDERLINE,
   ROW_H,
   type ColumnVisibility,
 } from "./constants";
@@ -35,8 +36,9 @@ interface StandingsRowProps {
   /** Which columns to render (must match the labels). */
   isVisible: ColumnVisibility;
   /**
-   * First row of its class group: prints the column labels in its top slice, so
-   * the table needs no header band (`design.md` § Dense tabular overlays, r. 3).
+   * First row of its class group *and* column labels are switched on: prints
+   * them in its top slice, so the table needs no header band (`design.md`
+   * § Dense tabular overlays, rule 3). Off by default — see the rule.
    */
   labelled: boolean;
   /** Class-group tone index into {@link GROUP_TONE} (rule 2's tone shift). */
@@ -106,7 +108,11 @@ function StandingsRowInner({
           .join(" ")}
         style={{
           gridTemplateColumns: gridTemplate(sectorCount, isVisible),
-          borderLeft: `2px solid ${row?.isClassLeader ? classColor : `${classColor}55`}`,
+          // 3 px, up from 2: on near-black paper a 2 px hairline of an arbitrary
+          // hue was the first thing to disappear in peripheral vision, which is
+          // where this surface is read. It is still the row's only carrier of
+          // class colour (§ Two colour systems, rule 2).
+          borderLeft: `3px solid ${row?.isClassLeader ? classColor : `${classColor}66`}`,
           // Clear the in-row column labels rather than centring under them.
           paddingTop: labelled ? COL_LABEL_H : undefined,
         }}
@@ -124,7 +130,7 @@ function StandingsRowInner({
 
         {/* position — class position when grouped by class, overall when flat.
             A flat overall table numbered by class position reads as scrambled. */}
-        <div className="text-center text-[13px] font-semibold tabular-nums tnum">
+        <div className="text-center text-[14px] font-bold tabular-nums tnum">
           {(classRelative
             ? row?.classPosition ?? row?.position
             : row?.position ?? row?.classPosition) ?? "—"}
@@ -135,7 +141,7 @@ function StandingsRowInner({
             not adopted). */}
         {isVisible("num") && (
           <div
-            className="truncate text-center text-[11px] font-semibold tabular-nums tnum text-muted"
+            className="truncate text-center text-[12px] font-bold tabular-nums tnum text-muted"
             title={`#${driver?.carNumber ?? ""}`}
           >
             {driver?.carNumber ?? "—"}
@@ -154,7 +160,7 @@ function StandingsRowInner({
 
         {/* driver */}
         <div className="flex min-w-0 items-center">
-          <span className="truncate text-[12px] text-text">
+          <span className="truncate text-[13px] font-semibold text-text">
             {driver?.userName ?? `Car ${carIdx}`}
           </span>
         </div>
@@ -199,6 +205,7 @@ function StandingsRowInner({
             key={`last-${row?.lastLapTime}`}
             time={row?.lastLapTime ?? null}
             color={LAP_COLOR[row?.lastLapStatus ?? "none"]}
+            underline={LAP_UNDERLINE[row?.lastLapStatus ?? "none"]}
             flash={row?.lastLapStatus === "overall_best"}
           />
         )}
@@ -243,10 +250,10 @@ function StandingsRowInner({
               className="text-warning"
               title={row?.isInPitStall ? "In pit stall" : "On pit road"}
             >
-              <Wrench className="size-3" />
+              <Wrench className="size-3.5" />
             </span>
           ) : row?.isOffTrack ? (
-            <AlertTriangle className="size-3 text-danger" />
+            <AlertTriangle className="size-3.5 text-danger" />
           ) : null}
         </div>
       </div>

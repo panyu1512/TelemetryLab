@@ -7,6 +7,7 @@ import {
 } from "../../stores/useStandingsStore";
 import { useStandingsUiStore } from "../../stores/useStandingsUiStore";
 import {
+  CLASS_BAND_H,
   ROW_H,
   fitColumns,
   tableMinWidth,
@@ -14,6 +15,8 @@ import {
 } from "./constants";
 import { StandingsRow } from "./StandingsRow";
 import { useStandingsLayout } from "./useStandingsLayout";
+import { SessionStrip } from "../timing/SessionStrip";
+import { ClassBand } from "./ClassBand";
 
 /** Extra pixels rendered above/below the viewport so fast scrolls stay filled. */
 const OVERSCAN = 320;
@@ -21,14 +24,18 @@ const OVERSCAN = 320;
 /**
  * The v0.4 standings / timing screen.
  *
- * The screen is **rows and nothing else**: no title bar, no session strip, no
- * controls. It is read at a glance while the user is driving, so every pixel
- * goes to the field. Everything configurable about it lives in the Overlay
- * Manager, which is the surface built for configuring.
+ * The screen is **rows and a readout, and nothing else**: no title bar, no
+ * controls, nothing that can be aimed at. It is read at a glance while the user
+ * is driving, so every pixel goes to the field — including the optional session
+ * strip above it, which is a readout the driver cannot interact with (see
+ * `design.md` § Dense tabular overlays, rule 7). Everything *configurable* about
+ * the screen, the strip included, lives in the Overlay Manager.
  *
  * That also means no column-header band — the labels print inside each class
- * leader's row (`design.md` § Dense tabular overlays, rule 3) — and no class
- * band: classes are separated by a gap plus a tone shift (rule 2).
+ * leader's row (`design.md` § Dense tabular overlays, rule 3). Class groups do
+ * open with a band, which carries that class's own numbers and nothing
+ * clickable; the gap and tone shift that separate the groups (rule 2) are still
+ * doing their job underneath it.
  *
  * Rendering budget: the body only mounts the rows on screen (windowed by scroll
  * offset), each row subscribes to just its own entry, and reorders animate
@@ -42,6 +49,8 @@ export function StandingsScreen() {
   const grouping = useStandingsUiStore((s) => s.grouping);
   const followPlayer = useStandingsUiStore((s) => s.followPlayer);
   const columns = useStandingsUiStore((s) => s.columns);
+  const showSessionStrip = useStandingsUiStore((s) => s.showSessionStrip);
+  const showColumnLabels = useStandingsUiStore((s) => s.showColumnLabels);
   const { items, totalHeight } = useStandingsLayout();
   const classRelative = grouping === "class";
 
@@ -112,14 +121,19 @@ export function StandingsScreen() {
   const visible = useMemo(() => {
     const min = scrollTop - OVERSCAN;
     const max = scrollTop + viewH + OVERSCAN;
-    return items.filter((it) => it.top + ROW_H >= min && it.top <= max);
+    return items.filter((it) => {
+      const h = it.kind === "band" ? CLASS_BAND_H : ROW_H;
+      return it.top + h >= min && it.top <= max;
+    });
   }, [items, scrollTop, viewH]);
 
   // Follow the player: keep their row roughly centered when it moves, but only
   // when it has drifted far enough that a nudge is warranted (avoids fighting).
   const playerTop = useMemo(() => {
     if (meta.playerCarIdx < 0) return null;
-    const it = items.find((i) => i.carIdx === meta.playerCarIdx);
+    const it = items.find(
+      (i) => i.kind === "row" && i.carIdx === meta.playerCarIdx
+    );
     return it ? it.top : null;
   }, [items, meta.playerCarIdx]);
 
@@ -135,7 +149,8 @@ export function StandingsScreen() {
   const isEmpty = items.length === 0;
 
   return (
-    <div className="overlay-card flex h-full flex-col overflow-hidden rounded-card border border-border/60 bg-surface">
+    <div className="overlay-card timing-surface flex h-full flex-col overflow-hidden rounded-card border border-border/60">
+      {showSessionStrip && <SessionStrip width={viewW} />}
       <div ref={scrollRef} className="relative flex-1 overflow-auto">
         {isEmpty ? (
           <EmptyState iracingActive={iracingActive} />
@@ -146,6 +161,30 @@ export function StandingsScreen() {
               style={{ height: totalHeight + 8, marginTop: 6 }}
             >
               {visible.map((it) => {
+                if (it.kind === "band") {
+                  const standing = classById.get(it.classId);
+                  if (!standing) return null;
+                  return (
+                    <div
+                      key={it.key}
+                      className="row-glide absolute inset-x-0 will-change-transform"
+                      style={{
+                        height: CLASS_BAND_H,
+                        transform: `translateY(${it.top}px)`,
+                      }}
+                    >
+                      <ClassBand
+                        standing={standing}
+                        fastestIsOverall={
+                          standing.fastestLapCarIdx != null &&
+                          fastestByCar.get(standing.fastestLapCarIdx) ===
+                            "overall"
+                        }
+                        width={viewW}
+                      />
+                    </div>
+                  );
+                }
                 return (
                   <StandingsRow
                     key={it.key}
@@ -156,7 +195,7 @@ export function StandingsScreen() {
                     zebra={it.zebra}
                     classRelative={classRelative}
                     isVisible={isVisible}
-                    labelled={it.leader}
+                    labelled={showColumnLabels && it.leader}
                     tone={it.tone}
                     fastest={fastestByCar.get(it.carIdx) ?? null}
                   />

@@ -84,13 +84,25 @@ export const MOCK_FIELD: MockCar[] = Array.from({ length: MOCK_FIELD_SIZE }, (_,
   };
 });
 
-function lapTime(car: MockCar, t: number): number {
-  return car.pace + car.wobble * Math.sin(t * 0.03 + car.idx);
-}
-
 /** Total laps completed (float): integer part = lap, fraction = lapDistPct. */
 function progress(car: MockCar, t: number): number {
   return car.phase + t / car.pace;
+}
+
+/**
+ * This car's most recently *completed* lap time.
+ *
+ * Keyed on the lap index rather than on `t` directly, which matters more than
+ * it looks: a completed lap time only changes when a lap completes. An earlier
+ * version varied it continuously with `t`, so at 10 Hz every car's last lap,
+ * lap grade and sector splits changed on every tick — which remounted the
+ * animated timing cells (they are keyed on their value to replay the sector-pop
+ * and lap-flash animations only on a real change) and made the whole table
+ * visibly blink.
+ */
+function lapTime(car: MockCar, t: number): number {
+  const lap = Math.floor(progress(car, t));
+  return car.pace + car.wobble * Math.sin(lap * 1.7 + car.idx);
 }
 
 // ── player telemetry ───────────────────────────────────────────────────────
@@ -235,15 +247,42 @@ export function mockSession(t: number): SessionInfo {
 
 // ── standings ────────────────────────────────────────────────────────────────
 
-function emptySectors(): SectorSplit[] {
-  return [0, 1, 2].map((index) => ({
-    index,
-    lastTime: null,
-    bestTime: null,
-    delta: null,
-    status: "none" as const,
-  }));
+/**
+ * Fraction of a lap each sector occupies, matching `mockSession`'s
+ * `sectorStarts` of `[0, 0.34, 0.71]`.
+ */
+const SECTOR_SHARE = [0.34, 0.37, 0.29];
+
+/** This car's best time for sector `i`, derived from its best lap. */
+function sectorBest(car: MockCar, i: number): number {
+  return (car.pace - 0.8) * SECTOR_SHARE[i];
 }
+
+/**
+ * This car's last time for sector `i`.
+ *
+ * The three sectors are perturbed on different periods so a car can be up in
+ * one and down in another — which is the whole point of a sector column, and
+ * what a flat "lap × share" split cannot show.
+ */
+function sectorLast(car: MockCar, t: number, i: number): number {
+  // Per completed lap, like `lapTime` — see the note there on why this must not
+  // vary continuously.
+  const lap = Math.floor(progress(car, t));
+  const swing = car.wobble * 0.5 * Math.sin(lap * 2.3 + car.idx + i * 2.1);
+  return sectorBest(car, i) + Math.max(-0.45, swing);
+}
+
+/**
+ * The grid this field started from: iRating order, which is a fair proxy for a
+ * qualifying result and — being derived from the stable field — keeps
+ * `positionsGainedTotal` deterministic in `t` like everything else here.
+ */
+const GRID_POS = new Map<number, number>(
+  [...MOCK_FIELD]
+    .sort((a, b) => b.iRating - a.iRating)
+    .map((car, i) => [car.idx, i + 1])
+);
 
 export function mockStandings(t: number): StandingsPayload {
   const ordered = [...MOCK_FIELD].sort((a, b) => progress(b, t) - progress(a, t));
@@ -263,6 +302,40 @@ export function mockStandings(t: number): StandingsPayload {
     classPos.set(c.idx, n);
   }
 
+  /* Field-wide bests, resolved once up front: the timing screen grades laps and
+     sectors against these, and a mock that never produced a purple or a green
+     left most of the surface's colour system impossible to see (which is
+     exactly how it shipped). */
+  const lastLapOf = new Map<number, number>(
+    MOCK_FIELD.map((c) => [c.idx, lapTime(c, t)])
+  );
+  const fieldBestLap = Math.min(...MOCK_FIELD.map((c) => c.pace - 0.8));
+  const fastestLapNow = Math.min(...lastLapOf.values());
+  const fieldBestSector = SECTOR_SHARE.map((_, i) =>
+    Math.min(...MOCK_FIELD.map((c) => sectorLast(c, t, i)))
+  );
+
+  /* Gaps to the leader, in running order — the source for each car's interval
+     to the one directly ahead of it (overall and in class). */
+  const gapOf = new Map<number, number>(
+    ordered.map((c) => [c.idx, Math.max(0, (leaderProg - progress(c, t)) * c.pace)])
+  );
+  const interval = (car: MockCar, within: readonly MockCar[]): number | null => {
+    const i = within.indexOf(car);
+    if (i <= 0) return null; // the leader has nobody ahead
+    const ahead = within[i - 1];
+    return round(
+      Math.max(0, (gapOf.get(car.idx) ?? 0) - (gapOf.get(ahead.idx) ?? 0)),
+      3
+    );
+  };
+  const inClassOrder = new Map<number, MockCar[]>();
+  for (const c of ordered) {
+    const list = inClassOrder.get(c.klass.id) ?? [];
+    list.push(c);
+    inClassOrder.set(c.klass.id, list);
+  }
+
   // Built from `ordered`, not `MOCK_FIELD`: the payload's entry sequence *is* the
   // overall running order (the store turns it straight into `order`), so emitting
   // declaration order made the flat/overall standings view render scrambled.
@@ -278,6 +351,53 @@ export function mockStandings(t: number): StandingsPayload {
     const relLaps = dLaps - Math.round(dLaps); // → [-0.5, 0.5]
     const intervalToPlayer =
       car.idx === MOCK_PLAYER_IDX ? 0 : round(relLaps * car.pace, 3);
+
+    // Lap grade. Purple only for the single quickest lap on track right now,
+    // and only when it actually beats the field's best; green whenever a car
+    // improves on its own.
+    const last = lastLapOf.get(car.idx) ?? lapTime(car, t);
+    const best = car.pace - 0.8;
+    const lastLapStatus: StandingsEntry["lastLapStatus"] =
+      last <= fastestLapNow && last < fieldBestLap
+        ? "overall_best"
+        : last <= best
+          ? "personal_best"
+          : "normal";
+
+    const sectors: SectorSplit[] = SECTOR_SHARE.map((_, i) => {
+      const lastTime = sectorLast(car, t, i);
+      const bestTime = sectorBest(car, i);
+      const delta = lastTime - bestTime;
+      const status: SectorSplit["status"] =
+        lastTime <= fieldBestSector[i]
+          ? "overall_best"
+          : delta <= 0
+            ? "personal_best"
+            : delta <= 0.35
+              ? "slower"
+              : "much_slower";
+      return {
+        index: i,
+        lastTime: round(lastTime, 3),
+        bestTime: round(bestTime, 3),
+        delta: round(delta, 3),
+        status,
+      };
+    });
+
+    const gained = (GRID_POS.get(car.idx) ?? 0) - (pos ?? 0);
+    // A rough projection: places are worth more against a strong field, and a
+    // driver rated above the field average has more to lose than to gain.
+    const iRatingChangeEst = Math.round(
+      gained * 4 + (2500 - car.iRating) / 400
+    );
+
+    // One car in the pits and one off-track at any time, rotating slowly, so
+    // the state column is never dead in a demo or a screenshot.
+    const rotation = Math.floor(t / 25);
+    const onPitRoad = car.idx === (rotation * 5) % MOCK_FIELD_SIZE;
+    const isOffTrack = car.idx === (rotation * 7 + 3) % MOCK_FIELD_SIZE;
+
     return {
       carIdx: car.idx,
       position: pos,
@@ -285,27 +405,30 @@ export function mockStandings(t: number): StandingsPayload {
       carClassId: car.klass.id,
       lap,
       lapDistPct: round(pct, 4),
-      lastLapTime: round(lapTime(car, t), 3),
-      bestLapTime: round(car.pace - 0.8, 3),
+      lastLapTime: round(last, 3),
+      bestLapTime: round(best, 3),
       gapToLeader: round(Math.max(0, gap), 3),
-      interval: null,
+      interval: interval(car, ordered),
       gapIsLaps: false,
       lapsDown: 0,
       gapToClassLeader: round(Math.max(0, gap), 3),
-      classInterval: null,
+      classInterval: interval(car, inClassOrder.get(car.klass.id) ?? []),
       classGapIsLaps: false,
       intervalToPlayer,
       estCatchTime: null,
-      positionsGainedTotal: 0,
+      positionsGainedTotal: gained,
       positionsGainedLastLap: 0,
       iRating: car.iRating,
-      iRatingChangeEst: 0,
-      lastLapStatus: "normal",
-      sectors: emptySectors(),
-      theoreticalBest: null,
-      onPitRoad: false,
-      trackSurfaceLabel: "OnTrack",
-      isOffTrack: false,
+      iRatingChangeEst,
+      lastLapStatus,
+      sectors,
+      theoreticalBest: round(
+        sectors.reduce((sum, s) => sum + (s.bestTime ?? 0), 0),
+        3
+      ),
+      onPitRoad,
+      trackSurfaceLabel: onPitRoad ? "AproachingPits" : "OnTrack",
+      isOffTrack,
       isInPitStall: false,
       isInWorld: true,
       isRetired: false,
@@ -313,7 +436,9 @@ export function mockStandings(t: number): StandingsPayload {
       isOverallLeader: pos === 1,
       isClassLeader: classPos.get(car.idx) === 1,
       isLapped: false,
-      tireCompound: 0,
+      // Alternate the compound across the field so the tyre cell's colour
+      // coding is visible at all in a mock session.
+      tireCompound: car.idx % 3 === 0 ? 0 : car.idx % 3 === 1 ? 1 : 2,
       tireLaps: lap,
     };
   });

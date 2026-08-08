@@ -8,7 +8,14 @@
  * windowed virtualization both cheap (see `useStandingsLayout`).
  */
 
-export const ROW_H = 30;
+/**
+ * Row height. 32 rather than 30: this surface's type went up a step and to
+ * semibold/bold across the board (it is read in peripheral vision at speed, and
+ * the previous 11–12 px regular weight was tuned for a screen you look *at*).
+ * Two more pixels is what keeps 13 px names and 12 px values from touching the
+ * zebra band above and below them.
+ */
+export const ROW_H = 32;
 
 /**
  * Height of the column-label line printed *inside* the class leader's row.
@@ -19,7 +26,7 @@ export const ROW_H = 30;
  * rule 3). The labels instead live in the top slice of a row that has to exist
  * anyway, so they cost no height at all.
  */
-export const COL_LABEL_H = 9;
+export const COL_LABEL_H = 10;
 
 /**
  * Vertical gap between class groups, in place of a labelled band. A gap reads
@@ -29,6 +36,30 @@ export const COL_LABEL_H = 9;
 export const CLASS_GAP = 10;
 
 /**
+ * Height of the per-class band that opens each group.
+ *
+ * A band was banned outright by an earlier reading of rule 2 — a gap plus a
+ * tone shift costs a third as much and separates just as well. What that
+ * reading missed is that separation was never the only job: in a multi-class
+ * field the band is also the only place the class's *own* numbers (its car
+ * count, its strength of field, its fastest lap) can live at all, and those
+ * have nowhere else to go — they are per-class, so the session strip cannot
+ * hold them, and per-group, so no row can.
+ *
+ * 30 px, not the 34 the old class header cost: it carries a chip and three
+ * micro-label pairs, which is a strip's geometry rather than a row's — but it
+ * is a *heading*, and one set flush against the row under it reads as a first
+ * row rather than as the thing that opens the group.
+ */
+export const CLASS_BAND_H = 30;
+
+/**
+ * Space between a class band and the first row of its group. Small, but it is
+ * what separates "this heads the group" from "this is the group's first entry".
+ */
+export const BAND_GAP = 4;
+
+/**
  * Per-class-group background tones, as `[base, zebra]` utility pairs, indexed by
  * the group's position in the field.
  *
@@ -36,10 +67,16 @@ export const CLASS_GAP = 10;
  * slightly different lightness, so a class boundary reads as a change of ground
  * rather than needing a label. Zebra tint is the only banding the rules allow,
  * so the shift rides on it instead of introducing a new device.
+ *
+ * Plain white alphas rather than `surface-2` tints: the table now paints on
+ * near-black paper (`--color-timing-bg`), where a graphite tint reads as a
+ * *colour* change and white simply reads as one step lighter. It also keeps the
+ * banding identical across all four themes, which is what a banding device
+ * carrying no meaning should do.
  */
 export const GROUP_TONE: readonly (readonly [base: string, zebra: string])[] = [
-  ["", "bg-surface-2/40"],
-  ["bg-surface-2/15", "bg-surface-2/55"],
+  ["", "bg-white/[0.035]"],
+  ["bg-white/[0.025]", "bg-white/[0.06]"],
 ];
 
 /** Every column in the timing table, in render order. */
@@ -88,24 +125,24 @@ interface ColumnDef {
  * `driver` and `state` are always shown; the rest are user-configurable.
  */
 export const STANDINGS_COLUMNS: readonly ColumnDef[] = [
-  { id: "change", label: "Δ", name: "Position change", width: "1.6rem", px: 26, align: "center" },
-  { id: "pos", label: "Pos", name: "Position", width: "2rem", px: 32, align: "center", always: true },
-  { id: "num", label: "#", name: "Car number", width: "2.4rem", px: 38, align: "center" },
-  { id: "country", label: "Nat", name: "Country flag", width: "1.6rem", px: 26, align: "center" },
+  { id: "change", label: "Δ", name: "Position change", width: "1.8rem", px: 29, align: "center" },
+  { id: "pos", label: "Pos", name: "Position", width: "2.1rem", px: 34, align: "center", always: true },
+  { id: "num", label: "#", name: "Car number", width: "2.5rem", px: 40, align: "center" },
+  { id: "country", label: "Nat", name: "Country flag", width: "1.7rem", px: 27, align: "center" },
   // `minmax(0, 1fr)`, not `minmax(8rem, 1fr)`: the name absorbs all slack and is
   // the only column allowed to truncate. An 8rem floor made the grid overflow
   // its container instead, which is how fixed columns ended up holding empty
   // space while `Francois Sieg…` clipped (rule 6).
-  { id: "driver", label: "Driver", name: "Driver", width: "minmax(0, 1fr)", px: 128, align: "left", always: true },
-  { id: "brand", label: "Car", name: "Car brand", width: "1.7rem", px: 27, align: "center" },
-  { id: "license", label: "Lic", name: "License / SR", width: "3.2rem", px: 51, align: "center" },
-  { id: "irating", label: "iR", name: "iRating", width: "4.4rem", px: 70, align: "right" },
-  { id: "gap", label: "Gap", name: "Gap to leader", width: "3.4rem", px: 54, align: "right" },
-  { id: "interval", label: "Int", name: "Interval", width: "3.4rem", px: 54, align: "right" },
-  { id: "last", label: "Last", name: "Last lap", width: "4.6rem", px: 74, align: "right" },
-  { id: "best", label: "Best", name: "Best lap", width: "4.6rem", px: 74, align: "right" },
-  { id: "tire", label: "Tyre", name: "Tyre compound", width: "3.2rem", px: 51, align: "center" },
-  { id: "sectors", label: "S", name: "Sector deltas", width: "2.8rem", px: 46, align: "center" },
+  { id: "driver", label: "Driver", name: "Driver", width: "minmax(0, 1fr)", px: 136, align: "left", always: true },
+  { id: "brand", label: "Car", name: "Car brand", width: "2rem", px: 32, align: "center" },
+  { id: "license", label: "Lic", name: "License / SR", width: "3.4rem", px: 54, align: "center" },
+  { id: "irating", label: "iR", name: "iRating", width: "4.6rem", px: 74, align: "right" },
+  { id: "gap", label: "Gap", name: "Gap to leader", width: "3.6rem", px: 58, align: "right" },
+  { id: "interval", label: "Int", name: "Interval", width: "3.6rem", px: 58, align: "right" },
+  { id: "last", label: "Last", name: "Last lap", width: "4.9rem", px: 78, align: "right" },
+  { id: "best", label: "Best", name: "Best lap", width: "4.9rem", px: 78, align: "right" },
+  { id: "tire", label: "Tyre", name: "Tyre compound", width: "3.4rem", px: 54, align: "center" },
+  { id: "sectors", label: "S", name: "Sector deltas", width: "3rem", px: 48, align: "center" },
   { id: "state", label: "", name: "Pit / off-track", width: "2.2rem", px: 35, align: "center", always: true },
 ];
 
@@ -207,10 +244,22 @@ export const SECTOR_COLOR: Record<string, string> = {
   none: "var(--color-faint)",
 };
 
-/** Lap-status → highlight color for the last-lap cell. */
+/** Lap-status → ink for the last-lap cell. */
 export const LAP_COLOR: Record<string, string> = {
   overall_best: "var(--color-sector-purple)",
-  personal_best: "var(--color-accent)",
+  // A personal best keeps white ink and takes its grade from the rule below.
+  // The last lap is the number a driver actually compares against the car
+  // ahead; recolouring the digits grades it at the cost of reading it.
+  personal_best: "var(--color-text)",
   normal: "var(--color-text)",
   none: "var(--color-faint)",
+};
+
+/**
+ * Lap-status → the rule drawn under the last-lap cell. Statuses with no entry
+ * get no rule, so an ordinary lap stays completely plain.
+ */
+export const LAP_UNDERLINE: Record<string, string | undefined> = {
+  overall_best: "var(--color-sector-purple)",
+  personal_best: "var(--color-accent)",
 };

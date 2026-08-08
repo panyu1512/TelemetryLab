@@ -32,8 +32,33 @@ export interface StandingsUiState {
   followPlayer: boolean;
   /** Which configurable columns are shown (missing = shown). */
   columns: ColumnVisibilityMap;
+  /**
+   * Show the session readout strip above the field (lap, time left, incidents,
+   * temperatures, SoF, clock). A readout, never a control — see
+   * `design.md` § Dense tabular overlays, rule 7.
+   */
+  showSessionStrip: boolean;
+  /**
+   * Open each class group with a band carrying that class's own numbers (car
+   * count, strength of field, fastest lap). Only applies when grouped by class
+   * — a flat overall table has one group and nothing to name.
+   */
+  showClassBands: boolean;
+  /**
+   * Print the `POS # NAT DRIVER …` micro-labels in the leader row's top slice.
+   *
+   * Off by default. The labels exist to make the table learnable on a first
+   * run, and they cost no height (they ride out of flow in a row that has to
+   * exist anyway) — but a driver who already knows the columns is reading past
+   * them every lap, and on a surface this dense that is a real tax. Learnable
+   * once, then switchable off, beats permanent.
+   */
+  showColumnLabels: boolean;
   setGrouping: (g: Grouping) => void;
   setFollowPlayer: (v: boolean) => void;
+  setShowSessionStrip: (v: boolean) => void;
+  setShowClassBands: (v: boolean) => void;
+  setShowColumnLabels: (v: boolean) => void;
   /** Whether a column is currently visible (configurable ones default to true). */
   isColumnVisible: (id: StandingsColumnId) => boolean;
   toggleColumn: (id: StandingsColumnId) => void;
@@ -47,12 +72,18 @@ interface Persisted {
   grouping: Grouping;
   followPlayer: boolean;
   columns: ColumnVisibilityMap;
+  showSessionStrip: boolean;
+  showClassBands: boolean;
+  showColumnLabels: boolean;
 }
 
 const DEFAULTS: Persisted = {
   grouping: "class",
   followPlayer: true,
   columns: {},
+  showSessionStrip: true,
+  showClassBands: true,
+  showColumnLabels: false,
 };
 
 function load(): Persisted {
@@ -79,8 +110,22 @@ let applyingRemote = false;
 
 export const useStandingsUiStore = create<StandingsUiState>((set, get) => {
   const save = () => {
-    const { grouping, followPlayer, columns } = get();
-    const snapshot: Persisted = { grouping, followPlayer, columns };
+    const {
+      grouping,
+      followPlayer,
+      columns,
+      showSessionStrip,
+      showClassBands,
+      showColumnLabels,
+    } = get();
+    const snapshot: Persisted = {
+      grouping,
+      followPlayer,
+      columns,
+      showSessionStrip,
+      showClassBands,
+      showColumnLabels,
+    };
     persist(snapshot);
     if (!applyingRemote) broadcast("standings-ui:changed", snapshot);
   };
@@ -92,6 +137,18 @@ export const useStandingsUiStore = create<StandingsUiState>((set, get) => {
     },
     setFollowPlayer: (followPlayer) => {
       set({ followPlayer });
+      save();
+    },
+    setShowSessionStrip: (showSessionStrip) => {
+      set({ showSessionStrip });
+      save();
+    },
+    setShowClassBands: (showClassBands) => {
+      set({ showClassBands });
+      save();
+    },
+    setShowColumnLabels: (showColumnLabels) => {
+      set({ showColumnLabels });
       save();
     },
     isColumnVisible: (id) => get().columns[id] !== false,
@@ -119,6 +176,11 @@ subscribe("standings-ui:changed", (payload) => {
       grouping: remote.grouping,
       followPlayer: remote.followPlayer,
       columns: remote.columns ?? {},
+      showSessionStrip:
+        remote.showSessionStrip ?? DEFAULTS.showSessionStrip,
+      showClassBands: remote.showClassBands ?? DEFAULTS.showClassBands,
+      showColumnLabels:
+        remote.showColumnLabels ?? DEFAULTS.showColumnLabels,
     });
   } finally {
     applyingRemote = false;

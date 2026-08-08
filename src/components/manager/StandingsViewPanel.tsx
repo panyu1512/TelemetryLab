@@ -41,6 +41,14 @@ export function StandingsViewPanel() {
   const setGrouping = useStandingsUiStore((s) => s.setGrouping);
   const followPlayer = useStandingsUiStore((s) => s.followPlayer);
   const setFollowPlayer = useStandingsUiStore((s) => s.setFollowPlayer);
+  const showSessionStrip = useStandingsUiStore((s) => s.showSessionStrip);
+  const setShowSessionStrip = useStandingsUiStore((s) => s.setShowSessionStrip);
+  const showClassBands = useStandingsUiStore((s) => s.showClassBands);
+  const setShowClassBands = useStandingsUiStore((s) => s.setShowClassBands);
+  const showColumnLabels = useStandingsUiStore((s) => s.showColumnLabels);
+  const setShowColumnLabels = useStandingsUiStore(
+    (s) => s.setShowColumnLabels
+  );
 
   return (
     <div className="space-y-2">
@@ -91,6 +99,62 @@ export function StandingsViewPanel() {
           </span>
         </div>
         <ToggleSwitch checked={followPlayer} onChange={setFollowPlayer} />
+      </label>
+
+      <label className="flex cursor-pointer items-center gap-3 rounded-card border border-border bg-surface px-3 py-2.5 transition-colors hover:border-border-strong">
+        <div className="min-w-0 flex-1">
+          <span className="block text-xs font-medium text-text">
+            Session strip
+          </span>
+          <span className="block text-[11px] text-faint">
+            Lap, time left, incidents, temperatures, SoF and the clock, above
+            the field.
+          </span>
+        </div>
+        <ToggleSwitch
+          checked={showSessionStrip}
+          onChange={setShowSessionStrip}
+        />
+      </label>
+
+      <label
+        className={[
+          "flex items-center gap-3 rounded-card border border-border bg-surface px-3 py-2.5 transition-colors",
+          grouping === "class"
+            ? "cursor-pointer hover:border-border-strong"
+            : "cursor-not-allowed opacity-50",
+        ].join(" ")}
+      >
+        <div className="min-w-0 flex-1">
+          <span className="block text-xs font-medium text-text">
+            Class bands
+          </span>
+          <span className="block text-[11px] text-faint">
+            {grouping === "class"
+              ? "Open each class with its car count, strength of field and fastest lap."
+              : "Only available when the field is grouped by class."}
+          </span>
+        </div>
+        <ToggleSwitch
+          checked={showClassBands}
+          onChange={setShowClassBands}
+          disabled={grouping !== "class"}
+        />
+      </label>
+
+      <label className="flex cursor-pointer items-center gap-3 rounded-card border border-border bg-surface px-3 py-2.5 transition-colors hover:border-border-strong">
+        <div className="min-w-0 flex-1">
+          <span className="block text-xs font-medium text-text">
+            Column labels
+          </span>
+          <span className="block text-[11px] text-faint">
+            Name each column once, in the first row. Off once you know them.
+          </span>
+        </div>
+        <ToggleSwitch
+          checked={showColumnLabels}
+          onChange={setShowColumnLabels}
+        />
       </label>
     </div>
   );

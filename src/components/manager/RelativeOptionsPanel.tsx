@@ -18,6 +18,10 @@ export function RelativeOptionsPanel() {
   const setShowBrand = useRelativeUiStore((s) => s.setShowBrand);
   const setShowCountry = useRelativeUiStore((s) => s.setShowCountry);
   const setWindowSize = useRelativeUiStore((s) => s.setWindowSize);
+  const showSessionStrip = useRelativeUiStore((s) => s.showSessionStrip);
+  const setShowSessionStrip = useRelativeUiStore((s) => s.setShowSessionStrip);
+  const showColumnLabels = useRelativeUiStore((s) => s.showColumnLabels);
+  const setShowColumnLabels = useRelativeUiStore((s) => s.setShowColumnLabels);
 
   return (
     <div className="space-y-2">
@@ -32,6 +36,18 @@ export function RelativeOptionsPanel() {
         description="Show each driver's country flag."
         checked={showCountry}
         onChange={setShowCountry}
+      />
+      <OptionRow
+        label="Session strip"
+        description="Lap, time left, incidents, temperatures, SoF and the clock, above the field."
+        checked={showSessionStrip}
+        onChange={setShowSessionStrip}
+      />
+      <OptionRow
+        label="Column labels"
+        description="Name each column once, in the first row. Off once you know them."
+        checked={showColumnLabels}
+        onChange={setShowColumnLabels}
       />
 
       <div className="flex items-center gap-3 rounded-card border border-border bg-surface px-3 py-2.5">
