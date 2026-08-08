@@ -429,6 +429,7 @@ export function RelativeScreen() {
   const showBrand = useRelativeUiStore((s) => s.showBrand);
   const showCountry = useRelativeUiStore((s) => s.showCountry);
   const showSessionStrip = useRelativeUiStore((s) => s.showSessionStrip);
+  const showColumnLabels = useRelativeUiStore((s) => s.showColumnLabels);
 
   // Measure our own width so the column set can adapt to the window.
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -494,6 +495,9 @@ export function RelativeScreen() {
   const isEmpty = order.length === 0;
 
   const rowProps = { playerLastLap, playerClassId, isOn, template };
+  // The first row of the table carries the labels when they are on: the
+  // furthest car ahead, or the player when nobody is ahead of them.
+  const labelRow = showColumnLabels;
 
   return (
     <div
@@ -505,9 +509,8 @@ export function RelativeScreen() {
         <EmptyState iracingActive={iracingActive} />
       ) : (
         <div className="flex flex-1 flex-col overflow-auto">
-          {/* No column-header band: the labels ride in the first row's top slice
-              (rule 3). The first row is the furthest car ahead, or the player
-              when nobody is ahead of them. */}
+          {/* No column-header band ever: when labels are on at all they ride in
+              the first row's top slice, out of flow (rule 3). */}
           <div className="flex flex-col gap-0.5 p-1">
             {/* Cars ahead — furthest at top, closest just above player */}
             {ahead.map((entry, i) => (
@@ -516,7 +519,7 @@ export function RelativeScreen() {
                 entry={entry}
                 driver={driversByIdx.get(entry.carIdx)}
                 classColor={classColorMap.get(entry.carClassId) ?? "#666666"}
-                labelled={i === 0}
+                labelled={labelRow && i === 0}
                 {...rowProps}
               />
             ))}
@@ -530,7 +533,7 @@ export function RelativeScreen() {
                 entry={player}
                 driver={driversByIdx.get(player.carIdx)}
                 classColor={playerClassColor}
-                labelled={ahead.length === 0}
+                labelled={labelRow && ahead.length === 0}
                 {...rowProps}
                 isPlayer
               />

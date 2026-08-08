@@ -36,8 +36,9 @@ interface StandingsRowProps {
   /** Which columns to render (must match the labels). */
   isVisible: ColumnVisibility;
   /**
-   * First row of its class group: prints the column labels in its top slice, so
-   * the table needs no header band (`design.md` § Dense tabular overlays, r. 3).
+   * First row of its class group *and* column labels are switched on: prints
+   * them in its top slice, so the table needs no header band (`design.md`
+   * § Dense tabular overlays, rule 3). Off by default — see the rule.
    */
   labelled: boolean;
   /** Class-group tone index into {@link GROUP_TONE} (rule 2's tone shift). */

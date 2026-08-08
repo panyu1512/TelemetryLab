@@ -45,6 +45,10 @@ export function StandingsViewPanel() {
   const setShowSessionStrip = useStandingsUiStore((s) => s.setShowSessionStrip);
   const showClassBands = useStandingsUiStore((s) => s.showClassBands);
   const setShowClassBands = useStandingsUiStore((s) => s.setShowClassBands);
+  const showColumnLabels = useStandingsUiStore((s) => s.showColumnLabels);
+  const setShowColumnLabels = useStandingsUiStore(
+    (s) => s.setShowColumnLabels
+  );
 
   return (
     <div className="space-y-2">
@@ -135,6 +139,21 @@ export function StandingsViewPanel() {
           checked={showClassBands}
           onChange={setShowClassBands}
           disabled={grouping !== "class"}
+        />
+      </label>
+
+      <label className="flex cursor-pointer items-center gap-3 rounded-card border border-border bg-surface px-3 py-2.5 transition-colors hover:border-border-strong">
+        <div className="min-w-0 flex-1">
+          <span className="block text-xs font-medium text-text">
+            Column labels
+          </span>
+          <span className="block text-[11px] text-faint">
+            Name each column once, in the first row. Off once you know them.
+          </span>
+        </div>
+        <ToggleSwitch
+          checked={showColumnLabels}
+          onChange={setShowColumnLabels}
         />
       </label>
     </div>

@@ -50,6 +50,7 @@ export function StandingsScreen() {
   const followPlayer = useStandingsUiStore((s) => s.followPlayer);
   const columns = useStandingsUiStore((s) => s.columns);
   const showSessionStrip = useStandingsUiStore((s) => s.showSessionStrip);
+  const showColumnLabels = useStandingsUiStore((s) => s.showColumnLabels);
   const { items, totalHeight } = useStandingsLayout();
   const classRelative = grouping === "class";
 
@@ -166,7 +167,7 @@ export function StandingsScreen() {
                   return (
                     <div
                       key={it.key}
-                      className="row-glide absolute inset-x-0 px-1 will-change-transform"
+                      className="row-glide absolute inset-x-0 will-change-transform"
                       style={{
                         height: CLASS_BAND_H,
                         transform: `translateY(${it.top}px)`,
@@ -194,7 +195,7 @@ export function StandingsScreen() {
                     zebra={it.zebra}
                     classRelative={classRelative}
                     isVisible={isVisible}
-                    labelled={it.leader}
+                    labelled={showColumnLabels && it.leader}
                     tone={it.tone}
                     fastest={fastestByCar.get(it.carIdx) ?? null}
                   />
