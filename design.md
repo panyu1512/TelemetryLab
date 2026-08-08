@@ -77,12 +77,18 @@ standings table stops being readable at a glance.
    land on any hue — including one that collides with `primary` or `danger`.
    Never add it to `tokens.css`, never give it a meaning from the status table,
    and never let a theme try to correct it.
-2. **Identity colour is quarantined to one carrier per surface.** On a
-   standings row that carrier is the 2 px left border
-   ([`StandingsRow.tsx:109`](src/components/standings/StandingsRow.tsx)). It may
-   not *additionally* tint the name, fill the row, or colour a badge — one
-   carrier, or an arbitrary hue starts competing with the status colours
-   sitting beside it in the same row.
+2. **Identity colour is quarantined to the leading edge.** On a standings or
+   relative row that carrier is the 3 px left border
+   ([`StandingsRow.tsx`](src/components/standings/StandingsRow.tsx)); on a class
+   band it is the band's own 3 px leading edge plus the chip that *is* the
+   band's subject. Those are one device at two scales, not two carriers. It may
+   not *additionally* tint a driver's name, fill a row, or colour a badge in a
+   data cell — one carrier, or an arbitrary hue starts competing with the status
+   colours sitting beside it in the same row.
+
+   The chip is the single case where identity colour fills, and it takes the
+   computed ink of § Dense tabular overlays rule 11 rather than `on-accent`,
+   because a colour this palette does not own cannot be assumed light.
 3. **"This is you" is `primary`, and it is the row's ground, not its ink.**
    `bg-primary/10` plus an inset `primary/35` ring. This is the "selection"
    sense of `primary` in the table above, which is why the token row now says
@@ -198,9 +204,22 @@ the fact that a header band and a row cost the same height.
    more attention than it returns. The one hairline permitted is the session
    strip's baseline, which separates the readout from the field rather than one
    row from the next.
-2. **Class separation is a gap plus a tone shift, not a labelled band.** The
-   gap reads pre-attentively, costs a third of a band, and needs nothing
-   clickable. There is no class band on any surface — see rule 7.
+2. **Class separation is a gap plus a tone shift — and, on Standings, a band
+   that earns its height by carrying the class's own numbers.** The gap and the
+   tone shift do the separating; they read pre-attentively and cost a third of
+   a band. What the earlier absolutist version of this rule got wrong is that
+   separation was never the only job. A class's **car count, strength of field
+   and fastest lap** are per-class and per-group: the session strip cannot hold
+   them (it is field-wide) and no row can (it is one car). The band is the only
+   place they exist, and a band that is *carrying data* is not the labelled
+   band this rule was written against.
+
+   `CLASS_BAND_H` is 26, not the 34 the old class header cost, because it is a
+   strip's geometry — a chip plus micro-label/value pairs — rather than a row's.
+   It is subject to rule 7 like everything else: no collapse, no solo, nothing
+   to click. It appears only when the field is grouped by class (a flat table
+   has one group and nothing to name), and it can be switched off from the
+   Manager.
 3. **Column labels print in the top slice of the class leader's row**, out of
    flow, so they cost no height at all. A persistent 28 px band was 13 % of a
    ~208 px six-row Relative spent on labels that a returning user stopped
@@ -209,10 +228,23 @@ the fact that a header band and a row cost the same height.
 4. **Compound cells over extra columns.** A value and its delta are one cell in
    two voices — mono value in `text`, delta in `accent` or `danger` — not two
    columns. iRating + its change is the canonical case.
-5. **Fill is rationed to one meaning per surface.** A filled background is the
-   loudest tool here; on Standings it is spent on fastest-lap-in-class and
-   nothing else. Everything else that needs colour gets coloured *text*. Filled
-   cells obey `on-accent` (§ Theme, rule 1).
+5. **Fill is rationed to one meaning per surface; tint is not fill.** A *fill*
+   is opaque and takes contrasting ink, and it is the loudest tool on this
+   surface — on Standings it is spent on fastest-lap-in-class and nothing else.
+   Filled cells obey `on-accent` (§ Theme, rule 1), with the one exception in
+   rule 11.
+
+   A **tint** is a different device: the same hue as its ink, at ≤ 18 % alpha,
+   behind that ink. It does not compete with a fill for attention; it *binds a
+   compound cell into one token* so the eye takes it as a single thing. The
+   licence badge (`A3.45`), the iRating pair (`3.7k ▲29`) and the
+   position-change chip (`▲8`) are tints — each is two values that are read
+   together or not at all. `tint()` lives in
+   [`lib/contrast.ts`](src/lib/contrast.ts).
+
+   The test for whether something may be tinted is rule 4's test: if it would
+   otherwise want to be two columns, it is a compound cell and a tint is
+   allowed. If it is one value, it gets coloured text and nothing else.
 6. **The name column is `minmax(0, 1fr)` and truncates last.** Every other
    column is fixed-width and mono; the name absorbs all slack. A layout that
    clips `Francois Sieg…` while fixed columns hold empty space has its
@@ -226,9 +258,9 @@ the fact that a header band and a row cost the same height.
    that is interactive where the overlay is not is a preview that lies.
 
    The rule is about *interaction*, not about chrome, so a **pure readout is
-   allowed above the rows**: the § Session strip below is the one sanctioned
-   case. It has no buttons and rewards no click, and whether it appears at all
-   is a Manager toggle, so it costs the driver nothing to ignore.
+   allowed above the rows**: the § Session strip below, and the per-class band
+   in rule 2. Neither has a button or rewards a click, and both are Manager
+   toggles, so they cost the driver nothing to ignore.
 
 8. **Type on these two surfaces runs one step larger and one weight heavier
    than anywhere else in the app.** 13 px semibold names, 12 px semibold values,
@@ -245,6 +277,44 @@ the fact that a header band and a row cost the same height.
    carries the active theme's hue so the surface stays part of the system, and
    the zebra banding on top of it is plain white alpha (`GROUP_TONE`) so the
    banding device means the same thing in all four themes.
+
+10. **A lap that grades is ruled, not recoloured.** The last-lap cell keeps
+    white digits and takes a 2 px underline in `accent` (personal best) or
+    `sector-purple` (session best). The last lap is the number a driver is
+    actually comparing against the car ahead, so it has to stay readable *as a
+    time* first; grading it by recolouring the digits trades legibility for the
+    grade, and the underline carries the same information in the same glyph box
+    at no cost. `sector-purple` still colours the digits themselves, because a
+    session-best lap is an event rather than a comparison.
+
+11. **Class colour picks its own ink.** § Theme rule 1 makes `on-accent` the
+    only ink allowed on a filled status colour, and that holds because every
+    status colour in this palette is light by construction. `carClassColor` is
+    not in this palette and is not light by construction — a class can land on
+    a navy that dark ink vanishes into. So the class chip on the band measures
+    the fill's WCAG luminance and picks dark or white
+    ([`lib/contrast.ts`](src/lib/contrast.ts)). This is the *only* place in the
+    app where ink on a fill is computed rather than declared, and it is
+    permitted for exactly the reason that makes identity colour a separate
+    system in the first place: the palette does not own it.
+
+### The class band
+
+One line opening each class group on Standings:
+`[GT3] · CARS 6 · SOF 4.1k · BEST 2:06.652`.
+
+- **The chip is the band's subject**, so identity colour is allowed to fill it
+  here — with ink chosen by rule 11. The band's 3 px leading edge takes the
+  same colour, which is the row's own left border one scale up rather than a
+  second carrier (§ Two colour systems, rule 2).
+- **`BEST` turns `sector-purple`** when that class's fastest lap is also the
+  session's, which is the same meaning purple carries in every row.
+- **It borrows the session strip's grammar** — chip, then micro-label/value
+  pairs — so a multi-class field reads as one masthead and several
+  sub-mastheads, not two unrelated kinds of furniture. Fields drop
+  right-to-left as the overlay narrows, as everything else on these surfaces
+  does; the chip is the last to go, because a band that has clipped its own
+  name has stopped doing its job.
 
 ### The session strip
 
@@ -277,13 +347,23 @@ pass doesn't "fix" their absence:
 - **Low-contrast car numbers.** `#30` in a near-`faint` grey fails the `faint`
   floor. Car number is `muted` at minimum.
 
-Manufacturer marks are the case that flipped. They were previously drawn at
-13 px in 55 % grey, on the theory that identity should stay quiet next to the
-status colours. At 13 px an Audi's four rings and a Porsche crest resolved to
-the same smudge in peripheral vision, which is the one place this surface is
-actually read — so they are now 17 px in near-white. That does not re-open
-§ Two colour systems rule 2: the mark is drawn in the row's own ink, so class
-colour still has exactly one carrier.
+Two things this section previously rejected have since flipped, and it is worth
+being explicit about *why* each turned, so the next pass reverses them only for
+a better reason than the last one:
+
+- **Manufacturer marks** were drawn at 13 px in 55 % grey, on the theory that
+  identity should stay quiet next to the status colours. At that size an Audi's
+  four rings and a Porsche crest resolved to the same smudge in peripheral
+  vision, which is the one place this surface is actually read. Now 17 px in
+  near-white. This does not re-open § Two colour systems rule 2 — the mark is
+  drawn in the row's own ink.
+- **The class band** was rejected on the grounds that a gap separates classes
+  for a third of the height. True, and irrelevant: separation was never the
+  band's job. See rule 2.
+
+The rejections that stand are both about *withholding information the reader
+needs*, which is the pattern worth noticing — a rule that only removes chrome
+is a rule that will keep getting revisited.
 
 ## Provenance
 
@@ -295,11 +375,15 @@ markup, and no token value came from the source; every rule above is expressed
 in this system's own tokens. Colour values here remain those of the four
 runtime themes.
 
-Rules 8 and 9 and the § Session strip were added on 2026-08-08 in a second pass
-over the same reference, after the first pass' surfaces were read against it
-side by side. The same boundary holds: what was taken is that a timing overlay
-wants heavier type on darker paper and a readout line of session state — not
-any particular weight, colour or field, all of which are this system's.
+Rules 8–11, the § Session strip and the § Class band were added on 2026-08-08
+across two further passes over the same reference, after this app's surfaces
+were read against it side by side. The same boundary holds throughout: what was
+taken is *that* a timing overlay wants heavier type on darker paper, a readout
+line of session state, per-class mastheads, and compound cells bound by a tint
+— not any particular weight, colour, field or value, all of which are this
+system's. Rule 2 was rewritten rather than patched, because the first pass had
+banned the class band on grounds (separation) that turned out not to be the
+band's actual job (per-class data).
 
 ## Known follow-ups
 
@@ -317,13 +401,17 @@ any particular weight, colour or field, all of which are this system's.
 - **Rule 3 repeats the labels once per class group.** Correct by the rule — each
   group is its own small table — but in a two-class field the second label line
   sits ten rows below the first, which may be one more than it needs to be.
-- ~~**Rule 7 cost the standings its class *names*.**~~ **Done.** The class name
-  and car count (`GT3 · 6`) now print in the leader row's label line, in the
-  slot the `Driver` label used to hold — the one label a first-time user never
-  needed, since a column of names announces itself. It sits directly above that
-  group's coloured left border, so adjacency binds colour to name without a
-  band and without a second carrier of the class hue.
-- **Per-class collapse and solo-filter are gone**, not relocated. They were
-  bound to the class band, and per-class state is session data rather than
-  configuration, so it has no natural home in the Manager. Worth revisiting only
-  if a large multi-class field actually proves unreadable without them.
+- ~~**Rule 7 cost the standings its class *names*.**~~ **Done** — by the class
+  band of rule 2, which names the class and carries its numbers besides. An
+  interim fix printed `GT3 · 6` in the leader row's `Driver` label slot; the
+  band supersedes it, and the `Driver` label is back.
+- **Per-class collapse and solo-filter are still gone**, and the band's return
+  does not bring them back: rule 7 outranks rule 2, and per-class state is
+  session data rather than configuration, so it has no home in the Manager
+  either. Worth revisiting only if a large multi-class field actually proves
+  unreadable without them.
+- **The class band repeats no session-wide value**, unlike the reference, which
+  reprints lap, clock and track temperature on every band. Those live once, on
+  the session strip. If a user ever runs the band without the strip and misses
+  them, the answer is to let the *strip* pin rather than to duplicate it per
+  class.
