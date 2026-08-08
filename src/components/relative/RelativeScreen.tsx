@@ -39,6 +39,7 @@ import { useRelativeUiStore } from "../../stores/useRelativeUiStore";
 import type { DriverEntry, StandingsEntry } from "../../telemetry/types";
 import { lapTime } from "../../lib/format";
 import { BrandIcon } from "../standings/cells";
+import { LAP_UNDERLINE } from "../standings/constants";
 import { CountryFlag } from "../ui/CountryFlag";
 import { SessionStrip } from "../timing/SessionStrip";
 
@@ -281,7 +282,9 @@ function RowInner({
         height: ROW_H,
         // The 2 px left border is this surface's single carrier of car-class
         // colour (§ Two colour systems, rule 2).
-        borderLeft: `2px solid ${isPlayer ? classColor : `${classColor}55`}`,
+        // 3 px, up from 2: on near-black paper a 2 px hairline of an arbitrary
+        // hue was the first thing to go in peripheral vision.
+        borderLeft: `3px solid ${isPlayer ? classColor : `${classColor}66`}`,
         // Clear the in-row column labels rather than centring under them.
         paddingTop: labelled ? REL_LABEL_H : undefined,
       }}
@@ -345,9 +348,23 @@ function RowInner({
         {isPlayer ? "0.0s" : `${fmtGap(gap)}s`}
       </div>
 
-      {/* last lap */}
+      {/* last lap, ruled rather than recoloured when it grades — the digits are
+          what the driver compares, so the grade rides underneath them
+          (`design.md` § Dense tabular overlays, rule 10) */}
       {isOn("last") && (
-        <div className="text-right text-[12px] font-semibold tabular-nums tnum text-muted">
+        <div
+          className="text-right text-[12px] font-semibold tabular-nums tnum text-muted"
+          style={
+            LAP_UNDERLINE[entry.lastLapStatus]
+              ? {
+                  textDecoration: "underline",
+                  textDecorationColor: LAP_UNDERLINE[entry.lastLapStatus],
+                  textDecorationThickness: 2,
+                  textUnderlineOffset: 3,
+                }
+              : undefined
+          }
+        >
           {lapTime(entry.lastLapTime)}
         </div>
       )}

@@ -8,6 +8,7 @@ import {
   sectorTime,
 } from "../../lib/format";
 import { LAP_COLOR, SECTOR_COLOR } from "./constants";
+import { tint } from "../../lib/contrast";
 
 /* -------------------------------------------------------------------------- */
 /*  Position-change arrow (▲2 / ▼1) — gain since the green flag                */
@@ -19,10 +20,13 @@ export function PosChange({ value }: { value: number }) {
   }
   const up = value > 0;
   const Icon = up ? ChevronUp : ChevronDown;
+  const color = up ? "var(--color-accent)" : "var(--color-danger)";
+  // A *tint*, not a fill: same hue behind ink of that hue, which groups the
+  // arrow with its count without spending the surface's one fill (rule 5).
   return (
     <span
-      className="flex items-center justify-center gap-px text-[11px] font-bold leading-none tnum"
-      style={{ color: up ? "var(--color-accent)" : "var(--color-danger)" }}
+      className="flex items-center justify-center gap-px rounded-[3px] px-0.5 py-0.5 text-[11px] font-bold leading-none tnum"
+      style={{ color, background: tint(color, 0.14) }}
       title={`${up ? "Gained" : "Lost"} ${Math.abs(value)} since start`}
     >
       <Icon className="size-3" strokeWidth={3.5} />
@@ -43,15 +47,23 @@ export function IRatingCell({
   change: number;
 }) {
   const up = change > 0;
+  const delta = up ? "var(--color-accent)" : "var(--color-danger)";
   return (
-    <div className="flex items-baseline justify-end gap-1 tnum">
+    // Rating and its projected change are one compound cell in two voices
+    // (rule 4). The tint binds them into a chip; the value keeps `text` and only
+    // the delta takes status colour, so the number itself never has to be read
+    // as a status.
+    <div
+      className="tnum flex w-fit items-baseline gap-1 justify-self-end rounded-[3px] px-1 py-0.5"
+      style={{ background: "rgb(255 255 255 / 0.05)" }}
+    >
       <span className="text-[12px] font-semibold text-text">
         {iRating > 0 ? (iRating / 1000).toFixed(1) + "k" : "—"}
       </span>
       {change !== 0 && (
         <span
           className="text-[10px] font-bold leading-none"
-          style={{ color: up ? "var(--color-accent)" : "var(--color-danger)" }}
+          style={{ color: delta }}
           title="Projected iRating change (estimate)"
         >
           {up ? "▲" : "▼"}
@@ -75,12 +87,14 @@ export function LicenseBadge({
   safetyRating: number;
   color: string;
 }) {
-  // Coloured ink, no chip: the fastest-lap cell holds this surface's only fill
-  // (`design.md` § Dense tabular overlays, rule 5).
+  // A tinted chip, not a fill: the fastest-lap cell still holds this surface's
+  // only fill (`design.md` § Dense tabular overlays, rule 5). The tint groups
+  // the class letter and the safety rating into one token — they are read
+  // together or not at all — at a fraction of a fill's weight.
   return (
     <span
-      className="inline-flex items-center text-[11px] font-bold leading-tight tnum"
-      style={{ color }}
+      className="tnum inline-flex items-center rounded-[3px] px-1 py-0.5 text-[11px] font-bold leading-none"
+      style={{ color, background: tint(color, 0.16) }}
       title={`${group} ${safetyRating.toFixed(2)}`}
     >
       {group}
@@ -353,12 +367,23 @@ export function IntervalCell({ value }: { value: number | null }) {
 export function LapCell({
   time,
   color,
+  underline,
   flash,
   fill,
   fillTitle,
 }: {
   time: number | null;
   color?: string;
+  /**
+   * Rule the value with this colour.
+   *
+   * A lap that is a personal best has to stay *readable as a time* first — it
+   * is the number the driver is actually comparing — so grading it by recolouring
+   * the digits trades legibility for the grade. An underline carries the grade
+   * in the same glyph box without touching the digits, which is why the last-lap
+   * cell now keeps white ink and takes a green rule instead of turning green.
+   */
+  underline?: string;
   flash?: boolean;
   /**
    * Paint the cell as a filled chip in this colour. Rationed to one meaning per
@@ -383,7 +408,17 @@ export function LapCell({
   return (
     <span
       className={`text-right text-[12px] font-semibold tabular-nums tnum ${flash ? "sec-flash" : ""}`}
-      style={{ color: color ?? "var(--color-text)" }}
+      style={{
+        color: color ?? "var(--color-text)",
+        ...(underline
+          ? {
+              textDecoration: "underline",
+              textDecorationColor: underline,
+              textDecorationThickness: 2,
+              textUnderlineOffset: 3,
+            }
+          : null),
+      }}
     >
       {lapTime(time)}
     </span>
