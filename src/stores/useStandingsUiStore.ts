@@ -32,8 +32,15 @@ export interface StandingsUiState {
   followPlayer: boolean;
   /** Which configurable columns are shown (missing = shown). */
   columns: ColumnVisibilityMap;
+  /**
+   * Show the session readout strip above the field (lap, time left, incidents,
+   * temperatures, SoF, clock). A readout, never a control — see
+   * `design.md` § Dense tabular overlays, rule 7.
+   */
+  showSessionStrip: boolean;
   setGrouping: (g: Grouping) => void;
   setFollowPlayer: (v: boolean) => void;
+  setShowSessionStrip: (v: boolean) => void;
   /** Whether a column is currently visible (configurable ones default to true). */
   isColumnVisible: (id: StandingsColumnId) => boolean;
   toggleColumn: (id: StandingsColumnId) => void;
@@ -47,12 +54,14 @@ interface Persisted {
   grouping: Grouping;
   followPlayer: boolean;
   columns: ColumnVisibilityMap;
+  showSessionStrip: boolean;
 }
 
 const DEFAULTS: Persisted = {
   grouping: "class",
   followPlayer: true,
   columns: {},
+  showSessionStrip: true,
 };
 
 function load(): Persisted {
@@ -79,8 +88,13 @@ let applyingRemote = false;
 
 export const useStandingsUiStore = create<StandingsUiState>((set, get) => {
   const save = () => {
-    const { grouping, followPlayer, columns } = get();
-    const snapshot: Persisted = { grouping, followPlayer, columns };
+    const { grouping, followPlayer, columns, showSessionStrip } = get();
+    const snapshot: Persisted = {
+      grouping,
+      followPlayer,
+      columns,
+      showSessionStrip,
+    };
     persist(snapshot);
     if (!applyingRemote) broadcast("standings-ui:changed", snapshot);
   };
@@ -92,6 +106,10 @@ export const useStandingsUiStore = create<StandingsUiState>((set, get) => {
     },
     setFollowPlayer: (followPlayer) => {
       set({ followPlayer });
+      save();
+    },
+    setShowSessionStrip: (showSessionStrip) => {
+      set({ showSessionStrip });
       save();
     },
     isColumnVisible: (id) => get().columns[id] !== false,
@@ -119,6 +137,8 @@ subscribe("standings-ui:changed", (payload) => {
       grouping: remote.grouping,
       followPlayer: remote.followPlayer,
       columns: remote.columns ?? {},
+      showSessionStrip:
+        remote.showSessionStrip ?? DEFAULTS.showSessionStrip,
     });
   } finally {
     applyingRemote = false;

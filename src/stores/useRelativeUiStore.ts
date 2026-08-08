@@ -19,9 +19,16 @@ export interface RelativeUiState {
   showCountry: boolean;
   /** Cars shown per side (ahead/behind). */
   windowSize: number;
+  /**
+   * Show the session readout strip above the field (lap, time left, incidents,
+   * temperatures, SoF, clock). A readout, never a control — see
+   * `design.md` § Dense tabular overlays, rule 7.
+   */
+  showSessionStrip: boolean;
   setShowBrand: (v: boolean) => void;
   setShowCountry: (v: boolean) => void;
   setWindowSize: (n: number) => void;
+  setShowSessionStrip: (v: boolean) => void;
 }
 
 const STORAGE_KEY = "telemetrylab.relative.ui.v1";
@@ -30,12 +37,14 @@ interface Persisted {
   showBrand: boolean;
   showCountry: boolean;
   windowSize: number;
+  showSessionStrip: boolean;
 }
 
 const DEFAULTS: Persisted = {
   showBrand: true,
   showCountry: true,
   windowSize: 5,
+  showSessionStrip: true,
 };
 
 function clampWindow(n: number): number {
@@ -70,8 +79,13 @@ let applyingRemote = false;
 
 export const useRelativeUiStore = create<RelativeUiState>((set, get) => {
   const save = () => {
-    const { showBrand, showCountry, windowSize } = get();
-    const snapshot: Persisted = { showBrand, showCountry, windowSize };
+    const { showBrand, showCountry, windowSize, showSessionStrip } = get();
+    const snapshot: Persisted = {
+      showBrand,
+      showCountry,
+      windowSize,
+      showSessionStrip,
+    };
     persist(snapshot);
     if (!applyingRemote) broadcast("relative-ui:changed", snapshot);
   };
@@ -89,6 +103,10 @@ export const useRelativeUiStore = create<RelativeUiState>((set, get) => {
       set({ windowSize: clampWindow(n) });
       save();
     },
+    setShowSessionStrip: (showSessionStrip) => {
+      set({ showSessionStrip });
+      save();
+    },
   };
 });
 
@@ -103,6 +121,8 @@ subscribe("relative-ui:changed", (payload) => {
       showBrand: remote.showBrand ?? DEFAULTS.showBrand,
       showCountry: remote.showCountry ?? DEFAULTS.showCountry,
       windowSize: clampWindow(remote.windowSize ?? DEFAULTS.windowSize),
+      showSessionStrip:
+        remote.showSessionStrip ?? DEFAULTS.showSessionStrip,
     });
   } finally {
     applyingRemote = false;

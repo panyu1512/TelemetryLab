@@ -41,6 +41,8 @@ export function StandingsViewPanel() {
   const setGrouping = useStandingsUiStore((s) => s.setGrouping);
   const followPlayer = useStandingsUiStore((s) => s.followPlayer);
   const setFollowPlayer = useStandingsUiStore((s) => s.setFollowPlayer);
+  const showSessionStrip = useStandingsUiStore((s) => s.showSessionStrip);
+  const setShowSessionStrip = useStandingsUiStore((s) => s.setShowSessionStrip);
 
   return (
     <div className="space-y-2">
@@ -91,6 +93,22 @@ export function StandingsViewPanel() {
           </span>
         </div>
         <ToggleSwitch checked={followPlayer} onChange={setFollowPlayer} />
+      </label>
+
+      <label className="flex cursor-pointer items-center gap-3 rounded-card border border-border bg-surface px-3 py-2.5 transition-colors hover:border-border-strong">
+        <div className="min-w-0 flex-1">
+          <span className="block text-xs font-medium text-text">
+            Session strip
+          </span>
+          <span className="block text-[11px] text-faint">
+            Lap, time left, incidents, temperatures, SoF and the clock, above
+            the field.
+          </span>
+        </div>
+        <ToggleSwitch
+          checked={showSessionStrip}
+          onChange={setShowSessionStrip}
+        />
       </label>
     </div>
   );
