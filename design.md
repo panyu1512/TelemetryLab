@@ -188,14 +188,16 @@ and a stable one-line helper row, so neither appearing reflows the panel.
 
 Standings and Relative are the densest surfaces in this app and the only ones
 read at a glance while the user is doing something else. The geometry is fixed
-in [`constants.ts`](src/components/standings/constants.ts): `ROW_H` 30 px,
-`CLASS_HEADER_H` 34, and — the two the rules below buy back — `COL_LABEL_H` 9
-and `CLASS_GAP` 10. Every rule below is downstream of the fact that a header
-band and a row cost the same height.
+in [`constants.ts`](src/components/standings/constants.ts): `ROW_H` 32 px, and
+— the two the rules below buy back — `COL_LABEL_H` 10 and `CLASS_GAP` 10, plus
+`STRIP_H` 26 when the § Session strip is on. Every rule below is downstream of
+the fact that a header band and a row cost the same height.
 
 1. **No vertical rules, no row separators.** Separation is alignment and
-   whitespace; zebra tint is the only banding allowed. At 30 px a rule costs
-   more attention than it returns.
+   whitespace; zebra tint is the only banding allowed. At 32 px a rule costs
+   more attention than it returns. The one hairline permitted is the session
+   strip's baseline, which separates the readout from the field rather than one
+   row from the next.
 2. **Class separation is a gap plus a tone shift, not a labelled band.** The
    gap reads pre-attentively, costs a third of a band, and needs nothing
    clickable. There is no class band on any surface — see rule 7.
@@ -215,29 +217,73 @@ band and a row cost the same height.
    column is fixed-width and mono; the name absorbs all slack. A layout that
    clips `Francois Sieg…` while fixed columns hold empty space has its
    priorities backwards.
-7. **A timing surface is rows and nothing else — no title bar, no session
-   strip, no controls.** These are the only surfaces read while the user's hands
-   are busy, so nothing on them can be aimed at. Everything configurable lives
-   in the Overlay Manager, which is the surface built for configuring; a setting
-   with no home there is a setting these screens do not get. The screens
-   therefore have exactly one form, and the Manager preview renders that same
-   form — a preview that is interactive where the overlay is not is a preview
-   that lies.
+7. **Nothing on a timing surface can be aimed at.** No title bar, no controls,
+   no menus, no per-class affordances. These are the only surfaces read while
+   the user's hands are busy. Everything configurable lives in the Overlay
+   Manager, which is the surface built for configuring; a setting with no home
+   there is a setting these screens do not get. The screens therefore have
+   exactly one form, and the Manager preview renders that same form — a preview
+   that is interactive where the overlay is not is a preview that lies.
+
+   The rule is about *interaction*, not about chrome, so a **pure readout is
+   allowed above the rows**: the § Session strip below is the one sanctioned
+   case. It has no buttons and rewards no click, and whether it appears at all
+   is a Manager toggle, so it costs the driver nothing to ignore.
+
+8. **Type on these two surfaces runs one step larger and one weight heavier
+   than anywhere else in the app.** 13 px semibold names, 12 px semibold values,
+   14 px bold positions, on `ROW_H` 32 (Standings) / 34 (Relative). Every other
+   surface in this system is read by someone looking *at* it; these are read in
+   peripheral vision at 200 km/h by someone who must not look away for long.
+   The density lost to the extra pixels is bought back by rules 2, 3 and 7,
+   which is what those rules are for.
+
+9. **They paint on their own near-black paper**, `--color-timing-bg`, not the
+   app's `surface` graphite — and unlike every other overlay card they keep it
+   opaque over live footage instead of dropping to glass. A gauge can afford to
+   let a sunlit kerb through; a 32 px row of 12 px type cannot. The token
+   carries the active theme's hue so the surface stays part of the system, and
+   the zebra banding on top of it is plain white alpha (`GROUP_TONE`) so the
+   banding device means the same thing in all four themes.
+
+### The session strip
+
+One line above the field, on both timing surfaces:
+`RACE · LAP 6/≈36 · LEFT 50:24 · INC 4x · TRK 38° · SOF 3.3k · AIR 22° · CLK 20:46`.
+
+- **Every field is a mono micro-label plus a bold value.** This is the
+  § Deliberately not adopted note on icon-only strips, cashed in: a thermometer
+  glyph the user has to *learn* is not a readout, it is a quiz.
+- **The session tag is the strip's only fill**, and the active flag is what
+  fills it — flag state is the one thing here that changes what the driver does
+  next. Filled ink obeys § Theme rule 1. Flag colour comes from the *status*
+  table, not from the marshal's flag: a black flag is `danger`, because black on
+  black is nothing.
+- **The lap field projects a distance for a timed race** (`6/≈36`, from time
+  remaining ÷ estimated lap) rather than showing a bare lap counter. "Am I on
+  the last lap" is a fuel and tyre decision, and a timed race never publishes
+  an answer.
+- **Fields drop right-to-left as the overlay narrows**, in priority order, the
+  same way `fitColumns` narrows the table. The last field standing is the lap.
 
 ### Deliberately not adopted
 
-Three things the reference does that this system rejects, recorded so a future
+Two things the reference does that this system rejects, recorded so a future
 pass doesn't "fix" their absence:
 
 - **A Relative with no column labels at all.** Rule 3 keeps labels on one row
   precisely so the surface stays learnable. Density is not worth a first run
   where `2.2`, `A3.6` and `3.9k` are undecodable.
-- **Icon-only status strips.** These surfaces carry no status strip at all now
-  (rule 7) — session type, clock, SOF and field-fastest went with the title bar.
-  Should one ever earn its way back, track temp, SOF, incidents and clock get
-  mono micro-labels per § Typography, never a bare glyph.
 - **Low-contrast car numbers.** `#30` in a near-`faint` grey fails the `faint`
   floor. Car number is `muted` at minimum.
+
+Manufacturer marks are the case that flipped. They were previously drawn at
+13 px in 55 % grey, on the theory that identity should stay quiet next to the
+status colours. At 13 px an Audi's four rings and a Porsche crest resolved to
+the same smudge in peripheral vision, which is the one place this surface is
+actually read — so they are now 17 px in near-white. That does not re-open
+§ Two colour systems rule 2: the mark is drawn in the row's own ink, so class
+colour still has exactly one carrier.
 
 ## Provenance
 
@@ -248,6 +294,12 @@ grammar, where labels live, how colour is rationed. No palette, no typeface, no
 markup, and no token value came from the source; every rule above is expressed
 in this system's own tokens. Colour values here remain those of the four
 runtime themes.
+
+Rules 8 and 9 and the § Session strip were added on 2026-08-08 in a second pass
+over the same reference, after the first pass' surfaces were read against it
+side by side. The same boundary holds: what was taken is that a timing overlay
+wants heavier type on darker paper and a readout line of session state — not
+any particular weight, colour or field, all of which are this system's.
 
 ## Known follow-ups
 
@@ -265,12 +317,12 @@ runtime themes.
 - **Rule 3 repeats the labels once per class group.** Correct by the rule — each
   group is its own small table — but in a two-class field the second label line
   sits ten rows below the first, which may be one more than it needs to be.
-- **Rule 7 cost the standings its class *names*.** The 2 px left border carries
-  which class a car is in, but nothing spells out which colour is GT3. The
-  Relative has a `CL` column and does not need one; Standings may. A per-group
-  mono micro-label in the leader row's blank `GAP` cell would fit inside rule 7
-  without becoming a band, and is the first thing to try if the colour alone
-  proves too thin.
+- ~~**Rule 7 cost the standings its class *names*.**~~ **Done.** The class name
+  and car count (`GT3 · 6`) now print in the leader row's label line, in the
+  slot the `Driver` label used to hold — the one label a first-time user never
+  needed, since a column of names announces itself. It sits directly above that
+  group's coloured left border, so adjacency binds colour to name without a
+  band and without a second carrier of the class hue.
 - **Per-class collapse and solo-filter are gone**, not relocated. They were
   bound to the class band, and per-class state is session data rather than
   configuration, so it has no natural home in the Manager. Worth revisiting only

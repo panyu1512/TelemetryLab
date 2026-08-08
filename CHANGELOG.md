@@ -9,6 +9,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Session strip on the timing overlays.** Standings and Relative now carry a
+  one-line readout above the field: session type tinted by the active flag,
+  lap, session time (or laps) remaining, your incident count, track and air
+  temperature, strength of field and the local clock. Every field is a mono
+  micro-label plus a bold value — no icon quizzes. In a timed race the lap
+  field projects the race distance from time remaining ÷ estimated lap
+  (`6/≈36`) instead of showing a bare counter. Fields drop right-to-left as the
+  overlay narrows, and the strip can be turned off per screen from the Overlay
+  Manager. It is a readout, never a control: nothing on a timing surface can
+  still be aimed at.
+- **Class names back on the standings.** Each class group's leader row prints
+  `GT3 · 6` in its label line, directly above that group's coloured left
+  border, so the class colour finally has a name attached without reintroducing
+  a class band.
 - **Driver country flags.** The bridge now forwards each driver's country flair
   (`FlairName`/`FlairShortName`) as `countryName`/`countryCode`, and the
   standings and relative overlays can show a country flag (bundled SVG flags,
@@ -20,6 +34,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Timing overlays redrawn for peripheral vision.** Standings and Relative now
+  paint on their own near-black paper (`--color-timing-bg`, themed, and kept
+  opaque over live footage where every other overlay card drops to glass), and
+  their type runs one step larger and one weight heavier than the rest of the
+  app: 13 px semibold driver names, 12 px semibold values, 14 px bold
+  positions, on 32/34 px rows. Zebra banding moved from graphite tints to plain
+  white alpha so it reads identically in all four themes.
+- **Manufacturer marks at 17 px in near-white**, up from 13 px in 55 % grey —
+  at the old size an Audi's four rings and a Porsche crest resolved to the same
+  smudge in exactly the viewing conditions these screens are built for. An
+  unknown make now prints its first three letters in the same ink instead of a
+  grey pill.
 - **Responsive standings & relative tables.** Both overlays now measure their
   window and drop optional columns in priority order when space runs out, so a
   narrow overlay shows a clean pos/driver/gap core instead of growing a
