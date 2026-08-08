@@ -42,6 +42,11 @@ interface StandingsRowProps {
   /** Class-group tone index into {@link GROUP_TONE} (rule 2's tone shift). */
   tone: number;
   /**
+   * On a class leader, the group's own label (e.g. `LMP2 · 6`), printed in the
+   * `Driver` label slot so the class colour on the border gets a name.
+   */
+  groupLabel?: string;
+  /**
    * Whether this car holds the fastest lap in its class, or in the whole field.
    * The *only* filled cell on this surface (rule 5) — everything else that needs
    * colour gets coloured text.
@@ -67,6 +72,7 @@ function StandingsRowInner({
   isVisible,
   labelled,
   tone,
+  groupLabel,
   fastest,
 }: StandingsRowProps) {
   const row = useStandingsRow(carIdx);
@@ -112,7 +118,11 @@ function StandingsRowInner({
         }}
       >
         {labelled && (
-          <ColumnLabels sectorCount={sectorCount} isVisible={isVisible} />
+          <ColumnLabels
+            sectorCount={sectorCount}
+            isVisible={isVisible}
+            groupLabel={groupLabel}
+          />
         )}
 
         {/* position change */}
@@ -124,7 +134,7 @@ function StandingsRowInner({
 
         {/* position — class position when grouped by class, overall when flat.
             A flat overall table numbered by class position reads as scrambled. */}
-        <div className="text-center text-[13px] font-semibold tabular-nums tnum">
+        <div className="text-center text-[14px] font-bold tabular-nums tnum">
           {(classRelative
             ? row?.classPosition ?? row?.position
             : row?.position ?? row?.classPosition) ?? "—"}
@@ -135,7 +145,7 @@ function StandingsRowInner({
             not adopted). */}
         {isVisible("num") && (
           <div
-            className="truncate text-center text-[11px] font-semibold tabular-nums tnum text-muted"
+            className="truncate text-center text-[12px] font-bold tabular-nums tnum text-muted"
             title={`#${driver?.carNumber ?? ""}`}
           >
             {driver?.carNumber ?? "—"}
@@ -154,7 +164,7 @@ function StandingsRowInner({
 
         {/* driver */}
         <div className="flex min-w-0 items-center">
-          <span className="truncate text-[12px] text-text">
+          <span className="truncate text-[13px] font-semibold text-text">
             {driver?.userName ?? `Car ${carIdx}`}
           </span>
         </div>
@@ -243,10 +253,10 @@ function StandingsRowInner({
               className="text-warning"
               title={row?.isInPitStall ? "In pit stall" : "On pit road"}
             >
-              <Wrench className="size-3" />
+              <Wrench className="size-3.5" />
             </span>
           ) : row?.isOffTrack ? (
-            <AlertTriangle className="size-3 text-danger" />
+            <AlertTriangle className="size-3.5 text-danger" />
           ) : null}
         </div>
       </div>

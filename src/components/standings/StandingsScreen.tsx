@@ -14,6 +14,7 @@ import {
 } from "./constants";
 import { StandingsRow } from "./StandingsRow";
 import { useStandingsLayout } from "./useStandingsLayout";
+import { SessionStrip } from "../timing/SessionStrip";
 
 /** Extra pixels rendered above/below the viewport so fast scrolls stay filled. */
 const OVERSCAN = 320;
@@ -21,10 +22,12 @@ const OVERSCAN = 320;
 /**
  * The v0.4 standings / timing screen.
  *
- * The screen is **rows and nothing else**: no title bar, no session strip, no
- * controls. It is read at a glance while the user is driving, so every pixel
- * goes to the field. Everything configurable about it lives in the Overlay
- * Manager, which is the surface built for configuring.
+ * The screen is **rows and a readout, and nothing else**: no title bar, no
+ * controls, nothing that can be aimed at. It is read at a glance while the user
+ * is driving, so every pixel goes to the field — including the optional session
+ * strip above it, which is a readout the driver cannot interact with (see
+ * `design.md` § Dense tabular overlays, rule 7). Everything *configurable* about
+ * the screen, the strip included, lives in the Overlay Manager.
  *
  * That also means no column-header band — the labels print inside each class
  * leader's row (`design.md` § Dense tabular overlays, rule 3) — and no class
@@ -42,6 +45,7 @@ export function StandingsScreen() {
   const grouping = useStandingsUiStore((s) => s.grouping);
   const followPlayer = useStandingsUiStore((s) => s.followPlayer);
   const columns = useStandingsUiStore((s) => s.columns);
+  const showSessionStrip = useStandingsUiStore((s) => s.showSessionStrip);
   const { items, totalHeight } = useStandingsLayout();
   const classRelative = grouping === "class";
 
@@ -85,6 +89,20 @@ export function StandingsScreen() {
 
   const classById = useMemo(
     () => new Map(classes.map((c) => [c.carClassId, c])),
+    [classes]
+  );
+
+  // Per-group label for the leader row's `Driver` label slot: which class this
+  // group is, and how many cars are in it. Only meaningful when the field is
+  // grouped by class — a flat overall table has one group and no class to name.
+  const groupLabels = useMemo(
+    () =>
+      new Map(
+        classes.map((c) => [
+          c.carClassId,
+          c.carCount > 0 ? `${c.shortName} · ${c.carCount}` : c.shortName,
+        ])
+      ),
     [classes]
   );
 
@@ -135,7 +153,8 @@ export function StandingsScreen() {
   const isEmpty = items.length === 0;
 
   return (
-    <div className="overlay-card flex h-full flex-col overflow-hidden rounded-card border border-border/60 bg-surface">
+    <div className="overlay-card timing-surface flex h-full flex-col overflow-hidden rounded-card border border-border/60">
+      {showSessionStrip && <SessionStrip width={viewW} />}
       <div ref={scrollRef} className="relative flex-1 overflow-auto">
         {isEmpty ? (
           <EmptyState iracingActive={iracingActive} />
@@ -158,6 +177,9 @@ export function StandingsScreen() {
                     isVisible={isVisible}
                     labelled={it.leader}
                     tone={it.tone}
+                    groupLabel={
+                      classRelative ? groupLabels.get(it.classId) : undefined
+                    }
                     fastest={fastestByCar.get(it.carIdx) ?? null}
                   />
                 );

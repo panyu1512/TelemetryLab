@@ -21,11 +21,11 @@ export function PosChange({ value }: { value: number }) {
   const Icon = up ? ChevronUp : ChevronDown;
   return (
     <span
-      className="flex items-center justify-center gap-px text-[10px] font-semibold leading-none tnum"
+      className="flex items-center justify-center gap-px text-[11px] font-bold leading-none tnum"
       style={{ color: up ? "var(--color-accent)" : "var(--color-danger)" }}
       title={`${up ? "Gained" : "Lost"} ${Math.abs(value)} since start`}
     >
-      <Icon className="size-2.5" strokeWidth={3} />
+      <Icon className="size-3" strokeWidth={3.5} />
       {Math.abs(value)}
     </span>
   );
@@ -45,12 +45,12 @@ export function IRatingCell({
   const up = change > 0;
   return (
     <div className="flex items-baseline justify-end gap-1 tnum">
-      <span className="text-[11px] text-text/90">
+      <span className="text-[12px] font-semibold text-text">
         {iRating > 0 ? (iRating / 1000).toFixed(1) + "k" : "—"}
       </span>
       {change !== 0 && (
         <span
-          className="text-[9px] font-semibold leading-none"
+          className="text-[10px] font-bold leading-none"
           style={{ color: up ? "var(--color-accent)" : "var(--color-danger)" }}
           title="Projected iRating change (estimate)"
         >
@@ -79,7 +79,7 @@ export function LicenseBadge({
   // (`design.md` § Dense tabular overlays, rule 5).
   return (
     <span
-      className="inline-flex items-center text-[10px] font-semibold leading-tight tnum"
+      className="inline-flex items-center text-[11px] font-bold leading-tight tnum"
       style={{ color }}
       title={`${group} ${safetyRating.toFixed(2)}`}
     >
@@ -275,26 +275,48 @@ const BRAND_ICONS: Record<string, () => JSX.Element> = {
 BRAND_ICONS.VW = BRAND_ICONS.Volkswagen;
 BRAND_ICONS["Mercedes-AMG"] = BRAND_ICONS.Mercedes;
 
-export function BrandIcon({ make }: { make: string }) {
+/**
+ * Default brand-mark height. 17 px rather than the previous 13: these marks are
+ * how a driver identifies a car at a glance in a multi-make field, and at 13 px
+ * a Porsche crest and an Audi's four rings resolved to the same grey smudge in
+ * peripheral vision.
+ */
+export const BRAND_ICON_H = 17;
+
+export function BrandIcon({
+  make,
+  height = BRAND_ICON_H,
+}: {
+  make: string;
+  /** Override the mark height in px (the width follows from the viewBox). */
+  height?: number;
+}) {
   if (!make) return null;
   const Icon = BRAND_ICONS[make];
   if (Icon) {
     // .brand-icon CSS rule: > svg { height: 100%; width: auto; display: block; }
-    // inline-flex default (align-items: stretch) lets height:100% resolve to 13px.
+    // inline-flex default (align-items: stretch) lets height:100% resolve.
+    //
+    // Near-white, not the old 55%-alpha grey. A manufacturer mark is *identity*
+    // and identity on this surface has exactly one coloured carrier, the left
+    // border (§ Two colour systems, rule 2) — so the mark reads in the row's own
+    // ink, at full strength, and simply gets out of the way of the coloured
+    // status values instead of competing with them from half-brightness.
     return (
       <span
-        className="brand-icon shrink-0 inline-flex"
-        style={{ height: 13, color: "rgba(230,230,230,0.55)" }}
+        className="brand-icon inline-flex shrink-0"
+        style={{ height, color: "rgba(255,255,255,0.94)" }}
         title={make}
       >
         <Icon />
       </span>
     );
   }
-  // Unknown brand: plain muted pill with first 3 letters.
+  // Unknown brand: the make's first three letters in the same ink as a mark —
+  // no pill, since fill is rationed to the fastest-lap cell (rule 5).
   return (
     <span
-      className="shrink-0 rounded bg-surface-2 px-1 text-[9px] uppercase tracking-wide text-muted"
+      className="shrink-0 font-mono text-[10px] font-bold uppercase leading-none tracking-[0.06em] text-text/90"
       title={make}
     >
       {make.slice(0, 3)}
@@ -314,7 +336,7 @@ export function GapCell({
   isLaps: boolean;
 }) {
   return (
-    <span className="text-right text-[11px] tabular-nums text-text/80 tnum">
+    <span className="text-right text-[12px] font-semibold tabular-nums text-text tnum">
       {fmtGap(value, isLaps)}
     </span>
   );
@@ -322,7 +344,7 @@ export function GapCell({
 
 export function IntervalCell({ value }: { value: number | null }) {
   return (
-    <span className="text-right text-[11px] tabular-nums text-text/80 tnum">
+    <span className="text-right text-[12px] font-semibold tabular-nums text-text tnum">
       {fmtInterval(value)}
     </span>
   );
@@ -350,7 +372,7 @@ export function LapCell({
   if (fill) {
     return (
       <span
-        className={`justify-self-end rounded-[3px] px-1 text-right text-[11px] font-semibold tabular-nums tnum ${flash ? "sec-flash" : ""}`}
+        className={`justify-self-end rounded-[3px] px-1.5 py-0.5 text-right text-[12px] font-bold tabular-nums tnum ${flash ? "sec-flash" : ""}`}
         style={{ background: fill, color: "var(--color-on-accent)" }}
         title={fillTitle}
       >
@@ -360,7 +382,7 @@ export function LapCell({
   }
   return (
     <span
-      className={`text-right text-[11px] tabular-nums tnum ${flash ? "sec-flash" : ""}`}
+      className={`text-right text-[12px] font-semibold tabular-nums tnum ${flash ? "sec-flash" : ""}`}
       style={{ color: color ?? "var(--color-text)" }}
     >
       {lapTime(time)}
@@ -386,7 +408,7 @@ export function SectorCell({ sector }: { sector: SectorSplit | undefined }) {
   return (
     <span
       key={`${sector.status}-${sector.lastTime}`}
-      className="sec-cell text-center text-[10px] font-medium tabular-nums tnum"
+      className="sec-cell text-center text-[11px] font-semibold tabular-nums tnum"
       style={{ color }}
       title={`S${sector.index + 1}: ${sectorTime(sector.lastTime)}${
         sector.bestTime != null ? ` (best ${sectorTime(sector.bestTime)})` : ""
@@ -453,13 +475,13 @@ export function TireCell({
     <div className="flex items-center justify-center gap-0.5">
       <TireCompoundIcon compound={compound} />
       <span
-        className="text-[9px] font-bold leading-none"
+        className="text-[10px] font-bold leading-none"
         style={{ color }}
         title={`Compound ${label}`}
       >
         {label}
       </span>
-      <span className="text-[9px] tabular-nums" style={{ color: "var(--color-faint)" }} title={`${laps} laps on tyres`}>
+      <span className="text-[10px] font-semibold tabular-nums tnum" style={{ color: "var(--color-muted)" }} title={`${laps} laps on tyres`}>
         {laps}
       </span>
     </div>
