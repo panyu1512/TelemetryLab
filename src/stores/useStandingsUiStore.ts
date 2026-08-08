@@ -38,9 +38,16 @@ export interface StandingsUiState {
    * `design.md` § Dense tabular overlays, rule 7.
    */
   showSessionStrip: boolean;
+  /**
+   * Open each class group with a band carrying that class's own numbers (car
+   * count, strength of field, fastest lap). Only applies when grouped by class
+   * — a flat overall table has one group and nothing to name.
+   */
+  showClassBands: boolean;
   setGrouping: (g: Grouping) => void;
   setFollowPlayer: (v: boolean) => void;
   setShowSessionStrip: (v: boolean) => void;
+  setShowClassBands: (v: boolean) => void;
   /** Whether a column is currently visible (configurable ones default to true). */
   isColumnVisible: (id: StandingsColumnId) => boolean;
   toggleColumn: (id: StandingsColumnId) => void;
@@ -55,6 +62,7 @@ interface Persisted {
   followPlayer: boolean;
   columns: ColumnVisibilityMap;
   showSessionStrip: boolean;
+  showClassBands: boolean;
 }
 
 const DEFAULTS: Persisted = {
@@ -62,6 +70,7 @@ const DEFAULTS: Persisted = {
   followPlayer: true,
   columns: {},
   showSessionStrip: true,
+  showClassBands: true,
 };
 
 function load(): Persisted {
@@ -88,12 +97,14 @@ let applyingRemote = false;
 
 export const useStandingsUiStore = create<StandingsUiState>((set, get) => {
   const save = () => {
-    const { grouping, followPlayer, columns, showSessionStrip } = get();
+    const { grouping, followPlayer, columns, showSessionStrip, showClassBands } =
+      get();
     const snapshot: Persisted = {
       grouping,
       followPlayer,
       columns,
       showSessionStrip,
+      showClassBands,
     };
     persist(snapshot);
     if (!applyingRemote) broadcast("standings-ui:changed", snapshot);
@@ -110,6 +121,10 @@ export const useStandingsUiStore = create<StandingsUiState>((set, get) => {
     },
     setShowSessionStrip: (showSessionStrip) => {
       set({ showSessionStrip });
+      save();
+    },
+    setShowClassBands: (showClassBands) => {
+      set({ showClassBands });
       save();
     },
     isColumnVisible: (id) => get().columns[id] !== false,
@@ -139,6 +154,7 @@ subscribe("standings-ui:changed", (payload) => {
       columns: remote.columns ?? {},
       showSessionStrip:
         remote.showSessionStrip ?? DEFAULTS.showSessionStrip,
+      showClassBands: remote.showClassBands ?? DEFAULTS.showClassBands,
     });
   } finally {
     applyingRemote = false;

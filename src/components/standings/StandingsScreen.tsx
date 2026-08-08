@@ -7,6 +7,7 @@ import {
 } from "../../stores/useStandingsStore";
 import { useStandingsUiStore } from "../../stores/useStandingsUiStore";
 import {
+  CLASS_BAND_H,
   ROW_H,
   fitColumns,
   tableMinWidth,
@@ -15,6 +16,7 @@ import {
 import { StandingsRow } from "./StandingsRow";
 import { useStandingsLayout } from "./useStandingsLayout";
 import { SessionStrip } from "../timing/SessionStrip";
+import { ClassBand } from "./ClassBand";
 
 /** Extra pixels rendered above/below the viewport so fast scrolls stay filled. */
 const OVERSCAN = 320;
@@ -30,8 +32,10 @@ const OVERSCAN = 320;
  * the screen, the strip included, lives in the Overlay Manager.
  *
  * That also means no column-header band — the labels print inside each class
- * leader's row (`design.md` § Dense tabular overlays, rule 3) — and no class
- * band: classes are separated by a gap plus a tone shift (rule 2).
+ * leader's row (`design.md` § Dense tabular overlays, rule 3). Class groups do
+ * open with a band, which carries that class's own numbers and nothing
+ * clickable; the gap and tone shift that separate the groups (rule 2) are still
+ * doing their job underneath it.
  *
  * Rendering budget: the body only mounts the rows on screen (windowed by scroll
  * offset), each row subscribes to just its own entry, and reorders animate
@@ -92,20 +96,6 @@ export function StandingsScreen() {
     [classes]
   );
 
-  // Per-group label for the leader row's `Driver` label slot: which class this
-  // group is, and how many cars are in it. Only meaningful when the field is
-  // grouped by class — a flat overall table has one group and no class to name.
-  const groupLabels = useMemo(
-    () =>
-      new Map(
-        classes.map((c) => [
-          c.carClassId,
-          c.carCount > 0 ? `${c.shortName} · ${c.carCount}` : c.shortName,
-        ])
-      ),
-    [classes]
-  );
-
   // Who holds a fastest lap: one car per class, plus the single car whose class
   // best is also the field best. This drives the surface's only filled cell
   // (`design.md` § Dense tabular overlays, rule 5), so it is resolved once here
@@ -130,14 +120,19 @@ export function StandingsScreen() {
   const visible = useMemo(() => {
     const min = scrollTop - OVERSCAN;
     const max = scrollTop + viewH + OVERSCAN;
-    return items.filter((it) => it.top + ROW_H >= min && it.top <= max);
+    return items.filter((it) => {
+      const h = it.kind === "band" ? CLASS_BAND_H : ROW_H;
+      return it.top + h >= min && it.top <= max;
+    });
   }, [items, scrollTop, viewH]);
 
   // Follow the player: keep their row roughly centered when it moves, but only
   // when it has drifted far enough that a nudge is warranted (avoids fighting).
   const playerTop = useMemo(() => {
     if (meta.playerCarIdx < 0) return null;
-    const it = items.find((i) => i.carIdx === meta.playerCarIdx);
+    const it = items.find(
+      (i) => i.kind === "row" && i.carIdx === meta.playerCarIdx
+    );
     return it ? it.top : null;
   }, [items, meta.playerCarIdx]);
 
@@ -165,6 +160,30 @@ export function StandingsScreen() {
               style={{ height: totalHeight + 8, marginTop: 6 }}
             >
               {visible.map((it) => {
+                if (it.kind === "band") {
+                  const standing = classById.get(it.classId);
+                  if (!standing) return null;
+                  return (
+                    <div
+                      key={it.key}
+                      className="row-glide absolute inset-x-0 px-1 will-change-transform"
+                      style={{
+                        height: CLASS_BAND_H,
+                        transform: `translateY(${it.top}px)`,
+                      }}
+                    >
+                      <ClassBand
+                        standing={standing}
+                        fastestIsOverall={
+                          standing.fastestLapCarIdx != null &&
+                          fastestByCar.get(standing.fastestLapCarIdx) ===
+                            "overall"
+                        }
+                        width={viewW}
+                      />
+                    </div>
+                  );
+                }
                 return (
                   <StandingsRow
                     key={it.key}
@@ -177,9 +196,6 @@ export function StandingsScreen() {
                     isVisible={isVisible}
                     labelled={it.leader}
                     tone={it.tone}
-                    groupLabel={
-                      classRelative ? groupLabels.get(it.classId) : undefined
-                    }
                     fastest={fastestByCar.get(it.carIdx) ?? null}
                   />
                 );

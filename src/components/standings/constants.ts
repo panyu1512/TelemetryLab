@@ -36,6 +36,22 @@ export const COL_LABEL_H = 10;
 export const CLASS_GAP = 10;
 
 /**
+ * Height of the per-class band that opens each group.
+ *
+ * A band was banned outright by an earlier reading of rule 2 — a gap plus a
+ * tone shift costs a third as much and separates just as well. What that
+ * reading missed is that separation was never the only job: in a multi-class
+ * field the band is also the only place the class's *own* numbers (its car
+ * count, its strength of field, its fastest lap) can live at all, and those
+ * have nowhere else to go — they are per-class, so the session strip cannot
+ * hold them, and per-group, so no row can.
+ *
+ * 26 px, not the 34 the old class header cost: it carries a chip and three
+ * micro-label pairs, which is a strip's geometry rather than a row's.
+ */
+export const CLASS_BAND_H = 26;
+
+/**
  * Per-class-group background tones, as `[base, zebra]` utility pairs, indexed by
  * the group's position in the field.
  *
@@ -220,10 +236,22 @@ export const SECTOR_COLOR: Record<string, string> = {
   none: "var(--color-faint)",
 };
 
-/** Lap-status → highlight color for the last-lap cell. */
+/** Lap-status → ink for the last-lap cell. */
 export const LAP_COLOR: Record<string, string> = {
   overall_best: "var(--color-sector-purple)",
-  personal_best: "var(--color-accent)",
+  // A personal best keeps white ink and takes its grade from the rule below.
+  // The last lap is the number a driver actually compares against the car
+  // ahead; recolouring the digits grades it at the cost of reading it.
+  personal_best: "var(--color-text)",
   normal: "var(--color-text)",
   none: "var(--color-faint)",
+};
+
+/**
+ * Lap-status → the rule drawn under the last-lap cell. Statuses with no entry
+ * get no rule, so an ordinary lap stays completely plain.
+ */
+export const LAP_UNDERLINE: Record<string, string | undefined> = {
+  overall_best: "var(--color-sector-purple)",
+  personal_best: "var(--color-accent)",
 };

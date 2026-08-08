@@ -7,6 +7,7 @@ import {
   GROUP_TONE,
   gridTemplate,
   LAP_COLOR,
+  LAP_UNDERLINE,
   ROW_H,
   type ColumnVisibility,
 } from "./constants";
@@ -42,11 +43,6 @@ interface StandingsRowProps {
   /** Class-group tone index into {@link GROUP_TONE} (rule 2's tone shift). */
   tone: number;
   /**
-   * On a class leader, the group's own label (e.g. `LMP2 · 6`), printed in the
-   * `Driver` label slot so the class colour on the border gets a name.
-   */
-  groupLabel?: string;
-  /**
    * Whether this car holds the fastest lap in its class, or in the whole field.
    * The *only* filled cell on this surface (rule 5) — everything else that needs
    * colour gets coloured text.
@@ -72,7 +68,6 @@ function StandingsRowInner({
   isVisible,
   labelled,
   tone,
-  groupLabel,
   fastest,
 }: StandingsRowProps) {
   const row = useStandingsRow(carIdx);
@@ -112,17 +107,17 @@ function StandingsRowInner({
           .join(" ")}
         style={{
           gridTemplateColumns: gridTemplate(sectorCount, isVisible),
-          borderLeft: `2px solid ${row?.isClassLeader ? classColor : `${classColor}55`}`,
+          // 3 px, up from 2: on near-black paper a 2 px hairline of an arbitrary
+          // hue was the first thing to disappear in peripheral vision, which is
+          // where this surface is read. It is still the row's only carrier of
+          // class colour (§ Two colour systems, rule 2).
+          borderLeft: `3px solid ${row?.isClassLeader ? classColor : `${classColor}66`}`,
           // Clear the in-row column labels rather than centring under them.
           paddingTop: labelled ? COL_LABEL_H : undefined,
         }}
       >
         {labelled && (
-          <ColumnLabels
-            sectorCount={sectorCount}
-            isVisible={isVisible}
-            groupLabel={groupLabel}
-          />
+          <ColumnLabels sectorCount={sectorCount} isVisible={isVisible} />
         )}
 
         {/* position change */}
@@ -209,6 +204,7 @@ function StandingsRowInner({
             key={`last-${row?.lastLapTime}`}
             time={row?.lastLapTime ?? null}
             color={LAP_COLOR[row?.lastLapStatus ?? "none"]}
+            underline={LAP_UNDERLINE[row?.lastLapStatus ?? "none"]}
             flash={row?.lastLapStatus === "overall_best"}
           />
         )}
