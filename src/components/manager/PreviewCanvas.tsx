@@ -48,6 +48,7 @@ import { useTelemetryStore } from "../../stores/useTelemetryStore";
 import type { TelemetryData } from "../../hooks/useTelemetry";
 import { useDashboardLayout } from "../../hooks/useDashboardLayout";
 import { DashboardGrid } from "../layout/DashboardGrid";
+import { SurfaceProvider } from "../ui/SurfaceContext";
 import { applyTheme, getTheme } from "../../themes";
 
 /**
@@ -762,11 +763,17 @@ function RealOverlay({
     // Screens fill a window and scroll internally. Give them a frame at the
     // (growing) stage height so their own scrollbars never engage — the parent
     // enlarges `height` until all rows/columns fit.
+    //
+    // `manager` is what lets a screen keep its interactive chrome here: the
+    // standings class band is a collapse/solo control, so it belongs on the
+    // stage the user is configuring from, not over their footage.
     const Screen = dashboard.Screen;
     return (
-      <div className="w-full overflow-hidden p-2" style={{ height }}>
-        <Screen />
-      </div>
+      <SurfaceProvider value="manager">
+        <div className="w-full overflow-hidden p-2" style={{ height }}>
+          <Screen />
+        </div>
+      </SurfaceProvider>
     );
   }
 
