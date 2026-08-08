@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TelemetryLab — timing and telemetry overlays for iRacing</title>
+    <meta
+      name="description"
+      content="A multi-class timing, relative, fuel and telemetry overlay for iRacing. Each screen is its own window over the game, built to be read at a glance. Free and open source."
+    />
+    <meta name="theme-color" content="#12161d" />
+    <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:title" content="TelemetryLab — read the field without looking" />
+    <meta
+      property="og:description"
+      content="Multi-class standings, an on-track relative, fuel strategy and a driving cluster. Each one its own window over iRacing."
+    />
+    <meta property="og:image" content="assets/standings.png" />
+    <meta name="twitter:card" content="summary_large_image" />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="css/site.css" />
+  </head>
+
+  <body>
+    <a class="skip" href="#main">Skip to content</a>
+
+    <!-- N9 · Edge-aligned: wordmark hard-left, actions hard-right, nothing in
+         between. The empty middle is the archetype. -->
+    <div class="shell">
+      <header class="nav">
+        <a class="wordmark" href="#main">
+          <span class="wordmark__mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          TelemetryLab
+        </a>
+        <div class="nav__actions">
+          <a class="link-q" href="https://github.com/panyu1512/TelemetryLab">Source</a>
+          <a
+            class="chip-solid"
+            href="https://github.com/panyu1512/TelemetryLab/releases/latest"
+            >Download</a
+          >
+        </div>
+      </header>
+    </div>
+
+    <main id="main">
+      <div class="shell">
+        <!-- H2 · Split diptych -->
+        <section class="hero">
+          <div class="hero__copy">
+            <h1>Read the field without looking.</h1>
+            <p class="hero__lede">
+              TelemetryLab is a timing and telemetry overlay for iRacing.
+              Multi-class standings, an on-track relative, fuel strategy and a
+              driving cluster — each one its own window, sitting over the game.
+            </p>
+            <div class="hero__actions">
+              <a
+                class="chip-solid"
+                href="https://github.com/panyu1512/TelemetryLab/releases/latest"
+                >Download for Windows</a
+              >
+              <a class="chip" href="https://github.com/panyu1512/TelemetryLab"
+                >Read the source</a
+              >
+            </div>
+            <p class="hero__note">Free and open source.</p>
+          </div>
+
+          <figure class="shot">
+            <img
+              src="assets/standings-compact.png"
+              width="1240"
+              height="744"
+              alt="The standings overlay in a narrow window: a session strip reading
+                   lap, time left, incidents, track and air temperature, strength of
+                   field and the clock, then a GT3 class band with car count, SoF and
+                   fastest lap, six driver rows carrying gap, interval, last and best
+                   lap, and the start of the GT4 group below."
+            />
+          </figure>
+        </section>
+
+        <!-- Split Studio rows. Every claim is paired with the capture that
+             proves it; the pairing alternates direction down the page. -->
+
+        <section class="row row--wide">
+          <div class="row__copy">
+            <h2>The whole field, grouped by class.</h2>
+            <p class="row__body">
+              Each class opens with its own band — how many cars are in it, its
+              strength of field, and the lap that leads it. Underneath, the
+              running order with everything you would otherwise be squinting for.
+            </p>
+            <ul class="reads">
+              <li>Gap to the class leader, and the interval to the car directly ahead</li>
+              <li>Sector times and deltas, graded against your own best and the field's</li>
+              <li>iRating with a live projected change, licence class and safety rating</li>
+              <li>Tyre compound and laps on the set; pit and off-track state</li>
+            </ul>
+          </div>
+          <figure class="shot">
+            <img
+              src="assets/standings.png"
+              width="2360"
+              height="840"
+              loading="lazy"
+              alt="The standings overlay showing two class groups, GT3 and GT4. Each
+                   group has a coloured band with car count, strength of field and
+                   fastest lap, followed by rows carrying position change, position,
+                   car number, driver, car brand, licence, iRating, gap, interval,
+                   last lap, best lap, tyre and three sector columns."
+            />
+          </figure>
+        </section>
+
+        <section class="row row--flip">
+          <div class="row__copy">
+            <h2>Who is actually coming.</h2>
+            <p class="row__body">
+              The relative sorts by time on track, not by position — so it shows
+              the cars you are about to meet, whatever lap they are on. Gaps are
+              signed and live. A closing indicator fires when a faster car is
+              catching you, and turns red when that car is from another class.
+            </p>
+          </div>
+          <figure class="shot">
+            <img
+              src="assets/relative.png"
+              width="1120"
+              height="904"
+              loading="lazy"
+              alt="The relative overlay: cars ahead and behind the player sorted by
+                   on-track time. Rows above the player show positive gaps in white,
+                   rows below show negative gaps in red, with the player's own row
+                   highlighted between a 'you' and a 'behind' divider."
+            />
+          </figure>
+        </section>
+
+        <section class="row">
+          <div class="row__copy">
+            <h2>The stop, before you need it.</h2>
+            <p class="row__body">
+              Fuel strategy works from your own measured burn, not from a number
+              you typed in before the race. It gives you the pit window, the lap
+              it recommends, and — when the two disagree — how many laps short you
+              are at the pace you are actually driving.
+            </p>
+            <ul class="reads">
+              <li>Consumption per lap, sampled live, with laps of fuel remaining</li>
+              <li>A pit window and a recommended lap, both recomputed every lap</li>
+              <li>A fuel-save target when finishing on what is in the tank is close</li>
+            </ul>
+          </div>
+          <figure class="shot">
+            <img
+              src="assets/fuel.png"
+              width="1240"
+              height="680"
+              loading="lazy"
+              alt="The fuel and strategy overlay: a 'Save to finish' banner reading
+                   22.7 fuel laps against 24 laps to the flag, 55.9 litres in tank,
+                   2.33 litres per lap consumption, a next pit window of laps 22 to
+                   23, a recommended pit on lap 23, and a note reading 'short by 2
+                   laps at the current burn'."
+            />
+          </figure>
+        </section>
+
+        <section class="row row--flip">
+          <div class="row__copy">
+            <h2>Configured once, then left alone.</h2>
+            <p class="row__body">
+              The timing screens carry no controls at all. Nothing on them can be
+              aimed at, because while you are reading them your hands are busy.
+              Everything configurable lives in the manager instead, next to a live
+              preview of the overlay it is changing.
+            </p>
+            <ul class="reads">
+              <li>Every overlay is a separate window — place, resize and theme it on its own</li>
+              <li>Pick which timing columns you want; the rest drop out as the window narrows</li>
+              <li>Four themes, and a mock-data mode that runs the whole UI without a sim</li>
+            </ul>
+          </div>
+          <figure class="shot">
+            <img
+              src="assets/manager.png"
+              width="2800"
+              height="1800"
+              loading="lazy"
+              alt="The Overlay Manager: a left rail listing Dashboard, Standings,
+                   Relative and Fuel Calc, a column of view and column settings in
+                   the middle, and a live scaled preview of the standings overlay on
+                   the right."
+            />
+          </figure>
+        </section>
+
+        <section class="row">
+          <div class="row__copy">
+            <h2>The car, when you want it.</h2>
+            <p class="row__body">
+              Speed, gear and RPM with a shift light. Throttle and brake drawn as
+              a trace rather than reduced to two numbers. Per-corner tyre
+              temperatures on a heat scale with pressures underneath, fuel and lap
+              timing beside them. Each widget pops out into a window of its own.
+            </p>
+          </div>
+          <figure class="shot">
+            <img
+              src="assets/dashboard.png"
+              width="2200"
+              height="1240"
+              loading="lazy"
+              alt="The dashboard overlay: a speed dial reading 239 km/h with gear 5
+                   and an RPM shift-light strip, a throttle and brake trace, fuel
+                   level, lap timing with a delta against best, and four tyre
+                   temperature tiles."
+            />
+          </figure>
+        </section>
+
+        <!-- F3 · Tabular spec sheet. The page becomes the instrument. -->
+        <section class="spec">
+          <div class="spec__intro">
+            <h2>What every column is telling you.</h2>
+            <p>
+              The timing screen is dense on purpose — it is read in peripheral
+              vision, at speed. Every column above is in this table, and colour
+              carries exactly one meaning throughout.
+            </p>
+          </div>
+
+          <div class="spec__scroll">
+            <table class="tnum">
+              <caption class="micro spec__cap">
+                Standings row
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Column</th>
+                  <th scope="col">Reads</th>
+                  <th scope="col">Colour</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">POS</th>
+                  <td>Position in class, or overall when the field is ungrouped</td>
+                  <td>—</td>
+                </tr>
+                <tr>
+                  <th scope="row">GAP</th>
+                  <td>Seconds behind the class leader, or laps down</td>
+                  <td>—</td>
+                </tr>
+                <tr>
+                  <th scope="row">INT</th>
+                  <td>Seconds to the car directly ahead of you in class</td>
+                  <td>—</td>
+                </tr>
+                <tr>
+                  <th scope="row">LAST</th>
+                  <td>Your last completed lap, ruled when it grades</td>
+                  <td>
+                    <span class="sw sw--pb">green rule</span> personal best ·
+                    <span class="sw sw--best">purple</span> leads the session
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">BEST</th>
+                  <td>Fastest lap of the session for that car</td>
+                  <td><span class="sw sw--pb">filled</span> when it leads the class</td>
+                </tr>
+                <tr>
+                  <th scope="row">iR</th>
+                  <td>iRating, with a projected change for this race</td>
+                  <td>
+                    <span class="sw sw--pb">▲ gain</span> ·
+                    <span class="sw sw--bad">▼ loss</span> — an estimate
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">LIC</th>
+                  <td>Licence class and safety rating</td>
+                  <td>iRacing's own licence colour</td>
+                </tr>
+                <tr>
+                  <th scope="row">TYRE</th>
+                  <td>Compound, and laps on the current set</td>
+                  <td>One colour per compound</td>
+                </tr>
+                <tr>
+                  <th scope="row">S1–S3</th>
+                  <td>Sector time when it is a best, the delta when it is a loss</td>
+                  <td>
+                    <span class="sw sw--best">purple</span> ·
+                    <span class="sw sw--pb">green</span> ·
+                    <span class="sw sw--warn">amber</span> ·
+                    <span class="sw sw--bad">red</span>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="spec__scroll spec__scroll--stacked">
+            <table class="tnum">
+              <caption class="micro spec__cap">
+                Session strip
+              </caption>
+              <thead>
+                <tr>
+                  <th scope="col">Field</th>
+                  <th scope="col">Reads</th>
+                  <th scope="col">Colour</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <th scope="row">RACE</th>
+                  <td>Session type, filled with the flag currently flying</td>
+                  <td>
+                    <span class="sw sw--pb">green</span> ·
+                    <span class="sw sw--warn">yellow</span> ·
+                    <span class="sw sw--bad">red</span>
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">LAP</th>
+                  <td>Laps done over the race distance — projected in a timed race</td>
+                  <td>—</td>
+                </tr>
+                <tr>
+                  <th scope="row">LEFT</th>
+                  <td>Time, or laps, left in the session</td>
+                  <td>—</td>
+                </tr>
+                <tr>
+                  <th scope="row">INC</th>
+                  <td>Your incident points this session</td>
+                  <td>
+                    <span class="sw sw--warn">amber</span> then
+                    <span class="sw sw--bad">red</span> as a limit comes into sight
+                  </td>
+                </tr>
+                <tr>
+                  <th scope="row">TRK · AIR</th>
+                  <td>Track and air temperature</td>
+                  <td>—</td>
+                </tr>
+                <tr>
+                  <th scope="row">SOF</th>
+                  <td>Strength of field</td>
+                  <td>—</td>
+                </tr>
+                <tr>
+                  <th scope="row">CLK</th>
+                  <td>Local time, for when the stint has stopped meaning anything</td>
+                  <td>—</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- S5 · Bottom-anchored label: the table is the act, the label is its
+               footer. -->
+          <p class="spec__end micro">Every field above appears in the captures on this page</p>
+        </section>
+
+        <section class="needs">
+          <h2>What it needs.</h2>
+          <dl class="needs__list">
+            <div>
+              <dt>Windows, and iRacing</dt>
+              <dd>
+                The bridge reads iRacing's shared memory, which exists only on
+                Windows. The installer is a signed-by-nobody <code>.msi</code> —
+                Windows will tell you so, and it is right to.
+              </dd>
+            </div>
+            <div>
+              <dt>No sim to hand?</dt>
+              <dd>
+                Turn on mock data in the manager's global settings and the whole
+                interface runs on synthetic telemetry — a full multi-class field,
+                no bridge required. Every capture on this page was taken that way.
+              </dd>
+            </div>
+            <div>
+              <dt>Or build it yourself</dt>
+              <dd>
+                The frontend, the Rust shell and the Python bridge are all in the
+                repository, along with the design system the overlays are built
+                against.
+              </dd>
+            </div>
+          </dl>
+        </section>
+
+        <section class="close">
+          <h2>Put it over the game.</h2>
+          <p>
+            It is free, and it will stay free. If it earns you a place or saves
+            you a stop, you can buy me a coffee — but the download is the same
+            either way.
+          </p>
+          <a
+            class="chip-solid"
+            href="https://github.com/panyu1512/TelemetryLab/releases/latest"
+            >Download for Windows</a
+          >
+        </section>
+      </div>
+    </main>
+
+    <!-- Ft5 · Statement: a closing line, not a sitemap. -->
+    <div class="shell">
+      <footer class="foot">
+        <p class="foot__line">
+          Nothing on these screens can be aimed at. Your hands are busy.
+        </p>
+        <div class="foot__meta">
+          <div class="foot__links">
+            <a class="link-q" href="https://github.com/panyu1512/TelemetryLab">GitHub</a>
+            <a
+              class="link-q"
+              href="https://github.com/panyu1512/TelemetryLab/releases/latest"
+              >Releases</a
+            >
+            <a class="link-q" href="https://buymeacoffee.com/panyu1512" rel="noopener"
+              >Buy me a coffee</a
+            >
+          </div>
+          <p class="foot__colophon">
+            TelemetryLab · open source · not affiliated with iRacing
+          </p>
+        </div>
+      </footer>
+    </div>
+  </body>
+</html>

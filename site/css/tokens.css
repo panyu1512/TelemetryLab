@@ -1,0 +1,127 @@
+/* Hallmark · genre: modern-minimal · macrostructure: Split Studio
+ * design-system: design.md (locked) · surface: marketing
+ * theme: the locked system — NOT a catalog rotation. design.md inverts the
+ * diversification rule: surfaces must share the system, so this file mirrors
+ * the app's Carbon values verbatim rather than picking a new palette.
+ * paper oklch(19% 0.0094 256) dark · display grotesk-sans (Inter) · accent cool (254°)
+ * nav: N9 edge-aligned · footer: Ft5 statement · enrichment: real product captures
+ */
+
+/*
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  TelemetryLab — marketing-surface tokens
+ *
+ *  The colour values below are copied from the project's `tokens.css` export
+ *  (the Carbon theme). They are duplicated rather than imported because this
+ *  site is a static page with no build step and no npm graph — it cannot reach
+ *  the app's Tailwind `@theme` block. If a colour changes in `src/styles.css`,
+ *  it must be changed here too. That is the cost of the site being standalone,
+ *  and it is deliberate: the site has to be deployable as three files.
+ *
+ *  What is NOT copied is the type scale and the spacing rhythm. The app is a
+ *  dense instrument read at a glance; a marketing page is read at arm's length
+ *  and needs a display range the app has no use for. Those tokens are declared
+ *  here for the first time and are marked as marketing-surface extensions.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+:root {
+  /* ── Colour — mirrored from the locked system, meanings unchanged ───────── */
+
+  /* Paper / surfaces. Elevation reads through lightness, never glow. */
+  --color-bg: oklch(19% 0.0094 256);
+  --color-surface: oklch(23.4% 0.0131 258);
+  --color-surface-2: oklch(26.3% 0.0167 260);
+  --color-border: oklch(31.5% 0.0182 258);
+  --color-border-strong: oklch(37.6% 0.0217 256);
+
+  /* The timing surfaces' own near-black paper. On the site it grounds every
+     product capture, so a screenshot sits on the same paper it was shot on
+     instead of floating on a lighter card. */
+  --color-timing-bg: color-mix(in oklab, oklch(19% 0.0094 256) 30%, #000);
+
+  /* Ink — three steps. `faint` is pinned at L 62%, the floor that clears
+     4.5:1 against `surface`. */
+  --color-text: oklch(100% 0 0);
+  --color-muted: oklch(81.1% 0.0166 254);
+  --color-faint: oklch(62% 0.021 256);
+
+  /* Status — one colour, one meaning. Unchanged from the app. */
+  --color-accent: oklch(77.4% 0.181 154); /* positive */
+  --color-accent-dim: oklch(64.6% 0.1526 155);
+  --color-danger: oklch(66.5% 0.195 26); /* critical */
+  --color-warning: oklch(80.7% 0.1472 81); /* caution */
+  --color-primary: oklch(68.6% 0.1569 254); /* interactive / informational */
+  --color-primary-dim: oklch(58.5% 0.1568 255);
+  --color-sector-purple: oklch(69.4% 0.1763 301); /* overall best */
+
+  /* The only ink allowed on a filled status colour. Every accent here is light
+     and every paper dark, so white-on-accent measures 2.2–2.9:1; this reads at
+     6.5–8.7:1. */
+  --color-on-accent: oklch(19% 0.0094 256);
+
+  /* Focus ring. Its own token so a theme can move it without moving
+     `primary`. Must clear 3:1 against both `bg` and `surface`. */
+  --color-focus: oklch(68.6% 0.1569 254);
+
+  /* ── Typography ─────────────────────────────────────────────────────────── */
+
+  /* Inter carries display and body — a single-family system, as the app does.
+     Mono is the third voice and it is *semantic*: instrument nomenclature only.
+
+     Marketing-surface extension: the app resolves mono to the OS default,
+     because it ships inside a WebView whose font stack is known. A public web
+     page has no such guarantee, and the mono is what makes this page read as
+     the product rather than as a page about it — so the site pins JetBrains
+     Mono rather than letting the platform choose. */
+  --font-sans: "Inter", "Inter Variable", -apple-system, "Segoe UI", system-ui,
+    sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo,
+    Consolas, monospace;
+
+  /* Type scale — marketing-surface extension. Every step is a clamp, so the
+     page never needs a font-size breakpoint. */
+  /* The ceiling is 4.6rem, not the 5.5 a hero of this weight could carry: the
+     headline shares its row with a product capture, so it has ~620 px to work
+     in, and at 5.5rem "without looking." broke to a third line of two words. A
+     display size that forces a widow is too big for its column, whatever it
+     measures in isolation. */
+  --text-display: clamp(2.5rem, 5vw + 0.35rem, 4.6rem);
+  --text-h2: clamp(1.75rem, 3vw + 0.55rem, 2.75rem);
+  --text-h3: clamp(1.2rem, 0.9vw + 0.95rem, 1.55rem);
+  --text-lede: clamp(1.05rem, 0.45vw + 0.95rem, 1.25rem);
+  --text-body: 1rem;
+  --text-sm: 0.875rem;
+  --text-micro: 0.72rem;
+
+  /* ── Spacing — the app's 4-point scale, named for portability ───────────── */
+  --space-3xs: 0.25rem;
+  --space-2xs: 0.5rem;
+  --space-xs: 0.75rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2rem;
+  --space-xl: 3rem;
+  --space-2xl: 4.5rem;
+  --space-3xl: 7rem;
+
+  /* Page gutter — one token, so the nav, the sections and the footer all sit
+     on the same left margin at every width. */
+  --page-gutter: clamp(1.25rem, 5vw, 4.5rem);
+  --page-max: 84rem;
+
+  /* ── Rules, radii, elevation ────────────────────────────────────────────── */
+  --rule-hair: 1px;
+  --radius-ctl: 6px;
+  --radius-card: 10px;
+  --radius-panel: 12px;
+  --shadow-raise: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 12px rgb(0 0 0 / 0.25);
+
+  /* ── Motion — the app's three easings and three durations verbatim ──────── */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --dur-instant: 80ms;
+  --dur-short: 140ms;
+  --dur-mid: 220ms;
+}
