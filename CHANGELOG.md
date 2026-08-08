@@ -19,6 +19,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   overlay narrows, and the strip can be turned off per screen from the Overlay
   Manager. It is a readout, never a control: nothing on a timing surface can
   still be aimed at.
+- **Column labels are now a per-screen toggle, off by default.** The
+  `POS # NAT DRIVER …` line on Standings and the `P # DRIVER CL GAP LAST` line
+  on Relative are gone unless you switch them on. They cost no height — they
+  ride out of flow in a row that has to exist anyway — but the cost of a label
+  you have already learned is the glance spent skipping it, which on these
+  screens is the expensive kind.
 - **Class bands on the standings.** Each class group now opens with a band
   carrying that class's own numbers — its colour chip and name, car count,
   strength of field and fastest lap (purple when it also leads the session).
@@ -36,6 +42,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The timing table no longer blinks.** The mock's lap times and sector splits
+  varied continuously with elapsed time, so at 10 Hz every car's last lap, lap
+  grade and sectors changed on every tick — which remounted the animated timing
+  cells (keyed on their value so the sector-pop and lap-flash animations replay
+  only on a real change) and made the whole table flicker. They are now keyed on
+  the completed lap, which is also what real telemetry does.
 - **The mock field now exercises the timing surface.** It previously emitted
   `normal` for every lap grade, empty sector splits, null intervals and zero
   position change, so purple/green laps, sector deltas, the interval column,
@@ -65,6 +77,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   digits and takes a green underline for a personal best, so the number stays
   readable *as a time* — which is what the driver is actually comparing.
   A session-best lap still colours its digits purple.
+- **The class band is set apart from its group and shares the field's left
+  margin.** It is 30 px with a 4 px gap before the first row — a heading flush
+  against the row under it reads as that group's first entry — and its coloured
+  leading edge now sits on the same vertical as the rows' left borders, since
+  they are the same device at two scales.
+- **iRating chips are sized by their column, not their contents.** A chip
+  hugging `3.7k ▲29` and one hugging `1.9k` were different widths in the same
+  column, which put the ratings on different verticals.
 - **The class-colour left border is 3 px**, up from 2. On the new near-black
   paper a 2 px hairline of an arbitrary hue was the first thing to vanish in
   peripheral vision.

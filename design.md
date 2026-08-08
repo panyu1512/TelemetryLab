@@ -220,11 +220,20 @@ the fact that a header band and a row cost the same height.
    to click. It appears only when the field is grouped by class (a flat table
    has one group and nothing to name), and it can be switched off from the
    Manager.
-3. **Column labels print in the top slice of the class leader's row**, out of
-   flow, so they cost no height at all. A persistent 28 px band was 13 % of a
-   ~208 px six-row Relative spent on labels that a returning user stopped
-   reading in their first session. The host row clears them with `COL_LABEL_H`
-   of top padding instead of centring under them.
+3. **Column labels are off by default, and when on they print in the top slice
+   of the first row**, out of flow, so they cost no height at all. A persistent
+   28 px band was 13 % of a ~208 px six-row Relative spent on labels a returning
+   user stopped reading in their first session; the host row clears the
+   in-flow version with `COL_LABEL_H` of top padding instead of centring under
+   them.
+
+   The default flipped to *off* because "costs no height" was answering the
+   wrong objection. The cost of a label a driver has already learned is not
+   pixels, it is the glance spent skipping it — and on the one surface read
+   without looking, that is the expensive kind. Learnable once and then
+   dismissable beats permanent: the labels stay one Manager toggle away, which
+   is what keeps this from being the § Deliberately not adopted case of a
+   Relative that is undecodable on a first run.
 4. **Compound cells over extra columns.** A value and its delta are one cell in
    two voices — mono value in `text`, delta in `accent` or `danger` — not two
    columns. iRating + its change is the canonical case.
@@ -241,6 +250,13 @@ the fact that a header band and a row cost the same height.
    position-change chip (`▲8`) are tints — each is two values that are read
    together or not at all. `tint()` lives in
    [`lib/contrast.ts`](src/lib/contrast.ts).
+
+   **A tinted chip in a column is sized by the column, not by its contents.**
+   `3.7k ▲29` and `1.9k` hugging their own text are two different widths in the
+   same column, which turns a quiet grouping device into a ragged edge down the
+   table — and puts the values themselves on different verticals, which is the
+   one thing a column of numbers may never do. The chip fills the cell and the
+   delta gets a fixed-width slot.
 
    The test for whether something may be tinted is rule 4's test: if it would
    otherwise want to be two columns, it is a compound cell and a tint is
@@ -309,6 +325,11 @@ One line opening each class group on Standings:
   second carrier (§ Two colour systems, rule 2).
 - **`BEST` turns `sector-purple`** when that class's fastest lap is also the
   session's, which is the same meaning purple carries in every row.
+- **It is a heading, so it is set apart from its group, not flush against it.**
+  `CLASS_BAND_H` 30 plus `BAND_GAP` 4: a band sitting directly on the first row
+  reads as that group's first entry rather than as the thing that opens it. Its
+  leading edge sits on the same vertical as the rows' left borders — same
+  device, same x — so the band and the field share one left margin.
 - **It borrows the session strip's grammar** — chip, then micro-label/value
   pairs — so a multi-class field reads as one masthead and several
   sub-mastheads, not two unrelated kinds of furniture. Fields drop
@@ -341,9 +362,11 @@ One line above the field, on both timing surfaces:
 Two things the reference does that this system rejects, recorded so a future
 pass doesn't "fix" their absence:
 
-- **A Relative with no column labels at all.** Rule 3 keeps labels on one row
-  precisely so the surface stays learnable. Density is not worth a first run
-  where `2.2`, `A3.6` and `3.9k` are undecodable.
+- **A Relative with *no way* to see column labels.** Rule 3 now defaults them
+  off, which is not the same thing: they are a toggle away, so a first run where
+  `2.2`, `A3.6` and `3.9k` are undecodable is still recoverable. Removing the
+  labels from the codebase, rather than from the default, is the thing that
+  stays rejected.
 - **Low-contrast car numbers.** `#30` in a near-`faint` grey fails the `faint`
   floor. Car number is `muted` at minimum.
 
