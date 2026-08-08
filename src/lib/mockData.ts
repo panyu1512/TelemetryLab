@@ -263,7 +263,10 @@ export function mockStandings(t: number): StandingsPayload {
     classPos.set(c.idx, n);
   }
 
-  const entries: StandingsEntry[] = MOCK_FIELD.map((car) => {
+  // Built from `ordered`, not `MOCK_FIELD`: the payload's entry sequence *is* the
+  // overall running order (the store turns it straight into `order`), so emitting
+  // declaration order made the flat/overall standings view render scrambled.
+  const entries: StandingsEntry[] = ordered.map((car) => {
     const prog = progress(car, t);
     const lap = Math.floor(prog);
     const pct = prog - lap;
@@ -319,6 +322,11 @@ export function mockStandings(t: number): StandingsPayload {
   const classes: ClassStanding[] = classIds.map((k) => {
     const inClass = ordered.filter((c) => c.klass === k);
     const leader = inClass[0];
+    // The fastest lap belongs to the lowest pace in the class, which is not
+    // generally the car leading it. The standings spend their one filled cell on
+    // this car, so pinning it to the leader made the preview misrepresent the
+    // design (`design.md` § Dense tabular overlays, rule 5).
+    const fastest = inClass.reduce((a, c) => (c.pace < a.pace ? c : a), inClass[0]);
     return {
       carClassId: k.id,
       shortName: k.short,
@@ -327,8 +335,8 @@ export function mockStandings(t: number): StandingsPayload {
       carCount: inClass.length,
       leaderCarIdx: leader?.idx ?? null,
       leaderLap: leader ? Math.floor(progress(leader, t)) : null,
-      fastestLap: leader ? round(leader.pace - 0.8, 3) : null,
-      fastestLapCarIdx: leader?.idx ?? null,
+      fastestLap: fastest ? round(fastest.pace - 0.8, 3) : null,
+      fastestLapCarIdx: fastest?.idx ?? null,
       order: inClass.map((c) => c.idx),
     };
   });
@@ -337,7 +345,11 @@ export function mockStandings(t: number): StandingsPayload {
     playerCarIdx: MOCK_PLAYER_IDX,
     sectorCount: 3,
     overallBestLap: round(Math.min(...MOCK_FIELD.map((c) => c.pace - 0.8)), 3),
-    overallBestLapCarIdx: ordered[0].idx,
+    // The field's fastest lap, not whoever happens to be leading it.
+    overallBestLapCarIdx: MOCK_FIELD.reduce(
+      (a, c) => (c.pace < a.pace ? c : a),
+      MOCK_FIELD[0]
+    ).idx,
     overallBestSectors: [null, null, null],
     classes,
     entries,
