@@ -1,8 +1,11 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  degrees,
   delta,
+  duration,
   gap,
+  kilo,
   gearLabel,
   interval,
   lapTime,
@@ -147,5 +150,58 @@ describe("signed", () => {
   it("dashes missing values", () => {
     expect(signed(null)).toBe(DASH);
     expect(signed(NaN)).toBe(DASH);
+  });
+});
+
+describe("duration", () => {
+  it("formats under an hour as m:ss", () => {
+    expect(duration(3024)).toBe("50:24");
+    expect(duration(59)).toBe("0:59");
+    expect(duration(0)).toBe("0:00");
+  });
+
+  it("grows to h:mm:ss past the hour, with padded minutes", () => {
+    expect(duration(3600)).toBe("1:00:00");
+    expect(duration(3731)).toBe("1:02:11");
+  });
+
+  it("truncates fractional seconds rather than rounding up", () => {
+    expect(duration(59.9)).toBe("0:59");
+  });
+
+  it("renders an em dash for null/NaN/negative", () => {
+    expect(duration(null)).toBe(DASH);
+    expect(duration(NaN)).toBe(DASH);
+    expect(duration(-1)).toBe(DASH);
+  });
+});
+
+describe("kilo", () => {
+  it("abbreviates four figures and up", () => {
+    expect(kilo(3337)).toBe("3.3k");
+    expect(kilo(1000)).toBe("1.0k");
+  });
+
+  it("leaves three figures alone", () => {
+    expect(kilo(842)).toBe("842");
+    expect(kilo(999.4)).toBe("999");
+  });
+
+  it("renders an em dash for null/NaN/non-positive", () => {
+    expect(kilo(null)).toBe(DASH);
+    expect(kilo(NaN)).toBe(DASH);
+    expect(kilo(0)).toBe(DASH);
+  });
+});
+
+describe("degrees", () => {
+  it("rounds to a whole degree", () => {
+    expect(degrees(37.6)).toBe("38°");
+    expect(degrees(-2.2)).toBe("-2°");
+  });
+
+  it("renders an em dash for null/NaN", () => {
+    expect(degrees(null)).toBe(DASH);
+    expect(degrees(NaN)).toBe(DASH);
   });
 });
