@@ -197,11 +197,8 @@ band and a row cost the same height.
    whitespace; zebra tint is the only banding allowed. At 30 px a rule costs
    more attention than it returns.
 2. **Class separation is a gap plus a tone shift, not a labelled band.** The
-   gap reads pre-attentively and costs a third of the band. `ClassHeader` is
-   interactive (collapse, solo), so it stays on the Manager preview — the
-   over-footage overlay takes the quiet form. Which form a screen renders is
-   selected by [`useSurface()`](src/components/ui/SurfaceContext.tsx), whose
-   default is the quiet one: the manager opts *in* to its own chrome.
+   gap reads pre-attentively, costs a third of a band, and needs nothing
+   clickable. There is no class band on any surface — see rule 7.
 3. **Column labels print in the top slice of the class leader's row**, out of
    flow, so they cost no height at all. A persistent 28 px band was 13 % of a
    ~208 px six-row Relative spent on labels that a returning user stopped
@@ -218,6 +215,14 @@ band and a row cost the same height.
    column is fixed-width and mono; the name absorbs all slack. A layout that
    clips `Francois Sieg…` while fixed columns hold empty space has its
    priorities backwards.
+7. **A timing surface is rows and nothing else — no title bar, no session
+   strip, no controls.** These are the only surfaces read while the user's hands
+   are busy, so nothing on them can be aimed at. Everything configurable lives
+   in the Overlay Manager, which is the surface built for configuring; a setting
+   with no home there is a setting these screens do not get. The screens
+   therefore have exactly one form, and the Manager preview renders that same
+   form — a preview that is interactive where the overlay is not is a preview
+   that lies.
 
 ### Deliberately not adopted
 
@@ -227,8 +232,10 @@ pass doesn't "fix" their absence:
 - **A Relative with no column labels at all.** Rule 3 keeps labels on one row
   precisely so the surface stays learnable. Density is not worth a first run
   where `2.2`, `A3.6` and `3.9k` are undecodable.
-- **Icon-only status strips.** Track temp, SOF, incidents and clock get mono
-  micro-labels per § Typography, not a bare glyph.
+- **Icon-only status strips.** These surfaces carry no status strip at all now
+  (rule 7) — session type, clock, SOF and field-fastest went with the title bar.
+  Should one ever earn its way back, track temp, SOF, incidents and clock get
+  mono micro-labels per § Typography, never a bare glyph.
 - **Low-contrast car numbers.** `#30` in a near-`faint` grey fails the `faint`
   floor. Car number is `muted` at minimum.
 
@@ -255,10 +262,16 @@ runtime themes.
   § Theme table that reads as *critical*, which a car three seconds back is not.
   It wants a token the palette does not have yet — "behind you" is neither
   positive nor a warning — so it is left alone rather than guessed at.
-- **`StandingsHeader` still puts session chrome on the over-footage form.** The
-  quiet/manager split now exists (`useSurface()`), so the fix has somewhere to
-  live; whether the overlay should keep a session line at all is a content
-  question, not a layout one.
 - **Rule 3 repeats the labels once per class group.** Correct by the rule — each
   group is its own small table — but in a two-class field the second label line
   sits ten rows below the first, which may be one more than it needs to be.
+- **Rule 7 cost the standings its class *names*.** The 2 px left border carries
+  which class a car is in, but nothing spells out which colour is GT3. The
+  Relative has a `CL` column and does not need one; Standings may. A per-group
+  mono micro-label in the leader row's blank `GAP` cell would fit inside rule 7
+  without becoming a band, and is the first thing to try if the colour alone
+  proves too thin.
+- **Per-class collapse and solo-filter are gone**, not relocated. They were
+  bound to the class band, and per-class state is session data rather than
+  configuration, so it has no natural home in the Manager. Worth revisiting only
+  if a large multi-class field actually proves unreadable without them.
