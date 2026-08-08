@@ -29,6 +29,7 @@ import { VisibilityPanel } from "./VisibilityPanel";
 import { WindowPanel } from "./WindowPanel";
 import { PreviewCanvas } from "./PreviewCanvas";
 import { StandingsColumnsPanel } from "./StandingsColumnsPanel";
+import { StandingsViewPanel } from "./StandingsViewPanel";
 import { RelativeOptionsPanel } from "./RelativeOptionsPanel";
 import { GlobalSettingsPanel } from "./GlobalSettingsPanel";
 import { DebugPanel } from "./DebugPanel";
@@ -233,6 +234,15 @@ function OverlayConfigSections({ overlayId }: { overlayId: string }) {
               <WidgetRow key={w.id} widget={w} />
             ))}
           </div>
+        </ConfigSection>
+      )}
+
+      {overlayId === "standings" && (
+        <ConfigSection
+          title="View"
+          description="How the field is grouped, and whether the table follows your row."
+        >
+          <StandingsViewPanel />
         </ConfigSection>
       )}
 

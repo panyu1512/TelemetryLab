@@ -122,9 +122,12 @@ function StandingsRowInner({
           </div>
         )}
 
-        {/* position */}
+        {/* position — class position when grouped by class, overall when flat.
+            A flat overall table numbered by class position reads as scrambled. */}
         <div className="text-center text-[13px] font-semibold tabular-nums tnum">
-          {row?.classPosition ?? row?.position ?? "—"}
+          {(classRelative
+            ? row?.classPosition ?? row?.position
+            : row?.position ?? row?.classPosition) ?? "—"}
         </div>
 
         {/* car number — no pill: fill is rationed to the fastest-lap cell

@@ -2,10 +2,14 @@
  * v0.5.0 — Relative Screen
  *
  * Shows the N cars physically nearest to the player on track, sorted by
- * signed relative time gap (positive = ahead, negative = behind). The window
- * is configurable (3–10 per side) via the header controls and persisted in
- * {@link useRelativeUiStore}, together with the brand/country column options
- * set from the Overlay Manager.
+ * signed relative time gap (positive = ahead, negative = behind).
+ *
+ * The screen is **rows and nothing else**: no title bar and nothing clickable.
+ * It is read at a glance while the user is driving, so every pixel goes to the
+ * field. The window size (3–10 per side) and the brand/country column options
+ * are all set from the Overlay Manager and persisted in
+ * {@link useRelativeUiStore}, which broadcasts them so an open overlay updates
+ * live.
  *
  * Data source: `StandingsEntry.intervalToPlayer` — already computed by the
  * bridge from `CarIdxEstTime` and wrapped to ±half-lap — so this screen is
@@ -22,18 +26,14 @@
  */
 
 import { memo, useEffect, useMemo, useRef, useState } from "react";
-import { Minus, Plus, Radio, Wrench, Zap } from "lucide-react";
+import { Radio, Wrench, Zap } from "lucide-react";
 import { useBridgeStore } from "../../stores/useBridgeStore";
 import {
   useStandingsClasses,
   useStandingsStore,
 } from "../../stores/useStandingsStore";
-import { useDriversByIdx, useSessionStore } from "../../stores/useSessionStore";
-import {
-  RELATIVE_WINDOW_MAX,
-  RELATIVE_WINDOW_MIN,
-  useRelativeUiStore,
-} from "../../stores/useRelativeUiStore";
+import { useDriversByIdx } from "../../stores/useSessionStore";
+import { useRelativeUiStore } from "../../stores/useRelativeUiStore";
 import type { DriverEntry, StandingsEntry } from "../../telemetry/types";
 import { lapTime } from "../../lib/format";
 import { BrandIcon } from "../standings/cells";
@@ -390,48 +390,6 @@ function EmptyState({ iracingActive }: { iracingActive: boolean }) {
   );
 }
 
-// ─── Header ──────────────────────────────────────────────────────────────────
-
-function RelativeHeader() {
-  const session = useSessionStore((s) => s.session);
-  const n = useRelativeUiStore((s) => s.windowSize);
-  const setWindowSize = useRelativeUiStore((s) => s.setWindowSize);
-
-  return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-2 border-b border-border px-3 py-2">
-      <span className="text-sm font-semibold tracking-tight text-text">Relative</span>
-      <span className="hidden min-w-0 truncate text-xs text-faint @[340px]:block">
-        {session?.track.name ?? "—"}
-        {session?.track.config ? ` · ${session.track.config}` : ""}
-      </span>
-
-      <div className="ml-auto flex items-center gap-1.5">
-        <span className="tnum text-[11px] text-muted">
-          ±{n}
-        </span>
-        <button
-          type="button"
-          onClick={() => setWindowSize(n - 1)}
-          disabled={n <= RELATIVE_WINDOW_MIN}
-          className="grid size-6 place-items-center rounded-ctl text-muted transition-colors hover:bg-surface-2 hover:text-text disabled:opacity-30"
-          title="Show fewer cars"
-        >
-          <Minus className="size-3" />
-        </button>
-        <button
-          type="button"
-          onClick={() => setWindowSize(n + 1)}
-          disabled={n >= RELATIVE_WINDOW_MAX}
-          className="grid size-6 place-items-center rounded-ctl text-muted transition-colors hover:bg-surface-2 hover:text-text disabled:opacity-30"
-          title="Show more cars"
-        >
-          <Plus className="size-3" />
-        </button>
-      </div>
-    </div>
-  );
-}
-
 // ─── Main screen ─────────────────────────────────────────────────────────────
 
 export function RelativeScreen() {
@@ -515,8 +473,6 @@ export function RelativeScreen() {
       ref={bodyRef}
       className="overlay-card @container flex h-full flex-col overflow-hidden rounded-card border border-border/60 bg-surface"
     >
-      <RelativeHeader />
-
       {isEmpty ? (
         <EmptyState iracingActive={iracingActive} />
       ) : (

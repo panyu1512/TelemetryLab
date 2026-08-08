@@ -9,7 +9,6 @@
  */
 
 export const ROW_H = 30;
-export const CLASS_HEADER_H = 34;
 
 /**
  * Height of the column-label line printed *inside* the class leader's row.
@@ -23,9 +22,9 @@ export const CLASS_HEADER_H = 34;
 export const COL_LABEL_H = 9;
 
 /**
- * Vertical gap between class groups on the quiet (over-footage) form, replacing
- * the interactive `ClassHeader` band. A gap reads pre-attentively and costs a
- * third of what the band cost (rule 2).
+ * Vertical gap between class groups, in place of a labelled band. A gap reads
+ * pre-attentively, costs a third of what a band cost, and needs nothing
+ * clickable (rule 2).
  */
 export const CLASS_GAP = 10;
 

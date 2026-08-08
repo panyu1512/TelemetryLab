@@ -467,12 +467,3 @@ export function TireCell({
 }
 
 export { LAP_COLOR };
-
-/* -------------------------------------------------------------------------- */
-/*  Class collapse chevron                                                     */
-/* -------------------------------------------------------------------------- */
-
-export function CollapseChevron({ collapsed }: { collapsed: boolean }) {
-  const Icon = collapsed ? ChevronDown : ChevronUp;
-  return <Icon className="size-3.5 text-muted" />;
-}
