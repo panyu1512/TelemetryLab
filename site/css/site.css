@@ -1,0 +1,745 @@
+/* Hallmark · genre: modern-minimal · macrostructure: Split Studio
+ * design-system: design.md (locked) · surface: marketing
+ * theme: the locked system (custom · "cool graphite instrument panel, signal blue")
+ * paper oklch(19% 0.0094 256) dark · display grotesk-sans (Inter) · accent cool (254°)
+ * nav: N9 edge-aligned · footer: Ft5 statement
+ * enrichment: real product captures (no illustration, no re-drawn chrome)
+ * motion: 1 primitive (hover lift) — design.md § Motion, reveal pattern: none
+ * pre-emit critique: P5 H5 E5 S5 R5 V4
+ */
+
+@import url("tokens.css");
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Reset + page frame
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  /* `clip`, never `hidden`: `hidden` on a root element silently creates a
+     scroll container and breaks `position: sticky` further down the tree. */
+  overflow-x: clip;
+}
+
+html {
+  color-scheme: dark;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-family: var(--font-sans);
+  font-size: var(--text-body);
+  line-height: 1.6;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+img,
+svg {
+  display: block;
+  max-width: 100%;
+  height: auto;
+}
+
+/* Headings are roman throughout — no italic display type anywhere in this
+   system. `overflow-wrap: anywhere` lets a long word break inside itself
+   rather than pushing the page sideways at 320 px. */
+h1,
+h2,
+h3 {
+  margin: 0;
+  font-weight: 600;
+  font-style: normal;
+  line-height: 1.05;
+  letter-spacing: -0.025em;
+  overflow-wrap: anywhere;
+  min-width: 0;
+}
+
+p {
+  margin: 0;
+}
+
+a {
+  color: inherit;
+}
+
+/* Tabular numerals wherever a number is a measurement — the same rule the app
+   applies to every column of times. */
+.tnum {
+  font-variant-numeric: tabular-nums;
+  font-feature-settings: "tnum", "cv05";
+}
+
+/* The focus ring is an outline at 2 px offset so it lands on the page rather
+   than inside a control's own fill. It is NEVER transitioned — a ring that
+   fades in leaves keyboard users with no indicator for the length of the
+   transition. */
+:focus-visible {
+  outline: 2px solid var(--color-focus);
+  outline-offset: 2px;
+  border-radius: var(--radius-ctl);
+}
+
+.shell {
+  max-width: var(--page-max);
+  margin-inline: auto;
+  padding-inline: var(--page-gutter);
+}
+
+/* Skip link — visible the moment it takes focus, off-screen otherwise. */
+.skip {
+  position: absolute;
+  left: -9999px;
+  top: 0;
+  z-index: 10;
+  padding: var(--space-2xs) var(--space-sm);
+  background: var(--color-surface);
+  border: var(--rule-hair) solid var(--color-border-strong);
+  border-radius: var(--radius-ctl);
+}
+.skip:focus {
+  left: var(--page-gutter);
+  top: var(--space-2xs);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Instrument voice — the mono micro-label
+   The one typographic device this page borrows wholesale from the product.
+   Mono, uppercase, tracked, `faint`: the quietest voice in the system.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.micro {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-faint);
+  line-height: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   N9 · Edge-aligned nav
+   Wordmark hard-left, actions hard-right, and nothing in between. The empty
+   middle IS the archetype; filling it with four links makes it N1 with extra
+   steps.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  padding-block: var(--space-md);
+  border-bottom: var(--rule-hair) solid var(--color-border);
+}
+
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.55rem;
+  /* The wordmark is a link, so it carries a link's hit target — 27 px of cap
+     height is a fine logo and a poor tap target. */
+  min-height: 44px;
+  font-weight: 600;
+  font-size: 1.0625rem;
+  letter-spacing: -0.02em;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+/* The wordmark's mark: three stacked rules of decreasing width — a timing
+   table reduced to its smallest legible form. Drawn, not imported. */
+.wordmark__mark {
+  display: grid;
+  gap: 2px;
+  flex: none;
+}
+.wordmark__mark i {
+  display: block;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--color-primary);
+}
+.wordmark__mark i:nth-child(1) {
+  width: 16px;
+}
+.wordmark__mark i:nth-child(2) {
+  width: 11px;
+  background: var(--color-accent);
+}
+.wordmark__mark i:nth-child(3) {
+  width: 14px;
+  opacity: 0.55;
+}
+
+.nav__actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-xs);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   C1 · Outlined chip + its filled sibling
+   Both ship the full state set. `border-width` never changes between states —
+   state goes to background, outline or colour, never to geometry, or the
+   control shifts its neighbours by a pixel on hover.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.chip,
+.chip-solid {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.45em;
+  min-height: 44px; /* WCAG AA hit target, at every width */
+  padding: 0.6rem 1.05rem;
+  border-radius: var(--radius-ctl);
+  font: inherit;
+  font-size: var(--text-sm);
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap; /* a two-line button is a broken button */
+  cursor: pointer;
+  transition:
+    background-color var(--dur-short) var(--ease-out),
+    border-color var(--dur-short) var(--ease-out),
+    transform var(--dur-instant) var(--ease-out);
+}
+
+.chip {
+  border: var(--rule-hair) solid var(--color-border-strong);
+  background: transparent;
+  color: var(--color-text);
+}
+.chip:hover {
+  background: var(--color-surface-2);
+  border-color: var(--color-faint);
+}
+
+.chip-solid {
+  border: var(--rule-hair) solid transparent;
+  background: var(--color-primary);
+  color: var(--color-on-accent);
+  font-weight: 600;
+}
+.chip-solid:hover {
+  background: var(--color-primary-dim);
+}
+
+.chip:active,
+.chip-solid:active {
+  transform: translateY(1px);
+}
+
+.chip[aria-disabled="true"],
+.chip-solid[aria-disabled="true"] {
+  opacity: 0.45;
+  pointer-events: none;
+}
+
+/* A quiet text link that still reads as an action. The rule under it is drawn
+   with a border, so it sits clear of the descenders. */
+.link-q {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: var(--space-3xs);
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+  text-decoration: none;
+  white-space: nowrap;
+  border-bottom: var(--rule-hair) solid transparent;
+  transition: color var(--dur-short) var(--ease-out);
+}
+.link-q:hover {
+  color: var(--color-text);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   H2 · Split diptych hero
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.hero {
+  display: grid;
+  /* 6/6 rather than 7/5. `minmax(0, …)` on both tracks: a bare `1fr` refuses to
+     shrink below its content's intrinsic width, which is how a wide screenshot
+     pushes a grid past the viewport.
+
+     The even split is not a style preference — the capture is a timing table,
+     and below about 600 px its 12 px type stops being legible. A hero image you
+     cannot read is decoration, and this system does not use decoration. */
+  grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
+  gap: var(--space-2xl);
+  align-items: center;
+  padding-block: var(--space-3xl) var(--space-2xl);
+}
+
+.hero__copy {
+  display: grid;
+  gap: var(--space-md);
+  justify-items: start;
+}
+
+.hero h1 {
+  font-size: var(--text-display);
+  max-width: 17ch; /* two lines, no widow */
+}
+
+.hero__lede {
+  font-size: var(--text-lede);
+  color: var(--color-muted);
+  max-width: 46ch;
+  text-wrap: pretty;
+}
+
+.hero__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs);
+  margin-block-start: var(--space-2xs);
+}
+
+.hero__note {
+  color: var(--color-faint);
+  font-size: var(--text-sm);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Product captures
+   A real screenshot in a <figure> with a hairline border. No drawn browser
+   bar, no traffic-light dots, no phone frame — the reader's own window already
+   supplies real chrome, and a fake one only ever reads as fake.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.shot {
+  margin: 0;
+  border: var(--rule-hair) solid var(--color-border);
+  border-radius: var(--radius-panel);
+  background: var(--color-timing-bg);
+  padding: var(--space-3xs);
+  overflow: hidden;
+  box-shadow: var(--shadow-raise);
+}
+
+.shot img {
+  width: 100%;
+  border-radius: calc(var(--radius-panel) - 5px);
+}
+
+.shot figcaption {
+  padding: var(--space-2xs) var(--space-3xs) var(--space-3xs);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Split Studio rows — the page's spine
+   Text on one side, its proof on the other; the pairing alternates direction
+   down the page. The alternation is done with `direction`-free explicit column
+   placement so the DOM order stays reading order for screen readers.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.row {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: var(--space-2xl);
+  align-items: center;
+  padding-block: var(--space-2xl);
+  border-top: var(--rule-hair) solid var(--color-border);
+}
+
+.row__copy {
+  display: grid;
+  gap: var(--space-sm);
+  align-content: start;
+}
+
+.row h2 {
+  font-size: var(--text-h2);
+  max-width: 16ch;
+}
+
+.row__body {
+  color: var(--color-muted);
+  max-width: 52ch;
+  text-wrap: pretty;
+}
+
+/* Alternate rows put the proof on the left. Grid placement, not `order` on a
+   flex container, so the tab order and the reading order stay identical. */
+.row--flip {
+  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+}
+.row--flip .row__copy {
+  grid-column: 2;
+  grid-row: 1;
+}
+.row--flip .shot {
+  grid-column: 1;
+  grid-row: 1;
+}
+
+/* One row breaks the diptych: the full standings table.
+ *
+ * Split Studio pairs each claim with a proof at half width, which works for
+ * every capture here except this one — the wide table carries twelve columns of
+ * 12 px type, and at half width that renders at around 5 px. The rule the
+ * archetype is really enforcing is "every claim gets its proof"; a proof too
+ * small to read fails that rule while satisfying its letter. So this row stacks:
+ * copy at reading measure, then the capture at the full width of the shell.
+ *
+ * Used exactly once. A second full-width row and the page has stopped being a
+ * diptych at all.
+ */
+.row--wide {
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-lg);
+}
+.row--wide .row__copy {
+  max-width: 62ch;
+}
+
+/* A short list of what the capture beside it actually shows. Every item is
+   verifiable in the image — the list is a caption, not a claim. */
+.reads {
+  display: grid;
+  gap: var(--space-2xs);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.reads li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-2xs);
+  align-items: baseline;
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+.reads li::before {
+  content: "";
+  width: 10px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--color-border-strong);
+  transform: translateY(-0.28em);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   F3 · Tabular spec sheet
+   The page's signature move: the site becomes the instrument it is selling.
+   Hairline rules between rows, mono keys, tabular figures, no vertical rules.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.spec {
+  padding-block: var(--space-2xl);
+  border-top: var(--rule-hair) solid var(--color-border);
+}
+
+.spec__intro {
+  max-width: 54ch;
+  margin-block-end: var(--space-lg);
+  display: grid;
+  gap: var(--space-sm);
+}
+
+.spec__intro h2 {
+  font-size: var(--text-h2);
+}
+
+.spec__intro p {
+  color: var(--color-muted);
+}
+
+/* A table caption is centred and inherits the table's alignment by default;
+   here it is a micro-label naming the readout, so it aligns with the first
+   column like every other label on the page. */
+.spec__cap {
+  text-align: left;
+  padding-block-end: var(--space-xs);
+}
+
+.spec__scroll--stacked {
+  margin-block-start: var(--space-xl);
+}
+
+.spec__scroll {
+  overflow-x: auto;
+  /* The table is the one element allowed to scroll sideways — inside its own
+     container, never taking the page with it. */
+  -webkit-overflow-scrolling: touch;
+}
+
+.spec table {
+  width: 100%;
+  min-width: 34rem;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.spec thead th {
+  padding: 0 var(--space-sm) var(--space-2xs) 0;
+  border-bottom: var(--rule-hair) solid var(--color-border-strong);
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-faint);
+}
+
+.spec tbody th {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 700;
+  color: var(--color-text);
+  white-space: nowrap;
+  padding-right: var(--space-md);
+}
+
+.spec tbody td {
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+  padding-right: var(--space-sm);
+}
+
+.spec tbody th,
+.spec tbody td {
+  padding-block: var(--space-xs);
+  border-bottom: var(--rule-hair) solid var(--color-border);
+  vertical-align: baseline;
+}
+
+.spec tbody tr:last-child th,
+.spec tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+/* Status swatches inside the table, carrying the app's own colour meanings.
+   Coloured ink, never a filled cell — the fill budget belongs to the product. */
+.sw {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  white-space: nowrap;
+}
+.sw--pb {
+  color: var(--color-accent);
+}
+.sw--best {
+  color: var(--color-sector-purple);
+}
+.sw--warn {
+  color: var(--color-warning);
+}
+.sw--bad {
+  color: var(--color-danger);
+}
+
+/* S5 · Bottom-anchored section label — the table is the act, the label is its
+   footer. Inverts the usual hierarchy and keeps the page clear of the
+   tag-above-heading pattern that reads as templated editorial. */
+.spec__end {
+  margin-block-start: var(--space-md);
+  padding-block-start: var(--space-xs);
+  border-top: var(--rule-hair) solid var(--color-border);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Requirements
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Heading above its content, never beside it. A heading parked in a left
+   column with the body in a right one is the hanging-header pattern, and it is
+   the single most reliable templated-editorial tell — banned outright here even
+   though the content would technically fit. */
+.needs {
+  padding-block: var(--space-2xl);
+  border-top: var(--rule-hair) solid var(--color-border);
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.needs h2 {
+  font-size: var(--text-h2);
+}
+
+.needs__list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-lg);
+  margin: 0;
+}
+
+.needs__list > div {
+  display: grid;
+  gap: var(--space-3xs);
+}
+
+.needs__list dt {
+  font-weight: 600;
+}
+
+.needs__list dd {
+  margin: 0;
+  color: var(--color-muted);
+  max-width: 46ch;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Closing CTA — one button, not two. The repetition is the call to action.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.close {
+  padding-block: var(--space-2xl);
+  border-top: var(--rule-hair) solid var(--color-border);
+  display: grid;
+  gap: var(--space-md);
+  justify-items: start;
+}
+
+.close h2 {
+  font-size: var(--text-h2);
+  max-width: 18ch;
+}
+
+.close p {
+  color: var(--color-muted);
+  max-width: 50ch;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Ft5 · Statement footer
+   One closing sentence at display scale; wordmark, links and colophon beneath
+   in muted small type. Not a sitemap.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.foot {
+  padding-block: var(--space-2xl) var(--space-xl);
+  border-top: var(--rule-hair) solid var(--color-border-strong);
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.foot__line {
+  font-size: clamp(1.6rem, 4vw, 2.6rem);
+  font-weight: 600;
+  line-height: 1.08;
+  letter-spacing: -0.025em;
+  max-width: 22ch;
+  overflow-wrap: anywhere;
+}
+
+.foot__meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-sm);
+  padding-block-start: var(--space-sm);
+  border-top: var(--rule-hair) solid var(--color-border);
+}
+
+.foot__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.foot__colophon {
+  color: var(--color-faint);
+  font-size: var(--text-sm);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Responsive — verified at 320 / 375 / 414 / 768
+   Below 60rem every two-column block becomes one column; below 40rem the page
+   is a phone and space is a luxury.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 60rem) {
+  .hero,
+  .row,
+  .row--flip,
+  .needs__list {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-lg);
+  }
+
+  .hero {
+    padding-block: var(--space-2xl) var(--space-lg);
+  }
+
+  /* The flipped rows lose their flip: on one column, DOM order wins and the
+     copy always leads. */
+  .row--flip .row__copy,
+  .row--flip .shot {
+    grid-column: 1;
+    grid-row: auto;
+  }
+
+  .row {
+    padding-block: var(--space-xl);
+  }
+}
+
+@media (max-width: 40rem) {
+  .nav {
+    /* Wordmark and actions stay edge-aligned but get their own line, so
+       neither has to shrink below its hit target. */
+    flex-wrap: wrap;
+    row-gap: var(--space-2xs);
+  }
+
+  .nav__actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .hero__actions .chip,
+  .hero__actions .chip-solid {
+    flex: 1 1 100%;
+  }
+
+  .foot__meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Reduced motion
+   Spatial movement collapses; the two short durations go to zero. The page has
+   no scroll reveals to disable — design.md § Motion sets the reveal pattern to
+   none, and the marketing surface keeps it.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .chip:active,
+  .chip-solid:active {
+    transform: none;
+  }
+}

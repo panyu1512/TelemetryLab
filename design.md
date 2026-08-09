@@ -35,6 +35,9 @@ decoration.
   and, where it earns its place, a header rule. It has no macrostructure and
   must never acquire one. **Tabular overlays** — Standings and Relative — are a
   named exception to the header rule; see § Dense tabular overlays.
+- **Marketing surface: Split Studio.** One page, at [`site/`](site/), selling
+  the app. Every claim is paired with the capture that proves it, and the
+  pairing alternates down the page. See § The marketing surface.
 
 ## Theme
 
@@ -186,9 +189,11 @@ and a stable one-line helper row, so neither appearing reflows the panel.
   fading `.header-rule` as section divider, the three-state sidebar rail.
 - **Overlay widgets** are legibility-first over footage: `overlay-card` glass,
   text-shadow, no scrollbars, no frame. They must never gain manager chrome.
-- **No surface uses enrichment.** No hero imagery, no illustration, no
+- **No *app* surface uses enrichment.** No hero imagery, no illustration, no
   decorative background beyond the existing `.bg-blueprint` dot grid on manager
-  chrome. Function carries every screen.
+  chrome. Function carries every screen. The marketing surface is the one place
+  images appear, and they are product captures rather than enrichment — see
+  § The marketing surface.
 
 ## Dense tabular overlays
 
@@ -388,6 +393,53 @@ The rejections that stand are both about *withholding information the reader
 needs*, which is the pattern worth noticing — a rule that only removes chrome
 is a rule that will keep getting revisited.
 
+## The marketing surface
+
+One page at [`site/`](site/): static HTML and two stylesheets, no build step, no
+framework, deployable as a folder. It is a **third surface class**, and the
+sharing rule at the top of this file governs it exactly as it governs the other
+two — a page selling an instrument that does not look like the instrument is
+selling something else.
+
+**Macrostructure: Split Studio.** Every claim sits beside the capture that
+proves it, and the pairing alternates direction. Nav is **N9 edge-aligned**
+(wordmark hard-left, actions hard-right, nothing between); footer is **Ft5
+statement** — a closing line, not a sitemap.
+
+What it inherits without change: every colour token and every colour *meaning*,
+Inter, the 4-point spacing scale, the three easings and durations, the 8-state
+control contract, the focus-ring rule, and § Motion's reveal pattern of **none**
+— a marketing page that animates on scroll would be the first surface in this
+system to do so, and it does not get to be.
+
+Four things it is allowed that no app surface is:
+
+1. **A display type scale.** `--text-display` and friends exist only here. The
+   app is read at a glance at 200 km/h and has no use for 4.6rem type; a page
+   read at arm's length needs it.
+2. **Real product captures.** They are proof, not enrichment: every claim on the
+   page is verifiable in the image next to it. They are wrapped in a bare
+   `<figure>` with a hairline border on `--color-timing-bg`, so a screenshot
+   sits on the paper it was shot on. **No drawn browser chrome** — no URL pill,
+   no traffic lights, no phone frame. A fake window only ever reads as fake.
+3. **A pinned mono.** The app resolves `--font-mono` to the OS default because
+   it ships inside a WebView whose stack is known; a public page has no such
+   guarantee, and the mono is what makes the site read as the product rather
+   than as a page about it. The site pins JetBrains Mono.
+4. **One duplicated token file.** [`site/css/tokens.css`](site/css/tokens.css)
+   copies the Carbon values rather than importing them, because the site must
+   stay deployable as a folder. **A colour changed in `src/styles.css` has to be
+   changed there too** — that is the standing cost of the site being standalone.
+
+Two rules it does *not* get to break:
+
+- **Honest copy.** No invented metric, download count, testimonial or logo wall.
+  Everything the page asserts is either visible in a capture on the page or is a
+  plain fact about how the software runs.
+- **No hanging headers.** A heading parked in a left column with its body in a
+  right one is banned here as it is everywhere else in this system. Section
+  heads stack.
+
 ## Provenance
 
 The § Dense tabular overlays rules were extracted on 2026-08-08 via
@@ -409,6 +461,15 @@ banned the class band on grounds (separation) that turned out not to be the
 band's actual job (per-class data).
 
 ## Known follow-ups
+
+- **The site's tokens are a copy, not an import.** Deliberate (it buys a
+  zero-build deploy) but it is a real fork: nothing enforces that
+  `site/css/tokens.css` still matches `src/styles.css`. A check in CI that
+  diffs the two colour blocks would close it.
+- **Nothing re-shoots the site's captures automatically.** The script is in the
+  repo ([`site/capture.mjs`](site/capture.mjs)) and takes one command, but a UI
+  change still dates the screenshots silently until someone runs it. Wiring it
+  into a release step would close that.
 
 - The overlay widgets' own header labels are still sans; they were deliberately
   left out of the Manager redesign so the preview keeps showing overlays
