@@ -9,6 +9,12 @@
  */
 
 @import url("tokens.css");
+/* The footer is the one part of this page with a device of its own, so it gets
+   its own stylesheet. Imported rather than `<link>`ed, to match `tokens.css`
+   above and keep the head to a single stylesheet. The cost is that the request
+   is serialized behind this file rather than running beside it; at ~5 KB of
+   render-blocking CSS that is the cheaper of the two prices. */
+@import url("footer.css");
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Reset + page frame
@@ -112,6 +118,22 @@ a {
 .skip:focus {
   left: var(--page-gutter);
   top: var(--space-2xs);
+}
+
+/* Read by a screen reader, invisible to everyone else. Used once — for the
+   footer wordmark, whose visible copy is a cropped shape rather than a string
+   and is `aria-hidden` for it. `clip-path` rather than a negative offset so
+   the text is never a target for a "find in page" scroll. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -622,104 +644,6 @@ a {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Ft5 · Statement footer
-   Links and colophon in muted small type, then the wordmark at page scale as
-   the closing statement. Not a sitemap.
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-.foot {
-  /* No bottom padding: the wordmark's cut IS the bottom of the document. A gap
-     under it would turn a deliberate crop into a mis-measured one. */
-  padding-block: var(--space-2xl) 0;
-  border-top: var(--rule-hair) solid var(--color-border-strong);
-  display: grid;
-  gap: var(--space-lg);
-}
-
-.foot__meta {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--space-sm);
-  padding-block-start: var(--space-sm);
-  border-top: var(--rule-hair) solid var(--color-border);
-}
-
-.foot__links {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-sm);
-}
-
-.foot__colophon {
-  color: var(--color-faint);
-  font-size: var(--text-sm);
-}
-
-/* The wordmark at page scale, sheared in half by the bottom edge of the page.
-   Three things are doing the work, and all three are load-bearing:
-
-   1. **The cut halves the x-height, not the cap height.** Ten of these twelve
-      letters are lowercase, so the lowercase is what the eye measures the
-      "half" against. With `line-height: 1` Inter puts the baseline 0.864em
-      below the top of the line box (ascender 0.969em, descender 0.241em,
-      half-leading −0.105em); take half an x-height (0.55em) back off it and
-      the cut lands at 0.59em. The obvious alternative — half the *cap* height,
-      0.50em — was measured and rejected: it leaves the round lowercase showing
-      only its top 30 % and the wordmark stops being readable as a word.
-      Fallback grotesks put the same cut at ~0.57em, so the crop survives the
-      webfont failing to load. Descenders — the `y`'s tail — go with the rest
-      of the lower half, which is the point: the letters are cut, not lowered.
-   2. **The size is in `cqw`, against the shell as container** — not `vw`. Past
-      `--page-max` the text column stops growing, and a viewport-relative
-      wordmark would keep growing straight past its own gutters. The string
-      measures 6.175em of *ink* at this weight and tracking, so the coefficient
-      is 100 / 6.19 — the ink width plus a hair, which leaves 0.5–2.5 px of
-      slack at the right gutter rather than betting the last letter on a
-      rounding. The mark spans the column at every width, with no breakpoint
-      and no `clamp()`.
-   3. **It sits on `.foot`'s zeroed bottom padding**, so the clip line is the
-      last pixel of the document.
-
-   Colour is `border-strong`, the tone the page already rules its sections
-   with. At 200 px the ink steps are all too loud — `faint` reads as a headline
-   rather than as a watermark — and this keeps the mark at the weight of a
-   printed edge. */
-.foot__mark {
-  container-type: inline-size;
-  margin-block-start: var(--space-lg);
-}
-
-.foot__mark-word {
-  display: block;
-  /* Clipped on one axis only. The vertical clip is the whole device; the
-     horizontal one would be a bug — a fallback grotesk wider than Inter (the
-     webfont blocked, say) would have the trailing `b` amputated in mid-air and
-     the mark would read `TelemetryLa`. Let it bleed toward the gutter instead;
-     `html, body { overflow-x: clip }` already stops that reaching a scrollbar.
-     `visible` and `clip` are the one pair the overflow shorthand keeps as
-     specified — pair `visible` with `hidden` and it silently computes to
-     `auto`, which is a scroll container. */
-  overflow: visible clip;
-  height: 0.59em;
-  font-size: 16.16cqw;
-  line-height: 1;
-  font-weight: 600;
-  /* Tighter than the -0.025em headings take: tracking that reads as tight at
-     44 px reads as loose at 200. Both margins are optical, and at this size
-     they are worth 8 px each: the start cancels the `T`'s left side bearing so
-     its stem lands on the same gutter as the copy above it, the end cancels
-     the trailing letter-space that would otherwise hold the `b` clear of the
-     right edge. */
-  letter-spacing: -0.035em;
-  margin-inline: -0.04em -0.035em;
-  color: var(--color-border-strong);
-  user-select: none;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
    Responsive — verified at 320 / 375 / 414 / 768
    Below 60rem every two-column block becomes one column; below 40rem the page
    is a phone and space is a luxury.
@@ -767,11 +691,6 @@ a {
   .hero__actions .chip,
   .hero__actions .chip-solid {
     flex: 1 1 100%;
-  }
-
-  .foot__meta {
-    flex-direction: column;
-    align-items: flex-start;
   }
 }
 

@@ -79,6 +79,19 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo,
     Consolas, monospace;
 
+  /* Marketing-surface extension, and the narrowest one in this file: a
+     condensed display face for the footer wordmark and nothing else. Inter has
+     no condensed cut, and a wordmark set edge to edge across the viewport in
+     Inter would be either 300 px tall or letter-spaced into a fence. It is a
+     token rather than a literal so the one element that uses it can be found
+     by grepping for the token; anything else reaching for `--font-display` is
+     a bug — see design.md § The marketing surface, rule 5.
+
+     The fallbacks are the condensed faces that actually ship on Windows and
+     macOS. A grotesk of normal width standing in for Anton would set the same
+     string ~40 % wider and push the tail of it past the viewport. */
+  --font-display: "Anton", "Arial Narrow", Impact, var(--font-sans);
+
   /* Type scale — marketing-surface extension. Every step is a clamp, so the
      page never needs a font-size breakpoint. */
   /* The ceiling is 4.6rem, not the 5.5 a hero of this weight could carry: the

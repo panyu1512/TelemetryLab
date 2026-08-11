@@ -26,6 +26,20 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap"
       rel="stylesheet"
     />
+    <!-- Anton is the third face and it is scoped to exactly one element — the
+         footer wordmark. It loads here rather than through the app's font
+         pipeline because this page has no build step; `--font-display` in
+         tokens.css is the token everything else goes through.
+
+         Its own request, for `display=block` rather than the `swap` above.
+         Body text must be readable while Inter is in flight, so it swaps; the
+         wordmark is a decorative shape below the fold, and swapping it would
+         flash a fallback ~40 % too wide for the crop it is sized to. Blank for
+         a moment, then correct, beats wrong and then correct. -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Anton&display=block"
+      rel="stylesheet"
+    />
     <link rel="stylesheet" href="css/site.css" />
   </head>
 
@@ -385,10 +399,21 @@
       </div>
     </main>
 
-    <!-- Ft5 · Statement: a closing line, not a sitemap. The closing line is the
-         wordmark itself, set at page scale and cut in half by the bottom edge. -->
-    <div class="shell">
-      <footer class="foot">
+    <!-- ══ Footer · Ft5 statement ═══════════════════════════════════════════
+         Styles live in their own stylesheet: css/footer.css. Two knobs sit at
+         the top of that file — `--brand-size` (how big the wordmark is against
+         the width of the viewport) and `--brand-crop` (how far the bottom edge
+         is pulled up into the letters).
+
+         BRAND NAME: this page has no template engine, so the string is not a
+         constant it can interpolate. It appears exactly twice, in the two
+         adjacent nodes below — the screen-reader copy and the decorative
+         wordmark — and nowhere else in this file. Change both together.
+         ══════════════════════════════════════════════════════════════════ -->
+    <footer class="foot">
+      <!-- The quiet row: the links and the colophon, held to the same text
+           column as the rest of the page. -->
+      <div class="shell">
         <div class="foot__meta">
           <div class="foot__links">
             <a class="link-q" href="https://github.com/panyu1512/TelemetryLab">GitHub</a>
@@ -402,18 +427,19 @@
             >
           </div>
           <p class="foot__colophon">
-            TelemetryLab · open source · not affiliated with iRacing
+            © 2026 TelemetryLab · open source · not affiliated with iRacing
           </p>
         </div>
+      </div>
 
-        <!-- The nav's wordmark, grown to the width of the text column and cut
-             in half by the bottom of the document. Decorative: the name is
-             already in the nav and in the colophon above, so a screen reader
-             is spared a third pass at a device it cannot see. -->
-        <div class="foot__mark" aria-hidden="true">
-          <span class="foot__mark-word">TelemetryLab</span>
-        </div>
-      </footer>
-    </div>
+      <!-- The wordmark: edge to edge across the viewport, cut off by the bottom
+           of the document. The visible copy is `aria-hidden` and unselectable —
+           it is a shape, not a string — and the `sr-only` copy beside it is
+           what a screen reader announces. -->
+      <div class="foot__mark">
+        <span class="sr-only">TelemetryLab</span>
+        <span class="foot__mark-word" aria-hidden="true">TelemetryLab</span>
+      </div>
+    </footer>
   </body>
 </html>
