@@ -259,6 +259,25 @@ a {
   transform: translateY(1px);
 }
 
+/* A chip that leads with a glyph. `1em` so the icon tracks the label's size,
+   and `flex: none` so it never gets squeezed when the row wraps on a phone. */
+.chip__icon {
+  width: 1.15em;
+  height: 1.15em;
+  flex: none;
+}
+
+/* The support chip sits beside the download CTA, so it must not compete with
+   it: outlined like any secondary action, and its warmth arrives only on
+   hover. `warning` is the closest the palette has to a coffee, and this is the
+   one place it is not carrying its § Theme meaning — it is a brand colour on a
+   link off-site, not a caution about anything on this page. */
+.chip--coffee:hover {
+  border-color: color-mix(in oklab, var(--color-warning) 55%, transparent);
+  color: var(--color-warning);
+  background: color-mix(in oklab, var(--color-warning) 10%, transparent);
+}
+
 .chip[aria-disabled="true"],
 .chip-solid[aria-disabled="true"] {
   opacity: 0.45;
@@ -669,17 +688,10 @@ a {
 }
 
 @media (max-width: 40rem) {
-  .nav {
-    /* Wordmark and actions stay edge-aligned but get their own line, so
-       neither has to shrink below its hit target. */
-    flex-wrap: wrap;
-    row-gap: var(--space-2xs);
-  }
-
-  .nav__actions {
-    width: 100%;
-    justify-content: space-between;
-  }
+  /* The nav used to wrap here, because two actions plus the wordmark would not
+     fit a phone without one of them shrinking below its hit target. There is
+     one action now, and the pair fits a 320 px screen with room to spare — so
+     it stays a single edge-aligned row, which is what N9 is. */
 
   .hero__actions .chip,
   .hero__actions .chip-solid {
@@ -688,10 +700,55 @@ a {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   Scroll reveal — opacity only
+   The one place this system animates on scroll, and it is fenced tightly.
+
+   · **Opacity and nothing else.** No rise, no scale, no stagger. A section
+     arrives at full strength by the time it is a third of the way up the
+     viewport; the effect is the arrival, not a performance.
+   · **Zero JavaScript.** `animation-timeline: view()` drives it from the
+     scroller itself, so the page keeps having no script at all. Under
+     `@supports`, because the fallback has to be "visible", never "stuck at
+     zero" — a browser without scroll-driven animations shows the page exactly
+     as it always did.
+   · **Never the hero, never the nav.** Anything above the fold at load must be
+     readable at load. The range ends inside `entry`, so an element already on
+     screen when the page opens is past its own animation and renders at 1.
+   · **Off under reduced motion**, via the guard below rather than by relying
+     on the blanket duration override — a scroll-driven animation has no
+     duration to collapse.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@keyframes reveal-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .row,
+    .spec,
+    .needs,
+    .foot__meta {
+      animation: reveal-fade linear both;
+      animation-timeline: view();
+      /* Start as the top edge clears the fold, finish well before the section
+         is centred — the copy is readable long before it stops moving. */
+      animation-range: entry 5% entry 55%;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    Reduced motion
-   Spatial movement collapses; the two short durations go to zero. The page has
-   no scroll reveals to disable — design.md § Motion sets the reveal pattern to
-   none, and the marketing surface keeps it.
+   Spatial movement collapses and the two short durations go to zero. The
+   scroll reveal above is not disabled here — it is never declared in the
+   first place, because a scroll-driven animation has no duration for this
+   block to shorten.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @media (prefers-reduced-motion: reduce) {

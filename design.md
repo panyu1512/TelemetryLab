@@ -130,8 +130,9 @@ Tailwind's default 4-point scale. Named equivalents are exported in
 - Durations: `--dur-instant` 80 ms, `--dur-short` 140 ms, `--dur-mid` 220 ms.
 - Animate `transform` and `opacity` only. Never layout properties.
 - No overshoot or bounce on UI state.
-- Reveal pattern: **none.** The manager fades in once on mount (`manager-in`).
-  Nothing animates on scroll.
+- Reveal pattern: **none on any app surface.** The manager fades in once on
+  mount (`manager-in`); nothing in the app animates on scroll. The marketing
+  page is the single exception, fenced in § The marketing surface rule 6.
 - Reduced motion: spatial movement collapses to ≤150 ms opacity; the two short
   durations go to 0.
 - **The focus ring is never transitioned.** It appears on the frame the key
@@ -472,11 +473,16 @@ itself, and rule 5 below is what it is allowed to do.
 
 What it inherits without change: every colour token and every colour *meaning*,
 Inter, the 4-point spacing scale, the three easings and durations, the 8-state
-control contract, the focus-ring rule, and § Motion's reveal pattern of **none**
-— a marketing page that animates on scroll would be the first surface in this
-system to do so, and it does not get to be.
+control contract, and the focus-ring rule.
 
-Five things it is allowed that no app surface is:
+**§ Motion's reveal pattern is the one thing it no longer inherits.** This file
+used to say that a marketing page which animates on scroll "would be the first
+surface in this system to do so, and it does not get to be". It does now — the
+product owner asked for it — so the rule is amended rather than quietly broken,
+and rule 6 is the fence around it. The app surfaces are unchanged: nothing in
+the manager or in an overlay animates on scroll, and nothing should.
+
+Six things it is allowed that no app surface is:
 
 1. **A display type scale.** `--text-display` and friends exist only here. The
    app is read at a glance at 200 km/h and has no use for 4.6rem type; a page
@@ -521,6 +527,27 @@ Five things it is allowed that no app surface is:
    **No product data is ever cropped.** A number the reader has to guess at is
    the failure mode this whole system is built against; a wordmark they already
    read at the top of the page is not.
+
+6. **One scroll reveal, and it is opacity only.** Sections fade from 0 to 1 as
+   they enter the viewport. Five fences, and the first two are the ones that
+   keep this from becoming the templated-editorial tell it usually is:
+
+   - **Opacity and nothing else.** No rise, no scale, no stagger, no direction.
+     The arrival is the effect.
+   - **Never above the fold.** The range ends inside `entry`, so anything
+     already on screen when the page opens renders at full strength. A hero
+     that fades in is a hero the reader waits for.
+   - **No JavaScript.** `animation-timeline: view()` inside `@supports`, so the
+     page keeps having no script at all and a browser without scroll-driven
+     animations gets the page exactly as it was. The fallback is *visible* —
+     content stuck at `opacity: 0` because a feature query was skipped is the
+     one failure this device can produce, and it is unacceptable.
+   - **Off under `prefers-reduced-motion`**, by not being declared rather than
+     by being overridden — a scroll-driven animation has no duration for the
+     reduced-motion block to collapse.
+   - **The app surfaces do not get this.** § Motion's reveal pattern still
+     reads *none* everywhere else, for the reason it always did: a driver is
+     not scrolling, and an overlay that faded anything would be hiding data.
 
 Two rules it does *not* get to break:
 

@@ -26,7 +26,7 @@ python3 -m http.server 4173 --directory site
 ## Design
 
 The page is a **third surface class** in this project's design system, alongside
-the app and the overlays. The rules it inherits — and the five things it is
+the app and the overlays. The rules it inherits — and the six things it is
 allowed that no app surface is — are written down in
 [`design.md` § The marketing surface](../design.md).
 
