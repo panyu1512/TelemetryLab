@@ -428,6 +428,21 @@ function driverEntry(car: MockCar, t: number): DriverEntry {
 
 export function mockSession(t: number): SessionInfo {
   const drivers = MOCK_FIELD.map((car) => driverEntry(car, t));
+  const timeRemain = Math.max(0, 3600 - t);
+  /*
+   * A predicted lap count for a timed race.
+   *
+   * iRacing publishes one on `SessionLapsRemainEx`, derived from the leader's
+   * pace, and the bridge now prefers that channel — so the mock carries the
+   * same thing rather than leaving the field null and making the fuel screen
+   * fall back to estimating from the *player's* lap time. It is the leader's
+   * pace on purpose: the flag falls when the leader runs the clock out, so
+   * that is what sets how many laps everyone still has to fuel for.
+   */
+  const lapsRemain = Math.max(
+    0,
+    Math.ceil(timeRemain / runningOrder(t)[0].pace)
+  );
   const classIds = [...new Set(MOCK_FIELD.map((c) => c.klass))];
   return {
     sessionId: "mock",
@@ -436,8 +451,8 @@ export function mockSession(t: number): SessionInfo {
     sessionName: "RACE",
     sessionState: t < 10 ? 2 : 4,
     sessionStateLabel: t < 10 ? "Warmup" : "Racing",
-    sessionTimeRemain: Math.max(0, 3600 - t),
-    sessionLapsRemain: null,
+    sessionTimeRemain: timeRemain,
+    sessionLapsRemain: lapsRemain,
     sessionTimeTotal: 3600,
     sessionLapsTotal: null,
     isTimed: true,

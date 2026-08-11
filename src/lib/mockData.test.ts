@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  MOCK_FIELD,
   MOCK_FIELD_SIZE,
   MOCK_PLAYER_IDX,
   MOCK_START_OFFSET_S,
@@ -197,5 +198,28 @@ describe("mockStandings — gaps are measured from the right car", () => {
     for (const e of p.entries) {
       expect(e.gapToClassLeader!).toBeLessThanOrEqual(e.gapToLeader! + 1e-6);
     }
+  });
+});
+
+describe("mockSession — a timed race carries a predicted lap count", () => {
+  it("publishes laps remaining, as iRacing's SessionLapsRemainEx does", () => {
+    const s = mockSession(MOCK_START_OFFSET_S);
+    expect(s.isTimed).toBe(true);
+    expect(s.sessionLapsRemain).toBeGreaterThan(0);
+  });
+
+  it("predicts from the leader's pace, not the player's", () => {
+    // The flag falls when the leader runs the clock out, so a slower player
+    // must still be quoted the leader's lap count.
+    const t = MOCK_START_OFFSET_S;
+    const s = mockSession(t);
+    const leaderPace = Math.min(...MOCK_FIELD.map((c) => c.pace));
+    const fromLeader = Math.ceil((3600 - t) / leaderPace);
+    expect(s.sessionLapsRemain).toBe(fromLeader);
+  });
+
+  it("counts down to zero and never below", () => {
+    expect(mockSession(3600).sessionLapsRemain).toBe(0);
+    expect(mockSession(4000).sessionLapsRemain).toBe(0);
   });
 });

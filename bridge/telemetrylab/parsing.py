@@ -191,12 +191,51 @@ def _build_classes(drivers: list[DriverEntry]) -> list[ClassEntry]:
 # ---------------------------------------------------------------------------
 # Weekend + session → SessionInfo
 # ---------------------------------------------------------------------------
+
+#: iRacing's "unlimited / not applicable" value for both laps-remaining
+#: channels. It is a real 32767 in the buffer, not a null.
+LAPS_SENTINEL = 32767
+
+
+def _laps_remain(raw: dict[str, Any]) -> int | None:
+    """Laps left in the session, preferring iRacing's own prediction.
+
+    Two channels carry this and they are not equivalent:
+
+    ``SessionLapsRemain``
+        Exact in a lap-limited race; the sentinel in a timed one, because the
+        lap count genuinely is not known yet.
+    ``SessionLapsRemainEx``
+        The SDK's improved version. In a timed race it holds iRacing's
+        *predicted* total, derived from the leader's pace — which is the number
+        the sim's own AutoFuel fuels against.
+
+    Preferring ``Ex`` is what stops the fuel screen estimating a timed race's
+    length from the player's own lap time. That estimate is wrong for everyone
+    slower than the leader: the flag falls when the *leader* runs the clock out,
+    so a driver a few seconds off the pace is quoted fewer laps than the race
+    will actually run, and fuels short by exactly that error.
+
+    Either channel may be missing (an older SDK, or a session that has not
+    started), so this falls through to the plain one and then to ``None``.
+    """
+    for key in ("session_laps_remain_ex", "session_laps_remain"):
+        n = _num(raw.get(key))
+        # Missing, the sentinel, or negative (which shows up between sessions):
+        # not a lap count, so fall through rather than believing it.
+        if n is None or int(n) == LAPS_SENTINEL or n < 0:
+            continue
+        return int(n)
+    return None
+
+
 def parse_session_info(raw: dict[str, Any]) -> SessionInfo:
     """Assemble a :class:`SessionInfo` from a raw source snapshot.
 
     ``raw`` keys (all optional, missing → sensible defaults):
       weekend_info, driver_info, sessions (the ``SessionInfo['Sessions']`` list),
-      session_num, session_time_remain, session_laps_remain, session_flags,
+      session_num, session_time_remain, session_laps_remain,
+      session_laps_remain_ex, session_flags,
       air_temp, track_temp, car_redline_rpm, car_est_lap_time.
     """
     weekend: dict[str, Any] = raw.get("weekend_info") or {}
@@ -259,11 +298,7 @@ def parse_session_info(raw: dict[str, Any]) -> SessionInfo:
         session_state=_int(raw.get("session_state"), 0),
         session_state_label=session_state(_int(raw.get("session_state"), 0)),
         session_time_remain=_num(raw.get("session_time_remain")),
-        session_laps_remain=(
-            None
-            if raw.get("session_laps_remain") in (None, 32767)
-            else _int(raw.get("session_laps_remain"))
-        ),
+        session_laps_remain=_laps_remain(raw),
         session_time_total=time_total,
         session_laps_total=laps_total,
         is_timed=is_timed,
