@@ -404,7 +404,8 @@ selling something else.
 **Macrostructure: Split Studio.** Every claim sits beside the capture that
 proves it, and the pairing alternates direction. Nav is **N9 edge-aligned**
 (wordmark hard-left, actions hard-right, nothing between); footer is **Ft5
-statement** — a closing line, not a sitemap.
+statement** — a closing line, not a sitemap. The closing line is the wordmark
+itself, and rule 5 below is what it is allowed to do.
 
 What it inherits without change: every colour token and every colour *meaning*,
 Inter, the 4-point spacing scale, the three easings and durations, the 8-state
@@ -412,7 +413,7 @@ control contract, the focus-ring rule, and § Motion's reveal pattern of **none*
 — a marketing page that animates on scroll would be the first surface in this
 system to do so, and it does not get to be.
 
-Four things it is allowed that no app surface is:
+Five things it is allowed that no app surface is:
 
 1. **A display type scale.** `--text-display` and friends exist only here. The
    app is read at a glance at 200 km/h and has no use for 4.6rem type; a page
@@ -430,6 +431,17 @@ Four things it is allowed that no app surface is:
    copies the Carbon values rather than importing them, because the site must
    stay deployable as a folder. **A colour changed in `src/styles.css` has to be
    changed there too** — that is the standing cost of the site being standalone.
+5. **One cropped element: the footer wordmark.** It spans the text column at
+   ~16cqw and the bottom edge of the document cuts it through the middle of its
+   x-height, so only the top half of the letters survives. This is the single
+   place in the system where something is deliberately incomplete, and it is
+   fenced in four ways: it is the *last* element on the page, it is the wordmark
+   and nothing else, it takes a border tone rather than an ink one — at 200 px
+   even `faint` reads as a headline — and it is `aria-hidden`, because a name
+   already in the nav and the colophon does not need a third pass in the
+   accessibility tree. **No product data is ever cropped.** A number the reader
+   has to guess at is the failure mode this whole system is built against; a
+   wordmark they already read at the top of the page is not.
 
 Two rules it does *not* get to break:
 

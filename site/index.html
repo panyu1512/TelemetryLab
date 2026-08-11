@@ -385,7 +385,8 @@
       </div>
     </main>
 
-    <!-- Ft5 · Statement: a closing line, not a sitemap. -->
+    <!-- Ft5 · Statement: a closing line, not a sitemap. The closing line is the
+         wordmark itself, set at page scale and cut in half by the bottom edge. -->
     <div class="shell">
       <footer class="foot">
         <div class="foot__meta">
@@ -403,6 +404,14 @@
           <p class="foot__colophon">
             TelemetryLab · open source · not affiliated with iRacing
           </p>
+        </div>
+
+        <!-- The nav's wordmark, grown to the width of the text column and cut
+             in half by the bottom of the document. Decorative: the name is
+             already in the nav and in the colophon above, so a screen reader
+             is spared a third pass at a device it cannot see. -->
+        <div class="foot__mark" aria-hidden="true">
+          <span class="foot__mark-word">TelemetryLab</span>
         </div>
       </footer>
     </div>
