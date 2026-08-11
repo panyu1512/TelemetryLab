@@ -34,8 +34,24 @@ export interface FuelInputs {
   timeRemaining: number | null;
   isTimed: boolean;
 
-  /** Safety reserve as a fraction of the tank (e.g. 0.05 = 5%). */
-  reservePct: number;
+  /**
+   * Safety margin at the flag, **in laps** — iRacing's own AutoFuel unit.
+   *
+   * AutoFuel's "Margin (Laps)" field "tells your crew chief how much margin you
+   * want to have at the end of the race", and iRacing recommends never going
+   * below 1.0 in a timed race "as you may run out of fuel on the final lap if
+   * the conditions change sufficiently for the race to go a lap longer than
+   * Autofuel expected". {@link computeFuelStrategy} enforces that floor.
+   *
+   * This replaced a percentage of the tank. A percentage is the wrong unit for
+   * the thing it is protecting against: the risk is *one more lap than the
+   * calculator predicted*, and a lap costs the same litres whether the tank
+   * that holds it is 40 L or 120 L. Five percent of a 120 L LMP tank was two
+   * laps of margin; five percent of a 40 L Skippy tank was two thirds of one.
+   *
+   * @see https://support.iracing.com/support/solutions/articles/31000169381-how-to-use-autofuel
+   */
+  marginLaps: number;
   /**
    * Manual override: litres to add at each stop. `null` ⇒ the planner tops up
    * to whatever the stint needs (up to a full tank).
@@ -88,8 +104,14 @@ export interface FuelStrategy {
   fuelToFinish: number | null;
   /** Usable fuel minus fuel-to-finish (>0 surplus, <0 deficit). */
   fuelDelta: number | null;
-  /** Whole laps of margin (safe laps − laps to finish). */
-  marginLaps: number | null;
+  /**
+   * Whole laps of fuel over (positive) or under (negative) the finish, once the
+   * margin is set aside. The margin you *asked for* is `FuelInputs.marginLaps`;
+   * this is what you actually have on top of it. It was called `marginLaps`
+   * until the margin became a lap count too, at which point one name for both
+   * would have been a bug waiting to happen.
+   */
+  surplusLaps: number | null;
   finishesOnFuel: boolean | null;
 
   // Fuel save.
@@ -256,7 +278,7 @@ export function computeFuelStrategy(input: FuelInputs): FuelStrategy {
     lapsRemaining,
     timeRemaining,
     isTimed,
-    reservePct,
+    marginLaps,
     pitFuel,
   } = input;
 
@@ -265,13 +287,31 @@ export function computeFuelStrategy(input: FuelInputs): FuelStrategy {
       ? clamp(fuelLevel / tankCapacity, 0, 1)
       : null;
 
-  // Reserve (litres) is a fraction of the tank when we know it, else of the
-  // current level so the safety margin still applies before capacity is known.
-  const reserve = finite(tankCapacity)
-    ? tankCapacity * reservePct
-    : finite(fuelLevel)
-      ? fuelLevel * reservePct
-      : null;
+  const hasBurn = finite(perLap) && perLap > 0;
+
+  /*
+   * The margin, in laps, after AutoFuel's floor: a timed race never runs on
+   * less than a lap of it. iRacing's reasoning is that a timed race's length is
+   * a *prediction* — if the leader picks up pace, or stops saving, the race
+   * goes a lap longer than anyone's arithmetic said, and the car with less than
+   * a lap in hand is the one that runs dry on the way to the flag. A lap race
+   * has a lap count that cannot move, so a smaller margin there is the driver's
+   * call to make.
+   */
+  const effectiveMarginLaps = Math.max(
+    0,
+    isTimed ? Math.max(1, marginLaps) : marginLaps
+  );
+
+  /*
+   * The reserve in litres is that margin priced at the current burn. It is
+   * deliberately null until a lap has been sampled: without a burn figure there
+   * is no honest conversion from laps to litres, and AutoFuel takes the same
+   * line — "we do not have fuel data for you. Run some laps with the desired
+   * car and track to generate data". Every figure that consumes the reserve
+   * already requires a burn, so nothing downstream regresses while it is null.
+   */
+  const reserve = hasBurn ? effectiveMarginLaps * perLap : null;
 
   const usableFuel =
     finite(fuelLevel) && finite(reserve) ? Math.max(0, fuelLevel - reserve) : null;
@@ -279,8 +319,6 @@ export function computeFuelStrategy(input: FuelInputs): FuelStrategy {
     finite(tankCapacity) && finite(reserve)
       ? Math.max(0, tankCapacity - reserve)
       : null;
-
-  const hasBurn = finite(perLap) && perLap > 0;
 
   const lapsOfFuel = hasBurn && finite(fuelLevel) ? fuelLevel / perLap : null;
   const lapsOfFuelSafe = hasBurn && finite(usableFuel) ? usableFuel / perLap : null;
@@ -297,7 +335,7 @@ export function computeFuelStrategy(input: FuelInputs): FuelStrategy {
     hasBurn && finite(lapsToFinish) ? lapsToFinish * perLap : null;
   const fuelDelta =
     finite(usableFuel) && finite(fuelToFinish) ? usableFuel - fuelToFinish : null;
-  const marginLaps =
+  const surplusLaps =
     finite(lapsOfFuelSafe) && finite(lapsToFinish)
       ? Math.floor(lapsOfFuelSafe - lapsToFinish)
       : null;
@@ -403,7 +441,7 @@ export function computeFuelStrategy(input: FuelInputs): FuelStrategy {
     lapsOfFuelSafe,
     fuelToFinish,
     fuelDelta,
-    marginLaps,
+    surplusLaps,
     finishesOnFuel,
     targetPerLap,
     saveNeededPct,
