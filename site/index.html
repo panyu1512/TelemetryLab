@@ -51,7 +51,18 @@
     <div class="shell">
       <header class="nav">
         <a class="wordmark" href="#main">
-          <span class="wordmark__mark" aria-hidden="true"><i></i><i></i><i></i></span>
+          <!-- The TL monogram, inlined so it takes `currentColor` and needs no
+               second request. Same two paths as favicon.svg, minus its plate —
+               the nav has paper of its own. -->
+          <svg
+            class="wordmark__mark"
+            viewBox="0 0 32 32"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path d="M8.69 9L18.89 9L17.69 14L15.69 14L13.48 23.2L7.81 26L10.69 14L4.69 14Z" />
+            <path d="M20.41 6L25.41 6L21.81 21L27.31 21L23.31 26L15.61 26Z" />
+          </svg>
           TelemetryLab
         </a>
         <div class="nav__actions">

@@ -11,7 +11,7 @@ site/
 ├── css/footer.css      the footer, which has a device of its own
 ├── assets/*.png        product captures, generated — see capture.mjs
 ├── capture.mjs         regenerates assets/ from the live app
-└── favicon.svg
+└── favicon.svg         a copy of ../public/favicon.svg — see below
 ```
 
 ## Running it locally
@@ -30,12 +30,17 @@ the app and the overlays. The rules it inherits — and the five things it is
 allowed that no app surface is — are written down in
 [`design.md` § The marketing surface](../design.md).
 
-The three that bite if you forget them:
+The four that bite if you forget them:
 
 - **`css/tokens.css` is a copy, not an import.** The site has no build step and
   cannot reach the app's Tailwind `@theme` block, so the colour values are
   duplicated. **Change a colour in `src/styles.css` and you must change it here
   too.**
+- **`favicon.svg` is a copy too**, of `../public/favicon.svg` — which is the
+  source the app's platform icons are generated from. The nav inlines the same
+  two paths a third time so the mark can take `currentColor`. See
+  [`design.md` § The mark](../design.md); change the mark and change all of
+  them.
 - **The footer wordmark is tuned to the string "TelemetryLab" in Anton.** Its
   two knobs — `--brand-size` and `--brand-crop`, at the top of `css/footer.css`
   — are a measurement, not a preference: the size is 100 divided by the string's

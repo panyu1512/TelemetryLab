@@ -168,11 +168,53 @@ and a stable one-line helper row, so neither appearing reflows the panel.
 - Destructive: secondary geometry; `danger` arrives only on hover, never at
   rest.
 
+## The mark
+
+A **TL monogram**, sheared 13.5° off vertical, every free terminal cut on the
+same diagonal. It is the only drawn symbol in the system — everything else on
+every surface is type, rule or data.
+
+The geometry is a construction, not a drawing, and it is written out in the
+header of [`public/favicon.svg`](public/favicon.svg) so it can be rebuilt rather
+than traced: both letters upright on a 32 grid, cap line 8, baseline 25, stroke
+5, then sheared 0.24 x per unit of height about the baseline. Two decisions in
+there are load-bearing — the T's stem hangs at **75 % along its crossbar**
+rather than the middle, without which the pair reads as a pi; and the L starts
+**3 above the cap line** with its foot running 10.5 right, which is what makes
+the letters interlock across the 2.8 channel instead of standing side by side.
+
+Four rules:
+
+1. **One shape, one colour.** The mark never uses two. It takes `primary` on
+   chrome — the nav, the title bar — because the name beside it is already
+   white and a white mark against white text is a ligature, not a mark. It
+   takes white on the icon plate, where it is ink on paper and the status
+   table does not apply. It never takes `accent`: the mark it replaced filled
+   its counter with `accent`, which by § Theme means *positive* and is never
+   decoration.
+2. **The plate is for icons only.** A 7-radius square of the timing surfaces'
+   near-black (`#0a0d12`), because an OS icon has to bring its own ground. In
+   the nav and the title bar the mark is bare — those surfaces have paper
+   already.
+3. **The ink fills 62.5 % of the box**, so the box is sized about a fifth
+   larger than the cap height it sits beside — 1.45em against the site's
+   wordmark, 18 px against the title bar's 13 px name. Sizing the box to the
+   cap height sets the mark visibly short.
+4. **It is always `aria-hidden`.** The product name is next to it in every
+   place it appears.
+
+`public/favicon.svg` is the source. The platform icons in `src-tauri/icons` are
+generated from it with `npm run tauri icon public/favicon.svg`;
+`site/favicon.svg` is a copy for the same reason the site's tokens are one; and
+the nav and title bar inline the two paths so they can take `currentColor`.
+**Four places, one geometry** — change the mark and change all four.
+
 ## What every surface MUST share
 
 - The token names (not the values — those move per theme).
 - The colour *meanings* in the table above.
 - Inter + mono, with mono reserved for instrument nomenclature.
+- The mark, and the four rules under § The mark.
 - The control contract and the 8 states.
 - 6 px controls / 10 px cards / 12 px panels.
 - `.tnum` on every column of numbers.

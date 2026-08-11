@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="TelemetryLab">
+  <!--
+    The TelemetryLab mark: a TL monogram, sheared 13.5° off vertical, with every
+    free terminal cut on the same diagonal.
+
+    Construction, so the shape can be rebuilt rather than traced: both letters
+    are drawn upright on a 32 grid — cap line 8, baseline 25, stroke 5 — and then
+    sheared about the baseline by 0.24 units of x per unit of height. The T's
+    stem hangs at 75 % along its crossbar rather than the middle, which is what
+    keeps the pair reading as "TL" and not as a pi; the L starts 3 above the cap
+    line and its foot runs 10.5 to the right, so the two letters interlock across
+    a 2.8-wide channel instead of standing side by side.
+
+    This file is the source of every other form of the icon. The platform icons
+    in src-tauri/icons are generated from it:
+
+        npm run tauri icon public/favicon.svg
+
+    site/favicon.svg is a copy — the marketing page has to stay deployable as a
+    folder, the same reason its tokens are copied. The nav and the app title bar
+    inline the two paths below directly, in currentColor.
+  -->
+  <rect width="32" height="32" rx="7" fill="#0a0d12" />
+  <g fill="#ffffff">
+    <path d="M8.69 9L18.89 9L17.69 14L15.69 14L13.48 23.2L7.81 26L10.69 14L4.69 14Z" />
+    <path d="M20.41 6L25.41 6L21.81 21L27.31 21L23.31 26L15.61 26Z" />
+  </g>
+</svg>
