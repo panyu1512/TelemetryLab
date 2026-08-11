@@ -545,7 +545,11 @@ function WidgetPreviewCard({
 }) {
   return (
     <section
-      className="overlay-card widget-card pointer-events-none flex flex-col overflow-hidden rounded-card border border-border/60 bg-surface shadow-2xl ring-1 ring-white/5"
+      // `timing-surface` here for the same reason rule 7 exists: the preview
+      // renders the overlay's one true form. A preview on graphite where the
+      // overlay paints near-black is a preview that lies about the thing it is
+      // previewing.
+      className="overlay-card widget-card timing-surface pointer-events-none flex flex-col overflow-hidden rounded-card border border-border/60 shadow-2xl ring-1 ring-white/5"
       style={{ height: widgetPreviewHeight(def) }}
     >
       <header className="flex shrink-0 items-center gap-2">

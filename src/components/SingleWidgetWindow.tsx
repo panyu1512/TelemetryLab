@@ -57,7 +57,9 @@ export function SingleWidgetWindow({ id }: { id: string }) {
     <div className="widget-frame flex h-full w-full flex-col overflow-hidden bg-bg text-text">
       <OverlayChrome kind="widget" id={id} />
 
-      <section className="overlay-card widget-card flex min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-border/60 bg-surface">
+      {/* Same paper as the widget in the dashboard grid — a widget popped into
+          its own window is the same widget. */}
+      <section className="overlay-card widget-card timing-surface flex min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-border/60">
         <header className="flex shrink-0 items-center gap-2">
           <def.icon className="size-3.5 shrink-0 text-faint" strokeWidth={2} />
           <h3 className="widget-title select-none truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">

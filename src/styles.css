@@ -282,11 +282,16 @@ a {
 /* --- standings / timing screen ------------------------------------------- */
 
 /*
- * The dense timing surfaces (Standings, Relative) paint on their own near-black
- * paper rather than the app's `surface` graphite. These are the only screens
- * read in peripheral vision at 200 km/h, so their type is bolder and larger
- * than anywhere else in the app, and bold white type wants the darkest ground
- * the palette can give it. See `--color-timing-bg`.
+ * The overlay surfaces paint on their own near-black paper rather than the
+ * app's `surface` graphite: Standings, Relative, Fuel & Strategy, and every
+ * dashboard widget. These are the screens read in peripheral vision at
+ * 200 km/h, and bold white type wants the darkest ground the palette can give
+ * it. See `--color-timing-bg`.
+ *
+ * It began as the two dense tables' own paper — they were the only surfaces
+ * whose type ran a step larger and a weight heavier. Extending it to the fuel
+ * screen and the widgets is what makes a dashboard read as one instrument
+ * instead of graphite cards sitting next to a black table.
  */
 .timing-surface {
   background: var(--color-timing-bg);
@@ -422,11 +427,19 @@ html.overlay-mode .overlay-card,
 }
 
 /*
- * …with one exception: the timing surfaces keep their own paper over the game.
- * The rule above drops every overlay card to transparent glass, which is right
- * for a gauge but wrong for a 30 px row of 12 px type — a white car or a sunlit
- * kerb passing under the table would take the field with it. Declared *after*
- * the transparency rule, at equal specificity, so it wins.
+ * …with one exception: anything carrying `timing-surface` keeps its own paper
+ * over the game. The rule above drops every overlay card to transparent glass,
+ * which a white car or a sunlit kerb passing underneath turns into a surface
+ * you cannot read a number off. Declared *after* the transparency rule, at
+ * equal specificity, so it wins.
+ *
+ * That exception used to be only the two dense tables, on the grounds that a
+ * gauge can afford to let a kerb through where a 30 px row of 12 px type
+ * cannot. The widgets and the fuel screen now take the paper too — the same
+ * legibility argument applies to a fuel figure you are reading mid-corner, and
+ * a dashboard where half the cards are glass and half are paper reads as two
+ * different products. What is left on glass is the frame around them, which
+ * carries no data.
  */
 html.overlay-mode .timing-surface,
 .overlay-preview .timing-surface {

@@ -5,25 +5,19 @@
  * live strategy: how much you're burning, whether it lasts to the flag, when to
  * pit, how much to save, and one or two candidate stint plans. All of the math
  * lives in `lib/fuelStrategy.ts`; the sampling/state lives in
- * `hooks/useFuelStrategy.ts`. This file is purely presentation + the small set
- * of user controls (safety reserve and a manual pit-fuel override).
+ * `hooks/useFuelStrategy.ts`. This file is purely presentation.
+ *
+ * **Nothing here can be aimed at** — design.md § Dense tabular overlays rule 7.
+ * This screen used to carry three controls: a reserve stepper, a pit-fuel
+ * override, and a collapsed "Pit strategies" section you had to click to open.
+ * All three are gone. It is read while the driver's hands are busy, so it holds
+ * no button, no checkbox and no disclosure; the plans are simply always
+ * visible. The two settings those controls fed now sit at their defaults —
+ * a 5 % safety reserve, and pit fuel calculated as needed — and if either ever
+ * needs to move, rule 7 says its home is the Overlay Manager, not this screen.
  */
 
-import { useState } from "react";
-import {
-  Fuel,
-  Gauge,
-  Flag,
-  Wrench,
-  TriangleAlert,
-  Check,
-  ChevronDown,
-  Minus,
-  Plus,
-  Droplet,
-  Radio,
-  Leaf,
-} from "lucide-react";
+import { Fuel, Gauge, Flag, Wrench, TriangleAlert, Check, Radio, Leaf } from "lucide-react";
 import { useTelemetry } from "../../hooks/useTelemetry";
 import { useSessionStore } from "../../stores/useSessionStore";
 import { useFuelStrategy } from "../../hooks/useFuelStrategy";
@@ -53,30 +47,34 @@ function statusMeta(status: FuelStatus): StatusMeta {
   }
 }
 
+// ── fixed inputs ─────────────────────────────────────────────────────────────
+
+/**
+ * Safety reserve, as a fraction of the tank — fuel the strategy refuses to
+ * count towards the flag. Was a stepper in this header; it is a constant now,
+ * at what was already its default.
+ */
+const RESERVE_PCT = 0.05;
+
+/** Litres to add per stop. `null` = whatever the plan says is needed. */
+const PIT_FUEL: number | null = null;
+
 // ── main screen ──────────────────────────────────────────────────────────────
 
 export function FuelStrategyScreen() {
   const { data, iracingActive } = useTelemetry();
   const session = useSessionStore((s) => s.session);
 
-  // User controls.
-  const [reservePct, setReservePct] = useState(5); // %
-  const [pitFuel, setPitFuel] = useState<number | null>(null); // litres, null = auto
-  // Collapsed by default so the core read-outs fit an overlay without scrolling.
-  const [showAlternates, setShowAlternates] = useState(false);
-
   const { strategy, sampleCount, outOfFuel } = useFuelStrategy(data, session, {
-    reservePct: reservePct / 100,
-    pitFuel,
+    reservePct: RESERVE_PCT,
+    pitFuel: PIT_FUEL,
   });
 
   const hasFuel = data?.fuelLevel != null;
 
   return (
-    <div className="overlay-card flex h-full flex-col overflow-hidden rounded-card border border-border/60 bg-surface">
+    <div className="overlay-card timing-surface flex h-full flex-col overflow-hidden rounded-card border border-border/60">
       <Header
-        reservePct={reservePct}
-        onReserveChange={setReservePct}
         track={session?.track.name ?? null}
         config={session?.track.config ?? null}
       />
@@ -96,18 +94,9 @@ export function FuelStrategyScreen() {
             <FuelBar strategy={strategy} />
             <StrategyCard strategy={strategy} />
             <FuelSaveCard strategy={strategy} />
-            <PitFuelControl
-              pitFuel={pitFuel}
-              capacity={strategy.tankCapacity}
-              onChange={setPitFuel}
-            />
           </div>
 
-          <PlansCard
-            strategy={strategy}
-            open={showAlternates}
-            onToggle={() => setShowAlternates((o) => !o)}
-          />
+          <PlansCard strategy={strategy} />
         </div>
       )}
     </div>
@@ -116,17 +105,7 @@ export function FuelStrategyScreen() {
 
 // ── header ───────────────────────────────────────────────────────────────────
 
-function Header({
-  reservePct,
-  onReserveChange,
-  track,
-  config,
-}: {
-  reservePct: number;
-  onReserveChange: (v: number) => void;
-  track: string | null;
-  config: string | null;
-}) {
+function Header({ track, config }: { track: string | null; config: string | null }) {
   return (
     <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border px-3 py-1.5">
       <span className="flex items-center gap-1.5 text-sm font-semibold tracking-tight text-text">
@@ -138,16 +117,16 @@ function Header({
         {config ? ` · ${config}` : ""}
       </span>
 
-      <div className="ml-auto flex items-center gap-1.5">
-        <span className="text-[10px] font-medium uppercase tracking-[0.12em] text-faint">Reserve</span>
-        <Stepper
-          value={`${reservePct}%`}
-          onDec={() => onReserveChange(Math.max(0, reservePct - 1))}
-          onInc={() => onReserveChange(Math.min(20, reservePct + 1))}
-          decDisabled={reservePct <= 0}
-          incDisabled={reservePct >= 20}
-        />
-      </div>
+      {/* A readout, not a control — rule 7 allows the first and bans the
+          second. It stays because every lap figure below is quoted *after* this
+          reserve is taken off the tank, and a number you cannot account for is
+          a number you end up not trusting. */}
+      <span className="ml-auto flex items-baseline gap-1.5 text-[10px] font-medium uppercase tracking-[0.12em] text-faint">
+        Reserve
+        <span className="tnum text-xs font-semibold normal-case tracking-normal text-muted">
+          {Math.round(RESERVE_PCT * 100)}%
+        </span>
+      </span>
     </div>
   );
 }
@@ -375,41 +354,25 @@ function FuelSaveCard({ strategy }: { strategy: FuelStrategy }) {
 
 // ── plans card ───────────────────────────────────────────────────────────────
 
-function PlansCard({
-  strategy,
-  open,
-  onToggle,
-}: {
-  strategy: FuelStrategy;
-  open: boolean;
-  onToggle: () => void;
-}) {
+/**
+ * The candidate stint plans. This used to be collapsed behind a disclosure
+ * button, on the grounds that the core read-outs should fit a small overlay
+ * without scrolling. That traded a driver's glance for a click, which is the
+ * wrong way round on a surface read at speed: the plans are always open now,
+ * and a window too short for them scrolls like it always did.
+ */
+function PlansCard({ strategy }: { strategy: FuelStrategy }) {
   const plans = strategy.plans;
   if (plans.length === 0) return null;
 
   return (
-    <section className="rounded-card border border-border bg-surface-2">
-      <button
-        type="button"
-        onClick={onToggle}
-        className="flex w-full items-center gap-2 px-3 py-2.5 text-left"
-      >
-        <SectionTitle icon={Wrench} noMargin>
-          Pit strategies
-        </SectionTitle>
-        <ChevronDown
-          className={`ml-auto size-4 text-muted transition-transform ${
-            open ? "rotate-180" : ""
-          }`}
-        />
-      </button>
-      {open && (
-        <div className="flex flex-col gap-2 px-3 pb-3">
-          {plans.map((plan, i) => (
-            <PlanRow key={plan.stops} plan={plan} primary={i === 0} />
-          ))}
-        </div>
-      )}
+    <section className="rounded-card border border-border bg-surface-2 px-3 py-2.5">
+      <SectionTitle icon={Wrench}>Pit strategies</SectionTitle>
+      <div className="flex flex-col gap-2">
+        {plans.map((plan, i) => (
+          <PlanRow key={plan.stops} plan={plan} primary={i === 0} />
+        ))}
+      </div>
     </section>
   );
 }
@@ -450,55 +413,6 @@ function PlanRow({ plan, primary }: { plan: StintPlan; primary: boolean }) {
         </span>
       )}
     </div>
-  );
-}
-
-// ── manual pit-fuel override ─────────────────────────────────────────────────
-
-function PitFuelControl({
-  pitFuel,
-  capacity,
-  onChange,
-}: {
-  pitFuel: number | null;
-  capacity: number | null;
-  onChange: (v: number | null) => void;
-}) {
-  const max = capacity ? Math.round(capacity) : 100;
-  const step = 5;
-  const current = pitFuel ?? Math.min(max, 40);
-
-  return (
-    <section className="rounded-card border border-border bg-surface-2 p-2.5">
-      <div className="flex items-center justify-between">
-        <SectionTitle icon={Droplet} noMargin>
-          Pit fuel
-        </SectionTitle>
-        <label className="flex cursor-pointer items-center gap-1.5 text-[11px] text-muted">
-          <input
-            type="checkbox"
-            checked={pitFuel == null}
-            onChange={(e) => onChange(e.target.checked ? null : current)}
-            className="accent-[var(--color-primary)]"
-          />
-          Auto (fill as needed)
-        </label>
-      </div>
-      {pitFuel != null && (
-        <div className="mt-2 flex items-center gap-3">
-          <Stepper
-            value={`${pitFuel} L`}
-            onDec={() => onChange(Math.max(0, pitFuel - step))}
-            onInc={() => onChange(Math.min(max, pitFuel + step))}
-            decDisabled={pitFuel <= 0}
-            incDisabled={pitFuel >= max}
-          />
-          <span className="text-[11px] text-muted">
-            Plans above assume this fixed fill per stop.
-          </span>
-        </div>
-      )}
-    </section>
   );
 }
 
@@ -564,21 +478,17 @@ function Metric({
   );
 }
 
+/* `noMargin` went with the disclosure button that was the only caller needing
+   it — every section title now sits above its content. */
 function SectionTitle({
   icon: Icon,
   children,
-  noMargin,
 }: {
   icon: typeof Flag;
   children: React.ReactNode;
-  noMargin?: boolean;
 }) {
   return (
-    <span
-      className={`flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-faint ${
-        noMargin ? "" : "mb-2"
-      }`}
-    >
+    <span className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">
       <Icon className="size-3.5" />
       {children}
     </span>
@@ -600,40 +510,3 @@ function KeyValue({
   );
 }
 
-function Stepper({
-  value,
-  onDec,
-  onInc,
-  decDisabled,
-  incDisabled,
-}: {
-  value: string;
-  onDec: () => void;
-  onInc: () => void;
-  decDisabled?: boolean;
-  incDisabled?: boolean;
-}) {
-  return (
-    <div className="flex items-center gap-1">
-      <button
-        type="button"
-        onClick={onDec}
-        disabled={decDisabled}
-        className="grid size-6 place-items-center rounded text-muted transition-colors hover:bg-surface hover:text-text disabled:opacity-30"
-      >
-        <Minus className="size-3" />
-      </button>
-      <span className="tnum min-w-[3rem] text-center text-xs font-medium text-text">
-        {value}
-      </span>
-      <button
-        type="button"
-        onClick={onInc}
-        disabled={incDisabled}
-        className="grid size-6 place-items-center rounded text-muted transition-colors hover:bg-surface hover:text-text disabled:opacity-30"
-      >
-        <Plus className="size-3" />
-      </button>
-    </div>
-  );
-}
