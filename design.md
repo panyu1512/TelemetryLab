@@ -229,8 +229,9 @@ the nav and title bar inline the two paths so they can take `currentColor`.
 
 - **Manager chrome** speaks the instrument voice: mono channel labels, the
   fading `.header-rule` as section divider, the three-state sidebar rail.
-- **Overlay widgets** are legibility-first over footage: `overlay-card` glass,
-  text-shadow, no scrollbars, no frame. They must never gain manager chrome.
+- **Overlay widgets** are legibility-first over footage: `.timing-surface`
+  paper (§ Dense tabular overlays rule 9), text-shadow, no scrollbars, no
+  frame. They must never gain manager chrome.
 - **No *app* surface uses enrichment.** No hero imagery, no illustration, no
   decorative background beyond the existing `.bg-blueprint` dot grid on manager
   chrome. Function carries every screen. The marketing surface is the one place
@@ -312,18 +313,29 @@ the fact that a header band and a row cost the same height.
    column is fixed-width and mono; the name absorbs all slack. A layout that
    clips `Francois Sieg…` while fixed columns hold empty space has its
    priorities backwards.
-7. **Nothing on a timing surface can be aimed at.** No title bar, no controls,
-   no menus, no per-class affordances. These are the only surfaces read while
-   the user's hands are busy. Everything configurable lives in the Overlay
+7. **Nothing on an overlay screen can be aimed at** — Standings, Relative and
+   Fuel & Strategy. No title bar, no controls, no menus, no per-class
+   affordances. These are the surfaces read while the user's hands are busy,
+   and the one place the rule is not yet true is recorded in § Known
+   follow-ups. Everything configurable lives in the Overlay
    Manager, which is the surface built for configuring; a setting with no home
    there is a setting these screens do not get. The screens therefore have
    exactly one form, and the Manager preview renders that same form — a preview
    that is interactive where the overlay is not is a preview that lies.
 
    The rule is about *interaction*, not about chrome, so a **pure readout is
-   allowed above the rows**: the § Session strip below, and the per-class band
-   in rule 2. Neither has a button or rewards a click, and both are Manager
-   toggles, so they cost the driver nothing to ignore.
+   allowed above the rows**: the § Session strip below, the per-class band in
+   rule 2, and the fuel screen's `RESERVE 5%`. None has a button or rewards a
+   click, and the first two are Manager toggles, so they cost the driver
+   nothing to ignore.
+
+   **Fuel & Strategy came under this rule late.** It shipped with a reserve
+   stepper, a pit-fuel override and a collapsed "Pit strategies" section, which
+   made it the one overlay that asked the driver to aim at something — and the
+   disclosure was the worst of the three, trading a glance for a click on a
+   surface read at speed. All three are gone; the plans are always open. Their
+   two settings sit at the defaults they had (5 % reserve, pit fuel as needed),
+   and by the sentence above, either one may come back only in the Manager.
 
 8. **Type on these two surfaces runs one step larger and one weight heavier
    than anywhere else in the app.** 13 px semibold names, 12 px semibold values,
@@ -334,12 +346,21 @@ the fact that a header band and a row cost the same height.
    which is what those rules are for.
 
 9. **They paint on their own near-black paper**, `--color-timing-bg`, not the
-   app's `surface` graphite — and unlike every other overlay card they keep it
-   opaque over live footage instead of dropping to glass. A gauge can afford to
-   let a sunlit kerb through; a 32 px row of 12 px type cannot. The token
-   carries the active theme's hue so the surface stays part of the system, and
-   the zebra banding on top of it is plain white alpha (`GROUP_TONE`) so the
-   banding device means the same thing in all four themes.
+   app's `surface` graphite, and they keep it opaque over live footage instead
+   of dropping to glass. A 32 px row of 12 px type cannot afford to let a
+   sunlit kerb through. The token carries the active theme's hue so the surface
+   stays part of the system, and the zebra banding on top of it is plain white
+   alpha (`GROUP_TONE`) so the banding device means the same thing in all four
+   themes.
+
+   **This paper is no longer only theirs.** It was, on the argument that a
+   gauge can afford a kerb showing through where a table cannot — but that
+   argument was about legibility, and a fuel figure read mid-corner needs the
+   ground as much as a lap time does. Fuel & Strategy and every dashboard
+   widget now carry `.timing-surface` too, in the overlay, in its own window
+   and in the Manager's preview. What is left on glass is the frame around
+   them, which carries no data. A dashboard where half the cards were paper and
+   half were glass read as two products.
 
 10. **A lap that grades is ruled, not recoloured.** The last-lap cell keeps
     white digits and takes a 2 px underline in `accent` (personal best) or
@@ -532,6 +553,14 @@ band's actual job (per-class data).
 
 ## Known follow-ups
 
+- **The dashboard's widget frames still carry two buttons each** — open in own
+  window, and hide — revealed on hover in
+  [`Widget.tsx`](src/components/layout/Widget.tsx). They are the last thing on
+  an overlay that can be aimed at, and § Dense tabular overlays rule 7 says
+  they should not be there. They are not simply deletable the way the fuel
+  screen's controls were: unlike a reserve percentage, "hide this widget" and
+  "pop this one out" have no home in the Manager yet. Closing this means
+  building that home first.
 - **The site's tokens are a copy, not an import.** Deliberate (it buys a
   zero-build deploy) but it is a real fork: nothing enforces that
   `site/css/tokens.css` still matches `src/styles.css`. A check in CI that

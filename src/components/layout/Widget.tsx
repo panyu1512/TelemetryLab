@@ -27,7 +27,12 @@ export function Widget({ def, data, onHide }: WidgetProps) {
   const closeWidget = useActiveOverlaysStore((s) => s.closeWidget);
 
   return (
-    <section className="overlay-card widget-card group flex h-full flex-col overflow-hidden rounded-card border border-border/60 bg-surface transition-colors">
+    // `timing-surface`, not `bg-surface`: a widget paints on the same near-black
+    // paper as Standings and Relative, so the dashboard reads as one instrument
+    // rather than as graphite cards next to a black table. It also means a
+    // widget keeps that paper over live footage instead of dropping to glass —
+    // see the exception in styles.css.
+    <section className="overlay-card widget-card timing-surface group flex h-full flex-col overflow-hidden rounded-card border border-border/60 transition-colors">
       <header
         className={`${WIDGET_DRAG_HANDLE} flex shrink-0 cursor-grab items-center gap-2 active:cursor-grabbing`}
       >
