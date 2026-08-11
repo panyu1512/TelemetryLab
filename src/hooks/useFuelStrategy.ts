@@ -27,8 +27,12 @@ import {
  */
 
 export interface FuelStrategyOptions {
-  /** Safety reserve as a fraction of the tank (default 0.05 = 5%). */
-  reservePct?: number;
+  /**
+   * Safety margin at the flag in laps, as iRacing's AutoFuel expresses it
+   * (default 1.0 — AutoFuel's own floor for a timed race). See
+   * {@link FuelInputs.marginLaps}.
+   */
+  marginLaps?: number;
   /** Manual per-stop fuel fill in litres; `null` ⇒ auto (top up as needed). */
   pitFuel?: number | null;
   /** Number of recent laps to average burn / lap time over (default 5). */
@@ -67,7 +71,7 @@ export function useFuelStrategy(
   session: SessionInfo | null,
   options: FuelStrategyOptions = {}
 ): FuelStrategyResult {
-  const reservePct = options.reservePct ?? 0.05;
+  const marginLaps = options.marginLaps ?? 1;
   const pitFuel = options.pitFuel ?? null;
   const window = Math.max(1, options.sampleWindow ?? 5);
 
@@ -209,7 +213,7 @@ export function useFuelStrategy(
     lapsRemaining: session?.sessionLapsRemain ?? null,
     timeRemaining: session?.sessionTimeRemain ?? null,
     isTimed: session?.isTimed ?? true,
-    reservePct,
+    marginLaps,
     pitFuel,
   };
 

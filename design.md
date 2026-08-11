@@ -238,6 +238,39 @@ the nav and title bar inline the two paths so they can take `currentColor`.
   images appear, and they are product captures rather than enrichment — see
   § The marketing surface.
 
+## Fuel, in the sim's units
+
+**Where iRacing already has a name and a unit for something, this app uses
+iRacing's.** A driver reads our overlay and the sim's own black box in the same
+glance; two vocabularies for one quantity is a reconciliation problem handed to
+someone doing 200 km/h.
+
+The case that set the rule is the safety margin. iRacing's
+[AutoFuel](https://support.iracing.com/support/solutions/articles/31000169381-how-to-use-autofuel)
+calls it **Margin (Laps)** — it "tells your crew chief how much margin you want
+to have at the end of the race" — and so do we:
+
+1. **The margin is a lap count, not a percentage of the tank.** It used to be
+   5 % of capacity, which is the wrong unit for the risk it covers: the risk is
+   *one lap more than the calculator predicted*, and a lap costs the same
+   litres whichever car is holding them. Five percent of a 120 L LMP tank was
+   two laps of cover; five percent of a 40 L Skippy tank was two thirds of one.
+   The reserve in litres is now `marginLaps × perLap`, so it re-prices itself
+   as the burn moves.
+2. **The default is 1.0 lap, and a timed race may not go below it.** iRacing's
+   own recommendation, for its own reason: a timed race's length is a
+   prediction, and if the leader picks up pace the race runs a lap longer than
+   the arithmetic said. A lap-limited race has a count that cannot move, so a
+   smaller margin there is the driver's call.
+3. **No margin before there is data.** Without a sampled burn there is no
+   honest lap-to-litre conversion, so the reserve is `null` rather than a
+   guess — the same position AutoFuel takes when it says "we do not have fuel
+   data for you. Run some laps."
+
+What we have *not* adopted is in § Known follow-ups: AutoFuel predicts a timed
+race's length from the **leader's** average lap time, and we still use the
+player's own.
+
 ## Dense tabular overlays
 
 Standings and Relative are the densest surfaces in this app and the only ones
@@ -325,7 +358,7 @@ the fact that a header band and a row cost the same height.
 
    The rule is about *interaction*, not about chrome, so a **pure readout is
    allowed above the rows**: the § Session strip below, the per-class band in
-   rule 2, and the fuel screen's `RESERVE 5%`. None has a button or rewards a
+   rule 2, and the fuel screen's `MARGIN 1.0 lap`. None has a button or rewards a
    click, and the first two are Manager toggles, so they cost the driver
    nothing to ignore.
 
@@ -334,8 +367,9 @@ the fact that a header band and a row cost the same height.
    made it the one overlay that asked the driver to aim at something — and the
    disclosure was the worst of the three, trading a glance for a click on a
    surface read at speed. All three are gone; the plans are always open. Their
-   two settings sit at the defaults they had (5 % reserve, pit fuel as needed),
-   and by the sentence above, either one may come back only in the Manager.
+   two settings sit at defaults taken from the sim (a 1.0-lap margin, pit fuel
+   as needed — see § Fuel, in the sim's units), and by the sentence above,
+   either one may come back only in the Manager.
 
 8. **Type on these two surfaces runs one step larger and one weight heavier
    than anywhere else in the app.** 13 px semibold names, 12 px semibold values,
@@ -553,6 +587,17 @@ band's actual job (per-class data).
 
 ## Known follow-ups
 
+- **A timed race's length is estimated from the player's pace, not the
+  leader's.** `computeFuelStrategy` divides the time remaining by the player's
+  own average lap
+  ([`fuelStrategy.ts`](src/lib/fuelStrategy.ts)); iRacing's AutoFuel uses the
+  leader's, which is the correct input — the flag falls when the *leader* has
+  run the time out, so a driver a second off the leader's pace is quoted fewer
+  laps than the race will actually run, and underfuelled by exactly the error.
+  The 1.0-lap margin of § Fuel absorbs a small version of this and nothing
+  more. Closing it means feeding the leader's rolling average lap out of the
+  standings store into `useFuelStrategy`, which today takes only the player's
+  telemetry and the session.
 - **The dashboard's widget frames still carry two buttons each** — open in own
   window, and hide — revealed on hover in
   [`Widget.tsx`](src/components/layout/Widget.tsx). They are the last thing on
