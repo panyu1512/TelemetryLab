@@ -9,6 +9,12 @@
  */
 
 @import url("tokens.css");
+/* The footer is the one part of this page with a device of its own, so it gets
+   its own stylesheet. Imported rather than `<link>`ed, to match `tokens.css`
+   above and keep the head to a single stylesheet. The cost is that the request
+   is serialized behind this file rather than running beside it; at ~5 KB of
+   render-blocking CSS that is the cheaper of the two prices. */
+@import url("footer.css");
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Reset + page frame
@@ -112,6 +118,22 @@ a {
 .skip:focus {
   left: var(--page-gutter);
   top: var(--space-2xs);
+}
+
+/* Read by a screen reader, invisible to everyone else. Used once — for the
+   footer wordmark, whose visible copy is a cropped shape rather than a string
+   and is `aria-hidden` for it. `clip-path` rather than a negative offset so
+   the text is never a target for a "find in page" scroll. */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -622,50 +644,6 @@ a {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Ft5 · Statement footer
-   One closing sentence at display scale; wordmark, links and colophon beneath
-   in muted small type. Not a sitemap.
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-.foot {
-  padding-block: var(--space-2xl) var(--space-xl);
-  border-top: var(--rule-hair) solid var(--color-border-strong);
-  display: grid;
-  gap: var(--space-lg);
-}
-
-.foot__line {
-  font-size: clamp(1.6rem, 4vw, 2.6rem);
-  font-weight: 600;
-  line-height: 1.08;
-  letter-spacing: -0.025em;
-  max-width: 22ch;
-  overflow-wrap: anywhere;
-}
-
-.foot__meta {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  align-items: center;
-  gap: var(--space-sm);
-  padding-block-start: var(--space-sm);
-  border-top: var(--rule-hair) solid var(--color-border);
-}
-
-.foot__links {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-sm);
-}
-
-.foot__colophon {
-  color: var(--color-faint);
-  font-size: var(--text-sm);
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
    Responsive — verified at 320 / 375 / 414 / 768
    Below 60rem every two-column block becomes one column; below 40rem the page
    is a phone and space is a luxury.
@@ -713,11 +691,6 @@ a {
   .hero__actions .chip,
   .hero__actions .chip-solid {
     flex: 1 1 100%;
-  }
-
-  .foot__meta {
-    flex-direction: column;
-    align-items: flex-start;
   }
 }
 

@@ -1,0 +1,159 @@
+/* Hallmark · genre: modern-minimal · macrostructure: Split Studio
+ * design-system: design.md (locked) · surface: marketing · component: Ft5 footer
+ *
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  The footer, split out of site.css because it is the one part of this page
+ *  with a device of its own: the wordmark set across the full width of the
+ *  viewport and cut off by the bottom edge of the document, so only the top of
+ *  the letters survives.
+ *
+ *  Everything above the wordmark stays quiet. The links and the copyright are
+ *  the page's small type on the page's own text column; the wordmark is the
+ *  only thing in this file that raises its voice, and it is not a link, not
+ *  selectable, and not in the accessibility tree.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   The two knobs
+   Both live here, on the component's root, so tuning the device never means
+   reading the rules underneath it.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.foot {
+  /* How big the wordmark is, against the width of the viewport. `cqw` rather
+     than `vw`, and `.foot` is the container it measures: `100vw` includes the
+     scrollbar, so on any machine with classic scrollbars — which is most of
+     the Windows machines this app is for — a wordmark sized to fill `100vw`
+     overflows the page by the scrollbar's width and loses the right-hand edge
+     of its last letter to the crop. `.foot` is full-bleed, so `100cqw` is the
+     same measurement with the scrollbar taken off.
+
+     "TelemetryLab" measures 5.344em of ink in Anton, so the value is 100 /
+     5.35 rounded down — and that rounding is the slack that stops a sub-pixel
+     pushing the last letter into the crop. It leaves 0.5–3.3 px between the
+     `b` and the right edge, from a phone to a 1920. Tuned to THIS string in
+     THIS face: a longer name, or a wider one, wants 100 divided by its own
+     measured ink width. */
+  --brand-size: 18.68cqw;
+
+  /* How far the bottom edge is pulled up into the letters. Subtracted from the
+     wordmark's 1em line box, so the crop scales with the type at every width —
+     a crop in pixels would swallow the whole word on a phone and barely nick
+     it on a desktop.
+
+     0.444em is half the x-height: Anton sets the baseline 0.9235em below the
+     top of the line box (ascender 1.176em, descender 0.329em, half-leading
+     −0.2525em), and half an x-height is 0.3675em back off that. It leaves half
+     the lowercase and the top 57 % of the capitals — enough that the word
+     still reads, little enough that it is unmistakably cut. Raise it toward
+     0.6em to bury more of the letters; drop it to 0 and the wordmark sits on
+     the bottom edge uncropped. */
+  --brand-crop: 0.444em;
+
+  /* The container the wordmark's `cqw` is measured against. */
+  container-type: inline-size;
+
+  padding-block-start: var(--space-2xl);
+  /* No bottom padding: the crop IS the bottom of the document. A gap under it
+     would turn a deliberate cut into a mis-measured one. */
+  padding-block-end: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   The quiet row — links, then the copyright
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.foot__meta {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-sm);
+  padding-block-start: var(--space-sm);
+  /* Column-aligned, like every other rule on this page: it sits inside the
+     shell, so it stops at the gutters rather than running the full bleed the
+     wordmark below it takes. */
+  border-top: var(--rule-hair) solid var(--color-border-strong);
+}
+
+.foot__links {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.foot__colophon {
+  color: var(--color-faint);
+  font-size: var(--text-sm);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   The wordmark, cut off by the bottom of the page
+
+   The crop is a box with `overflow: hidden` whose bottom edge is pulled up
+   into the glyphs by a negative bottom margin on the text itself.
+
+   Two details that are load-bearing rather than decorative:
+
+   1. **`line-height: 1` and nothing else.** The negative margin is measured
+      against the line box, so any leading would shift the cut off the letters
+      and onto empty space.
+   2. **No optical margin, and that is a measurement rather than an
+      oversight.** Anton's `T` sits flush on its origin — a left side bearing
+      of 0.000em, against the 0.040em Inter carries — so nothing needs pulling
+      out to the edge. Swap the face and that has to be re-measured, or the
+      wordmark will start a few pixels shy of the bleed it is claiming.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* `hidden` clips both axes, which is what makes the vertical crop work and is
+   also the one risk in this component: a fallback face wider than Anton has its
+   tail cut rather than pushed past the gutter. Two things hold it off — the
+   fallbacks in `--font-display` are condensed, and Anton loads `display=block`
+   so a cold page never paints the wrong face into this box. If a wider fallback
+   ever does land here, `overflow: visible clip` lets it bleed instead. */
+.foot__mark {
+  overflow: hidden;
+  margin-block-start: var(--space-lg);
+}
+
+.foot__mark-word {
+  display: block;
+  font-family: var(--font-display);
+  font-size: var(--brand-size);
+  font-weight: 400; /* Anton ships one weight; it is already the bold. */
+  line-height: 1;
+  /* Anton is drawn tight. Tracking it further closes the counters on `e` and
+     `a` before it buys any width worth having. */
+  letter-spacing: 0;
+  white-space: nowrap;
+
+  /* The cut. The line box is 1em tall; this pulls the bottom of the box up
+     into the letters by `--brand-crop`, and `overflow: hidden` on the parent
+     takes everything below it — including the `y`'s descender. The letters are
+     cut, not lowered. */
+  margin-block-end: calc(-1 * var(--brand-crop));
+
+  color: var(--color-border-strong);
+
+  /* It is a shape, not a string. `aria-hidden` in the markup keeps it out of
+     the accessibility tree; these keep it out of a selection and out of the
+     way of a pointer. The `sr-only` copy beside it is the real name. */
+  user-select: none;
+  -webkit-user-select: none;
+  pointer-events: none;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Responsive
+   The wordmark needs no breakpoint — it is sized and cropped in units that
+   scale themselves. The row above it does.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 40rem) {
+  .foot__meta {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+}

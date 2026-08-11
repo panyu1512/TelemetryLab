@@ -395,7 +395,7 @@ is a rule that will keep getting revisited.
 
 ## The marketing surface
 
-One page at [`site/`](site/): static HTML and two stylesheets, no build step, no
+One page at [`site/`](site/): static HTML and three stylesheets, no build step, no
 framework, deployable as a folder. It is a **third surface class**, and the
 sharing rule at the top of this file governs it exactly as it governs the other
 two — a page selling an instrument that does not look like the instrument is
@@ -404,7 +404,8 @@ selling something else.
 **Macrostructure: Split Studio.** Every claim sits beside the capture that
 proves it, and the pairing alternates direction. Nav is **N9 edge-aligned**
 (wordmark hard-left, actions hard-right, nothing between); footer is **Ft5
-statement** — a closing line, not a sitemap.
+statement** — a closing line, not a sitemap. The closing line is the wordmark
+itself, and rule 5 below is what it is allowed to do.
 
 What it inherits without change: every colour token and every colour *meaning*,
 Inter, the 4-point spacing scale, the three easings and durations, the 8-state
@@ -412,7 +413,7 @@ control contract, the focus-ring rule, and § Motion's reveal pattern of **none*
 — a marketing page that animates on scroll would be the first surface in this
 system to do so, and it does not get to be.
 
-Four things it is allowed that no app surface is:
+Five things it is allowed that no app surface is:
 
 1. **A display type scale.** `--text-display` and friends exist only here. The
    app is read at a glance at 200 km/h and has no use for 4.6rem type; a page
@@ -430,6 +431,33 @@ Four things it is allowed that no app surface is:
    copies the Carbon values rather than importing them, because the site must
    stay deployable as a folder. **A colour changed in `src/styles.css` has to be
    changed there too** — that is the standing cost of the site being standalone.
+5. **One cropped element, and one condensed face to set it in: the footer
+   wordmark.** It runs the full bleed of the viewport at ~18.7cqw and the bottom
+   edge of the document cuts it through the middle of its x-height, so only the
+   top of the letters survives. This is the single place in the system where
+   something is deliberately incomplete, and where a second display face is
+   allowed to stand beside Inter, so both are fenced hard:
+
+   - It is the **last element on the page**, it is the **wordmark and nothing
+     else**, and it takes a **border tone rather than an ink one** — at 300 px
+     even `faint` reads as a headline.
+   - It is **`aria-hidden`, `pointer-events: none` and unselectable**, with an
+     `sr-only` copy of the name beside it. It is a shape; the string lives next
+     to it.
+   - **Anton is reachable only through `--font-display`**, and `--font-display`
+     has exactly one call site ([`site/css/footer.css`](site/css/footer.css)).
+     Inter still carries every heading, every line of body copy and every
+     surface of the app. A second face anywhere else is the § Typography
+     single-family rule being broken, not this allowance being extended.
+   - The size and the crop are **two custom properties at the top of the
+     component**, both tuned to this string in this face: the size is 100
+     divided by the string's measured ink width in ems, the crop is half an
+     x-height off the baseline. Change the name or the face and both need
+     re-measuring — nothing here derives itself.
+
+   **No product data is ever cropped.** A number the reader has to guess at is
+   the failure mode this whole system is built against; a wordmark they already
+   read at the top of the page is not.
 
 Two rules it does *not* get to break:
 
