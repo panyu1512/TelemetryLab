@@ -603,14 +603,6 @@ Seven things it is allowed that no app surface is:
    - **Never above the fold.** The range ends inside `entry`, so anything
      already on screen when the page opens renders at full strength. A hero
      that fades in is a hero the reader waits for.
-   - **The fade is per element, never per section.** A section is often taller
-     than the viewport, and `entry` does not complete until its *bottom* edge
-     has entered — so a capture in the middle of a 900 px row was on screen,
-     being looked at, at 0.49 opacity, because the row it belongs to had not
-     finished arriving. Each piece fades as *it* arrives. Anything taller than
-     a viewport is left out altogether: the two spec tables carry no fade,
-     because no range that is kind to a paragraph leaves a 1300 px table lit
-     while it is read.
    - **No JavaScript in any of the three.** `animation-timeline: view()` and
      `scroll()` inside `@supports`, so a browser without scroll-driven
      animations gets the page exactly as it was. The fallback is *visible* —
