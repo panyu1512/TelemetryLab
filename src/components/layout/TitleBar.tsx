@@ -18,15 +18,23 @@ export interface ConnectionStatus {
   color: string;
 }
 
-/** The TelemetryLab mark: a chevron-cut square that reads as a speed block. */
+/**
+ * The TelemetryLab mark: a TL monogram sheared 13.5° off vertical, with every
+ * free terminal cut on the same diagonal. The same two paths ship in
+ * `public/favicon.svg` (which is what the platform icons are generated from)
+ * and in the marketing page's nav — change one and change all three.
+ *
+ * One colour, not two. The mark it replaces filled its counter with `accent`,
+ * which by the design system's own table means "positive" and is never
+ * decoration; `primary` alone is the informational/chrome sense this wants.
+ */
 function BrandMark() {
+  // 18px, not `size-4`: the ink fills 62.5 % of the box, so a 16px box would
+  // set the mark below the cap height of the 13px name beside it.
   return (
-    <svg viewBox="0 0 20 20" className="size-4" aria-hidden>
-      <path
-        d="M4 3h9.5a2.5 2.5 0 0 1 2.5 2.5v9A2.5 2.5 0 0 1 13.5 17H4l4.2-7L4 3Z"
-        fill="var(--color-primary)"
-      />
-      <path d="M4 3l4.2 7L4 17V3Z" fill="var(--color-accent)" opacity="0.9" />
+    <svg viewBox="0 0 32 32" className="size-[18px]" fill="var(--color-primary)" aria-hidden>
+      <path d="M8.69 9L18.89 9L17.69 14L15.69 14L13.48 23.2L7.81 26L10.69 14L4.69 14Z" />
+      <path d="M20.41 6L25.41 6L21.81 21L27.31 21L23.31 26L15.61 26Z" />
     </svg>
   );
 }
