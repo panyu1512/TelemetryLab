@@ -13,7 +13,7 @@
  * All three are gone. It is read while the driver's hands are busy, so it holds
  * no button, no checkbox and no disclosure; the plans are simply always
  * visible. The two settings those controls fed now sit at their defaults —
- * a 5 % safety reserve, and pit fuel calculated as needed — and if either ever
+ * a 1.0-lap margin, and pit fuel calculated as needed — and if either ever
  * needs to move, rule 7 says its home is the Overlay Manager, not this screen.
  */
 
@@ -50,11 +50,16 @@ function statusMeta(status: FuelStatus): StatusMeta {
 // ── fixed inputs ─────────────────────────────────────────────────────────────
 
 /**
- * Safety reserve, as a fraction of the tank — fuel the strategy refuses to
- * count towards the flag. Was a stepper in this header; it is a constant now,
- * at what was already its default.
+ * Safety margin at the flag, in laps — fuel the strategy refuses to count
+ * towards the finish. This is iRacing's own AutoFuel unit and its own default:
+ * AutoFuel's "Margin (Laps)" field, which it recommends never dropping below
+ * 1.0 in a timed race. Matching the sim's unit matters more than it looks —
+ * a driver reading "margin 1.0" here and setting "Margin (Laps) 1.0" in the
+ * black box should get the same fuel, not two answers that need reconciling.
+ *
+ * Was a stepper in this header, and before that a percentage of the tank.
  */
-const RESERVE_PCT = 0.05;
+const MARGIN_LAPS = 1;
 
 /** Litres to add per stop. `null` = whatever the plan says is needed. */
 const PIT_FUEL: number | null = null;
@@ -66,7 +71,7 @@ export function FuelStrategyScreen() {
   const session = useSessionStore((s) => s.session);
 
   const { strategy, sampleCount, outOfFuel } = useFuelStrategy(data, session, {
-    reservePct: RESERVE_PCT,
+    marginLaps: MARGIN_LAPS,
     pitFuel: PIT_FUEL,
   });
 
@@ -119,12 +124,13 @@ function Header({ track, config }: { track: string | null; config: string | null
 
       {/* A readout, not a control — rule 7 allows the first and bans the
           second. It stays because every lap figure below is quoted *after* this
-          reserve is taken off the tank, and a number you cannot account for is
-          a number you end up not trusting. */}
+          margin is taken off the tank, and a number you cannot account for is
+          a number you end up not trusting. Labelled as AutoFuel labels it, so
+          it reads against the sim's own black box rather than beside it. */}
       <span className="ml-auto flex items-baseline gap-1.5 text-[10px] font-medium uppercase tracking-[0.12em] text-faint">
-        Reserve
+        Margin
         <span className="tnum text-xs font-semibold normal-case tracking-normal text-muted">
-          {Math.round(RESERVE_PCT * 100)}%
+          {MARGIN_LAPS.toFixed(1)} lap{MARGIN_LAPS === 1 ? "" : "s"}
         </span>
       </span>
     </div>
@@ -160,7 +166,9 @@ function FuelBar({ strategy }: { strategy: FuelStrategy }) {
         />
       </div>
 
-      {/* Tank bar with a reserve marker. */}
+      {/* Tank bar, with the margin marked where it falls on the tank. Its
+          position moves with the burn now that the margin is priced in laps —
+          a thirstier car sets it further up the bar. */}
       <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-surface">
         <div
           className="h-full rounded-full transition-[width] duration-150"
@@ -170,7 +178,7 @@ function FuelBar({ strategy }: { strategy: FuelStrategy }) {
           <div
             className="absolute inset-y-0 w-px bg-danger/70"
             style={{ left: `${reserveFrac * 100}%` }}
-            title={`Reserve: ${num(strategy.reserve, 1)} L`}
+            title={`Margin: ${MARGIN_LAPS.toFixed(1)} lap = ${num(strategy.reserve, 1)} L`}
           />
         )}
       </div>
@@ -236,7 +244,8 @@ function PredictionRow({
 // ── strategy card (stint + pit window) ───────────────────────────────────────
 
 function StrategyCard({ strategy }: { strategy: FuelStrategy }) {
-  const { stintUsed, stintTotal, pitWindow, recommendedPitLap, marginLaps } = strategy;
+  const { stintUsed, stintTotal, pitWindow, recommendedPitLap, surplusLaps } =
+    strategy;
 
   const stintProgress =
     stintUsed != null && stintTotal != null && stintTotal > 0
@@ -288,19 +297,19 @@ function StrategyCard({ strategy }: { strategy: FuelStrategy }) {
         </KeyValue>
       </div>
 
-      {marginLaps != null && (
+      {surplusLaps != null && (
         <div className="mt-2 text-[11px] text-muted">
-          {marginLaps >= 0 ? (
+          {surplusLaps >= 0 ? (
             <>
               Margin:{" "}
-              <span className="tnum text-accent">+{marginLaps}</span> lap
-              {marginLaps === 1 ? "" : "s"} of fuel over the finish.
+              <span className="tnum text-accent">+{surplusLaps}</span> lap
+              {surplusLaps === 1 ? "" : "s"} of fuel over the finish.
             </>
           ) : (
             <>
               Short by{" "}
-              <span className="tnum text-danger">{Math.abs(marginLaps)}</span> lap
-              {marginLaps === -1 ? "" : "s"} at the current burn.
+              <span className="tnum text-danger">{Math.abs(surplusLaps)}</span> lap
+              {surplusLaps === -1 ? "" : "s"} at the current burn.
             </>
           )}
         </div>
