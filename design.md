@@ -267,9 +267,20 @@ to have at the end of the race" — and so do we:
    guess — the same position AutoFuel takes when it says "we do not have fuel
    data for you. Run some laps."
 
-What we have *not* adopted is in § Known follow-ups: AutoFuel predicts a timed
-race's length from the **leader's** average lap time, and we still use the
-player's own.
+4. **A timed race's length comes from the leader, not from you.** AutoFuel
+   works off "the leader's average laptime, predicted lap count", and it has to:
+   the flag falls when the *leader* runs the clock out, so a driver a few
+   seconds off the pace runs the same number of laps as the leader and not the
+   fewer their own lap time implies. Dividing the time remaining by your own
+   average — which is what this app did — quotes that driver too few laps and
+   fuels them short by exactly the error.
+
+   We do not compute the prediction ourselves. iRacing publishes it on
+   `SessionLapsRemainEx`, and the bridge prefers that channel over the plain
+   `SessionLapsRemain`, which is the unlimited sentinel in precisely the timed
+   races where the question arises. Our own time-÷-lap-time estimate survives
+   as the fallback for a session that has not published one yet, and the mock
+   feed carries a leader-derived count so the demo exercises the same path.
 
 ## Dense tabular overlays
 
@@ -587,17 +598,15 @@ band's actual job (per-class data).
 
 ## Known follow-ups
 
-- **A timed race's length is estimated from the player's pace, not the
-  leader's.** `computeFuelStrategy` divides the time remaining by the player's
-  own average lap
-  ([`fuelStrategy.ts`](src/lib/fuelStrategy.ts)); iRacing's AutoFuel uses the
-  leader's, which is the correct input — the flag falls when the *leader* has
-  run the time out, so a driver a second off the leader's pace is quoted fewer
-  laps than the race will actually run, and underfuelled by exactly the error.
-  The 1.0-lap margin of § Fuel absorbs a small version of this and nothing
-  more. Closing it means feeding the leader's rolling average lap out of the
-  standings store into `useFuelStrategy`, which today takes only the player's
-  telemetry and the session.
+- ~~**A timed race's length is estimated from the player's pace, not the
+  leader's.**~~ **Done**, and more cheaply than this entry expected. The plan
+  was to derive a leader average from the standings store; iRacing already
+  publishes the answer on `SessionLapsRemainEx`, and the bridge was reading the
+  plain `SessionLapsRemain` — which is the unlimited sentinel in exactly the
+  timed races where the question matters. Preferring `…Ex`
+  ([`parsing.py`](bridge/telemetrylab/parsing.py)) hands the fuel screen
+  iRacing's own leader-derived prediction, so the estimate from the player's
+  lap time is now only the fallback for a session that has not published one.
 - **The dashboard's widget frames still carry two buttons each** — open in own
   window, and hide — revealed on hover in
   [`Widget.tsx`](src/components/layout/Widget.tsx). They are the last thing on

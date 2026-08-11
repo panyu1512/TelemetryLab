@@ -83,6 +83,13 @@ class IrsdkSource:
             "session_state": self._get("SessionState", 0),
             "session_time_remain": self._get("SessionTimeRemain"),
             "session_laps_remain": self._get("SessionLapsRemain"),
+            # `…Ex` is the SDK's "new improved laps left till session ends": in a
+            # timed race it carries iRacing's *predicted* lap count, computed
+            # from the leader's pace, where the plain channel is just the
+            # unlimited sentinel. That prediction is the same input AutoFuel
+            # fuels against, so preferring it is what keeps the fuel screen's
+            # laps-to-flag agreeing with the sim's own black box.
+            "session_laps_remain_ex": self._get("SessionLapsRemainEx"),
             "session_flags": self._get("SessionFlags", 0),
             "air_temp": self._get("AirTemp"),
             "track_temp": self._get("TrackTemp"),

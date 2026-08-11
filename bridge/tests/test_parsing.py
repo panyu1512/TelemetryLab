@@ -181,6 +181,34 @@ class TestParseSessionInfo:
         raw = make_session_raw(session_laps_remain=32767)
         assert parse_session_info(raw).session_laps_remain is None
 
+    def test_prefers_the_ex_channel(self):
+        # In a timed race the plain channel is the sentinel and `…Ex` carries
+        # iRacing's own predicted lap count — the number AutoFuel fuels against.
+        raw = make_session_raw(session_laps_remain=32767, session_laps_remain_ex=14)
+        assert parse_session_info(raw).session_laps_remain == 14
+
+    def test_ex_wins_over_a_valid_plain_value(self):
+        raw = make_session_raw(session_laps_remain=20, session_laps_remain_ex=18)
+        assert parse_session_info(raw).session_laps_remain == 18
+
+    def test_falls_back_when_ex_is_the_sentinel(self):
+        raw = make_session_raw(session_laps_remain=20, session_laps_remain_ex=32767)
+        assert parse_session_info(raw).session_laps_remain == 20
+
+    def test_falls_back_when_ex_is_absent(self):
+        # An older SDK, or a session that has not started.
+        raw = make_session_raw(session_laps_remain=7)
+        assert parse_session_info(raw).session_laps_remain == 7
+
+    def test_both_sentinel_is_none(self):
+        raw = make_session_raw(session_laps_remain=32767, session_laps_remain_ex=32767)
+        assert parse_session_info(raw).session_laps_remain is None
+
+    def test_negative_laps_are_not_a_count(self):
+        # Shows up between sessions; it is not "minus two laps to go".
+        raw = make_session_raw(session_laps_remain=20, session_laps_remain_ex=-2)
+        assert parse_session_info(raw).session_laps_remain == 20
+
     def test_session_id_composition(self):
         raw = make_session_raw(session_num=2, sessions=[{}, {}, {"SessionType": "Race"}])
         session = parse_session_info(raw)
