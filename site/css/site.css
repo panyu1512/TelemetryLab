@@ -34,9 +34,21 @@ body {
   overflow-x: clip;
 }
 
+/* `color-scheme` tells the browser which way to paint the things this
+   stylesheet does not own — form controls, scrollbars, the canvas behind the
+   page. It follows the same three states as the palette: the OS decides until
+   the toggle says otherwise. */
 html {
   color-scheme: dark;
   -webkit-text-size-adjust: 100%;
+}
+@media (prefers-color-scheme: light) {
+  html:not([data-theme="dark"]) {
+    color-scheme: light;
+  }
+}
+html[data-theme="light"] {
+  color-scheme: light;
 }
 
 body {
@@ -104,12 +116,23 @@ a {
   padding-inline: var(--page-gutter);
 }
 
+/* Anything a link or a "find in page" can jump to has to clear the pinned
+   dock, or it arrives underneath it. ~5rem is the dock's height plus air. */
+#main,
+.row,
+.spec,
+.needs {
+  scroll-margin-block-start: 5rem;
+}
+
 /* Skip link — visible the moment it takes focus, off-screen otherwise. */
 .skip {
   position: absolute;
   left: -9999px;
   top: 0;
-  z-index: 10;
+  /* Above the sticky dock (z-index 20). A skip link that lands *behind* the
+     thing it is meant to skip is worse than no skip link. */
+  z-index: 30;
   padding: var(--space-2xs) var(--space-sm);
   background: var(--color-surface);
   border: var(--rule-hair) solid var(--color-border-strong);
@@ -159,13 +182,65 @@ a {
    steps.
    ═══════════════════════════════════════════════════════════════════════════ */
 
+/*
+ * The dock: the nav pins to the top of the viewport and carries a scroll
+ * readout along its bottom edge.
+ *
+ * It pins because the theme toggle is the only control on the page now and a
+ * control you have to scroll back up to reach is a control you do not use. It
+ * is opaque `bg` rather than translucent glass — the page's own paper, so the
+ * pinned row is indistinguishable from the unpinned one at the top of the
+ * page, and copy never shows through it.
+ *
+ * The rule along its bottom is a **progress readout**, not a decoration: it
+ * fills left to right with how far down the page you are. This is the same
+ * instrument voice as the session strip in the product — a bar that reports a
+ * measured quantity — which is the only reason a progress indicator belongs on
+ * a page in this system at all.
+ */
+.nav-dock {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--color-bg);
+}
+
 .nav {
+  position: relative;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-md);
   padding-block: var(--space-md);
   border-bottom: var(--rule-hair) solid var(--color-border);
+}
+
+.nav-dock::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  height: 2px;
+  background: var(--color-primary);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) {
+    .nav-dock::after {
+      animation: scroll-progress linear both;
+      /* The document's own scroller, so the bar reports the whole page rather
+         than one section of it. */
+      animation-timeline: scroll(root block);
+    }
+  }
+}
+
+@keyframes scroll-progress {
+  to {
+    transform: scaleX(1);
+  }
 }
 
 .wordmark {
@@ -204,6 +279,84 @@ a {
   display: flex;
   align-items: center;
   gap: var(--space-xs);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Theme toggle
+   An icon button, and the only control on the page. It ships the same states
+   as the chips — `border-width` never changes, state goes to background and
+   colour — and it keeps a 44 px hit target while painting a 34 px box, via
+   the inset pseudo-element the app's controls use for the same reason.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.theme-toggle {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: var(--rule-hair) solid var(--color-border-strong);
+  border-radius: var(--radius-ctl);
+  background: transparent;
+  color: var(--color-muted);
+  cursor: pointer;
+  transition:
+    background-color var(--dur-short) var(--ease-out),
+    border-color var(--dur-short) var(--ease-out),
+    color var(--dur-short) var(--ease-out);
+}
+
+/* The painted box is 34 px; the thing you can hit is 44. */
+.theme-toggle::before {
+  content: "";
+  position: absolute;
+  inset: -5px;
+}
+
+.theme-toggle:hover {
+  background: var(--color-surface-2);
+  border-color: var(--color-faint);
+  color: var(--color-text);
+}
+
+.theme-toggle:active {
+  transform: translateY(1px);
+}
+
+.theme-toggle svg {
+  width: 17px;
+  height: 17px;
+}
+
+/*
+ * Which glyph shows is a statement about what the button *does*, not about
+ * what the page currently is: on dark paper it offers the sun, on light paper
+ * the moon. Both are in the markup and CSS picks one, so there is no flash of
+ * the wrong icon and no second script to swap them.
+ */
+.theme-toggle__moon {
+  display: none;
+}
+@media (prefers-color-scheme: light) {
+  html:not([data-theme="dark"]) .theme-toggle__sun {
+    display: none;
+  }
+  html:not([data-theme="dark"]) .theme-toggle__moon {
+    display: block;
+  }
+}
+html[data-theme="light"] .theme-toggle__sun {
+  display: none;
+}
+html[data-theme="light"] .theme-toggle__moon {
+  display: block;
+}
+html[data-theme="dark"] .theme-toggle__sun {
+  display: block;
+}
+html[data-theme="dark"] .theme-toggle__moon {
+  display: none;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -728,6 +881,29 @@ a {
   }
 }
 
+/*
+ * The second device: the captures drift.
+ *
+ * Each product shot travels about 26 px against the page over its whole pass
+ * through the viewport, which reads as the image sitting slightly *behind* the
+ * copy beside it. It is transform-only, it is tiny, and it is deliberately
+ * applied to the `<figure>` rather than to the `<img>` inside it — moving the
+ * image within its own frame would look like a bug, moving the framed picture
+ * against the paragraph next to it looks like depth.
+ *
+ * Amplitude is the whole argument here. At 26 px it is felt rather than
+ * watched; at the 80–120 px a parallax library would default to, a screenshot
+ * whose entire job is to be *read* would be sliding while you read it.
+ */
+@keyframes reveal-drift {
+  from {
+    transform: translateY(13px);
+  }
+  to {
+    transform: translateY(-13px);
+  }
+}
+
 @media (prefers-reduced-motion: no-preference) {
   @supports (animation-timeline: view()) {
     .row,
@@ -739,6 +915,14 @@ a {
       /* Start as the top edge clears the fold, finish well before the section
          is centred — the copy is readable long before it stops moving. */
       animation-range: entry 5% entry 55%;
+    }
+
+    /* The hero's own capture is exempt: it is on screen at load, and a hero
+       that arrives already mid-animation reads as a page still loading. */
+    .row .shot {
+      animation: reveal-drift linear both;
+      animation-timeline: view();
+      animation-range: entry 0% exit 100%;
     }
   }
 }

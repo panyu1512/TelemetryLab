@@ -41,36 +41,101 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="css/site.css" />
+
+    <!-- The theme, resolved before the first paint.
+         Inline and synchronous on purpose: a stored preference applied after
+         paint is a white flash on a dark page, which is the one thing a theme
+         toggle must never do. This is the whole of the page's JavaScript
+         besides the toggle's own click handler — see design.md § The marketing
+         surface, rule 7. With scripting off the page still follows the OS,
+         through the `prefers-color-scheme` copy of the palette. -->
+    <script>
+      (function () {
+        var KEY = "telemetrylab.theme";
+        var stored = null;
+        try {
+          stored = localStorage.getItem(KEY);
+        } catch (e) {
+          /* private mode, or storage disabled — fall through to the OS */
+        }
+        var theme =
+          stored === "light" || stored === "dark"
+            ? stored
+            : window.matchMedia &&
+                window.matchMedia("(prefers-color-scheme: light)").matches
+              ? "light"
+              : "dark";
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
   </head>
 
   <body>
     <a class="skip" href="#main">Skip to content</a>
 
     <!-- N9 · Edge-aligned: wordmark hard-left, actions hard-right, nothing in
-         between. The empty middle is the archetype. -->
-    <div class="shell">
-      <header class="nav">
-        <a class="wordmark" href="#main">
-          <!-- The TL monogram, inlined so it takes `currentColor` and needs no
-               second request. Same two paths as favicon.svg, minus its plate —
-               the nav has paper of its own. -->
-          <svg
-            class="wordmark__mark"
-            viewBox="0 0 32 32"
-            aria-hidden="true"
-            focusable="false"
-          >
-            <path d="M8.69 9L18.89 9L17.69 14L15.69 14L13.48 23.2L7.81 26L10.69 14L4.69 14Z" />
-            <path d="M20.41 6L25.41 6L21.81 21L27.31 21L23.31 26L15.61 26Z" />
-          </svg>
-          TelemetryLab
-        </a>
-        <div class="nav__actions">
-          <a class="chip-solid" href="https://github.com/panyu1512/TelemetryLab/releases/latest"
-            >Download</a
-          >
-        </div>
-      </header>
+         between. The empty middle is the archetype.
+
+         The dock pins the row to the top of the viewport and carries the scroll
+         readout along its bottom edge. -->
+    <div class="nav-dock">
+      <div class="shell">
+        <header class="nav">
+          <a class="wordmark" href="#main">
+            <!-- The TL monogram, inlined so it takes `currentColor` and needs
+                 no second request. Same two paths as favicon.svg, minus its
+                 plate — the nav has paper of its own. -->
+            <svg
+              class="wordmark__mark"
+              viewBox="0 0 32 32"
+              aria-hidden="true"
+              focusable="false"
+            >
+              <path d="M8.69 9L18.89 9L17.69 14L15.69 14L13.48 23.2L7.81 26L10.69 14L4.69 14Z" />
+              <path d="M20.41 6L25.41 6L21.81 21L27.31 21L23.31 26L15.61 26Z" />
+            </svg>
+            TelemetryLab
+          </a>
+          <div class="nav__actions">
+            <!-- The glyph names the destination, not the current state: sun on
+                 dark paper, moon on light. Both ship; CSS picks. -->
+            <button
+              class="theme-toggle"
+              type="button"
+              id="theme-toggle"
+              aria-label="Switch theme"
+            >
+              <svg
+                class="theme-toggle__sun"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              >
+                <circle cx="12" cy="12" r="4.2" />
+                <path
+                  d="M12 2.6v2.2M12 19.2v2.2M4.2 12H2M22 12h-2.2M6.5 6.5 4.9 4.9M19.1 19.1l-1.6-1.6M17.5 6.5l1.6-1.6M4.9 19.1l1.6-1.6"
+                />
+              </svg>
+              <svg
+                class="theme-toggle__moon"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+                fill="none"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linejoin="round"
+              >
+                <path d="M20 13.4A8.2 8.2 0 0 1 10.6 4a8.4 8.4 0 1 0 9.4 9.4Z" />
+              </svg>
+            </button>
+          </div>
+        </header>
+      </div>
     </div>
 
     <main id="main">
@@ -493,5 +558,51 @@
         <span class="foot__mark-word" aria-hidden="true">TelemetryLab</span>
       </div>
     </footer>
+
+    <!-- The toggle's handler. It flips the attribute the head script set,
+         stores the choice, and keeps the browser-chrome colour in step. It
+         does not touch the stylesheet: the palette is entirely `data-theme`,
+         so there is nothing here to keep in sync with the CSS. -->
+    <script>
+      (function () {
+        var KEY = "telemetrylab.theme";
+        var root = document.documentElement;
+        var button = document.getElementById("theme-toggle");
+        var meta = document.querySelector('meta[name="theme-color"]');
+        if (!button) return;
+
+        function paintChrome() {
+          if (!meta) return;
+          // Read the resolved paper rather than restating it here, so the
+          // browser chrome can never drift from the palette — but hand it
+          // `rgb()`, not the `oklch()` the token is authored in: `theme-color`
+          // is parsed by the browser shell, which is older than the page.
+          var paper = getComputedStyle(root).getPropertyValue("--color-bg").trim();
+          if (!paper) return;
+          try {
+            var c = document.createElement("canvas").getContext("2d");
+            c.fillStyle = paper;
+            var d = ((c.fillRect(0, 0, 1, 1), c.getImageData(0, 0, 1, 1)) || {}).data;
+            if (d) paper = "rgb(" + d[0] + " " + d[1] + " " + d[2] + ")";
+          } catch (e) {
+            /* no canvas — send the token through as authored */
+          }
+          meta.setAttribute("content", paper);
+        }
+
+        button.addEventListener("click", function () {
+          var next = root.dataset.theme === "light" ? "dark" : "light";
+          root.dataset.theme = next;
+          try {
+            localStorage.setItem(KEY, next);
+          } catch (e) {
+            /* the choice just will not survive the tab; the page still flips */
+          }
+          paintChrome();
+        });
+
+        paintChrome();
+      })();
+    </script>
   </body>
 </html>
