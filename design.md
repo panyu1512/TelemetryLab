@@ -238,6 +238,50 @@ the nav and title bar inline the two paths so they can take `currentColor`.
   images appear, and they are product captures rather than enrichment — see
   § The marketing surface.
 
+## Fuel, in the sim's units
+
+**Where iRacing already has a name and a unit for something, this app uses
+iRacing's.** A driver reads our overlay and the sim's own black box in the same
+glance; two vocabularies for one quantity is a reconciliation problem handed to
+someone doing 200 km/h.
+
+The case that set the rule is the safety margin. iRacing's
+[AutoFuel](https://support.iracing.com/support/solutions/articles/31000169381-how-to-use-autofuel)
+calls it **Margin (Laps)** — it "tells your crew chief how much margin you want
+to have at the end of the race" — and so do we:
+
+1. **The margin is a lap count, not a percentage of the tank.** It used to be
+   5 % of capacity, which is the wrong unit for the risk it covers: the risk is
+   *one lap more than the calculator predicted*, and a lap costs the same
+   litres whichever car is holding them. Five percent of a 120 L LMP tank was
+   two laps of cover; five percent of a 40 L Skippy tank was two thirds of one.
+   The reserve in litres is now `marginLaps × perLap`, so it re-prices itself
+   as the burn moves.
+2. **The default is 1.0 lap, and a timed race may not go below it.** iRacing's
+   own recommendation, for its own reason: a timed race's length is a
+   prediction, and if the leader picks up pace the race runs a lap longer than
+   the arithmetic said. A lap-limited race has a count that cannot move, so a
+   smaller margin there is the driver's call.
+3. **No margin before there is data.** Without a sampled burn there is no
+   honest lap-to-litre conversion, so the reserve is `null` rather than a
+   guess — the same position AutoFuel takes when it says "we do not have fuel
+   data for you. Run some laps."
+
+4. **A timed race's length comes from the leader, not from you.** AutoFuel
+   works off "the leader's average laptime, predicted lap count", and it has to:
+   the flag falls when the *leader* runs the clock out, so a driver a few
+   seconds off the pace runs the same number of laps as the leader and not the
+   fewer their own lap time implies. Dividing the time remaining by your own
+   average — which is what this app did — quotes that driver too few laps and
+   fuels them short by exactly the error.
+
+   We do not compute the prediction ourselves. iRacing publishes it on
+   `SessionLapsRemainEx`, and the bridge prefers that channel over the plain
+   `SessionLapsRemain`, which is the unlimited sentinel in precisely the timed
+   races where the question arises. Our own time-÷-lap-time estimate survives
+   as the fallback for a session that has not published one yet, and the mock
+   feed carries a leader-derived count so the demo exercises the same path.
+
 ## Dense tabular overlays
 
 Standings and Relative are the densest surfaces in this app and the only ones
@@ -325,7 +369,7 @@ the fact that a header band and a row cost the same height.
 
    The rule is about *interaction*, not about chrome, so a **pure readout is
    allowed above the rows**: the § Session strip below, the per-class band in
-   rule 2, and the fuel screen's `RESERVE 5%`. None has a button or rewards a
+   rule 2, and the fuel screen's `MARGIN 1.0 lap`. None has a button or rewards a
    click, and the first two are Manager toggles, so they cost the driver
    nothing to ignore.
 
@@ -334,8 +378,9 @@ the fact that a header band and a row cost the same height.
    made it the one overlay that asked the driver to aim at something — and the
    disclosure was the worst of the three, trading a glance for a click on a
    surface read at speed. All three are gone; the plans are always open. Their
-   two settings sit at the defaults they had (5 % reserve, pit fuel as needed),
-   and by the sentence above, either one may come back only in the Manager.
+   two settings sit at defaults taken from the sim (a 1.0-lap margin, pit fuel
+   as needed — see § Fuel, in the sim's units), and by the sentence above,
+   either one may come back only in the Manager.
 
 8. **Type on these two surfaces runs one step larger and one weight heavier
    than anywhere else in the app.** 13 px semibold names, 12 px semibold values,
@@ -553,6 +598,15 @@ band's actual job (per-class data).
 
 ## Known follow-ups
 
+- ~~**A timed race's length is estimated from the player's pace, not the
+  leader's.**~~ **Done**, and more cheaply than this entry expected. The plan
+  was to derive a leader average from the standings store; iRacing already
+  publishes the answer on `SessionLapsRemainEx`, and the bridge was reading the
+  plain `SessionLapsRemain` — which is the unlimited sentinel in exactly the
+  timed races where the question matters. Preferring `…Ex`
+  ([`parsing.py`](bridge/telemetrylab/parsing.py)) hands the fuel screen
+  iRacing's own leader-derived prediction, so the estimate from the player's
+  lap time is now only the fallback for a session that has not published one.
 - **The dashboard's widget frames still carry two buttons each** — open in own
   window, and hide — revealed on hover in
   [`Widget.tsx`](src/components/layout/Widget.tsx). They are the last thing on
