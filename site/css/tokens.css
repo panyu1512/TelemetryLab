@@ -138,3 +138,88 @@
   --dur-short: 140ms;
   --dur-mid: 220ms;
 }
+
+/*
+ * ─────────────────────────────────────────────────────────────────────────────
+ *  Light
+ *
+ *  A marketing-surface extension, and the largest one in this file: the app is
+ *  dark by necessity — overlays composite over live footage and the manager
+ *  sits on a second monitor at night — but a page read at arm's length in
+ *  daylight has no such constraint, and half the people who open it have their
+ *  OS set to light.
+ *
+ *  What does NOT invert:
+ *
+ *  · **Colour meaning.** `accent` is still positive, `danger` still critical,
+ *    `primary` still interactive. Only their lightness moves, so each one
+ *    clears 4.5:1 against paper instead of against ink.
+ *  · **`--color-timing-bg`.** It stays near-black in both themes, because it
+ *    grounds the product captures and those are screenshots of a dark app. A
+ *    light frame around a dark screenshot is a frame that fights its picture.
+ *  · **`--color-on-accent`.** It is still "the only ink allowed on a filled
+ *    status colour" — but on light paper the accents are dark, so it is
+ *    near-white here rather than near-black. The rule is unchanged; the value
+ *    it resolves to is the other end of the scale.
+ *
+ *  Measured, not guessed. Against light paper: text 16.6:1, muted 7.5:1, faint
+ *  5.3:1 (4.9:1 on `surface`), `primary` as a link 5.8:1, `on-accent` on a
+ *  filled `primary` 5.9:1 and on `accent` 5.8:1, ink on `warning` 7.9:1.
+ *
+ *  Declared twice on purpose. The media-query copy is what a browser with
+ *  JavaScript off gets, so the page still follows the OS; the attribute copy is
+ *  what the toggle sets, and it has to win over the OS in both directions.
+ * ─────────────────────────────────────────────────────────────────────────────
+ */
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) {
+    --color-bg: oklch(98.6% 0.0018 256);
+    --color-surface: oklch(96.2% 0.004 258);
+    --color-surface-2: oklch(93.4% 0.006 260);
+    --color-border: oklch(86% 0.008 258);
+    --color-border-strong: oklch(76% 0.012 256);
+
+    --color-text: oklch(22% 0.014 256);
+    --color-muted: oklch(44% 0.018 254);
+    --color-faint: oklch(52% 0.02 256);
+
+    --color-accent: oklch(48% 0.14 154);
+    --color-accent-dim: oklch(42% 0.13 155);
+    --color-danger: oklch(50% 0.19 26);
+    --color-warning: oklch(58% 0.13 81);
+    --color-primary: oklch(50% 0.17 254);
+    --color-primary-dim: oklch(42% 0.16 255);
+    --color-sector-purple: oklch(48% 0.19 301);
+
+    --color-on-accent: oklch(99% 0 0);
+    --color-focus: oklch(50% 0.17 254);
+
+    --shadow-raise: 0 1px 2px rgb(15 20 28 / 0.08), 0 4px 12px rgb(15 20 28 / 0.08);
+  }
+}
+
+:root[data-theme="light"] {
+  --color-bg: oklch(98.6% 0.0018 256);
+  --color-surface: oklch(96.2% 0.004 258);
+  --color-surface-2: oklch(93.4% 0.006 260);
+  --color-border: oklch(86% 0.008 258);
+  --color-border-strong: oklch(76% 0.012 256);
+
+  --color-text: oklch(22% 0.014 256);
+  --color-muted: oklch(44% 0.018 254);
+  --color-faint: oklch(52% 0.02 256);
+
+  --color-accent: oklch(48% 0.14 154);
+  --color-accent-dim: oklch(42% 0.13 155);
+  --color-danger: oklch(50% 0.19 26);
+  --color-warning: oklch(58% 0.13 81);
+  --color-primary: oklch(50% 0.17 254);
+  --color-primary-dim: oklch(42% 0.16 255);
+  --color-sector-purple: oklch(48% 0.19 301);
+
+  --color-on-accent: oklch(99% 0 0);
+  --color-focus: oklch(50% 0.17 254);
+
+  --shadow-raise: 0 1px 2px rgb(15 20 28 / 0.08), 0 4px 12px rgb(15 20 28 / 0.08);
+}

@@ -1,7 +1,8 @@
 # site/
 
-The marketing page for TelemetryLab. Static HTML and three stylesheets — no
-build step, no framework, no dependencies. Deploy the folder.
+The marketing page for TelemetryLab. Static HTML, three stylesheets and ~30
+lines of inline script for the theme toggle — no build step, no framework, no
+dependencies. Deploy the folder.
 
 ```
 site/
@@ -26,7 +27,7 @@ python3 -m http.server 4173 --directory site
 ## Design
 
 The page is a **third surface class** in this project's design system, alongside
-the app and the overlays. The rules it inherits — and the six things it is
+the app and the overlays. The rules it inherits — and the seven things it is
 allowed that no app surface is — are written down in
 [`design.md` § The marketing surface](../design.md).
 

@@ -504,8 +504,9 @@ is a rule that will keep getting revisited.
 
 ## The marketing surface
 
-One page at [`site/`](site/): static HTML and three stylesheets, no build step, no
-framework, deployable as a folder. It is a **third surface class**, and the
+One page at [`site/`](site/): static HTML, three stylesheets and ~30 lines of
+inline script for the theme toggle — no build step, no framework, deployable as
+a folder. It is a **third surface class**, and the
 sharing rule at the top of this file governs it exactly as it governs the other
 two — a page selling an instrument that does not look like the instrument is
 selling something else.
@@ -527,7 +528,7 @@ product owner asked for it — so the rule is amended rather than quietly broken
 and rule 6 is the fence around it. The app surfaces are unchanged: nothing in
 the manager or in an overlay animates on scroll, and nothing should.
 
-Six things it is allowed that no app surface is:
+Seven things it is allowed that no app surface is:
 
 1. **A display type scale.** `--text-display` and friends exist only here. The
    app is read at a glance at 200 km/h and has no use for 4.6rem type; a page
@@ -573,26 +574,72 @@ Six things it is allowed that no app surface is:
    the failure mode this whole system is built against; a wordmark they already
    read at the top of the page is not.
 
-6. **One scroll reveal, and it is opacity only.** Sections fade from 0 to 1 as
-   they enter the viewport. Five fences, and the first two are the ones that
-   keep this from becoming the templated-editorial tell it usually is:
+6. **Scroll-driven devices — three of them, and each one reports or reveals
+   rather than performs.** A section fade on entry, a 26 px drift on the
+   product captures, and a progress rule along the pinned nav that fills with
+   how far down the page you are. That last one is the reason the set is
+   allowed at all: a bar reporting a measured quantity is the same instrument
+   voice as the § Session strip, not decoration borrowed from a template.
 
-   - **Opacity and nothing else.** No rise, no scale, no stagger, no direction.
-     The arrival is the effect.
+   Five fences, and the first two are the ones that keep this from becoming the
+   templated-editorial tell it usually is:
+
+   - **Transform and opacity only**, per § Motion — never a layout property.
+     The fade is opacity; the drift and the progress rule are transforms.
+   - **Amplitude is the argument.** The drift is ±13 px over a capture's whole
+     pass through the viewport: felt, not watched. At the 80–120 px a parallax
+     library defaults to, a screenshot whose entire job is to be *read* would
+     be sliding while you read it. It moves the `<figure>`, never the `<img>`
+     inside it — an image shifting within its own frame reads as a bug; a
+     framed picture drifting against the paragraph beside it reads as depth.
    - **Never above the fold.** The range ends inside `entry`, so anything
      already on screen when the page opens renders at full strength. A hero
      that fades in is a hero the reader waits for.
-   - **No JavaScript.** `animation-timeline: view()` inside `@supports`, so the
-     page keeps having no script at all and a browser without scroll-driven
+   - **No JavaScript in any of the three.** `animation-timeline: view()` and
+     `scroll()` inside `@supports`, so a browser without scroll-driven
      animations gets the page exactly as it was. The fallback is *visible* —
      content stuck at `opacity: 0` because a feature query was skipped is the
-     one failure this device can produce, and it is unacceptable.
+     one failure these devices can produce, and it is unacceptable. (The page
+     does now carry script, for the theme toggle; see rule 7. None of it
+     touches these.)
    - **Off under `prefers-reduced-motion`**, by not being declared rather than
      by being overridden — a scroll-driven animation has no duration for the
      reduced-motion block to collapse.
    - **The app surfaces do not get this.** § Motion's reveal pattern still
      reads *none* everywhere else, for the reason it always did: a driver is
      not scrolling, and an overlay that faded anything would be hiding data.
+
+7. **A light theme, and the ~30 lines of script that serve it.** The app is
+   dark by necessity — overlays composite over live footage, the manager sits
+   on a second monitor at night. A page read at arm's length in daylight has no
+   such constraint, and half the people who open it have their OS set to light.
+   So this surface, alone, has two papers.
+
+   - **Colour meaning does not invert.** `accent` is still positive, `danger`
+     still critical, `primary` still interactive. Only lightness moves, so each
+     clears 4.5:1 against paper instead of against ink. The values are
+     measured, and the measurements are in
+     [`site/css/tokens.css`](site/css/tokens.css) beside them.
+   - **`--color-timing-bg` stays near-black in both.** It grounds the product
+     captures, and those are screenshots of a dark app. A light frame around a
+     dark picture is a frame fighting its picture.
+   - **`--color-on-accent` still means "the only ink allowed on a filled status
+     colour"** — § Theme rule 1 is unchanged. On light paper the accents are
+     dark, so the token resolves to near-white instead of near-black. The rule
+     held; the value moved.
+   - **Three states, not two.** The OS decides until the reader overrides it,
+     and the override wins in both directions — so the palette is declared once
+     under `prefers-color-scheme` and once under `[data-theme]`.
+   - **The script is inline, synchronous and in the `<head>`**, because a
+     stored preference applied after first paint is a white flash on a dark
+     page. It sets one attribute. With scripting off the page still follows the
+     OS through the media-query copy, and the toggle is simply a button that
+     does nothing — the one thing it must never be is a page that renders
+     unstyled or unreadable.
+
+   This is the only script on the surface and the only script this system has
+   outside the app itself. Anything else that wants to be added here has to
+   argue for itself the way this did.
 
 Two rules it does *not* get to break:
 
