@@ -23,9 +23,12 @@
  *   · `reducedMotion: "reduce"` — rows are positioned by `translateY` with a
  *     220 ms glide, so a capture fired mid-swap catches two rows overlapping.
  *     Reduced motion switches the glide off and every row sits at its offset.
- *   · the fuel capture waits past the first completed lap (~140 s of mock
- *     time). Before that the strategy panel is honestly empty, and an empty
- *     panel is a bad advertisement for a full one.
+ *   · every shot waits for a completed lap, because the two fuel readouts have
+ *     no per-lap burn until one lands and an empty panel is a bad
+ *     advertisement for a full one. That wait used to be three minutes; the
+ *     mock feed now opens fourteen laps into the race and runs five times
+ *     wall-clock (`MOCK_START_OFFSET_S` / `MOCK_TIME_SCALE` in
+ *     `src/lib/mockData.ts`), so a lap boundary is ~28 s away instead of ~140.
  */
 
 import { chromium } from "playwright";
@@ -37,8 +40,13 @@ const HERE = path.dirname(fileURLToPath(import.meta.url));
 const OUT = path.join(HERE, "assets");
 const BASE = process.env.SITE_CAPTURE_BASE ?? "http://localhost:1420";
 
-/** One completed mock lap is ~140 s; wait past it so fuel has real numbers. */
-const ONE_MOCK_LAP_MS = 175_000;
+/**
+ * Long enough for a lap boundary to pass at `MOCK_TIME_SCALE`, so the fuel
+ * panels have a measured burn rather than "calibrating…". The feed opens ~29 %
+ * into a lap, so the boundary is ~0.71 × 138 s of mock time away — call it 28 s
+ * at 5×, and round up for the render.
+ */
+const PAST_A_LAP_MS = 40_000;
 
 /**
  * name, route, viewport, and how long to let the feed run before the shutter.
@@ -51,15 +59,17 @@ const SHOTS = [
   { name: "standings", route: "?overlay=standings", w: 1180, h: 420 },
   { name: "relative", route: "?overlay=relative", w: 560, h: 452 },
   { name: "dashboard", route: "?overlay=dashboard", w: 1100, h: 620 },
-  { name: "manager", route: "", w: 1400, h: 900, wait: 7_000 },
-  { name: "fuel", route: "?overlay=fuel", w: 620, h: 340, wait: ONE_MOCK_LAP_MS },
+  { name: "manager", route: "", w: 1400, h: 900, wait: PAST_A_LAP_MS },
+  // Tall enough for the pit-strategies card, which stopped being collapsed and
+  // now always renders under the fold of the old 340 px frame.
+  { name: "fuel", route: "?overlay=fuel", w: 620, h: 560, wait: PAST_A_LAP_MS },
 ];
 
 fs.mkdirSync(OUT, { recursive: true });
 
 const browser = await chromium.launch();
 
-for (const { name, route, w, h, wait = 9_000 } of SHOTS) {
+for (const { name, route, w, h, wait = PAST_A_LAP_MS } of SHOTS) {
   const ctx = await browser.newContext({
     viewport: { width: w, height: h },
     deviceScaleFactor: 2,

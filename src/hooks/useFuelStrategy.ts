@@ -53,6 +53,9 @@ const CAPACITY_MIN_PCT = 0.1;
 interface SamplerState {
   lastLap: number | null;
   lapStartFuel: number | null;
+  /** Where on the lap the current interval started, so a part lap can be
+   *  scaled up to one. `null` once we are measuring whole laps. */
+  startPct: number | null;
   burn: number[];
   lapTimes: number[];
   wasOnPitRoad: boolean;
@@ -71,6 +74,7 @@ export function useFuelStrategy(
   const s = useRef<SamplerState>({
     lastLap: null,
     lapStartFuel: null,
+    startPct: null,
     burn: [],
     lapTimes: [],
     wasOnPitRoad: false,
@@ -88,6 +92,7 @@ export function useFuelStrategy(
   const fuel = data?.fuelLevel ?? null;
   const fuelPct = data?.fuelLevelPct ?? null;
   const lastLapTime = data?.lapLastLapTime ?? null;
+  const distPct = data?.lapDistPct ?? null;
   const onPitRoad = data?.onPitRoad ?? null;
 
   // ── capacity estimate ──────────────────────────────────────────────────────
@@ -108,6 +113,7 @@ export function useFuelStrategy(
       // Just left the pits on a fresh fuel load: a new stint begins.
       setStintStartLap(lap);
       st.lapStartFuel = fuel; // avoid a bogus sample spanning the stop
+      st.startPct = distPct; // …and the rest of this lap is a part lap
     }
     st.wasOnPitRoad = onPitRoad;
   }, [onPitRoad, lap, fuel]);
@@ -134,14 +140,21 @@ export function useFuelStrategy(
     if (st.lastLap == null) {
       st.lastLap = lap;
       st.lapStartFuel = fuel;
+      st.startPct = distPct;
       if (stintStartLap == null) setStintStartLap(lap);
       return;
     }
 
     if (lap > st.lastLap) {
-      // A lap completed: record how much fuel it cost.
-      if (st.lapStartFuel != null) {
-        const used = st.lapStartFuel - fuel;
+      /*
+       * A lap completed: record how much fuel it cost, scaling the interval up
+       * when it covered only part of a lap — which the first one after we
+       * start watching, or after a pit exit, always does. See the longer note
+       * on the same guard in {@link useFuelEstimate}.
+       */
+      const covered = st.startPct == null ? 1 : 1 - st.startPct;
+      if (st.lapStartFuel != null && covered >= 0.5) {
+        const used = (st.lapStartFuel - fuel) / covered;
         if (used > 0.01) {
           st.burn.push(used);
           if (st.burn.length > window) st.burn.shift();
@@ -155,6 +168,7 @@ export function useFuelStrategy(
         if (st.lapTimes.length > window) st.lapTimes.shift();
         setAvgLapTime(avg(st.lapTimes));
       }
+      st.startPct = null;
       st.lastLap = lap;
       st.lapStartFuel = fuel;
     } else if (lap < st.lastLap) {
@@ -163,6 +177,7 @@ export function useFuelStrategy(
       st.lapStartFuel = fuel;
       st.burn = [];
       st.lapTimes = [];
+      st.startPct = distPct;
       st.outOfFuelLatched = false;
       setPerLap(null);
       setAvgLapTime(null);
@@ -172,7 +187,7 @@ export function useFuelStrategy(
     }
     // `stintStartLap` intentionally omitted: we only seed it on first sight.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lap, fuel, lastLapTime, window]);
+  }, [lap, fuel, lastLapTime, distPct, window]);
 
   // Prefer the sampled lap-time average, then best lap, then the SDK estimate.
   const effectiveLapTime =
