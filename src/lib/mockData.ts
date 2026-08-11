@@ -26,6 +26,39 @@ export const MOCK_FIELD_SIZE = 12;
 export const MOCK_PLAYER_IDX = 0;
 const TANK_CAPACITY = 60; // litres
 
+/**
+ * Where the mock race starts — not on the formation lap.
+ *
+ * A feed that begins at t=0 shows an empty instrument: lap 0, a full tank, no
+ * gaps, no positions gained, no tyre laps, and every lap-boundary figure in the
+ * app (per-lap burn, last lap, sector deltas) blank until a lap completes. The
+ * point of this feed is to explain the UI to someone who has never seen it, so
+ * it opens where a race is interesting.
+ *
+ * Fourteen laps in, specifically: far enough that the slowest GT4s are a lap
+ * down on the GT3 leader — 12 s a lap of class difference takes about that long
+ * — and two thirds of the way through a stint, so the fuel screen opens on a
+ * pit call rather than on a full tank and a shrug.
+ */
+export const MOCK_START_OFFSET_S = 14 * 138 + 40;
+
+/**
+ * How much faster than the wall clock the mock race runs.
+ *
+ * Lap *times* stay real — a 2:18 lap still reads 2:18, because they are
+ * computed in mock seconds. What compresses is how long you wait to see the
+ * next one: a lap boundary every ~35 s instead of every 2:18. That matters
+ * because the two fuel readouts sample burn at lap boundaries and show
+ * "calibrating…" until they have one; at 1× a new user stares at a dash of
+ * placeholders for the first two and a half minutes.
+ */
+export const MOCK_TIME_SCALE = 5;
+
+/** Litres per lap the player's car burns, before per-lap variation. */
+const BURN_PER_LAP = 2.85;
+/** Laps a full tank covers before the scenario pits. */
+const STINT_LAPS = 20;
+
 const CLASS_GT3 = { id: 84, short: "GT3", color: "#ff4d4d", baseLap: 138 };
 const CLASS_GT4 = { id: 85, short: "GT4", color: "#4d9dff", baseLap: 150 };
 
@@ -77,16 +110,82 @@ export const MOCK_FIELD: MockCar[] = Array.from({ length: MOCK_FIELD_SIZE }, (_,
     name: `${FIRST[idx % FIRST.length]} ${LAST[idx % LAST.length]}`,
     iRating,
     isAI: idx !== 0 && rand(idx + 3) < 0.5,
-    // Faster drivers lap a touch quicker; add a stable per-car offset.
-    pace: klass.baseLap * (1 + (2500 - iRating) / 40000) + rand(idx + 11) * 1.5,
+    /*
+     * Faster drivers lap a touch quicker, plus a stable per-car offset.
+     *
+     * The divisor was 40 000, which spread a class over ±12 % — seventeen
+     * seconds a lap between its quickest and slowest car. A field that spread
+     * out that hard was strung into single file within three laps: every
+     * interval in the standings read in tens of seconds, nobody ever changed
+     * position, and the gap and interval columns showed numbers no real race
+     * produces. At 200 000 a class covers about two and a half seconds a lap,
+     * which is a grid, and the classes stay 12 s apart because that is what the
+     * two base lap times are for.
+     */
+    pace: klass.baseLap * (1 + (2500 - iRating) / 200000) + rand(idx + 11) * 1.5,
     phase: rand(idx + 5) * 0.4, // grid stagger (fraction of a lap)
     wobble: 0.3 + rand(idx + 13) * 0.9, // lap-time variation amplitude
   };
 });
 
-/** Total laps completed (float): integer part = lap, fraction = lapDistPct. */
+/*
+ * Put the player in traffic.
+ *
+ * Left to itself the field drifts apart over fourteen laps and the player ends
+ * up alone — which leaves the Relative, the whole point of which is the cars
+ * about to arrive, showing its nearest company forty seconds away. That is a
+ * screen with nothing on it to understand. So three cars are pinned to the
+ * player's pace and offset by a second or two of track position: one GT3 just
+ * ahead, one just behind, and a GT4 close enough to be caught — which is the
+ * case the relative's cross-class closing indicator exists for.
+ */
+{
+  const me = MOCK_FIELD[MOCK_PLAYER_IDX];
+
+  // Two GT3s shadowing the player's pace, one either side.
+  for (const [idx, dPace, dPhase] of [
+    [2, -0.18, 0.011], // ~1.5 s ahead
+    [4, 0.12, -0.008], // ~1.1 s behind
+  ] as const) {
+    MOCK_FIELD[idx].pace = me.pace + dPace;
+    MOCK_FIELD[idx].phase = me.phase + dPhase;
+  }
+
+  /*
+   * And a GT4 the player is about to lap.
+   *
+   * A slower class cannot simply be given the player's pace — it would stop
+   * being a slower class. What puts it alongside is being exactly one lap
+   * behind at the moment the feed opens: solve `t/pace = t/myPace − 1` at
+   * `MOCK_START_OFFSET_S` and the answer is a perfectly ordinary GT4 lap time.
+   * It drifts out of the window over the following few minutes, which is
+   * correct — that is what being lapped looks like.
+   */
+  const gt4 = MOCK_FIELD[3];
+  gt4.pace = MOCK_START_OFFSET_S / (MOCK_START_OFFSET_S / me.pace - 1);
+  gt4.phase = me.phase + 0.03; // ~4 s up the road, a lap down
+}
+
+/**
+ * Total laps completed (float): integer part = lap, fraction = lapDistPct.
+ *
+ * The swing on the end is what makes this a race rather than a procession.
+ * With a fixed pace per car the running order never changed after the grid, so
+ * the position-change column, the interval column and the relative's closing
+ * indicator were all permanently at rest. A slow oscillation of about a second
+ * and a half, on a different period per car, lets cars of similar pace trade
+ * places the way they do on track.
+ *
+ * It is deliberately far too small to reverse the lap counter — the swing's
+ * gradient is ~3e-5 laps/s against the ~7e-3 of the lap itself. That matters:
+ * both fuel samplers read a lap going backwards as a session reset and throw
+ * their history away.
+ */
 function progress(car: MockCar, t: number): number {
-  return car.phase + t / car.pace;
+  const laps = car.phase + t / car.pace;
+  const swing =
+    0.03 * car.wobble * Math.sin(t / (car.pace * (1.4 + car.idx * 0.3)) + car.idx);
+  return laps + swing;
 }
 
 /**
@@ -105,62 +204,192 @@ function lapTime(car: MockCar, t: number): number {
   return car.pace + car.wobble * Math.sin(lap * 1.7 + car.idx);
 }
 
+// ── the lap, as a shape ────────────────────────────────────────────────────
+
+/*
+ * The player's inputs used to be three sine waves of `t`: throttle rising and
+ * falling on an eight-second period, brake as its inverse, speed and rpm and
+ * gear all read straight off the same wave. Every widget fed by them showed
+ * something that moved but nothing that meant anything — the trace never had a
+ * braking event in it, the gear never stepped down for a corner, the shift
+ * lights never swept, and the whole dashboard was impossible to *read* because
+ * nothing on it corresponded to anything a driver does.
+ *
+ * So the lap is a shape now, indexed by track position rather than by time:
+ * six braking zones roughly where Spa's are, a top speed on the straights, and
+ * speed interpolated between them. Everything else is derived from that curve —
+ * throttle and brake from whether it is rising or falling, gear from the speed
+ * bands, rpm from where the speed sits inside its gear, steering and lateral g
+ * from how close the car is to an apex. The instruments agree with each other
+ * because they are all reading the same drive.
+ */
+
+/** Braking zones: `at` is lap fraction, `v` the apex speed in km/h, `dir` the
+ *  steering sign (+1 right, −1 left). Ordered around the lap. */
+const CORNERS: Array<{ at: number; v: number; dir: number }> = [
+  { at: 0.02, v: 68, dir: 1 }, // La Source
+  { at: 0.29, v: 118, dir: 1 }, // Les Combes
+  { at: 0.4, v: 92, dir: -1 }, // Rivage
+  { at: 0.55, v: 165, dir: -1 }, // Pouhon
+  { at: 0.73, v: 128, dir: 1 }, // Stavelot
+  { at: 0.94, v: 62, dir: -1 }, // Bus Stop
+];
+
+const V_MAX = 288; // km/h on the Kemmel straight
+const V_MIN = 55;
+/** How quickly speed recovers away from an apex, in km/h per lap-fraction. */
+const ACCEL_RATE = 2100;
+/** Steeper than acceleration: braking zones are short and violent. */
+const BRAKE_RATE = 5200;
+
+/** Cyclic distance between two lap fractions, in [0, 0.5]. */
+function lapGap(a: number, b: number): number {
+  const d = Math.abs(a - b) % 1;
+  return Math.min(d, 1 - d);
+}
+
+/**
+ * Target speed at a point on the lap: every corner pulls the car down towards
+ * its apex speed, and the lowest of those constraints wins. Approaching an apex
+ * is steep (braking), leaving it is shallow (acceleration), which is what puts
+ * a recognisable sawtooth in the trace rather than a sine.
+ */
+function speedAt(pct: number): number {
+  let v = V_MAX;
+  for (const c of CORNERS) {
+    const d = lapGap(pct, c.at);
+    // Ahead of the apex the car is braking; past it, accelerating.
+    const before = ((c.at - pct + 1) % 1) < 0.5;
+    const rate = before ? BRAKE_RATE : ACCEL_RATE;
+    v = Math.min(v, c.v + d * rate);
+  }
+  return Math.max(V_MIN, v);
+}
+
+/** Gear boundaries in km/h — index i is the lower bound of gear i+1. */
+const GEAR_STEPS = [0, 72, 108, 145, 186, 232];
+
+function gearFor(kmh: number): number {
+  let g = 1;
+  for (let i = 0; i < GEAR_STEPS.length; i++) if (kmh >= GEAR_STEPS[i]) g = i + 1;
+  return Math.max(1, Math.min(6, g));
+}
+
+/** Revs from where the speed sits inside its gear's band. */
+function rpmFor(kmh: number, gear: number): number {
+  const lo = GEAR_STEPS[gear - 1];
+  const hi = gear < 6 ? GEAR_STEPS[gear] : V_MAX + 20;
+  const f = Math.max(0, Math.min(1, (kmh - lo) / Math.max(1, hi - lo)));
+  return 3600 + f * 4000; // 3600 off the corner → 7600 at the shift light
+}
+
 // ── player telemetry ───────────────────────────────────────────────────────
 
 export function mockPlayerTelemetry(t: number): PlayerTelemetry {
   const car = MOCK_FIELD[MOCK_PLAYER_IDX];
   const prog = progress(car, t);
-  const pct = prog - Math.floor(prog);
-  const throttle = (Math.sin(t * 0.8) + 1) / 2;
-  const brake = Math.max(0, Math.sin(t * 0.8 + Math.PI)) * (throttle < 0.3 ? 1 : 0);
-  const speedKmh = 80 + 160 * throttle;
-  const rpm = 4000 + 3600 * throttle;
-  const steer = 0.6 * Math.sin(t * 0.6);
-  const fuelPct = Math.max(0.05, 1 - (t % (car.pace * 20)) / (car.pace * 20));
+  const lap = Math.floor(prog);
+  const pct = prog - lap;
 
-  const corner = (base: number, i: number) => ({
-    tempL: round(base + 6 * Math.sin(t * 0.5 + i) - 4, 1),
-    tempM: round(base + 6 * Math.sin(t * 0.5 + i), 1),
-    tempR: round(base + 6 * Math.sin(t * 0.5 + i) + 3, 1),
-    pressure: round(165 + 4 * Math.sin(t * 0.2 + i), 1),
-  });
+  // Speed now, and a moment ago, so the pedals can be read off the gradient.
+  const kmh = speedAt(pct);
+  const dPct = 0.004;
+  const prev = speedAt((pct - dPct + 1) % 1);
+  const slope = (kmh - prev) / dPct; // km/h per lap-fraction
+
+  // Steering and lateral load come from the nearest apex: hardest at the apex
+  // itself, released down the straights.
+  const near = CORNERS.reduce((a, c) =>
+    lapGap(pct, c.at) < lapGap(pct, a.at) ? c : a
+  );
+  const nearness = Math.max(0, 1 - lapGap(pct, near.at) / 0.055);
+  const pastApex = (pct - near.at + 1) % 1;
+
+  const brake = Math.max(0, Math.min(1, -slope / BRAKE_RATE));
+  /*
+   * Flat speed is not a lifted throttle. Reading the pedal straight off the
+   * gradient put throttle at 0 all the way down the Kemmel straight — the car
+   * is pinned there, it has simply run out of gears. So: braking ⇒ nothing,
+   * otherwise flat out, except for the first 2 % of the lap past an apex where
+   * it feeds in progressively, which is the shape a real trace has.
+   */
+  const throttle =
+    brake > 0.02
+      ? 0
+      : nearness > 0 && pastApex < 0.02
+        ? Math.max(0.25, pastApex / 0.02)
+        : 1;
+  const steer = near.dir * nearness * (1 - kmh / (V_MAX * 1.6));
+
+  const gear = gearFor(kmh);
+  const rpm = rpmFor(kmh, gear);
+  const pos = playerPosition(t);
+
+  // Fuel: burned down a stint, refilled at the stop. Monotonic within a stint,
+  // which is what lets both fuel readouts sample a per-lap burn from it.
+  const stintLap = lap % STINT_LAPS;
+  const burned = (stintLap + pct) * BURN_PER_LAP;
+  const fuelLevel = Math.max(1.2, TANK_CAPACITY - burned);
+  const fuelPct = fuelLevel / TANK_CAPACITY;
+
+  /*
+   * Tyres are spread across the heat scale on purpose: the fronts work harder
+   * than the rears at Spa and the left-hand tyres take the long right-handers,
+   * so the corners land on four different colours (green → orange) instead of
+   * the single green a flat ±6 °C sine gave every one of them. Each corner also
+   * gains temperature through the lap and sheds it on the straights.
+   */
+  const load = 0.5 + 0.5 * Math.sin(pct * Math.PI * 2 - 1.2);
+  const corner = (base: number, spread: number, i: number) => {
+    const mid = base + 5 * load + 1.5 * Math.sin(t * 0.07 + i);
+    return {
+      tempL: round(mid - spread, 1),
+      tempM: round(mid, 1),
+      tempR: round(mid + spread, 1),
+      pressure: round(168 + 3 * load + Math.sin(t * 0.05 + i), 1),
+    };
+  };
 
   return {
     sessionTime: round(t, 3),
-    speed: round(speedKmh / 3.6, 3),
-    speedKmh: round(speedKmh, 1),
+    speed: round(kmh / 3.6, 3),
+    speedKmh: round(kmh, 1),
     rpm: Math.round(rpm),
-    gear: Math.max(1, Math.min(6, Math.floor(1 + throttle * 5))),
+    gear,
     throttle: round(throttle, 3),
     brake: round(brake, 3),
     steeringWheelAngle: round(steer, 4),
     steeringDeg: round((steer * 180) / Math.PI, 1),
-    fuelLevel: round(TANK_CAPACITY * fuelPct, 2),
+    fuelLevel: round(fuelLevel, 2),
     fuelLevelPct: round(fuelPct, 3),
     lapCurrentLapTime: round(pct * car.pace, 3),
     lapBestLapTime: round(car.pace - 0.8, 3),
     lapLastLapTime: round(lapTime(car, t), 3),
-    lap: Math.floor(prog),
+    lap,
     lapDistPct: round(pct, 4),
-    playerCarPosition: null, // standings channel is authoritative
-    playerCarClassPosition: null,
-    latAccel: round(9 * Math.sin(t * 0.6), 2),
-    lonAccel: round(6 * (throttle - brake), 2),
+    // The standings channel is still authoritative, but the player's own
+    // position is a real iRacing channel and the Position widget reads it from
+    // here. Nulling it left that widget showing "P—" in every demo and every
+    // screenshot we have ever taken.
+    playerCarPosition: pos.overall,
+    playerCarClassPosition: pos.inClass,
+    latAccel: round(near.dir * nearness * 2.4 * (kmh / 100), 2),
+    lonAccel: round(6.5 * throttle - 11 * brake, 2),
     onPitRoad: false,
     airTemp: 22,
     trackTemp: round(30 + 2 * Math.sin(t * 0.01), 1),
     tyres: {
-      lf: corner(85, 0),
-      rf: corner(88, 1),
-      lr: corner(80, 2),
-      rr: corner(82, 3),
+      lf: corner(88, 4, 0), // works hardest — orange
+      rf: corner(83, 3.5, 1),
+      lr: corner(79, 3, 2),
+      rr: corner(76, 2.5, 3), // coolest — green
     },
   };
 }
 
 // ── session ─────────────────────────────────────────────────────────────────
 
-function driverEntry(car: MockCar): DriverEntry {
+function driverEntry(car: MockCar, t: number): DriverEntry {
   return {
     carIdx: car.idx,
     userId: 100000 + car.idx,
@@ -185,7 +414,11 @@ function driverEntry(car: MockCar): DriverEntry {
     countryName: COUNTRIES[car.idx % COUNTRIES.length][0],
     countryCode: COUNTRIES[car.idx % COUNTRIES.length][1],
     division: (car.idx % 5) + 1,
-    incidentCount: car.idx % 4,
+    /* Incidents accumulate. The player's used to be a flat 0 — which is the one
+       value that makes the session strip's INC field impossible to understand,
+       since it never leaves its resting state and never reaches the amber the
+       field is designed to warn with. Four by lap 11, climbing every few laps. */
+    incidentCount: car.idx % 4 === 0 ? 2 + Math.floor(t / 420) : car.idx % 4,
     isPaceCar: false,
     isSpectator: false,
     isAI: car.isAI,
@@ -194,7 +427,7 @@ function driverEntry(car: MockCar): DriverEntry {
 }
 
 export function mockSession(t: number): SessionInfo {
-  const drivers = MOCK_FIELD.map(driverEntry);
+  const drivers = MOCK_FIELD.map((car) => driverEntry(car, t));
   const classIds = [...new Set(MOCK_FIELD.map((c) => c.klass))];
   return {
     sessionId: "mock",
@@ -284,8 +517,32 @@ const GRID_POS = new Map<number, number>(
     .map((car, i) => [car.idx, i + 1])
 );
 
+/** The running order at `t`, leader first. */
+function runningOrder(t: number): MockCar[] {
+  return [...MOCK_FIELD].sort((a, b) => progress(b, t) - progress(a, t));
+}
+
+/**
+ * The player's own position, overall and in class — the same ordering the
+ * standings payload uses, exposed so the telemetry frame can carry iRacing's
+ * `PlayerCarPosition` channels rather than nulls.
+ */
+function playerPosition(t: number): { overall: number; inClass: number } {
+  const ordered = runningOrder(t);
+  const me = MOCK_FIELD[MOCK_PLAYER_IDX];
+  const overall = ordered.findIndex((c) => c.idx === me.idx) + 1;
+  const inClass =
+    ordered.filter((c) => c.klass === me.klass).findIndex((c) => c.idx === me.idx) + 1;
+  return { overall, inClass };
+}
+
 export function mockStandings(t: number): StandingsPayload {
-  const ordered = [...MOCK_FIELD].sort((a, b) => progress(b, t) - progress(a, t));
+  const ordered = runningOrder(t);
+  /* The order one lap ago, so the position-change arrow has something to show.
+     It was hard-coded to 0, which meant the column existed in every screenshot
+     and never once demonstrated what it is for. */
+  const prevOrder = runningOrder(Math.max(0, t - MOCK_FIELD[MOCK_PLAYER_IDX].pace));
+  const prevPos = new Map(prevOrder.map((c, i) => [c.idx, i + 1]));
   const leaderProg = progress(ordered[0], t);
   // Track position of the player, so we can express each car's on-track gap
   // relative to them (drives the Relative screen).
@@ -386,6 +643,23 @@ export function mockStandings(t: number): StandingsPayload {
     });
 
     const gained = (GRID_POS.get(car.idx) ?? 0) - (pos ?? 0);
+    const gainedLastLap = (prevPos.get(car.idx) ?? pos ?? 0) - (pos ?? 0);
+
+    /* Laps down. The GT4s lap ~12 s slower than the GT3s, so by lap 11 the tail
+       of the field is genuinely a lap behind — the payload just used to say
+       otherwise, which meant the "+1 lap" branch of the gap cell had never been
+       seen outside a real session. */
+    const lapsBehind = Math.floor(leaderProg - prog);
+    const classLeaderProg = progress(
+      (inClassOrder.get(car.klass.id) ?? [car])[0],
+      t
+    );
+    const classLapsBehind = Math.floor(classLeaderProg - prog);
+    /* Seconds behind the leader *of this car's class* — which is not the same
+       number as the gap to the overall leader, and used to be set to it. In a
+       grouped table that made every GT4 read three minutes behind its own class
+       leader, including the class leader itself. */
+    const classGap = (classLeaderProg - prog) * car.pace;
     // A rough projection: places are worth more against a strong field, and a
     // driver rated above the field average has more to lose than to gain.
     const iRatingChangeEst = Math.round(
@@ -409,15 +683,15 @@ export function mockStandings(t: number): StandingsPayload {
       bestLapTime: round(best, 3),
       gapToLeader: round(Math.max(0, gap), 3),
       interval: interval(car, ordered),
-      gapIsLaps: false,
-      lapsDown: 0,
-      gapToClassLeader: round(Math.max(0, gap), 3),
+      gapIsLaps: lapsBehind >= 1,
+      lapsDown: Math.max(0, lapsBehind),
+      gapToClassLeader: round(Math.max(0, classGap), 3),
       classInterval: interval(car, inClassOrder.get(car.klass.id) ?? []),
-      classGapIsLaps: false,
+      classGapIsLaps: classLapsBehind >= 1,
       intervalToPlayer,
       estCatchTime: null,
       positionsGainedTotal: gained,
-      positionsGainedLastLap: 0,
+      positionsGainedLastLap: gainedLastLap,
       iRating: car.iRating,
       iRatingChangeEst,
       lastLapStatus,
@@ -439,7 +713,9 @@ export function mockStandings(t: number): StandingsPayload {
       // Alternate the compound across the field so the tyre cell's colour
       // coding is visible at all in a mock session.
       tireCompound: car.idx % 3 === 0 ? 0 : car.idx % 3 === 1 ? 1 : 2,
-      tireLaps: lap,
+      // Laps on the *set*, not laps in the race — they reset at a stop, and a
+      // set age that only ever climbed made the cell read as a lap counter.
+      tireLaps: lap % STINT_LAPS,
     };
   });
 

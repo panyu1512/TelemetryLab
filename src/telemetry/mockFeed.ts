@@ -11,6 +11,8 @@
 
 import { pushLog } from "../lib/debugLog";
 import {
+  MOCK_START_OFFSET_S,
+  MOCK_TIME_SCALE,
   mockPlayerTelemetry,
   mockSession,
   mockStandings,
@@ -67,8 +69,16 @@ export class MockFeed {
     pushLog("info", "Mock data mode disabled.");
   }
 
+  /**
+   * Mock-session time. Two adjustments over the wall clock, both explained
+   * where they are declared in `lib/mockData.ts`: the feed opens mid-race
+   * rather than on a formation lap, and it runs `MOCK_TIME_SCALE` faster so
+   * lap-boundary figures arrive while someone is still looking at the screen.
+   */
   private elapsed(): number {
-    return (Date.now() - this.start_) / 1000;
+    return (
+      MOCK_START_OFFSET_S + ((Date.now() - this.start_) / 1000) * MOCK_TIME_SCALE
+    );
   }
 
   private pushTelemetry(): void {

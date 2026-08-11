@@ -312,17 +312,30 @@ function StrategyCard({ strategy }: { strategy: FuelStrategy }) {
 // ── fuel-save card ───────────────────────────────────────────────────────────
 
 function FuelSaveCard({ strategy }: { strategy: FuelStrategy }) {
-  const { saveNeededPct, targetPerLap, perLap, finishesOnFuel } = strategy;
+  const { saveNeededPct, targetPerLap, perLap, finishesOnFuel, status } = strategy;
 
   // Nothing to coach if we're finishing comfortably or have no burn data.
   if (perLap == null) return null;
 
   const finishing = finishesOnFuel === true || !saveNeededPct;
+  /*
+   * A deficit big enough to force a stop is not a saving target. The card used
+   * to quote the arithmetic whatever it came to — "Save 61%", which is not a
+   * number anybody can drive to, printed directly under a banner reading "Pit
+   * stop needed". `status` already separates the two cases: `save` is the one
+   * where lifting and coasting can still close the gap.
+   */
+  const mustPit = !finishing && status === "pit";
 
   return (
     <section className="rounded-card border border-border bg-surface-2 p-2.5">
       <SectionTitle icon={Leaf}>Fuel save</SectionTitle>
-      {finishing ? (
+      {mustPit ? (
+        <p className="text-xs text-muted">
+          Too far short to save — the stop below is required. Saving buys laps
+          in the window, not the finish.
+        </p>
+      ) : finishing ? (
         <p className="text-xs text-muted">
           No lift-and-coast needed — you're on target to finish on the current
           burn.
