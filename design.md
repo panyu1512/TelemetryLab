@@ -575,9 +575,9 @@ Seven things it is allowed that no app surface is:
    read at the top of the page is not.
 
 6. **Scroll-driven devices — three of them, and each one reports or reveals
-   rather than performs.** A section fade on entry; a drift-and-settle on the
-   product captures — 26 px of travel and a 3.5 % scale; and a progress rule
-   along the pinned nav that fills with how far down the page you are. That last one is the reason the set is
+   rather than performs.** A section fade on entry, a 26 px drift on the
+   product captures, and a progress rule along the pinned nav that fills with
+   how far down the page you are. That last one is the reason the set is
    allowed at all: a bar reporting a measured quantity is the same instrument
    voice as the § Session strip, not decoration borrowed from a template.
 
@@ -592,14 +592,6 @@ Seven things it is allowed that no app surface is:
      be sliding while you read it. It moves the `<figure>`, never the `<img>`
      inside it — an image shifting within its own frame reads as a bug; a
      framed picture drifting against the paragraph beside it reads as depth.
-   - **The scale finishes before the reading starts.** The settle runs 0.965 →
-     1 and ends at `entry 60%`, a third of the range the drift takes, so a
-     capture is at its true size for the whole time it is in front of the
-     reader. This is the difference between a reveal and a distraction: a
-     screenshot still growing while someone reads a lap time off it is a
-     screenshot fighting its own caption. The two channels ride the
-     independent `translate` and `scale` properties rather than sharing
-     `transform`, so neither has to know the other exists.
    - **Never above the fold.** The range ends inside `entry`, so anything
      already on screen when the page opens renders at full strength. A hero
      that fades in is a hero the reader waits for.
