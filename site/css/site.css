@@ -895,12 +895,37 @@ html[data-theme="dark"] .theme-toggle__moon {
  * watched; at the 80–120 px a parallax library would default to, a screenshot
  * whose entire job is to be *read* would be sliding while you read it.
  */
+/*
+ * The drift runs on the independent `translate` property rather than inside
+ * `transform`, so the settle below can own `scale` without the two animations
+ * fighting over one property. Two channels, two ranges, no compositing tricks.
+ */
 @keyframes reveal-drift {
   from {
-    transform: translateY(13px);
+    translate: 0 13px;
   }
   to {
-    transform: translateY(-13px);
+    translate: 0 -13px;
+  }
+}
+
+/*
+ * …and the settle: a capture arrives fractionally small and reaches full size
+ * as it clears the fold.
+ *
+ * 0.965, which is 30-odd pixels on a 1000 px wide shot — the same reasoning as
+ * the drift's amplitude. It is also on a *shorter* range than the drift: the
+ * scale finishes at `entry 60%`, so the image is at its true size for the
+ * whole time it is actually being read, and only the imperceptible drift is
+ * still running. A screenshot that is still growing while you read a lap time
+ * off it is a screenshot fighting its own caption.
+ */
+@keyframes reveal-settle {
+  from {
+    scale: 0.965;
+  }
+  to {
+    scale: 1;
   }
 }
 
@@ -920,9 +945,13 @@ html[data-theme="dark"] .theme-toggle__moon {
     /* The hero's own capture is exempt: it is on screen at load, and a hero
        that arrives already mid-animation reads as a page still loading. */
     .row .shot {
-      animation: reveal-drift linear both;
-      animation-timeline: view();
-      animation-range: entry 0% exit 100%;
+      animation:
+        reveal-drift linear both,
+        reveal-settle linear both;
+      animation-timeline: view(), view();
+      animation-range:
+        entry 0% exit 100%,
+        entry 0% entry 60%;
     }
   }
 }
