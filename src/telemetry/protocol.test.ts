@@ -1,6 +1,18 @@
 import { describe, expect, it } from "vitest";
 
-import { Channel, parseEnvelope, PROTOCOL_VERSION } from "./protocol";
+import type { Equals, Expect, ExpectFalse } from "../lib/typeAssert";
+import type {
+  BridgeMessage,
+  ChannelName,
+  PayloadFor,
+} from "./protocol";
+import { Channel, isChannelName, parseEnvelope, PROTOCOL_VERSION } from "./protocol";
+import type {
+  BridgeStatus,
+  PlayerTelemetry,
+  SessionInfo,
+  StandingsPayload,
+} from "./types";
 
 function frame(obj: unknown): string {
   return JSON.stringify(obj);
@@ -89,3 +101,48 @@ describe("parseEnvelope", () => {
     expect(parseEnvelope("42")).toBeNull();
   });
 });
+
+describe("isChannelName", () => {
+  it("accepts every declared channel", () => {
+    for (const name of Object.values(Channel)) {
+      expect(isChannelName(name)).toBe(true);
+    }
+  });
+
+  it("rejects a channel the client does not handle", () => {
+    expect(isChannelName("weather")).toBe(false);
+  });
+
+  it("makes parseEnvelope reject an unknown channel", () => {
+    // Previously such a frame was cast into a BridgeMessage that lied about its
+    // type; it must not reach the demuxer at all.
+    expect(
+      parseEnvelope(frame({ type: "weather", seq: 1, payload: {} })),
+    ).toBeNull();
+  });
+});
+
+// ── type-level contracts ─────────────────────────────────────────────────────
+// These never run; they fail the build if the protocol's inference regresses.
+
+/** Each channel narrows to exactly its declared payload. */
+export type _TelemetryPayload = Expect<
+  Equals<Extract<BridgeMessage, { type: "telemetry" }>["payload"], PlayerTelemetry>
+>;
+export type _SessionPayload = Expect<
+  Equals<PayloadFor<"session">, SessionInfo>
+>;
+export type _StandingsPayload = Expect<
+  Equals<PayloadFor<"standings">, StandingsPayload>
+>;
+export type _BridgePayload = Expect<Equals<PayloadFor<"bridge">, BridgeStatus>>;
+
+/** The union stays exhaustive: its `type` covers every channel, no more. */
+export type _TypeCoversChannels = Expect<
+  Equals<BridgeMessage["type"], ChannelName>
+>;
+
+/** A payload is never assignable to the wrong channel. */
+export type _NoCrossChannelPayload = ExpectFalse<
+  Equals<PayloadFor<"telemetry">, PayloadFor<"session">>
+>;

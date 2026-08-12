@@ -108,11 +108,8 @@ export const useWindowStore = create<WindowState>()((set, get) => ({
 // window, apply the OS-level click-through. We never re-broadcast (the sender
 // already did), so there is no feedback loop.
 
-subscribe("window:lock", (payload) => {
-  const { label, locked } = (payload ?? {}) as {
-    label?: string;
-    locked?: boolean;
-  };
+subscribe("window:lock", (event) => {
+  const { label, locked } = event ?? {};
   if (!label || typeof locked !== "boolean") return;
   useWindowStore.setState((s) => ({ locks: { ...s.locks, [label]: locked } }));
   if (label === WINDOW_LABEL) {

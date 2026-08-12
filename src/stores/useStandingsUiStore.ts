@@ -68,7 +68,7 @@ export interface StandingsUiState {
 
 const STORAGE_KEY = "telemetrylab.standings.ui.v1";
 
-interface Persisted {
+export interface Persisted {
   grouping: Grouping;
   followPlayer: boolean;
   columns: ColumnVisibilityMap;
@@ -167,8 +167,7 @@ export const useStandingsUiStore = create<StandingsUiState>((set, get) => {
 
 // Adopt standings-view changes made in the manager so an open standings overlay
 // updates its columns/grouping live.
-subscribe("standings-ui:changed", (payload) => {
-  const remote = payload as Persisted | undefined;
+subscribe("standings-ui:changed", (remote) => {
   if (!remote || typeof remote !== "object") return;
   applyingRemote = true;
   try {
@@ -189,3 +188,6 @@ subscribe("standings-ui:changed", (payload) => {
 
 // Re-export for consumers that build column toggles.
 export { CONFIGURABLE_COLUMNS };
+
+/** Public name for the snapshot this store broadcasts over the window bus. */
+export type StandingsUiSnapshot = Persisted;
