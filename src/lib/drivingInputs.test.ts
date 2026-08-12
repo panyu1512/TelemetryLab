@@ -68,10 +68,13 @@ describe("pedalsFor — approach", () => {
     );
     // Peak pressure arrives in the first half of the zone…
     expect(peakAt / sweep.length).toBeLessThan(0.5);
-    // …and the pedal is materially released by the apex (trail braking).
-    const apex = sweep[sweep.length - 1].brake;
-    expect(apex).toBeLessThan(sweep[peakAt].brake * 0.4);
-    expect(apex).toBeGreaterThan(0);
+    // …and the pedal is fully released before the apex, leaving the car
+    // neutral through the middle rather than trailing brake into it.
+    expect(sweep[sweep.length - 1].brake).toBe(0);
+    // The release is progressive, not a snap: the last pressure before zero is
+    // a small fraction of peak.
+    const lastOn = sweep.filter((s) => s.brake > 0).pop()!;
+    expect(lastOn.brake).toBeLessThan(sweep[peakAt].brake * 0.4);
   });
 
   it("does not pin the brake at a constant value through the zone", () => {
@@ -91,9 +94,14 @@ describe("pedalsFor — approach", () => {
 describe("pedalsFor — exit", () => {
   it("squeezes the throttle on instead of snapping to full", () => {
     const sweep = exitSweep();
-    expect(sweep[0].throttle).toBeGreaterThan(0);
-    expect(sweep[0].throttle).toBeLessThan(0.35);
+    // Picked up after the apex coast, and gently when it is.
+    const firstOn = sweep.find((s) => s.throttle > 0)!;
+    expect(firstOn.throttle).toBeLessThan(0.35);
     expect(sweep[sweep.length - 1].throttle).toBe(1);
+  });
+
+  it("stays off the throttle briefly past the apex", () => {
+    expect(exitSweep()[0].throttle).toBe(0);
   });
 
   it("applies throttle monotonically out of the corner", () => {
@@ -111,6 +119,46 @@ describe("pedalsFor — exit", () => {
     const full = (sev: number) =>
       exitSweep(sev).findIndex((s) => s.throttle >= 0.999);
     expect(full(1)).toBeGreaterThan(full(0));
+  });
+});
+
+describe("pedalsFor — off the pedals", () => {
+  it("leaves a neutral window on the way into the apex", () => {
+    const neutral = approachSweep().filter(
+      (s) => s.throttle === 0 && s.brake === 0,
+    );
+    // Both the lift before the brake and the release before the apex.
+    expect(neutral.length).toBeGreaterThan(3);
+  });
+
+  it("carries the coast across the apex, off both pedals", () => {
+    // The end of the approach and the start of the exit are both neutral, so
+    // the car rolls through the apex itself on neither pedal.
+    const intoApex = pedalsFor({ approach: 0.99, exit: null, severity: 0.8 });
+    const pastApex = pedalsFor({ approach: null, exit: 0.01, severity: 0.8 });
+    expect(intoApex).toEqual({ throttle: 0, brake: 0 });
+    expect(pastApex).toEqual({ throttle: 0, brake: 0 });
+  });
+
+  it("coasts for longer through a fast corner than a hairpin", () => {
+    const coastLen = (sev: number) =>
+      approachSweep(sev).filter((s) => s.throttle === 0 && s.brake === 0).length;
+    expect(coastLen(0)).toBeGreaterThan(coastLen(1));
+  });
+
+  it("stays off the pedals far longer on a lift-and-coast entry", () => {
+    const neutral = (lift: number) =>
+      Array.from({ length: 60 }, (_, i) =>
+        pedalsFor({ approach: i / 59, exit: null, severity: 0.8, lift }),
+      ).filter((s) => s.throttle === 0 && s.brake === 0).length;
+    expect(neutral(1)).toBeGreaterThan(neutral(0) * 1.5);
+  });
+
+  it("still gets on the brake on a lift-and-coast entry", () => {
+    const braked = Array.from({ length: 60 }, (_, i) =>
+      pedalsFor({ approach: i / 59, exit: null, severity: 0.8, lift: 1 }),
+    );
+    expect(Math.max(...braked.map((s) => s.brake))).toBeGreaterThan(0.5);
   });
 });
 
@@ -132,6 +180,8 @@ describe("drivePhase", () => {
     expect(drivePhase(phase({}))).toBe(DrivePhase.FlatOut);
     expect(drivePhase(phase({ approach: 0.01 }))).toBe(DrivePhase.Lift);
     expect(drivePhase(phase({ approach: 0.5 }))).toBe(DrivePhase.Braking);
+    expect(drivePhase(phase({ approach: 0.99 }))).toBe(DrivePhase.Coast);
+    expect(drivePhase(phase({ exit: 0.01 }))).toBe(DrivePhase.Coast);
     expect(drivePhase(phase({ exit: 0.2 }))).toBe(DrivePhase.Squeeze);
   });
 });
@@ -151,7 +201,7 @@ describe("cornerSeverity", () => {
 
 /** The phase union is derived from the const object, so the two cannot drift. */
 export type _PhaseUnion = Expect<
-  Equals<DrivePhase, "flat-out" | "lift" | "braking" | "squeeze">
+  Equals<DrivePhase, "flat-out" | "lift" | "coast" | "braking" | "squeeze">
 >;
 
 /** Pedal outputs stay readonly — callers must not mutate a sampled frame. */

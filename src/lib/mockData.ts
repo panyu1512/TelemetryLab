@@ -316,11 +316,32 @@ const CORNER_ZONES: readonly CornerZone[] = CORNERS.map((c) => ({
 }));
 
 /**
+ * Deterministic 0–1 value per (lap, corner). Drivers do not drive every corner
+ * identically lap after lap, and a mock that does reads as a loop. This keeps
+ * `mockPlayerTelemetry` a pure function of `t` while still varying.
+ */
+function cornerHash(lap: number, corner: number): number {
+  const x = Math.sin(lap * 12.9898 + corner * 78.233) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+/**
+ * How much of a lift-and-coast this lap's entry to a corner is. Most are
+ * ordinary; roughly a quarter are rolled in off the pedals early.
+ */
+const LIFT_CHANCE = 0.26;
+
+function liftFor(lap: number, corner: number): number {
+  const h = cornerHash(lap, corner);
+  return h < LIFT_CHANCE ? 0.35 + (h / LIFT_CHANCE) * 0.65 : 0;
+}
+
+/**
  * Locate the car in the corner cycle: inside a braking zone, inside a corner
  * exit, or on a straight. Braking wins when zones overlap — the next corner's
  * entry matters more than the last one's exit.
  */
-function cornerPhaseAt(pct: number) {
+function cornerPhaseAt(pct: number, lap: number) {
   let exit: { at: number; zone: CornerZone } | null = null;
 
   for (let i = 0; i < CORNERS.length; i++) {
@@ -332,6 +353,7 @@ function cornerPhaseAt(pct: number) {
         approach: 1 - toApex / zone.brake,
         exit: null,
         severity: zone.severity,
+        lift: liftFor(lap, i),
       };
     }
     const pastApex = (pct - c.at + 1) % 1;
@@ -392,7 +414,7 @@ export function mockPlayerTelemetry(t: number): PlayerTelemetry {
    * the two against each other, and the alternative is rebuilding the corner
    * model around the pedal shape.
    */
-  const { throttle, brake } = pedalsFor(cornerPhaseAt(pct));
+  const { throttle, brake } = pedalsFor(cornerPhaseAt(pct, lap));
   const steer = near.dir * nearness * (1 - kmh / (V_MAX * 1.6));
 
   const gear = gearFor(kmh);
