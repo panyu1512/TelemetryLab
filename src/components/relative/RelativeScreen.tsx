@@ -21,6 +21,19 @@
  * (last lap, car number, flags, brand, class badge) drop out one by one as the
  * overlay gets narrower, so the essential pos/driver/gap trio never crushes.
  *
+ * Lapped traffic is called out explicitly. `intervalToPlayer` is wrapped to
+ * ±half a lap, so a car a lap down sitting alongside the player is
+ * indistinguishable from a rival by gap alone. Any neighbour not on the
+ * player's lap therefore takes a danger-tinted row ground with a signed
+ * `+1L` / `-1L` tag — the ground says "not your lap", the sign says which way
+ * (see {@link lapRelation}; the entry's own `isLapped`/`lapsDown` are
+ * leader-relative and cannot answer this).
+ *
+ * The call-out is the row's ground rather than its ink for the same reason the
+ * player's own row is: ink in this table carries values, and red ink already
+ * means "behind" on the gap and "faster car, different class" on the closing
+ * icon. A tinted ground adds a third meaning without overloading either.
+ *
  * Closing-rate hints flag cars that are approaching the player faster than a
  * threshold. A ⚡ icon in the closing column indicates the car is gaining
  * meaningful seconds per lap; the icon is red when the faster car is also from
@@ -38,6 +51,14 @@ import { useDriversByIdx } from "../../stores/useSessionStore";
 import { useRelativeUiStore } from "../../stores/useRelativeUiStore";
 import type { DriverEntry, StandingsEntry } from "../../telemetry/types";
 import { lapTime } from "../../lib/format";
+import type { LapPositioned } from "../../lib/relativeLaps";
+import {
+  isOffLap,
+  LapRelation,
+  lapDelta,
+  lapRelation,
+  lapTag,
+} from "../../lib/relativeLaps";
 import { BrandIcon } from "../standings/cells";
 import { LAP_UNDERLINE } from "../standings/constants";
 import { CountryFlag } from "../ui/CountryFlag";
@@ -225,6 +246,8 @@ interface RowProps {
   classColor: string;
   playerLastLap: number | null;
   playerClassId: number;
+  /** Player lap position, for the lap-relation comparison. */
+  playerLap: LapPositioned;
   isOn: RelVisibility;
   template: string;
   isPlayer?: boolean;
@@ -238,6 +261,7 @@ function RowInner({
   classColor,
   playerLastLap,
   playerClassId,
+  playerLap,
   isOn,
   template,
   isPlayer = false,
@@ -259,6 +283,11 @@ function RowInner({
     closingRate > CLOSE_THRESHOLD &&
     Math.abs(gap ?? 0) < CLOSE_GAP_MAX;
 
+  // Lap standing vs. the player — the thing the wrapped gap cannot express.
+  const relation = isPlayer ? LapRelation.SameLap : lapRelation(entry, playerLap);
+  const offLap = isOffLap(relation);
+  const tag = isPlayer ? null : lapTag(lapDelta(entry, playerLap));
+
   const isDiffClass = !isPlayer && entry.carClassId !== playerClassId;
   const dimmed = !isPlayer && (entry.isRetired || !entry.isInWorld);
 
@@ -273,6 +302,12 @@ function RowInner({
       className={[
         "relative grid items-center gap-x-1 px-2 text-xs",
         isPlayer ? "rounded-sm bg-primary/10 ring-1 ring-inset ring-primary/35" : "",
+        // Off-lap traffic is called out as the row's *ground*, the same
+        // mechanism that says "this is you" — ground carries identity/status,
+        // ink stays free for values (§ Two colour systems, rule 3). Red as ink
+        // would have collided with the behind-gap and the closing-rate icon,
+        // which already mean something else in this very row.
+        offLap ? "rounded-sm bg-danger/10 ring-1 ring-inset ring-danger/35" : "",
         dimmed ? "opacity-35" : "",
       ]
         .filter(Boolean)
@@ -315,10 +350,23 @@ function RowInner({
 
       {/* driver name — plain `text` even for the player; the row's ground says
           "you" (§ Two colour systems, rule 3) */}
-      <div className="flex min-w-0 items-center">
+      <div className="flex min-w-0 items-center gap-1">
         <span className="truncate text-[13px] font-semibold text-text">
           {driver?.userName ?? `Car ${entry.carIdx}`}
         </span>
+        {tag && (
+          <span
+            className="shrink-0 font-mono text-[9px] font-bold leading-none tracking-[0.06em]"
+            style={{ color: "var(--color-danger)" }}
+            title={
+              relation === LapRelation.LappedBy
+                ? "A lap or more ahead — faster car coming through"
+                : "A lap or more behind — traffic you are lapping"
+            }
+          >
+            {tag}
+          </span>
+        )}
       </div>
 
       {/* car brand */}
@@ -494,7 +542,20 @@ export function RelativeScreen() {
 
   const isEmpty = order.length === 0;
 
-  const rowProps = { playerLastLap, playerClassId, isOn, template };
+  // The player's own lap position, against which every neighbour is compared.
+  // Defaults to a no-lap car so rows classify as Unknown (never as lapped)
+  // while the player's own data is still missing.
+  // Memoized on the two values it holds: `Row` is memoized, and a fresh object
+  // every render would re-render every row on every telemetry frame.
+  const playerLap = useMemo<LapPositioned>(
+    () => ({
+      lap: playerEntry?.lap ?? null,
+      lapDistPct: playerEntry?.lapDistPct ?? null,
+    }),
+    [playerEntry?.lap, playerEntry?.lapDistPct]
+  );
+
+  const rowProps = { playerLastLap, playerClassId, playerLap, isOn, template };
   // The first row of the table carries the labels when they are on: the
   // furthest car ahead, or the player when nobody is ahead of them.
   const labelRow = showColumnLabels;
