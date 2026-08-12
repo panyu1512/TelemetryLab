@@ -979,7 +979,10 @@ html[data-theme="dark"] .theme-toggle__moon {
 
 .needs__list {
   display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+  /* `auto-fit`, not a fixed 3: the list gained a fourth entry and a hard
+     column count would have parked it alone on a second row with two empty
+     cells beside it. */
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
   gap: var(--space-lg);
   margin: 0;
 }
@@ -987,6 +990,10 @@ html[data-theme="dark"] .theme-toggle__moon {
 .needs__list > div {
   display: grid;
   gap: var(--space-3xs);
+  /* Without this the two auto rows stretch to the tallest column in the row,
+     which pushes each `dd` down by half the difference and leaves the short
+     entries floating clear of their own headings. */
+  align-content: start;
 }
 
 .needs__list dt {

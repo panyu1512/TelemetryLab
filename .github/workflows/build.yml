@@ -8,6 +8,8 @@ on:
 
 permissions:
   contents: write # needed to publish the .msi as a release asset
+  id-token: write # sign the build provenance attestation
+  attestations: write # and record it against the repository
 
 jobs:
   build:
@@ -74,6 +76,55 @@ jobs:
           path: src-tauri/target/release/bundle/msi/*.msi
           if-no-files-found: error
 
+      # 7. Provenance and a checksum — the two things a user can check about an
+      #    unsigned installer.
+      #
+      #    The .msi is not code-signed, so Windows SmartScreen shows "Editor
+      #    desconocido" and asks the user to trust it on nothing. A certificate
+      #    would put a name in that dialog; these two do not remove the warning,
+      #    but they replace "trust me" with something checkable:
+      #
+      #      · the attestation cryptographically ties this exact .msi to this
+      #        workflow, this commit and this repository. `gh attestation
+      #        verify` proves the file came from here and was not rebuilt or
+      #        tampered with by whoever is hosting the download.
+      #      · the SHA-256 lets someone confirm the bytes they downloaded are
+      #        the bytes we published, without any tooling but `certutil`.
+      #
+      #    The attestation is gated on the repository being public. Artifact
+      #    attestations are free for public repositories on every plan, but a
+      #    *private* repository needs GitHub Enterprise Cloud — on Free or Pro
+      #    the step fails, and a release build that dies after compiling a good
+      #    installer is a worse outcome than a release without provenance. The
+      #    gate switches it on by itself if this repo is ever made public.
+      - name: Attest build provenance
+        if: ${{ github.event.repository.private == false }}
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: src-tauri/target/release/bundle/msi/*.msi
+
+      - name: Checksum the installer
+        id: msi
+        shell: pwsh
+        run: |
+          $msi = Get-ChildItem src-tauri/target/release/bundle/msi/*.msi |
+            Select-Object -First 1
+          # Two spaces between hash and filename: the format `sha256sum -c`
+          # and `certutil` users expect.
+          "$((Get-FileHash $msi -Algorithm SHA256).Hash.ToLower())  $($msi.Name)" |
+            Out-File -FilePath SHA256SUMS.txt -Encoding ascii
+          Get-Content SHA256SUMS.txt
+          # The installer's filename carries the version, so the release notes
+          # cannot hard-code it.
+          "name=$($msi.Name)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding ascii
+
+      - name: Upload checksum artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: iracing-telemetry-sha256
+          path: SHA256SUMS.txt
+          if-no-files-found: error
+
       # ...and as a GitHub Release asset when triggered by a version tag. The
       # body is that version's CHANGELOG section — release.yml wrote it, so it
       # is prose someone chose rather than a list of commit subjects.
@@ -86,10 +137,56 @@ jobs:
           node scripts/release.mjs notes "${GITHUB_REF_NAME}" > RELEASE_NOTES.md \
             || echo "See [CHANGELOG.md](CHANGELOG.md)." > RELEASE_NOTES.md
 
+          # Every release says the same thing about the SmartScreen warning,
+          # because every release triggers it. Saying it here means the answer
+          # is on the page the user is already looking at when they hit it,
+          # rather than somewhere they would have to think to go looking.
+          {
+            echo
+            echo "---"
+            echo
+            echo "### Installing on Windows"
+            echo
+            echo "Windows will show **\"Windows protegió su PC / Windows protected your PC\"**"
+            echo "and name the publisher as unknown. That is expected: this installer is not"
+            echo "code-signed, and SmartScreen blocks anything it cannot attribute to a"
+            echo "publisher. Choose **More info → Run anyway** to continue."
+            echo
+            echo "You do not have to take that on trust — check the bytes you downloaded"
+            echo "against the ones this workflow built:"
+            echo
+            echo '```powershell'
+            echo "certutil -hashfile .\\${MSI_NAME} SHA256"
+            echo '```'
+            echo
+            echo "Expected SHA-256:"
+            echo
+            echo '```'
+            cat SHA256SUMS.txt
+            echo '```'
+
+            # Only offer the provenance check when there is one to run: the
+            # attestation step above is gated on the repository being public.
+            if [ "${IS_PRIVATE}" = "false" ]; then
+              echo
+              echo "You can also confirm the file came from this repository's own build,"
+              echo "rather than from whoever handed it to you:"
+              echo
+              echo '```powershell'
+              echo "gh attestation verify .\\${MSI_NAME} --repo ${GITHUB_REPOSITORY}"
+              echo '```'
+            fi
+          } >> RELEASE_NOTES.md
+        env:
+          MSI_NAME: ${{ steps.msi.outputs.name }}
+          IS_PRIVATE: ${{ github.event.repository.private }}
+
       - name: Publish release asset
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
-          files: src-tauri/target/release/bundle/msi/*.msi
+          files: |
+            src-tauri/target/release/bundle/msi/*.msi
+            SHA256SUMS.txt
           body_path: RELEASE_NOTES.md
           fail_on_unmatched_files: true
