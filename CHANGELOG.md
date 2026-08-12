@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A `.exe` installer, and it does not ask for administrator rights.** The
+  Windows build now produces an NSIS `-setup.exe` alongside the `.msi`, and it
+  is the one you want: it installs into your own user profile, so there is no
+  UAC prompt and no Windows Installer wizard to click through, and it opens
+  the app when it finishes. The `.msi` remains for per-machine and managed
+  deployment.
+
+### Changed
+
+- **The download link downloads.** It used to open the release page and leave
+  you to find the file. Each release now publishes a copy of the installer
+  under a fixed name, `TelemetryLab-setup.exe`, so the site can link straight
+  at the newest one — the versioned files beside it carry the version in their
+  names and therefore cannot be linked to permanently. The stable copy is
+  listed in `SHA256SUMS.txt` under its own name, so a direct download is still
+  verifiable.
+
+### Fixed
+
+- The site described the installer as a `.msi` after the `.exe` became the
+  recommended download, and never said what installing actually does to the
+  machine. It now says both.
+- Links inside running prose used a control sized for standalone tapping —
+  44 px tall with its own padding — which opened a gap before the punctuation
+  that followed and inflated the line box around it.
+
 ## [1.0.0] - 2026-08-12
 
 ### Added
