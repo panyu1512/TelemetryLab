@@ -620,6 +620,14 @@ Seven things it is allowed that no app surface is:
      clears 4.5:1 against paper instead of against ink. The values are
      measured, and the measurements are in
      [`site/css/tokens.css`](site/css/tokens.css) beside them.
+
+     Two of them moved on the pass that added rule 8, both by lightness only.
+     **`warning` was failing** — 4.17:1 on the old paper, below the floor this
+     bullet claims — and went from L 58% to L 54% for 4.6:1. And **the paper
+     itself is a tone below `surface` now** rather than above it: at L 98.6%
+     the page was brighter than every card sitting on it, which inverts the
+     elevation direction the dark theme uses and reads as a document rather
+     than as an instrument. `bg` L 96.4%, `surface` L 98.4%.
    - **`--color-timing-bg` stays near-black in both.** It grounds the product
      captures, and those are screenshots of a dark app. A light frame around a
      dark picture is a frame fighting its picture.
@@ -640,6 +648,48 @@ Seven things it is allowed that no app surface is:
    This is the only script on the surface and the only script this system has
    outside the app itself. Anything else that wants to be added here has to
    argue for itself the way this did.
+
+8. **The product's own readout devices, at page scale.** Rule 6 admitted the
+   progress rule on the argument that *a bar reporting a measured quantity is
+   the same instrument voice as the § Session strip*. Two devices now cash that
+   argument in properly, and both are the app's own furniture rather than
+   anything borrowed from a marketing template.
+
+   - **The page's session strip** (`.readout`) sits in the dock under the nav
+     row: the six sections as mono micro-labels, with the one you are reading
+     filled. It is the § Session strip's grammar exactly — a row of fields, one
+     fill, and the fill marks the state that changes what you do next. It takes
+     `primary` (§ Theme: selection) and `on-accent` ink (§ Theme rule 1).
+
+     It costs **no JavaScript**, per rule 6's fourth fence: six `view()`
+     timelines declared on the sections and referenced from the dock through a
+     `timeline-scope` on `:root`. The scope has to be on the root and not on
+     `main` — the sections that *define* the timelines are inside `main`, the
+     strip that *references* them is not, and the scope must cover both. Where
+     scroll-driven animations are unavailable the strip is six plain links,
+     which is what it is anyway.
+
+     **The nav row above it is still N9.** Wordmark left, actions right,
+     nothing between. This is a readout *below* the nav, not links moved into
+     it — and it is the only wayfinding on a page ~5,600 px tall.
+
+   - **The section band** (`.band`) opens every section, including the hero, in
+     the § Class band's grammar: a chip naming the subject, then micro-label /
+     value pairs carrying that subject's own numbers — `COLUMNS 15 · ALWAYS 3 ·
+     ROW 32px`. Every value is a fact checkable in this repo or in a capture on
+     the page, so the band is inside the honest-copy rule below rather than an
+     exception to it. Its 3 px leading edge is the standings row's left border
+     at a larger scale — one device, three sizes — and it takes
+     `border-strong` rather than a status colour, because on this surface it
+     carries structure and there is no identity colour to quarantine
+     (§ Two colour systems is a product-surface rule).
+
+     This is the answer to a page that hosted the instrument in screenshots but
+     did not speak its language anywhere else: the hero was a headline, a lede
+     and a filled button, which is the layout of every other product page and
+     told the reader nothing this product is. Numbered section markers were
+     tried and cut — the fill already reports position, and an ordinal beside
+     it is the decoration this system does not use.
 
 Two rules it does *not* get to break:
 
@@ -698,10 +748,14 @@ band's actual job (per-class data).
   change still dates the screenshots silently until someone runs it. Wiring it
   into a release step would close that.
 
-- The overlay widgets' own header labels are still sans; they were deliberately
-  left out of the Manager redesign so the preview keeps showing overlays
-  exactly as they render over the game. Aligning them to the mono nomenclature
-  rule is a separate change that should be verified against real footage.
+- ~~The overlay widgets' own header labels are still sans.~~ **Done** — the
+  widget header and the two micro-labels in `widgets/primitives.tsx` are mono
+  now, which is what § Typography always said they should be: a widget header
+  names a channel, and a channel name is nomenclature rather than prose. The
+  caveat this entry carried still stands and has not been discharged: it was
+  verified in the Manager preview and against the mock feed, **not against real
+  footage**. If mono at 10 px reads worse over a bright kerb than sans did,
+  that is the finding this entry was reserving judgement for.
 - `--color-danger` and `--color-warning` have no `-dim` counterpart, so a
   filled destructive button has no hover fill. Not needed yet: destructive
   actions here are outline-at-rest.

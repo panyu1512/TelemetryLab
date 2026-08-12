@@ -174,9 +174,20 @@
 
 @media (prefers-color-scheme: light) {
   :root:not([data-theme="dark"]) {
-    --color-bg: oklch(98.6% 0.0018 256);
-    --color-surface: oklch(96.2% 0.004 258);
-    --color-surface-2: oklch(93.4% 0.006 260);
+/* Paper, not white. The dark theme's `bg` is the page and `surface` sits
+       above it in lightness; on light paper elevation runs the same direction,
+       so `surface` is the *lighter* of the two and the page is a tone below it.
+       At 98.6% the page was brighter than every card on it, which reads as a
+       document rather than as an instrument.
+
+       Measured against this paper (WCAG, sRGB): text 15.6:1 · muted 7.0:1 ·
+       faint 5.0:1 · accent 5.4:1 · danger 6.0:1 · warning 4.6:1 ·
+       primary 5.4:1 · sector-purple 6.5:1. `warning` was 4.17:1 before this
+       pass — below the 4.5 floor on the old paper too — and moved from L 58%
+       to L 54% to clear it. Only lightness moved; no meaning did. */
+    --color-bg: oklch(96.4% 0.0035 256);
+    --color-surface: oklch(98.4% 0.0022 258);
+    --color-surface-2: oklch(93% 0.0065 260);
     --color-border: oklch(86% 0.008 258);
     --color-border-strong: oklch(76% 0.012 256);
 
@@ -187,7 +198,7 @@
     --color-accent: oklch(48% 0.14 154);
     --color-accent-dim: oklch(42% 0.13 155);
     --color-danger: oklch(50% 0.19 26);
-    --color-warning: oklch(58% 0.13 81);
+    --color-warning: oklch(54% 0.135 81);
     --color-primary: oklch(50% 0.17 254);
     --color-primary-dim: oklch(42% 0.16 255);
     --color-sector-purple: oklch(48% 0.19 301);
@@ -200,9 +211,9 @@
 }
 
 :root[data-theme="light"] {
-  --color-bg: oklch(98.6% 0.0018 256);
-  --color-surface: oklch(96.2% 0.004 258);
-  --color-surface-2: oklch(93.4% 0.006 260);
+  --color-bg: oklch(96.4% 0.0035 256);
+  --color-surface: oklch(98.4% 0.0022 258);
+  --color-surface-2: oklch(93% 0.0065 260);
   --color-border: oklch(86% 0.008 258);
   --color-border-strong: oklch(76% 0.012 256);
 
@@ -213,7 +224,7 @@
   --color-accent: oklch(48% 0.14 154);
   --color-accent-dim: oklch(42% 0.13 155);
   --color-danger: oklch(50% 0.19 26);
-  --color-warning: oklch(58% 0.13 81);
+  --color-warning: oklch(54% 0.135 81);
   --color-primary: oklch(50% 0.17 254);
   --color-primary-dim: oklch(42% 0.16 255);
   --color-sector-purple: oklch(48% 0.19 301);

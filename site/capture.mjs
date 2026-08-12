@@ -23,6 +23,11 @@
  *   · `reducedMotion: "reduce"` — rows are positioned by `translateY` with a
  *     220 ms glide, so a capture fired mid-swap catches two rows overlapping.
  *     Reduced motion switches the glide off and every row sits at its offset.
+ *   · the fuel capture's `alt` text in `index.html` quotes numbers off the
+ *     panel — fuel laps, litres in tank. The mock feed is wall-clock driven, so
+ *     those move on every re-shoot. **Re-read that alt after running this**, or
+ *     the page describes a picture it is no longer showing, which is the one
+ *     accessibility bug a sighted reviewer cannot see.
  *   · every shot waits for a completed lap, because the two fuel readouts have
  *     no per-lap burn until one lands and an empty panel is a bad
  *     advertisement for a full one. That wait used to be three minutes; the
@@ -52,17 +57,40 @@ const PAST_A_LAP_MS = 40_000;
  * name, route, viewport, and how long to let the feed run before the shutter.
  * Viewports are CSS px; the files land at 2× those dimensions.
  */
+/*
+ * Heights are measured, not guessed.
+ *
+ * A viewport that ends mid-row is the one way these captures can look sloppy
+ * while being perfectly honest: the overlay paints its paper to the full
+ * viewport, so a height that falls between two row boundaries crops the last
+ * row through its type and the frame closes on a half-glyph. Every height
+ * below therefore lands just past a row boundary, with a few px of paper as
+ * margin.
+ *
+ * The boundaries at these widths, from the live app: the standings field runs
+ * strip 26 · [band 30 + gap 4 + 6 rows] · CLASS_GAP 10 · [band 30 + gap 4 +
+ * 6 rows], with row bottoms at 71 · 107 · 139 … 267 for GT3 and 307 · 343 …
+ * 503 for GT4. Re-measure after any change to `constants.ts` geometry.
+ */
 const SHOTS = [
   // The hero capture. Narrow on purpose — it doubles as the proof that the
   // table drops columns to fit rather than growing a scrollbar.
-  { name: "standings-compact", route: "?overlay=standings", w: 620, h: 372 },
-  { name: "standings", route: "?overlay=standings", w: 1180, h: 420 },
-  { name: "relative", route: "?overlay=relative", w: 560, h: 452 },
+  // 381 = the second GT4 row's bottom (375) plus margin, so the group that
+  // proves the field is multi-class is not cut through its first two entries.
+  { name: "standings-compact", route: "?overlay=standings", w: 620, h: 381 },
+  // 512 = the whole two-class field (ends 503). This capture is the page's
+  // proof that the table groups by class; at 420 it cropped the GT4 group
+  // mid-row, which showed the reader four of six cars and a sliced fifth.
+  { name: "standings", route: "?overlay=standings", w: 1180, h: 512 },
+  // 472 fits five cars ahead, the player and four behind, all whole. At 452
+  // a thirteenth row was sliced by the frame.
+  { name: "relative", route: "?overlay=relative", w: 560, h: 472 },
   { name: "dashboard", route: "?overlay=dashboard", w: 1100, h: 620 },
   { name: "manager", route: "", w: 1400, h: 900, wait: PAST_A_LAP_MS },
   // Tall enough for the pit-strategies card, which stopped being collapsed and
-  // now always renders under the fold of the old 340 px frame.
-  { name: "fuel", route: "?overlay=fuel", w: 620, h: 560, wait: PAST_A_LAP_MS },
+  // now always renders under the fold of the old 340 px frame — and no taller:
+  // 560 left ~60 px of empty paper below the last card.
+  { name: "fuel", route: "?overlay=fuel", w: 620, h: 505, wait: PAST_A_LAP_MS },
 ];
 
 fs.mkdirSync(OUT, { recursive: true });

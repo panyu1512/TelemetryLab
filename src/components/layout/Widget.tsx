@@ -37,7 +37,7 @@ export function Widget({ def, data, onHide }: WidgetProps) {
         className={`${WIDGET_DRAG_HANDLE} flex shrink-0 cursor-grab items-center gap-2 active:cursor-grabbing`}
       >
         <Icon className="size-3.5 shrink-0 text-faint" strokeWidth={2} />
-        <h3 className="widget-title select-none truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">
+        <h3 className="widget-title select-none truncate font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">
           {def.title}
         </h3>
         <span className="header-rule" aria-hidden />
