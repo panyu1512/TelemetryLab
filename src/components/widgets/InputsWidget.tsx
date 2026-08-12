@@ -93,8 +93,12 @@ function VBar({
         {Math.round(v * 100)}
       </span>
       <div className="relative w-full flex-1 overflow-hidden rounded-sm bg-surface-2">
+        {/* No CSS transition: frames arrive at 30 Hz, which is already smooth,
+            and a 75 ms ease on `height` low-passed the very thing this bar
+            exists to show — the initial stab at the brake never reached its
+            peak before the pedal had started trailing off again. */}
         <div
-          className="absolute inset-x-0 bottom-0 rounded-sm transition-[height] duration-75"
+          className="absolute inset-x-0 bottom-0 rounded-sm"
           style={{ height: `${v * 100}%`, background: fill }}
         />
       </div>
@@ -129,7 +133,9 @@ function SteeringIndicator({ deg }: { deg: number | null | undefined }) {
       <div className="relative h-2 min-w-0 flex-1 rounded-full bg-surface-2">
         <span className="absolute left-1/2 top-0 h-full w-px -translate-x-1/2 bg-border-strong" />
         <div
-          className="absolute top-0 h-full rounded-full bg-accent transition-all duration-100"
+          // Likewise untweened — a 100 ms ease made quick corrections read as
+          // one slow sweep.
+          className="absolute top-0 h-full rounded-full bg-accent"
           style={{
             width: `${frac * 50}%`,
             left: toLeft ? `${50 - frac * 50}%` : "50%",
