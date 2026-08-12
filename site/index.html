@@ -576,17 +576,18 @@
               <dt>Windows, and iRacing</dt>
               <dd>
                 The bridge reads iRacing's shared memory, which exists only on
-                Windows.
+                Windows. The installer puts the app in your own user profile —
+                no administrator rights, nothing written to Program Files.
               </dd>
             </div>
             <div>
               <dt>Windows will warn you</dt>
               <dd>
-                The installer is a signed-by-nobody <code>.msi</code>, so
+                The setup <code>.exe</code> is signed by nobody, so
                 SmartScreen calls the publisher unknown and asks you to trust it
                 on nothing. Choose <b>More info</b>, then <b>Run anyway</b>. You
-                do not have to take it on trust either: every release
-                publishes the installer's SHA-256, so you can check the file you
+                do not have to take it on trust either: every release publishes
+                the installer's SHA-256, so you can check that the file you
                 downloaded is the file that was built. It is on the
                 <a
                   class="link-q"
