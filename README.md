@@ -309,14 +309,25 @@ or `custom` with an exact `X.Y.Z`. It re-runs the frontend gates, then:
 2. Converts the CHANGELOG's `## [Unreleased]` section into a dated
    `## [X.Y.Z]` section and refreshes the compare links. An empty
    `[Unreleased]` aborts the release: there is nothing to ship.
-3. Commits `chore(release): vX.Y.Z`, tags `vX.Y.Z`, and pushes both.
+3. Commits `chore(release): vX.Y.Z`, tags `vX.Y.Z`, pushes both, and
+   dispatches `build.yml` against the new tag.
 
 The bump/extract logic lives in [`scripts/release.mjs`](scripts/release.mjs)
 (`bump` and `notes` modes) so it can be run and tested outside CI.
 
 [`.github/workflows/build.yml`](.github/workflows/build.yml) is the **build**
-pipeline, started by the tag that `release.yml` pushed (or by any `v*` tag, or
-manually). It runs on `windows-latest` and:
+pipeline. `release.yml` dispatches it against the tag it just pushed; it also
+runs on any `v*` tag pushed by hand, or on demand.
+
+> **Why dispatch rather than rely on the tag?** GitHub does not start workflow
+> runs from events created with the default `GITHUB_TOKEN` — a rule that stops
+> workflows triggering themselves in a loop. A tag pushed by `release.yml` is
+> such an event, so `build.yml`'s `push: tags: v*` trigger never fires for it
+> and no installer is produced. `workflow_dispatch` is one of the two
+> documented exceptions, so `release.yml` calls it explicitly. If a release
+> ever lands with no `.msi`, this is the first thing to check.
+
+It runs on `windows-latest` and:
 
 1. Builds the bridge into a onefile `iracing-bridge.exe` with PyInstaller.
 2. Copies it to `src-tauri/binaries/iracing-bridge-x86_64-pc-windows-msvc.exe`
