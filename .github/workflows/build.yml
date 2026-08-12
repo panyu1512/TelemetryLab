@@ -109,14 +109,20 @@ jobs:
         run: |
           $msi = Get-ChildItem src-tauri/target/release/bundle/msi/*.msi |
             Select-Object -First 1
+          # GitHub replaces spaces with dots when it stores a release asset, and
+          # this product's name has one — so the file the user ends up with is
+          # NOT named $msi.Name. Both the checksum line and the verify command
+          # have to use the name they will actually have on disk, or the check
+          # they paste fails on a file that does not exist.
+          $asset = $msi.Name -replace ' ', '.'
           # Two spaces between hash and filename: the format `sha256sum -c`
           # and `certutil` users expect.
-          "$((Get-FileHash $msi -Algorithm SHA256).Hash.ToLower())  $($msi.Name)" |
+          "$((Get-FileHash $msi -Algorithm SHA256).Hash.ToLower())  $asset" |
             Out-File -FilePath SHA256SUMS.txt -Encoding ascii
           Get-Content SHA256SUMS.txt
           # The installer's filename carries the version, so the release notes
           # cannot hard-code it.
-          "name=$($msi.Name)" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding ascii
+          "asset=$asset" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding ascii
 
       - name: Upload checksum artifact
         uses: actions/upload-artifact@v4
@@ -156,7 +162,7 @@ jobs:
             echo "against the ones this workflow built:"
             echo
             echo '```powershell'
-            echo "certutil -hashfile .\\${MSI_NAME} SHA256"
+            echo "certutil -hashfile '.\\${ASSET_NAME}' SHA256"
             echo '```'
             echo
             echo "Expected SHA-256:"
@@ -173,12 +179,12 @@ jobs:
               echo "rather than from whoever handed it to you:"
               echo
               echo '```powershell'
-              echo "gh attestation verify .\\${MSI_NAME} --repo ${GITHUB_REPOSITORY}"
+              echo "gh attestation verify '.\\${ASSET_NAME}' --repo ${GITHUB_REPOSITORY}"
               echo '```'
             fi
           } >> RELEASE_NOTES.md
         env:
-          MSI_NAME: ${{ steps.msi.outputs.name }}
+          ASSET_NAME: ${{ steps.msi.outputs.asset }}
           IS_PRIVATE: ${{ github.event.repository.private }}
 
       - name: Publish release asset
