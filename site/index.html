@@ -199,9 +199,14 @@
               driving cluster — each one its own window, sitting over the game.
             </p>
             <div class="hero__actions">
+              <!-- Straight at the file. `releases/latest/download/<name>`
+                   always resolves to the newest release, which is why the
+                   build publishes a copy under a name that does not carry the
+                   version — see build.yml. One click, no release page to
+                   read. -->
               <a
                 class="chip-solid"
-                href="https://github.com/panyu1512/TelemetryLab/releases/latest"
+                href="https://github.com/panyu1512/TelemetryLab/releases/latest/download/TelemetryLab-setup.exe"
                 >Download for Windows</a
               >
               <!-- Drawn here rather than loaded from Buy Me a Coffee's CDN: this
@@ -571,20 +576,21 @@
               <dt>Windows, and iRacing</dt>
               <dd>
                 The bridge reads iRacing's shared memory, which exists only on
-                Windows.
+                Windows. The installer puts the app in your own user profile —
+                no administrator rights, nothing written to Program Files.
               </dd>
             </div>
             <div>
               <dt>Windows will warn you</dt>
               <dd>
-                The installer is a signed-by-nobody <code>.msi</code>, so
+                The setup <code>.exe</code> is signed by nobody, so
                 SmartScreen calls the publisher unknown and asks you to trust it
                 on nothing. Choose <b>More info</b>, then <b>Run anyway</b>. You
-                do not have to take it on trust either: every release
-                publishes the installer's SHA-256, so you can check the file you
+                do not have to take it on trust either: every release publishes
+                the installer's SHA-256, so you can check that the file you
                 downloaded is the file that was built. It is on the
                 <a
-                  class="link-q"
+                  class="link-inline"
                   href="https://github.com/panyu1512/TelemetryLab/releases/latest"
                   >release page</a
                 >, with the command that checks it.
@@ -630,7 +636,7 @@
           <div class="foot__links">
             <a
               class="link-q"
-              href="https://github.com/panyu1512/TelemetryLab/releases/latest"
+              href="https://github.com/panyu1512/TelemetryLab/releases/latest/download/TelemetryLab-setup.exe"
               >Download</a
             >
             <a

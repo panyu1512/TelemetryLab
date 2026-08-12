@@ -68,23 +68,31 @@ jobs:
       - name: Tauri build
         run: npm run tauri build
 
-      # 6. Upload the installer as a workflow artifact...
-      - name: Upload MSI artifact
+      # 6. Upload both installers as workflow artifacts.
+      #
+      #    Two bundles, and the .exe is the one people should use: NSIS with
+      #    `installMode: currentUser` installs into %LOCALAPPDATA% with no
+      #    Administrator prompt and no Windows Installer wizard — double-click,
+      #    it installs, it opens. The .msi is kept for the per-machine and
+      #    managed-deployment cases an MSI is actually good at.
+      - name: Upload installers
         uses: actions/upload-artifact@v4
         with:
-          name: iracing-telemetry-msi
-          path: src-tauri/target/release/bundle/msi/*.msi
+          name: iracing-telemetry-installers
+          path: |
+            src-tauri/target/release/bundle/nsis/*-setup.exe
+            src-tauri/target/release/bundle/msi/*.msi
           if-no-files-found: error
 
       # 7. Provenance and a checksum — the two things a user can check about an
       #    unsigned installer.
       #
-      #    The .msi is not code-signed, so Windows SmartScreen shows "Editor
+      #    Neither installer is code-signed, so Windows SmartScreen shows "Editor
       #    desconocido" and asks the user to trust it on nothing. A certificate
       #    would put a name in that dialog; these two do not remove the warning,
       #    but they replace "trust me" with something checkable:
       #
-      #      · the attestation cryptographically ties this exact .msi to this
+      #      · the attestation cryptographically ties these exact files to this
       #        workflow, this commit and this repository. `gh attestation
       #        verify` proves the file came from here and was not rebuilt or
       #        tampered with by whoever is hosting the download.
@@ -101,28 +109,53 @@ jobs:
         if: ${{ github.event.repository.private == false }}
         uses: actions/attest-build-provenance@v2
         with:
-          subject-path: src-tauri/target/release/bundle/msi/*.msi
+          subject-path: |
+            src-tauri/target/release/bundle/nsis/*-setup.exe
+            src-tauri/target/release/bundle/msi/*.msi
 
-      - name: Checksum the installer
+      - name: Checksum the installers
         id: msi
         shell: pwsh
         run: |
-          $msi = Get-ChildItem src-tauri/target/release/bundle/msi/*.msi |
-            Select-Object -First 1
+          $files = @(
+            Get-ChildItem src-tauri/target/release/bundle/nsis/*-setup.exe
+            Get-ChildItem src-tauri/target/release/bundle/msi/*.msi
+          )
+          if (-not $files) { throw "no installers were produced" }
+
+          # A stable-named copy of the .exe, so the site can link straight at
+          # the download instead of at the release page.
+          #
+          # GitHub serves `releases/latest/download/<name>` and always resolves
+          # it to the newest release — but only for an exact filename, and every
+          # other asset here carries the version in its name, which changes
+          # every release. This copy is the one thing with a name that does not
+          # move. It is byte-identical to the versioned .exe beside it, and it
+          # is hashed below under its own name so a direct download can still be
+          # verified.
+          $stable = "TelemetryLab-setup.exe"
+          $setup = $files | Where-Object { $_.Extension -eq ".exe" } | Select-Object -First 1
+          Copy-Item $setup.FullName $stable -Force
+          $files += Get-Item $stable
+
           # GitHub replaces spaces with dots when it stores a release asset, and
-          # this product's name has one — so the file the user ends up with is
-          # NOT named $msi.Name. Both the checksum line and the verify command
-          # have to use the name they will actually have on disk, or the check
+          # this product's name has one — so the files the user ends up with are
+          # NOT named $file.Name. Both the checksum lines and the verify command
+          # have to use the names they will actually have on disk, or the check
           # they paste fails on a file that does not exist.
-          $asset = $msi.Name -replace ' ', '.'
-          # Two spaces between hash and filename: the format `sha256sum -c`
-          # and `certutil` users expect.
-          "$((Get-FileHash $msi -Algorithm SHA256).Hash.ToLower())  $asset" |
-            Out-File -FilePath SHA256SUMS.txt -Encoding ascii
+          $lines = foreach ($f in $files) {
+            $asset = $f.Name -replace ' ', '.'
+            # Two spaces between hash and filename: the format `sha256sum -c`
+            # and `certutil` users expect.
+            "$((Get-FileHash $f -Algorithm SHA256).Hash.ToLower())  $asset"
+          }
+          $lines | Out-File -FilePath SHA256SUMS.txt -Encoding ascii
           Get-Content SHA256SUMS.txt
-          # The installer's filename carries the version, so the release notes
-          # cannot hard-code it.
-          "asset=$asset" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding ascii
+
+          # The .exe is the recommended download, so it is the one the release
+          # notes name in the verify command. Its filename carries the version,
+          # so the notes cannot hard-code it.
+          "asset=$stable" | Out-File -FilePath $env:GITHUB_OUTPUT -Append -Encoding ascii
 
       - name: Upload checksum artifact
         uses: actions/upload-artifact@v4
@@ -153,8 +186,13 @@ jobs:
             echo
             echo "### Installing on Windows"
             echo
+            echo "Download the **\`-setup.exe\`** and run it. It installs for the current"
+            echo "user only, so there is no Administrator prompt, and it opens the app when"
+            echo "it finishes. The \`.msi\` beside it is the same application packaged for"
+            echo "per-machine or managed deployment — you do not need it."
+            echo
             echo "Windows will show **\"Windows protegió su PC / Windows protected your PC\"**"
-            echo "and name the publisher as unknown. That is expected: this installer is not"
+            echo "and name the publisher as unknown. That is expected: neither installer is"
             echo "code-signed, and SmartScreen blocks anything it cannot attribute to a"
             echo "publisher. Choose **More info → Run anyway** to continue."
             echo
@@ -192,6 +230,8 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
+            TelemetryLab-setup.exe
+            src-tauri/target/release/bundle/nsis/*-setup.exe
             src-tauri/target/release/bundle/msi/*.msi
             SHA256SUMS.txt
           body_path: RELEASE_NOTES.md
