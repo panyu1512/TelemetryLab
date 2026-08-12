@@ -105,7 +105,7 @@ function makeProfile(id: string, name: string): Profile {
 
 const STORAGE_KEY = "telemetrylab.config.v1";
 
-interface Persisted {
+export interface Persisted {
   profiles: Profile[];
   activeProfileId: string;
   globalSettings: GlobalSettings;
@@ -468,22 +468,30 @@ export const useOverlayConfigStore = create<OverlayConfigState>()((set, get) => 
 // applying (localStorage is already shared) to avoid a feedback loop, and only
 // re-apply the theme when it actually changed.
 
-subscribe("config:changed", (payload) => {
-  const remote = payload as Persisted | undefined;
-  if (!remote || !Array.isArray(remote.profiles)) return;
+subscribe("config:changed", (remote) => {
+  // A remote snapshot may predate fields we rely on, so require the two we
+  // cannot sensibly default before adopting anything.
+  if (!remote || !Array.isArray(remote.profiles) || !remote.globalSettings) {
+    return;
+  }
+  const { profiles, activeProfileId, globalSettings, lastOverlayId } = remote;
   applyingRemote = true;
   try {
-    const prevThemeId = useOverlayConfigStore.getState().globalSettings.themeId;
+    const current = useOverlayConfigStore.getState();
+    const prevThemeId = current.globalSettings.themeId;
     useOverlayConfigStore.setState({
-      profiles: remote.profiles,
-      activeProfileId: remote.activeProfileId,
-      globalSettings: remote.globalSettings,
-      lastOverlayId: remote.lastOverlayId ?? null,
+      profiles,
+      activeProfileId: activeProfileId ?? current.activeProfileId,
+      globalSettings,
+      lastOverlayId: lastOverlayId ?? null,
     });
-    if (remote.globalSettings.themeId !== prevThemeId) {
-      applyTheme(getTheme(remote.globalSettings.themeId), isOverlayModeActive());
+    if (globalSettings.themeId !== prevThemeId) {
+      applyTheme(getTheme(globalSettings.themeId), isOverlayModeActive());
     }
   } finally {
     applyingRemote = false;
   }
 });
+
+/** Public name for the snapshot this store broadcasts over the window bus. */
+export type OverlayConfigSnapshot = Persisted;

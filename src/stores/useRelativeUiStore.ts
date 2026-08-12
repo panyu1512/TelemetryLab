@@ -39,7 +39,7 @@ export interface RelativeUiState {
 
 const STORAGE_KEY = "telemetrylab.relative.ui.v1";
 
-interface Persisted {
+export interface Persisted {
   showBrand: boolean;
   showCountry: boolean;
   windowSize: number;
@@ -131,8 +131,7 @@ export const useRelativeUiStore = create<RelativeUiState>((set, get) => {
 
 // Adopt relative-view changes made in another window (e.g. the manager) so an
 // open relative overlay updates live.
-subscribe("relative-ui:changed", (payload) => {
-  const remote = payload as Partial<Persisted> | undefined;
+subscribe("relative-ui:changed", (remote) => {
   if (!remote || typeof remote !== "object") return;
   applyingRemote = true;
   try {
@@ -149,3 +148,6 @@ subscribe("relative-ui:changed", (payload) => {
     applyingRemote = false;
   }
 });
+
+/** Public name for the snapshot this store broadcasts over the window bus. */
+export type RelativeUiSnapshot = Persisted;

@@ -25,6 +25,22 @@ export const Channel = {
 
 export type ChannelName = (typeof Channel)[keyof typeof Channel];
 
+/**
+ * The single source of truth mapping each channel to the payload it carries.
+ * Adding a channel here (plus an entry in {@link Channel}) is all it takes:
+ * {@link BridgeMessage} and {@link PayloadFor} follow automatically, and the
+ * `switch` in `BridgeConnection.dispatch` stops compiling until it is handled.
+ */
+export interface ChannelPayloadMap {
+  [Channel.Telemetry]: PlayerTelemetry;
+  [Channel.Session]: SessionInfo;
+  [Channel.Standings]: StandingsPayload;
+  [Channel.Bridge]: BridgeStatus;
+}
+
+/** The payload type carried by a given channel. */
+export type PayloadFor<K extends ChannelName> = ChannelPayloadMap[K];
+
 /** The generic envelope wrapping every payload. */
 export interface Envelope<T = unknown> {
   /** Protocol version. */
@@ -42,11 +58,14 @@ export interface Envelope<T = unknown> {
  * spec drafts called it `timestamp`, so we accept either on the wire (see
  * `parseEnvelope`) and normalize to `timestamp` here.
  */
-export type BridgeMessage =
-  | (Envelope<PlayerTelemetry> & { type: typeof Channel.Telemetry })
-  | (Envelope<SessionInfo> & { type: typeof Channel.Session })
-  | (Envelope<StandingsPayload> & { type: typeof Channel.Standings })
-  | (Envelope<BridgeStatus> & { type: typeof Channel.Bridge });
+export type BridgeMessage = {
+  [K in ChannelName]: Omit<Envelope<PayloadFor<K>>, "type"> & { type: K };
+}[ChannelName];
+
+/** Narrow an arbitrary `type` string to a channel we actually handle. */
+export function isChannelName(value: string): value is ChannelName {
+  return (Object.values(Channel) as string[]).includes(value);
+}
 
 interface RawEnvelope {
   v?: number;
@@ -75,11 +94,30 @@ export function parseEnvelope(raw: string): BridgeMessage | null {
   if (msg.v !== undefined && msg.v !== PROTOCOL_VERSION) {
     return null;
   }
-  return {
-    v: msg.v ?? PROTOCOL_VERSION,
-    type: msg.type,
-    timestamp: msg.ts ?? msg.timestamp ?? Date.now(),
-    seq: msg.seq ?? 0,
-    payload: msg.payload,
-  } as BridgeMessage;
+  if (!isChannelName(msg.type)) {
+    return null;
+  }
+  return tagged(
+    msg.type,
+    {
+      v: msg.v ?? PROTOCOL_VERSION,
+      timestamp: msg.ts ?? msg.timestamp ?? Date.now(),
+      seq: msg.seq ?? 0,
+    },
+    msg.payload,
+  );
+}
+
+/**
+ * The protocol's single trust boundary: pair a *validated* channel with its
+ * still-unverified payload. Everything downstream is correlated by `K`, so this
+ * is the only assertion in the module — consumers get exhaustive narrowing for
+ * free, and a payload can never be attached to the wrong channel by mistake.
+ */
+function tagged<K extends ChannelName>(
+  type: K,
+  head: Omit<Envelope, "type" | "payload">,
+  payload: unknown,
+): Extract<BridgeMessage, { type: K }> {
+  return { ...head, type, payload } as Extract<BridgeMessage, { type: K }>;
 }

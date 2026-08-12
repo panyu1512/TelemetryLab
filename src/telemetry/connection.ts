@@ -18,12 +18,6 @@ import { useBridgeStore } from "../stores/useBridgeStore";
 import { useSessionStore } from "../stores/useSessionStore";
 import { useStandingsStore } from "../stores/useStandingsStore";
 import { useTelemetryStore } from "../stores/useTelemetryStore";
-import type {
-  BridgeStatus,
-  PlayerTelemetry,
-  SessionInfo,
-  StandingsPayload,
-} from "./types";
 import { Channel, parseEnvelope } from "./protocol";
 
 export class BridgeConnection {
@@ -123,18 +117,18 @@ export class BridgeConnection {
       case Channel.Telemetry:
         useTelemetryStore
           .getState()
-          .setTelemetry(msg.payload as PlayerTelemetry, msg.seq);
+          .setTelemetry(msg.payload, msg.seq);
         break;
       case Channel.Session:
-        useSessionStore.getState().setSession(msg.payload as SessionInfo);
+        useSessionStore.getState().setSession(msg.payload);
         break;
       case Channel.Standings:
         useStandingsStore
           .getState()
-          .setStandings(msg.payload as StandingsPayload, msg.seq);
+          .setStandings(msg.payload, msg.seq);
         break;
       case Channel.Bridge: {
-        const status = msg.payload as BridgeStatus;
+        const status = msg.payload;
         const wasActive = useBridgeStore.getState().iracingActive;
         useBridgeStore.getState().setIracingActive(status.iracingActive);
         if (status.iracingActive && !wasActive) {
