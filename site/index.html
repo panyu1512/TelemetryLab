@@ -135,6 +135,45 @@
             </button>
           </div>
         </header>
+
+        <!-- The page's own session strip.
+             §·The marketing surface rule 6 allowed the progress rule on the
+             argument that a bar reporting a measured quantity is the same
+             instrument voice as the product's § Session strip. This is that
+             argument cashed in one step further: the strip names its fields
+             the way the overlay does — mono micro-labels in a row — and fills
+             exactly one of them, the section you are currently reading.
+
+             The fill is the strip's only fill, as it is in the product, and it
+             marks the state that changes what you do next. It is driven by
+             `view()` timelines scoped from `<main>`, so it costs no
+             JavaScript (rule 6, fence 4); a browser without scroll-driven
+             animations gets six plain links, which is what they are anyway.
+
+             It is also the only wayfinding on a page this tall. The nav row
+             above it stays N9 edge-aligned — wordmark left, actions right,
+             nothing between — because this is a readout below it, not links
+             moved into it. -->
+        <nav class="readout" aria-label="Sections">
+          <a class="readout__field" href="#standings">
+            Standings
+          </a>
+          <a class="readout__field" href="#relative">
+            Relative
+          </a>
+          <a class="readout__field" href="#fuel">
+            Fuel
+          </a>
+          <a class="readout__field" href="#manager">
+            Manager
+          </a>
+          <a class="readout__field" href="#spec">
+            Legend
+          </a>
+          <a class="readout__field" href="#needs">
+            Requirements
+          </a>
+        </nav>
       </div>
     </div>
 
@@ -143,6 +182,16 @@
         <!-- H2 · Split diptych -->
         <section class="hero">
           <div class="hero__copy">
+            <!-- The hero opens in the same band grammar every section below
+                 uses, so the page states what it is in the product's own
+                 voice before it says a word of prose. Every value is a fact
+                 checkable on this page. -->
+            <div class="band band--hero">
+              <span class="band__chip">TelemetryLab</span>
+              <span class="band__field"><span class="band__k">OVERLAYS</span><b class="band__v">4</b></span>
+              <span class="band__field"><span class="band__k">OS</span><b class="band__v">Windows</b></span>
+              <span class="band__field"><span class="band__k">PRICE</span><b class="band__v">free</b></span>
+            </div>
             <h1>Read the field without looking.</h1>
             <p class="hero__lede">
               TelemetryLab is a timing and telemetry overlay for iRacing.
@@ -218,7 +267,13 @@
         <!-- Split Studio rows. Every claim is paired with the capture that
              proves it; the pairing alternates direction down the page. -->
 
-        <section class="row row--wide">
+        <section id="standings" class="row row--wide">
+          <div class="band">
+            <span class="band__chip">Standings</span>
+            <span class="band__field"><span class="band__k">COLUMNS</span><b class="band__v">15</b></span>
+            <span class="band__field"><span class="band__k">ALWAYS</span><b class="band__v">3</b></span>
+            <span class="band__field"><span class="band__k">ROW</span><b class="band__v">32px</b></span>
+          </div>
           <div class="row__copy">
             <h2>The whole field, grouped by class.</h2>
             <p class="row__body">
@@ -248,7 +303,12 @@
           </figure>
         </section>
 
-        <section class="row row--flip">
+        <section id="relative" class="row row--flip">
+          <div class="band">
+            <span class="band__chip">Relative</span>
+            <span class="band__field"><span class="band__k">SORT</span><b class="band__v">track order</b></span>
+            <span class="band__field"><span class="band__k">GAP</span><b class="band__v">signed</b></span>
+          </div>
           <div class="row__copy">
             <h2>Who is actually coming.</h2>
             <p class="row__body">
@@ -272,7 +332,12 @@
           </figure>
         </section>
 
-        <section class="row">
+        <section id="fuel" class="row">
+          <div class="band">
+            <span class="band__chip">Fuel</span>
+            <span class="band__field"><span class="band__k">MARGIN</span><b class="band__v">1.0 lap</b></span>
+            <span class="band__field"><span class="band__k">BURN</span><b class="band__v">measured</b></span>
+          </div>
           <div class="row__copy">
             <h2>The stop, before you need it.</h2>
             <p class="row__body">
@@ -303,7 +368,13 @@
           </figure>
         </section>
 
-        <section class="row row--flip">
+        <section id="manager" class="row row--flip">
+          <div class="band">
+            <span class="band__chip">Manager</span>
+            <span class="band__field"><span class="band__k">OVERLAYS</span><b class="band__v">4</b></span>
+            <span class="band__field"><span class="band__k">WIDGETS</span><b class="band__v">6</b></span>
+            <span class="band__field"><span class="band__k">THEMES</span><b class="band__v">4</b></span>
+          </div>
           <div class="row__copy">
             <h2>Configured once, then left alone.</h2>
             <p class="row__body">
@@ -334,7 +405,12 @@
         </section>
 
         <!-- F3 · Tabular spec sheet. The page becomes the instrument. -->
-        <section class="spec">
+        <section id="spec" class="spec">
+          <div class="band">
+            <span class="band__chip">Legend</span>
+            <span class="band__field"><span class="band__k">FIELDS</span><b class="band__v">16</b></span>
+            <span class="band__field"><span class="band__k">TABLES</span><b class="band__v">2</b></span>
+          </div>
           <div class="spec__intro">
             <h2>What every column is telling you.</h2>
             <p>
@@ -481,7 +557,13 @@
           <p class="spec__end micro">Every field above appears in the captures on this page</p>
         </section>
 
-        <section class="needs">
+        <section id="needs" class="needs">
+          <div class="band">
+            <span class="band__chip">Requirements</span>
+            <span class="band__field"><span class="band__k">OS</span><b class="band__v">Windows</b></span>
+            <span class="band__field"><span class="band__k">SIM</span><b class="band__v">iRacing</b></span>
+            <span class="band__field"><span class="band__k">PRICE</span><b class="band__v">free</b></span>
+          </div>
           <h2>What it needs.</h2>
           <dl class="needs__list">
             <div>

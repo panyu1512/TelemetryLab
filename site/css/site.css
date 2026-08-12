@@ -243,6 +243,184 @@ a {
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   The page's session strip
+   The product's § Session strip at page scale: a row of mono fields, one of
+   them filled, reporting the state that matters. In the overlay that state is
+   the flag; here it is the section you are reading.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.readout {
+  display: flex;
+  align-items: stretch;
+  gap: var(--space-md);
+  /* Narrow viewports scroll it rather than wrapping it: a strip that becomes
+     two strips has stopped being one line of state. Fields drop right-to-left
+     in the product; here they run off the same edge and can be dragged back. */
+  overflow-x: auto;
+  scrollbar-width: none;
+  padding-block: var(--space-2xs);
+  border-top: var(--rule-hair) solid var(--color-border);
+}
+.readout::-webkit-scrollbar {
+  display: none;
+}
+
+.readout__field {
+  flex: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  line-height: 1;
+  padding: 0.4rem 0.5rem;
+  border-radius: var(--radius-ctl);
+  color: var(--color-faint);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color var(--dur-instant) var(--ease-out);
+}
+
+.readout__field:hover {
+  color: var(--color-text);
+}
+
+/* The active field. `primary` is the token for "informational / selection"
+   (§ Theme), which is exactly what this is — and filled ink takes `on-accent`,
+   never white, per § Theme rule 1. */
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    /* Scoped on the root, not on `main`: the sections that *define* these
+       timelines live in `main`, but the strip that *references* them is up in
+       the dock. The scope has to cover both. */
+    :root {
+      timeline-scope: --sec-standings, --sec-relative, --sec-fuel,
+        --sec-manager, --sec-spec, --sec-needs;
+    }
+
+    #standings {
+      view-timeline-name: --sec-standings;
+    }
+    #relative {
+      view-timeline-name: --sec-relative;
+    }
+    #fuel {
+      view-timeline-name: --sec-fuel;
+    }
+    #manager {
+      view-timeline-name: --sec-manager;
+    }
+    #spec {
+      view-timeline-name: --sec-spec;
+    }
+    #needs {
+      view-timeline-name: --sec-needs;
+    }
+
+    .readout__field {
+      animation: readout-active linear both;
+      /* Lit while the section owns the middle of its pass through the
+         viewport, so exactly one field is filled at a time. */
+      animation-range: cover 22% cover 78%;
+    }
+
+    .readout__field:nth-child(1) {
+      animation-timeline: --sec-standings;
+    }
+    .readout__field:nth-child(2) {
+      animation-timeline: --sec-relative;
+    }
+    .readout__field:nth-child(3) {
+      animation-timeline: --sec-fuel;
+    }
+    .readout__field:nth-child(4) {
+      animation-timeline: --sec-manager;
+    }
+    .readout__field:nth-child(5) {
+      animation-timeline: --sec-spec;
+    }
+    .readout__field:nth-child(6) {
+      animation-timeline: --sec-needs;
+    }
+  }
+}
+
+/* Off at both ends of the range, on through the middle. `fill: both` clamps to
+   the nearest endpoint outside the range, so both endpoints must be the *off*
+   state or the field stays lit for the rest of the page. */
+@keyframes readout-active {
+  0% {
+    background: transparent;
+    color: var(--color-faint);
+  }
+  1%,
+  99% {
+    background: var(--color-primary);
+    color: var(--color-on-accent);
+  }
+  100% {
+    background: transparent;
+    color: var(--color-faint);
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Section band
+   The product's § Class band at page scale: a chip naming the subject, then
+   micro-label/value pairs carrying that subject's own numbers. Every value is
+   a fact about the thing in the section — the band is structure that reports,
+   not structure that decorates.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.band {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs) var(--space-md);
+  padding-inline-start: var(--space-sm);
+  /* The leading edge is the row's left border one scale up — the same device
+     at a different size, not a second one. On the site there is no identity
+     colour to carry (§ Two colour systems is a product-surface rule), so it
+     takes `border-strong`: structure, not status. */
+  border-inline-start: 3px solid var(--color-border-strong);
+}
+
+.band__chip {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  line-height: 1;
+  padding: 0.34rem 0.45rem;
+  border-radius: var(--radius-ctl);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+
+.band__field {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 0.45rem;
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  line-height: 1;
+}
+
+.band__k {
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-faint);
+}
+
+.band__v {
+  font-weight: 700;
+  color: var(--color-text);
+  font-variant-numeric: tabular-nums;
+}
+
 .wordmark {
   display: inline-flex;
   align-items: center;
@@ -478,11 +656,27 @@ html[data-theme="dark"] .theme-toggle__moon {
   display: grid;
   gap: var(--space-md);
   justify-items: start;
+  /* The leading edge, one more time. The product quarantines identity colour
+     to a 3 px left border; the site has no identity to carry, so the same
+     geometry carries structure instead — hero, band and section all hang off
+     one vertical. */
+  padding-inline-start: var(--space-sm);
+  border-inline-start: 3px solid var(--color-border-strong);
+}
+
+.band--hero {
+  /* Already inside the hero's own leading edge — a second rule here would be
+     the device stacked on itself. */
+  border-inline-start: 0;
+  padding-inline-start: 0;
+  margin-block-end: calc(var(--space-md) * -1 + var(--space-2xs));
 }
 
 .hero h1 {
   font-size: var(--text-display);
   max-width: 17ch; /* two lines, no widow */
+  letter-spacing: -0.035em;
+  font-weight: 700;
 }
 
 .hero__lede {
@@ -541,11 +735,29 @@ html[data-theme="dark"] .theme-toggle__moon {
 .row {
   display: grid;
   grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  /* Row 1 is the band, row 2 the diptych. Declared rather than implicit
+     because the flipped rows place their children by explicit `grid-row`, and
+     an auto-placed band would land in the same cell as the copy. */
+  grid-template-rows: auto auto;
   gap: var(--space-2xl);
   align-items: center;
-  padding-block: var(--space-2xl);
+  padding-block: var(--space-xl) var(--space-2xl);
   border-top: var(--rule-hair) solid var(--color-border);
 }
+
+/* The band is a heading device, so it sits apart from its section rather than
+   on top of it — the same `CLASS_BAND_H` + `BAND_GAP` reasoning the product
+   uses, at page scale. */
+.row > .band {
+  grid-column: 1 / -1;
+  grid-row: 1;
+  /* The grid gap is sized for the diptych; the band wants a heading's air
+     under it, not a column's. */
+  margin-block-end: calc(var(--space-2xl) * -1 + var(--space-xl));
+}
+
+/* Everything after the band auto-places from row 2 onward — two columns in a
+   diptych row, stacked in `--wide`. Only the flipped rows place explicitly. */
 
 .row__copy {
   display: grid;
@@ -569,13 +781,13 @@ html[data-theme="dark"] .theme-toggle__moon {
 .row--flip {
   grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
 }
-.row--flip .row__copy {
+.row--flip > .row__copy {
   grid-column: 2;
-  grid-row: 1;
+  grid-row: 2;
 }
-.row--flip .shot {
+.row--flip > .shot {
   grid-column: 1;
-  grid-row: 1;
+  grid-row: 2;
 }
 
 /* One row breaks the diptych: the full standings table.
@@ -633,13 +845,14 @@ html[data-theme="dark"] .theme-toggle__moon {
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .spec {
-  padding-block: var(--space-2xl);
+  padding-block: var(--space-xl) var(--space-2xl);
   border-top: var(--rule-hair) solid var(--color-border);
+  display: grid;
+  gap: var(--space-lg);
 }
 
 .spec__intro {
   max-width: 54ch;
-  margin-block-end: var(--space-lg);
   display: grid;
   gap: var(--space-sm);
 }
@@ -754,7 +967,7 @@ html[data-theme="dark"] .theme-toggle__moon {
    the single most reliable templated-editorial tell — banned outright here even
    though the content would technically fit. */
 .needs {
-  padding-block: var(--space-2xl);
+  padding-block: var(--space-xl) var(--space-2xl);
   border-top: var(--rule-hair) solid var(--color-border);
   display: grid;
   gap: var(--space-lg);
