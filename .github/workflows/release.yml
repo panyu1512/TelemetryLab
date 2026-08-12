@@ -30,6 +30,7 @@ concurrency:
 
 permissions:
   contents: write # commits the bump and pushes the tag
+  actions: write # dispatches build.yml on the new tag — see the step below
 
 jobs:
   release:
@@ -88,6 +89,26 @@ jobs:
           git tag -a "v${VERSION}" -m "v${VERSION}"
           git push origin HEAD:${{ github.ref_name }}
           git push origin "v${VERSION}"
+
+      # Start the installer build explicitly.
+      #
+      # build.yml triggers on `push: tags: v*`, and that is NOT enough on its
+      # own: GitHub deliberately does not start workflow runs from events
+      # created with the default GITHUB_TOKEN, to stop a workflow triggering
+      # itself forever. The tag push above is such an event, so build.yml stays
+      # silent — the tag lands, and no installer is ever produced. Every build
+      # before this workflow existed ran because a human pushed the tag.
+      #
+      # `workflow_dispatch` is one of the two documented exceptions to that rule
+      # (with `repository_dispatch`), so dispatching it here works with the
+      # default token and needs no PAT. Dispatching against the tag ref means
+      # build.yml sees `github.ref` = refs/tags/vX.Y.Z, which is what its
+      # release-publishing steps gate on.
+      - name: Build the installer for this tag
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.bump.outputs.version }}
+        run: gh workflow run build.yml --ref "v${VERSION}"
 
       - name: Summary
         env:
