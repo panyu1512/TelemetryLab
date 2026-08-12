@@ -10,6 +10,7 @@
  * actually pushes these into the stores lives in `telemetry/mockFeed.ts`.
  */
 
+import { cornerSeverity, pedalsFor } from "./drivingInputs";
 import type {
   ClassStanding,
   DriverEntry,
@@ -242,6 +243,21 @@ const ACCEL_RATE = 2100;
 /** Steeper than acceleration: braking zones are short and violent. */
 const BRAKE_RATE = 5200;
 
+/**
+ * Zone lengths per corner, in lap fractions: how far before the apex braking
+ * starts, and how far past it the car is still winding back up to speed.
+ *
+ * Measured once from the speed model rather than assumed, by walking outwards
+ * from each apex while that corner is still the binding constraint. The pedals
+ * need these to know *where in the event* they are — the phase is what gives
+ * them a shape instead of a step.
+ */
+interface CornerZone {
+  readonly brake: number;
+  readonly exit: number;
+  readonly severity: number;
+}
+
 /** Cyclic distance between two lap fractions, in [0, 0.5]. */
 function lapGap(a: number, b: number): number {
   const d = Math.abs(a - b) % 1;
@@ -264,6 +280,91 @@ function speedAt(pct: number): number {
     v = Math.min(v, c.v + d * rate);
   }
   return Math.max(V_MIN, v);
+}
+
+/**
+ * Walk outwards from an apex while `corner` is still the constraint setting the
+ * speed, and return how far that reaches. `rate` picks the side: braking on the
+ * way in, acceleration on the way out.
+ */
+function zoneLength(
+  corner: (typeof CORNERS)[number],
+  rate: number,
+  before: boolean
+): number {
+  const STEP = 0.0005;
+  const LIMIT = 0.5;
+  let d = STEP;
+  while (d < LIMIT) {
+    const pct = (corner.at + (before ? -d : d) + 1) % 1;
+    // Still this corner's zone only while its own ray is what speedAt returns.
+    if (Math.abs(speedAt(pct) - (corner.v + d * rate)) > 0.5) break;
+    d += STEP;
+  }
+  return d - STEP;
+}
+
+/**
+ * Measured once at module load: six corners, ~1000 cheap evaluations each, and
+ * then every frame is O(1). The table is what lets the pedals know they are, say,
+ * 30 % into a braking zone rather than merely "decelerating".
+ */
+const CORNER_ZONES: readonly CornerZone[] = CORNERS.map((c) => ({
+  brake: zoneLength(c, BRAKE_RATE, true),
+  exit: zoneLength(c, ACCEL_RATE, false),
+  severity: cornerSeverity(c.v, V_MAX),
+}));
+
+/**
+ * Deterministic 0–1 value per (lap, corner). Drivers do not drive every corner
+ * identically lap after lap, and a mock that does reads as a loop. This keeps
+ * `mockPlayerTelemetry` a pure function of `t` while still varying.
+ */
+function cornerHash(lap: number, corner: number): number {
+  const x = Math.sin(lap * 12.9898 + corner * 78.233) * 43758.5453;
+  return x - Math.floor(x);
+}
+
+/**
+ * How much of a lift-and-coast this lap's entry to a corner is. Most are
+ * ordinary; roughly a quarter are rolled in off the pedals early.
+ */
+const LIFT_CHANCE = 0.26;
+
+function liftFor(lap: number, corner: number): number {
+  const h = cornerHash(lap, corner);
+  return h < LIFT_CHANCE ? 0.35 + (h / LIFT_CHANCE) * 0.65 : 0;
+}
+
+/**
+ * Locate the car in the corner cycle: inside a braking zone, inside a corner
+ * exit, or on a straight. Braking wins when zones overlap — the next corner's
+ * entry matters more than the last one's exit.
+ */
+function cornerPhaseAt(pct: number, lap: number) {
+  let exit: { at: number; zone: CornerZone } | null = null;
+
+  for (let i = 0; i < CORNERS.length; i++) {
+    const c = CORNERS[i];
+    const zone = CORNER_ZONES[i];
+    const toApex = (c.at - pct + 1) % 1;
+    if (toApex > 0 && toApex <= zone.brake) {
+      return {
+        approach: 1 - toApex / zone.brake,
+        exit: null,
+        severity: zone.severity,
+        lift: liftFor(lap, i),
+      };
+    }
+    const pastApex = (pct - c.at + 1) % 1;
+    if (pastApex >= 0 && pastApex <= zone.exit) {
+      exit = { at: pastApex / Math.max(zone.exit, 1e-6), zone };
+    }
+  }
+
+  return exit
+    ? { approach: null, exit: exit.at, severity: exit.zone.severity }
+    : { approach: null, exit: null, severity: 0 };
 }
 
 /** Gear boundaries in km/h — index i is the lower bound of gear i+1. */
@@ -291,11 +392,7 @@ export function mockPlayerTelemetry(t: number): PlayerTelemetry {
   const lap = Math.floor(prog);
   const pct = prog - lap;
 
-  // Speed now, and a moment ago, so the pedals can be read off the gradient.
   const kmh = speedAt(pct);
-  const dPct = 0.004;
-  const prev = speedAt((pct - dPct + 1) % 1);
-  const slope = (kmh - prev) / dPct; // km/h per lap-fraction
 
   // Steering and lateral load come from the nearest apex: hardest at the apex
   // itself, released down the straights.
@@ -303,22 +400,21 @@ export function mockPlayerTelemetry(t: number): PlayerTelemetry {
     lapGap(pct, c.at) < lapGap(pct, a.at) ? c : a
   );
   const nearness = Math.max(0, 1 - lapGap(pct, near.at) / 0.055);
-  const pastApex = (pct - near.at + 1) % 1;
 
-  const brake = Math.max(0, Math.min(1, -slope / BRAKE_RATE));
   /*
-   * Flat speed is not a lifted throttle. Reading the pedal straight off the
-   * gradient put throttle at 0 all the way down the Kemmel straight — the car
-   * is pinned there, it has simply run out of gears. So: braking ⇒ nothing,
-   * otherwise flat out, except for the first 2 % of the lap past an apex where
-   * it feeds in progressively, which is the shape a real trace has.
+   * Pedals come from a driver model, not from the speed gradient. Read off the
+   * gradient they stepped 1.00 → 0.00 in a single frame and then pinned the
+   * brake at exactly 1.00 for the whole zone — a square wave no real trace
+   * shows. `pedalsFor` gives the event its shape: lift, coast, a hard initial
+   * stab, then progressive release into the apex and a squeeze back out.
+   *
+   * Speed still comes from the geometric model, so the two agree on *when* the
+   * car brakes and accelerates but not on the exact instantaneous rate — the
+   * pedal trails while the speed line keeps its constant slope. No widget plots
+   * the two against each other, and the alternative is rebuilding the corner
+   * model around the pedal shape.
    */
-  const throttle =
-    brake > 0.02
-      ? 0
-      : nearness > 0 && pastApex < 0.02
-        ? Math.max(0.25, pastApex / 0.02)
-        : 1;
+  const { throttle, brake } = pedalsFor(cornerPhaseAt(pct, lap));
   const steer = near.dir * nearness * (1 - kmh / (V_MAX * 1.6));
 
   const gear = gearFor(kmh);
