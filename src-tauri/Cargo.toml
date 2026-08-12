@@ -1,6 +1,6 @@
 [package]
 name = "iracing-telemetry"
-version = "0.18.0"
+version = "1.0.0"
 description = "iRacing Telemetry Dashboard"
 authors = ["iRacing Telemetry contributors"]
 edition = "2021"

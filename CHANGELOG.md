@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.0] - 2026-08-12
+
 ### Added
 
 - **Standings.** The whole field, grouped by class. Each class opens with a
@@ -41,3 +43,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - **Windows installer.** A `.msi` built by CI from a tagged commit, published
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
+
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.0.0...HEAD
+[1.0.0]: https://github.com/panyu1512/TelemetryLab/releases/tag/v1.0.0
