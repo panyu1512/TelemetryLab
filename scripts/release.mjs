@@ -111,13 +111,29 @@ function rollChangelog(version, previous) {
     `## [Unreleased]\n\n## [${version}] - ${today}\n`,
   );
 
+  // Was there a released version in the log before this one? If not, this
+  // release opens the log, and there is no earlier tag to compare against —
+  // link the release itself instead. A compare link against a tag that was
+  // never pushed (or has since been deleted) is a 404 in the one file whose
+  // job is to be a reliable index of what shipped.
+  const isFirst = !/^## \[\d+\.\d+\.\d+\]/m.test(src);
+
+  const links =
+    `[Unreleased]: ${REPO}/compare/v${version}...HEAD\n` +
+    (isFirst
+      ? `[${version}]: ${REPO}/releases/tag/v${version}`
+      : `[${version}]: ${REPO}/compare/v${previous}...v${version}`);
+
   // Compare links: [Unreleased] now starts at the new tag, and the new
   // version gets its own line above the previous one.
-  out = out.replace(
-    /^\[Unreleased\]: .*$/m,
-    `[Unreleased]: ${REPO}/compare/v${version}...HEAD\n` +
-      `[${version}]: ${REPO}/compare/v${previous}...v${version}`,
-  );
+  if (/^\[Unreleased\]: .*$/m.test(out)) {
+    out = out.replace(/^\[Unreleased\]: .*$/m, links);
+  } else {
+    // A log that has never been released has no link block yet. Append one
+    // rather than silently rolling the section and dropping the links — which
+    // is what a bare `.replace()` with no match does.
+    out = `${out.replace(/\s+$/, "")}\n\n${links}\n`;
+  }
 
   write("CHANGELOG.md", out);
 }
