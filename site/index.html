@@ -562,6 +562,7 @@
             <span class="band__chip">Requirements</span>
             <span class="band__field"><span class="band__k">OS</span><b class="band__v">Windows</b></span>
             <span class="band__field"><span class="band__k">SIM</span><b class="band__v">iRacing</b></span>
+            <span class="band__field"><span class="band__k">SIGNED</span><b class="band__v">no</b></span>
             <span class="band__field"><span class="band__k">PRICE</span><b class="band__v">free</b></span>
           </div>
           <h2>What it needs.</h2>
@@ -570,8 +571,23 @@
               <dt>Windows, and iRacing</dt>
               <dd>
                 The bridge reads iRacing's shared memory, which exists only on
-                Windows. The installer is a signed-by-nobody <code>.msi</code> —
-                Windows will tell you so, and it is right to.
+                Windows.
+              </dd>
+            </div>
+            <div>
+              <dt>Windows will warn you</dt>
+              <dd>
+                The installer is a signed-by-nobody <code>.msi</code>, so
+                SmartScreen calls the publisher unknown and asks you to trust it
+                on nothing. Choose <b>More info</b>, then <b>Run anyway</b>. You
+                do not have to take it on trust either: every release
+                publishes the installer's SHA-256, so you can check the file you
+                downloaded is the file that was built. It is on the
+                <a
+                  class="link-q"
+                  href="https://github.com/panyu1512/TelemetryLab/releases/latest"
+                  >release page</a
+                >, with the command that checks it.
               </dd>
             </div>
             <div>

@@ -261,6 +261,26 @@ presentation and degrades gracefully before the first lap of data.
   without the sim — complements the mock bridge).
 - Pit service / black-box info, incident count, weather/grip.
 - Cross-platform packaging beyond the `.msi` (NSIS, auto-update feeds).
+- **Get rid of the SmartScreen warning.** The `.msi` is unsigned, so Windows
+  shows "Windows protected your PC" with an unknown publisher on every install
+  — the single worst moment in the product, and it happens before anyone has
+  seen it run. Releases now carry a build-provenance attestation and a SHA-256
+  so the download is at least *checkable* (see the README), but that does not
+  remove the dialog.
+
+  Signing does not remove it either: since 2024 neither OV nor EV certificates
+  bypass SmartScreen, and reputation builds over time regardless. A certificate
+  buys a publisher name in the dialog and a reputation that carries across
+  releases — worth having, ~$10/month via Azure Artifact Signing (individuals:
+  USA and Canada only) or $150–300/year for an OV certificate.
+
+  **The one route that removes the warning outright is the Microsoft Store as
+  an MSIX package**, where Microsoft re-signs and there is nothing to buy or
+  renew. It needs MSIX packaging, which Tauri does not emit today, plus Store
+  certification. Submitting the `.msi` to the Store instead puts signing back
+  on us, so it is the MSIX path or nothing. No open-source requirement either
+  way. This is the item to pick up if installs are being abandoned at the
+  purple screen.
 
 ---
 

@@ -17,9 +17,42 @@ frontend connects to it and renders the data. On Windows the real bridge talks
 to iRacing; on macOS/Linux a **mock bridge** generates synthetic data so you can
 develop the UI without a sim.
 
-> **Status:** v0.1.0 — the end-to-end pipeline works; the dashboard is a
-> placeholder. See the [roadmap](ROADMAP.md) (north star: a multi-class
-> timing/standings overlay) and the [changelog](CHANGELOG.md).
+> **Status:** shipping. Multi-class standings, an on-track relative, fuel
+> strategy and a driving cluster, each in its own window. See the
+> [roadmap](ROADMAP.md) and the [changelog](CHANGELOG.md).
+
+## Installing on Windows
+
+Download the `.msi` from the
+[latest release](https://github.com/panyu1512/TelemetryLab/releases/latest).
+
+**Windows will warn you**, with *"Windows protected your PC"* and a publisher
+listed as unknown. That is expected and it is not a false alarm: the installer
+is **not code-signed**, so SmartScreen has no publisher to attribute it to and
+blocks it by default. Choose **More info → Run anyway**.
+
+You do not have to accept that on trust. Every release is built by
+[`build.yml`](.github/workflows/build.yml) and publishes a `SHA256SUMS.txt`
+beside the installer, so you can confirm the bytes you downloaded are the bytes
+that were built:
+
+```powershell
+certutil -hashfile .\iRacing.Telemetry_<version>_x64_en-US.msi SHA256
+```
+
+A build-provenance attestation — which proves the file came from this
+repository's own workflow rather than from whoever handed it to you — is wired
+up in the same workflow but **only runs while this repository is public**.
+GitHub bills artifact attestations for private repositories under Enterprise
+Cloud, so the step is gated rather than left to fail a release. If the repo is
+public, the release notes carry the `gh attestation verify` command too.
+
+Signing the installer would put a name in that dialog instead of "unknown
+publisher". It would **not** remove the warning: since 2024 neither OV nor EV
+certificates bypass SmartScreen, and reputation accrues over time either way.
+The only route that removes it outright is distributing through the Microsoft
+Store as an MSIX, which is recorded as an open question in
+[the roadmap](ROADMAP.md).
 
 ## Quick start (Docker)
 
