@@ -76,14 +76,89 @@ def _license_group(lic_string: str) -> str:
     return token[:1] if token else "R"
 
 
-def _car_make(screen_name: str) -> str:
-    """Best-effort make from the car's screen name (first word).
+# Every manufacturer that appears in an iRacing car screen name. The name is
+# the only place a make is recorded — iRacing exposes no make field — and it
+# does not reliably *start* with one: road cars do ("Audi R8 LMS EVO II") but
+# anything with a series prefix does not ("NASCAR Cup Series Ford Mustang",
+# "Supercars Holden ZB Commodore", "Global Mazda MX-5 Cup"). Taking the first
+# word therefore mislabelled roughly a quarter of the roster — all of oval
+# racing — as "NASCAR"/"ARCA"/"Supercars", so the frontend drew a three-letter
+# fallback for cars whose brand mark it already had.
+#
+# Spelling matters: these strings are the frontend's icon keys (see
+# BRAND_ICONS in src/components/standings/cells.tsx), so "Mercedes-AMG" is
+# hyphenated and "Aston Martin" keeps its space.
+_CAR_MAKES = (
+    "Acura",
+    "Aston Martin",
+    "Audi",
+    "BMW",
+    "Buick",
+    "Cadillac",
+    "Chevrolet",
+    "Dallara",
+    "Ferrari",
+    "Ford",
+    "Holden",
+    "Honda",
+    "HPD",
+    "Hyundai",
+    "Kia",
+    "Lamborghini",
+    "Ligier",
+    "Lotus",
+    "Mazda",
+    "McLaren",
+    "Mercedes-AMG",
+    "Mercedes",
+    "Nissan",
+    "Pontiac",
+    "Porsche",
+    "Radical",
+    "RAM",
+    "Ray",
+    "Renault",
+    "Riley",
+    "Ruf",
+    "Subaru",
+    "Toyota",
+    "Volkswagen",
+    "VW",
+    "Williams",
+)
 
-    iRacing has no explicit make field; the screen name reliably starts with the
-    manufacturer (e.g. "Audi R8 LMS EVO II"). The frontend can map makes to logo
-    assets; keeping the raw ``carScreenName`` lets it refine this later.
+# Word-bounded so "Ray" doesn't fire inside "Racing" and "RAM" doesn't fire
+# inside a model code. Longest-first so "Mercedes-AMG" wins over "Mercedes"
+# and "Aston Martin" over nothing at all.
+_MAKE_PATTERN = re.compile(
+    r"\b(" + "|".join(re.escape(m) for m in sorted(_CAR_MAKES, key=len, reverse=True)) + r")\b",
+    re.IGNORECASE,
+)
+
+# Canonical casing, keyed by the lowercased match.
+_MAKE_CANONICAL = {m.lower(): m for m in _CAR_MAKES}
+
+
+def _car_make(screen_name: str) -> str:
+    """Best-effort manufacturer from the car's screen name.
+
+    Scans for the first known make anywhere in the name rather than assuming it
+    leads. "First" is deliberate: where two makes appear, the leading one is the
+    chassis or entrant and the one that belongs on the car — "McLaren Honda
+    MP4-30" is a McLaren, and "Super Formula SF23 - Honda" (engine only) still
+    resolves to Honda because nothing precedes it.
+
+    Falls back to the first word for anything unrecognised, so a car added to
+    iRacing after this list was written still yields a usable label rather than
+    an empty one.
     """
-    return (screen_name or "").strip().split(" ", 1)[0]
+    name = (screen_name or "").strip()
+    if not name:
+        return ""
+    match = _MAKE_PATTERN.search(name)
+    if match:
+        return _MAKE_CANONICAL[match.group(1).lower()]
+    return name.split(" ", 1)[0]
 
 
 # ---------------------------------------------------------------------------
