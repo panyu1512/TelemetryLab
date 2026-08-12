@@ -85,11 +85,55 @@ class TestLicenseGroup:
 
 
 class TestCarMake:
-    def test_first_word(self):
-        assert _car_make("Audi R8 LMS EVO II") == "Audi"
+    @pytest.mark.parametrize(
+        "screen_name, expected",
+        [
+            # Road cars lead with the make.
+            ("Audi R8 LMS EVO II", "Audi"),
+            ("Porsche 911 GT3 R (992)", "Porsche"),
+            ("Mercedes-AMG GT3 2020", "Mercedes-AMG"),
+            ("Aston Martin Vantage GT3 EVO", "Aston Martin"),
+            # Series prefixes bury it — the case the first-word rule got wrong.
+            ("NASCAR Cup Series Ford Mustang", "Ford"),
+            ("Next Gen NASCAR Cup Series Chevrolet Camaro ZL1", "Chevrolet"),
+            ("ARCA Toyota Camry", "Toyota"),
+            ("Supercars Holden ZB Commodore", "Holden"),
+            ("Global Mazda MX-5 Cup", "Mazda"),
+            ("Pro Mazda", "Mazda"),
+            ("NASCAR Legends Buick LeSabre - 1987", "Buick"),
+            ("NASCAR Truck RAM", "RAM"),
+            ("Legends Ford '34 Coupe", "Ford"),
+            # Two makes: the leading one is the chassis/entrant.
+            ("McLaren Honda MP4-30", "McLaren"),
+            ("Williams-Toyota FW31", "Williams"),
+            # ...but an engine badge alone still counts.
+            ("Super Formula SF23 - Honda", "Honda"),
+        ],
+    )
+    def test_known_makes(self, screen_name, expected):
+        assert _car_make(screen_name) == expected
 
-    def test_empty(self):
-        assert _car_make("") == ""
+    @pytest.mark.parametrize(
+        "screen_name, expected",
+        [
+            # No make in the name at all: fall back to the first word.
+            ("Dirt Midget", "Dirt"),
+            ("World of Outlaws 410 Sprint Car", "World"),
+            ("USF2000", "USF2000"),
+            # A make iRacing adds after this list was written.
+            ("Bugatti Hypothetical GT1", "Bugatti"),
+        ],
+    )
+    def test_unknown_falls_back_to_first_word(self, screen_name, expected):
+        assert _car_make(screen_name) == expected
+
+    def test_word_bounded(self):
+        """A make must be a whole word — no matches inside longer words."""
+        assert _car_make("C&R Racing Silver Crown Car") == "C&R"
+
+    @pytest.mark.parametrize("blank", ["", "   ", None])
+    def test_blank(self, blank):
+        assert _car_make(blank) == ""
 
 
 class TestStrengthOfField:
