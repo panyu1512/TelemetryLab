@@ -91,7 +91,8 @@ Its product screenshots are generated from this app on the mock feed; see
 │   └── requirements-dev.txt
 └── .github/workflows/
     ├── ci.yml                # Quality gates: lint + typecheck + tests (every push/PR)
-    └── build.yml             # Release: Windows .msi on version tags
+    ├── release.yml           # Cut a release: bump + changelog + tag (manual)
+    └── build.yml             # Build: Windows .msi on version tags
 ```
 
 ## Prerequisites
@@ -251,7 +252,7 @@ fuel-&-strategy solver.
 
 ## Continuous integration
 
-Two workflows split the fast feedback loop from the release build:
+Three workflows split the fast feedback loop from the release build:
 
 [`.github/workflows/ci.yml`](.github/workflows/ci.yml) is the **quality-gate**
 pipeline. It runs on every push to `main`/`claude/**` and on every pull request,
@@ -264,22 +265,36 @@ across two parallel `ubuntu-latest` jobs:
 Both roll up into a single `ci` status so branch protection can require one
 check. Nothing should merge with a red gate.
 
-[`.github/workflows/build.yml`](.github/workflows/build.yml) is the **release**
-pipeline. It runs on `windows-latest`, triggered by **version tags** (`v*`) or
-manually (`workflow_dispatch`). It:
+[`.github/workflows/release.yml`](.github/workflows/release.yml) is the
+**release** pipeline — the decision to ship. Run it from the Actions tab (or
+`gh workflow run release.yml -f bump=minor`) and pick `patch`/`minor`/`major`,
+or `custom` with an exact `X.Y.Z`. It re-runs the frontend gates, then:
+
+1. Bumps the version in `package.json`, `package-lock.json`,
+   `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml` and `Cargo.lock` — all
+   five must move together, since Tauri stamps the `.msi` from `tauri.conf.json`.
+2. Converts the CHANGELOG's `## [Unreleased]` section into a dated
+   `## [X.Y.Z]` section and refreshes the compare links. An empty
+   `[Unreleased]` aborts the release: there is nothing to ship.
+3. Commits `chore(release): vX.Y.Z`, tags `vX.Y.Z`, and pushes both.
+
+The bump/extract logic lives in [`scripts/release.mjs`](scripts/release.mjs)
+(`bump` and `notes` modes) so it can be run and tested outside CI.
+
+[`.github/workflows/build.yml`](.github/workflows/build.yml) is the **build**
+pipeline, started by the tag that `release.yml` pushed (or by any `v*` tag, or
+manually). It runs on `windows-latest` and:
 
 1. Builds the bridge into a onefile `iracing-bridge.exe` with PyInstaller.
 2. Copies it to `src-tauri/binaries/iracing-bridge-x86_64-pc-windows-msvc.exe`
    (the exact name Tauri requires for a sidecar: `{name}-{target-triple}.exe`).
 3. Runs `npm run tauri build` to produce the `.msi`.
-4. Uploads the `.msi` as a workflow artifact, and as a Release asset on tags.
+4. Uploads the `.msi` as a workflow artifact, and as a Release asset on tags —
+   with that version's CHANGELOG section as the release body, rather than a
+   dump of commit subjects.
 
-To cut a release:
-
-```bash
-git tag v0.1.0
-git push origin v0.1.0
-```
+So a release is one button: run `release`, and the installer and release notes
+follow from the tag it pushes.
 
 ---
 

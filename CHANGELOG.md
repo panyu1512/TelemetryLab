@@ -9,6 +9,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **A release is now one button.** A `release` workflow, run manually with a
+  `patch`/`minor`/`major` choice (or an exact version), bumps the version in
+  all five places that carry it, rolls this `[Unreleased]` section into a dated
+  one, and pushes the tag that builds the installer. The GitHub release body is
+  that changelog section instead of a list of commit subjects. Version files
+  had drifted to `0.1.0` while releases ran to `v0.18.0` — they are back in
+  step, and can no longer part company, because nothing bumps them by hand.
 - **Session strip on the timing overlays.** Standings and Relative now carry a
   one-line readout above the field: session type tinted by the active flag,
   lap, session time (or laps) remaining, your incident count, track and air
@@ -741,7 +748,7 @@ React dashboard, plus CI that ships a Windows installer.
   the `.msi` as an artifact and a Release asset on `v*` tags.
 - Project documentation (`README.md`) with Windows and macOS (mock) setup.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v0.5.0...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v0.18.0...HEAD
 [0.5.0]: https://github.com/panyu1512/TelemetryLab/compare/v0.4.2...v0.5.0
 [0.4.2]: https://github.com/panyu1512/TelemetryLab/compare/v0.4.1...v0.4.2
 [0.4.1]: https://github.com/panyu1512/TelemetryLab/compare/v0.4.0...v0.4.1

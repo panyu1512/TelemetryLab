@@ -1,0 +1,102 @@
+name: release
+
+# Cuts a release: bump the version everywhere, roll the CHANGELOG, tag, push.
+# Pushing the tag is what starts build.yml, which compiles the Windows .msi and
+# attaches it to the GitHub release. This workflow deliberately does no
+# building of its own — it is the decision to ship, not the shipping.
+
+on:
+  workflow_dispatch:
+    inputs:
+      bump:
+        description: "Version bump"
+        type: choice
+        required: true
+        default: minor
+        options:
+          - patch
+          - minor
+          - major
+          - custom
+      custom_version:
+        description: "Exact version (X.Y.Z) — only used when bump is 'custom'"
+        type: string
+        required: false
+
+# Never let two releases race for the same tag.
+concurrency:
+  group: release
+  cancel-in-progress: false
+
+permissions:
+  contents: write # commits the bump and pushes the tag
+
+jobs:
+  release:
+    name: cut release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      # Releases are only ever cut from green code. This is the same gate as
+      # ci.yml, run here because a tag push skips ci.yml's branch filter.
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Type-check
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm run test
+
+      - name: Production build
+        run: npm run build
+
+      - name: Bump version and roll CHANGELOG
+        id: bump
+        run: |
+          if [ "${{ inputs.bump }}" = "custom" ]; then
+            spec="${{ inputs.custom_version }}"
+            if ! echo "$spec" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+              echo "custom_version must be X.Y.Z (got '$spec')" >&2
+              exit 1
+            fi
+          else
+            spec="${{ inputs.bump }}"
+          fi
+          version="$(node scripts/release.mjs bump "$spec")"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Commit, tag and push
+        env:
+          VERSION: ${{ steps.bump.outputs.version }}
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add package.json package-lock.json CHANGELOG.md \
+                  src-tauri/tauri.conf.json src-tauri/Cargo.toml src-tauri/Cargo.lock
+          git commit -m "chore(release): v${VERSION}"
+          git tag -a "v${VERSION}" -m "v${VERSION}"
+          git push origin HEAD:${{ github.ref_name }}
+          git push origin "v${VERSION}"
+
+      - name: Summary
+        env:
+          VERSION: ${{ steps.bump.outputs.version }}
+        run: |
+          {
+            echo "### Released v${VERSION}"
+            echo
+            echo "Tag pushed — \`build\` is now compiling the installer."
+            echo
+            node scripts/release.mjs notes "${VERSION}"
+          } >> "$GITHUB_STEP_SUMMARY"
