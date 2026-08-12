@@ -74,9 +74,22 @@ jobs:
           path: src-tauri/target/release/bundle/msi/*.msi
           if-no-files-found: error
 
-      # ...and as a GitHub Release asset when triggered by a version tag.
+      # ...and as a GitHub Release asset when triggered by a version tag. The
+      # body is that version's CHANGELOG section — release.yml wrote it, so it
+      # is prose someone chose rather than a list of commit subjects.
+      - name: Extract release notes
+        if: startsWith(github.ref, 'refs/tags/v')
+        shell: bash
+        # A hand-pushed tag may have no CHANGELOG section; fall back rather
+        # than failing a build that otherwise produced a good installer.
+        run: |
+          node scripts/release.mjs notes "${GITHUB_REF_NAME}" > RELEASE_NOTES.md \
+            || echo "See [CHANGELOG.md](CHANGELOG.md)." > RELEASE_NOTES.md
+
       - name: Publish release asset
         if: startsWith(github.ref, 'refs/tags/v')
         uses: softprops/action-gh-release@v2
         with:
           files: src-tauri/target/release/bundle/msi/*.msi
+          body_path: RELEASE_NOTES.md
+          fail_on_unmatched_files: true
