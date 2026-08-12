@@ -23,8 +23,17 @@ develop the UI without a sim.
 
 ## Installing on Windows
 
-Download the `.msi` from the
-[latest release](https://github.com/panyu1512/TelemetryLab/releases/latest).
+**[Download TelemetryLab-setup.exe](https://github.com/panyu1512/TelemetryLab/releases/latest/download/TelemetryLab-setup.exe)**
+and run it. It installs for the current user only — into `%LOCALAPPDATA%`, with
+no Administrator prompt and no installer wizard to click through — and opens
+the app when it finishes.
+
+That link always resolves to the newest release, because the build publishes a
+copy of the installer under a name that does not carry the version. The
+versioned `…-setup.exe` and a `.msi` sit beside it on the
+[release page](https://github.com/panyu1512/TelemetryLab/releases/latest); the
+`.msi` is the same application packaged for per-machine or managed deployment
+and most people do not need it.
 
 **Windows will warn you**, with *"Windows protected your PC"* and a publisher
 listed as unknown. That is expected and it is not a false alarm: the installer
@@ -37,7 +46,7 @@ beside the installer, so you can confirm the bytes you downloaded are the bytes
 that were built:
 
 ```powershell
-certutil -hashfile .\iRacing.Telemetry_<version>_x64_en-US.msi SHA256
+certutil -hashfile .\TelemetryLab-setup.exe SHA256
 ```
 
 A build-provenance attestation — which proves the file came from this
