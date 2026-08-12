@@ -24,10 +24,15 @@
  * Lapped traffic is called out explicitly. `intervalToPlayer` is wrapped to
  * ±half a lap, so a car a lap down sitting alongside the player is
  * indistinguishable from a rival by gap alone. Any neighbour not on the
- * player's lap therefore prints its name in the informational hue with a signed
- * `+1L` / `-1L` tag — one colour for "not your lap", the sign for which way
+ * player's lap therefore takes a danger-tinted row ground with a signed
+ * `+1L` / `-1L` tag — the ground says "not your lap", the sign says which way
  * (see {@link lapRelation}; the entry's own `isLapped`/`lapsDown` are
  * leader-relative and cannot answer this).
+ *
+ * The call-out is the row's ground rather than its ink for the same reason the
+ * player's own row is: ink in this table carries values, and red ink already
+ * means "behind" on the gap and "faster car, different class" on the closing
+ * icon. A tinted ground adds a third meaning without overloading either.
  *
  * Closing-rate hints flag cars that are approaching the player faster than a
  * threshold. A ⚡ icon in the closing column indicates the car is gaining
@@ -297,6 +302,12 @@ function RowInner({
       className={[
         "relative grid items-center gap-x-1 px-2 text-xs",
         isPlayer ? "rounded-sm bg-primary/10 ring-1 ring-inset ring-primary/35" : "",
+        // Off-lap traffic is called out as the row's *ground*, the same
+        // mechanism that says "this is you" — ground carries identity/status,
+        // ink stays free for values (§ Two colour systems, rule 3). Red as ink
+        // would have collided with the behind-gap and the closing-rate icon,
+        // which already mean something else in this very row.
+        offLap ? "rounded-sm bg-danger/10 ring-1 ring-inset ring-danger/35" : "",
         dimmed ? "opacity-35" : "",
       ]
         .filter(Boolean)
@@ -340,21 +351,13 @@ function RowInner({
       {/* driver name — plain `text` even for the player; the row's ground says
           "you" (§ Two colour systems, rule 3) */}
       <div className="flex min-w-0 items-center gap-1">
-        <span
-          className="truncate text-[13px] font-semibold"
-          style={{
-            // Off-lap traffic is *informational*, not a threat: it takes the
-            // primary hue, leaving danger/warning to the status meanings they
-            // already carry in this row (§ Two colour systems, rule 3).
-            color: offLap ? "var(--color-primary)" : "var(--color-text)",
-          }}
-        >
+        <span className="truncate text-[13px] font-semibold text-text">
           {driver?.userName ?? `Car ${entry.carIdx}`}
         </span>
         {tag && (
           <span
             className="shrink-0 font-mono text-[9px] font-bold leading-none tracking-[0.06em]"
-            style={{ color: "var(--color-primary)" }}
+            style={{ color: "var(--color-danger)" }}
             title={
               relation === LapRelation.LappedBy
                 ? "A lap or more ahead — faster car coming through"
