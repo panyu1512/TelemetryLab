@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.2] - 2026-08-13
+
 ### Fixed
 
 - **The car-brand marks are readable in the row now.** They were too small to
@@ -113,7 +115,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.1.2...HEAD
+[1.1.2]: https://github.com/panyu1512/TelemetryLab/compare/v1.1.1...v1.1.2
 [1.1.1]: https://github.com/panyu1512/TelemetryLab/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.0.0...v1.1.0
 [1.0.0]: https://github.com/panyu1512/TelemetryLab/releases/tag/v1.0.0
