@@ -211,56 +211,74 @@ const BRAND_ICONS: Record<string, () => JSX.Element> = {
     </svg>
   ),
 
-  /* Acura — precision-cut A with horizontal bar */
+  /* Acura — the caliper A: stem and two splayed legs, no crossbar, in its ring */
   Acura: () => (
-    <svg viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M0.8,10 L5.5,1 L10.2,10"/>
-      <line x1="2.8" y1="7.5" x2="8.2" y2="7.5"/>
+    <svg viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round">
+      <circle cx="6" cy="6" r="5.4"/>
+      <path d="M6,1.4 V5.5" strokeWidth="1.4"/>
+      <path d="M5.4,6 L3.1,10.6" strokeWidth="1.4"/>
+      <path d="M6.6,6 L8.9,10.6" strokeWidth="1.4"/>
     </svg>
   ),
 
-  /* Mazda — M-wing / double-arc logo */
+  /* Mazda — the winged V inside its oval */
   Mazda: () => (
-    <svg viewBox="0 0 15 9" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
-      <path d="M0.5,8 C2.5,8 4,1 7.5,1 C11,1 12.5,8 14.5,8"/>
-      <path d="M3.5,8 C4.5,8 6,4 7.5,4 C9,4 10.5,8 11.5,8"/>
+    <svg viewBox="0 0 16 11" fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round" strokeLinejoin="round">
+      <ellipse cx="8" cy="5.5" rx="7.4" ry="4.9"/>
+      <path d="M1.9,3.3 C4.5,4.4 6.6,6 8,8.6 C9.4,6 11.5,4.4 14.1,3.3" strokeWidth="1.25"/>
     </svg>
   ),
 
-  /* Nissan — circle with a horizontal bar running through it */
+  /* Nissan — the wordmark band across the circle, flush with it, not through it */
   Nissan: () => (
-    <svg viewBox="0 0 18 9" fill="none" stroke="currentColor" strokeWidth="1.1">
-      <line x1="0.5" y1="4.5" x2="17.5" y2="4.5"/>
-      <circle cx="9" cy="4.5" r="4"/>
+    <svg viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1">
+      <circle cx="5" cy="5" r="4.5"/>
+      <path d="M0.9,3.6 H9.1 M0.9,6.4 H9.1"/>
     </svg>
   ),
 
-  /* Hyundai — italic H inside an oval */
+  /* Hyundai — the slanted, curved H inside its wide oval (the H leans; it is not upright) */
   Hyundai: () => (
-    <svg viewBox="0 0 15 11" fill="none" stroke="currentColor" strokeWidth="1.1">
-      <ellipse cx="7.5" cy="5.5" rx="6.8" ry="4.8"/>
-      <path d="M4,3 V8 M11,3 V8 M4,5.5 H11" strokeWidth="1.4"/>
+    <svg viewBox="0 0 18 11" fill="none" stroke="currentColor" strokeWidth="1" strokeLinecap="round">
+      <ellipse cx="9" cy="5.5" rx="8.5" ry="4.6"/>
+      <path d="M3.9,8.9 C5.1,5.3 7,3.2 9.7,2.2" strokeWidth="1.3"/>
+      <path d="M8.3,8.8 C11,7.8 12.9,5.7 14.1,2.1" strokeWidth="1.3"/>
+      <path d="M5.9,5.9 C7.8,4.9 10.2,4.7 12.5,4.9" strokeWidth="1.3"/>
     </svg>
   ),
 
-  /* Subaru — Pleiades star cluster (one large + five smaller) */
-  Subaru: () => (
-    <svg viewBox="0 0 16 9" fill="currentColor">
-      <circle cx="3.8"  cy="4.5" r="2.2"/>
-      <circle cx="9"    cy="2.2" r="1.4"/>
-      <circle cx="12.5" cy="1.2" r="1.1"/>
-      <circle cx="13.5" cy="4.5" r="1.5"/>
-      <circle cx="11.5" cy="7.5" r="1.1"/>
-      <circle cx="8.5"  cy="7.8" r="1.1"/>
-    </svg>
-  ),
+  /* Subaru — the Pleiades inside the oval: six four-pointed stars, not six dots.
+     Each star is a concave diamond, wider than tall, as on the badge. */
+  Subaru: () => {
+    // x, y, half-width, half-height — measured off the badge's proportions.
+    const stars: [number, number, number, number][] = [
+      [6.3, 4.55, 5.2, 2.8],
+      [11.8, 6.0, 2.25, 1.3],
+      [15.2, 3.5, 2.35, 1.2],
+      [16.5, 6.0, 2.35, 1.3],
+      [13.4, 8.3, 2.2, 1.25],
+      [8.4, 8.5, 2.1, 1.2],
+    ];
+    const star = (x: number, y: number, rx: number, ry: number) =>
+      `M${x},${y - ry} Q${x + rx * 0.18},${y - ry * 0.18} ${x + rx},${y}` +
+      ` Q${x + rx * 0.18},${y + ry * 0.18} ${x},${y + ry}` +
+      ` Q${x - rx * 0.18},${y + ry * 0.18} ${x - rx},${y}` +
+      ` Q${x - rx * 0.18},${y - ry * 0.18} ${x},${y - ry} Z`;
+    return (
+      <svg viewBox="0 0 20 11" fill="currentColor">
+        <ellipse cx="10" cy="5.5" rx="9.5" ry="5" fill="none" stroke="currentColor" strokeWidth="1"/>
+        {stars.map(([x, y, rx, ry]) => (
+          <path key={`${x},${y}`} d={star(x, y, rx, ry)}/>
+        ))}
+      </svg>
+    );
+  },
 
-  /* Volkswagen — stacked V and W letters inside a circle */
+  /* Volkswagen — the ring with the V seated on the W's centre peak, both cut
+     from the ring itself rather than drawn as two loose strokes over it. */
   Volkswagen: () => (
-    <svg viewBox="0 0 11 11" fill="none">
-      <circle cx="5.5" cy="5.5" r="4.8" stroke="currentColor" strokeWidth="1"/>
-      <path d="M3.5,2.5 L5.5,6.5 L7.5,2.5"             fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round"/>
-      <path d="M1.8,5 L3.8,9 L5.5,6.5 L7.2,9 L9.2,5"   fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round"/>
+    <svg viewBox="0 0 24 24" fill="currentColor">
+      <path d="M12 0C5.36 0 0 5.36 0 12S5.36 24 12 24 24 18.64 24 12 18.64 0 12 0M12 1.41C13.2 1.41 14.36 1.63 15.43 2L12.13 9.13C12.09 9.17 12.09 9.26 12 9.26S11.91 9.17 11.87 9.13L8.57 2C9.64 1.63 10.8 1.42 12 1.42M6.9 2.74L10.72 10.97C10.8 11.14 10.89 11.19 11 11.19H13C13.12 11.19 13.2 11.14 13.29 10.97L17.06 2.74C18.64 3.64 20 4.93 20.96 6.47L15.6 16.84C15.56 16.93 15.5 16.97 15.47 16.97C15.39 16.97 15.39 16.89 15.34 16.84L13.29 12.3C13.2 12.13 13.12 12.09 13 12.09H11C10.89 12.09 10.8 12.13 10.71 12.3L8.66 16.84C8.61 16.89 8.62 16.97 8.53 16.97C8.44 16.97 8.44 16.89 8.4 16.84L3 6.47C3.94 4.93 5.32 3.64 6.9 2.74M2.06 8.53L8.23 20.53C8.31 20.7 8.4 20.83 8.62 20.83C8.83 20.83 8.91 20.7 9 20.53L11.87 14.14C11.91 14.06 11.96 14 12 14C12.09 14 12.09 14.1 12.13 14.14L15.04 20.53C15.13 20.7 15.21 20.83 15.43 20.83C15.64 20.83 15.73 20.7 15.81 20.53L22 8.53C22.37 9.6 22.59 10.76 22.59 12C22.54 17.79 17.79 22.59 12 22.59C6.21 22.59 1.46 17.79 1.46 12C1.46 10.8 1.67 9.65 2.06 8.53Z"/>
     </svg>
   ),
 
@@ -282,9 +300,135 @@ const BRAND_ICONS: Record<string, () => JSX.Element> = {
   ),
 
   /* Skip Barber — simplified S letterform */
-  Skip: () => (
+  "Skip Barber": () => (
     <svg viewBox="0 0 9 11" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
       <path d="M7.5,2.5 Q7.5,1 5.5,1 Q1.5,1 1.5,3.5 Q1.5,6 7.5,6 Q7.5,8 7.5,9.5 Q7.5,10.5 5.5,10.5 Q1.5,10.5 1.5,9"/>
+    </svg>
+  ),
+
+  /* Aston Martin — the wordmark band across the top, feathers sweeping out and
+     up from either side of it, and the feathered fan tapering to a point below.
+     Roughly 4:1 wide, as the badge is; the previous mark was a squat pair of
+     wings around a downward pip, which is nothing on the real badge. */
+  "Aston Martin": () => (
+    <svg viewBox="0 0 40 10" fill="currentColor">
+      <path d="M28,1.8 L40,0.6 L38.2,2.4 L28,2.6 Z"/>
+      <path d="M28,2.9 L38.7,2.7 L36.7,4.4 L28,4.4 Z"/>
+      <path d="M12,1.8 L0,0.6 L1.8,2.4 L12,2.6 Z"/>
+      <path d="M12,2.9 L1.3,2.7 L3.3,4.4 L12,4.4 Z"/>
+      <rect x="12" y="1.7" width="16" height="2.8" rx="0.3"/>
+      <g fill="none" stroke="currentColor" strokeWidth="0.9" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M12.2,4.9 Q15.2,8.4 20,9.9 Q24.8,8.4 27.8,4.9"/>
+        <path d="M16,4.9 L18.5,9.4 M20,4.9 V9.9 M24,4.9 L21.5,9.4"/>
+      </g>
+    </svg>
+  ),
+
+  /* Buick — the tri-shield inside its ring. The three shields climb in a
+     staircase left to right; a level row of them is not the badge. */
+  Buick: () => (
+    <svg viewBox="0 0 72 72" fill="none" stroke="currentColor" strokeLinejoin="round">
+      <circle cx="36" cy="36" r="33.4" strokeWidth="3.6"/>
+      <g strokeWidth="2.8">
+        <path d="M17,27.3 H28 V42.5 L22.5,57.8 L17,42.5 Z"/>
+        <path d="M30.6,22.4 H41.7 V37.7 L36.2,53 L30.6,37.7 Z"/>
+        <path d="M44.3,17.6 H55.4 V32.9 L49.9,48.2 L44.3,32.9 Z"/>
+      </g>
+    </svg>
+  ),
+
+  /* Holden — the lion perched on its stone, inside the roundel */
+  Holden: () => (
+    <svg viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1">
+      <circle cx="5.5" cy="5.5" r="4.8"/>
+      <path d="M2.6,8.1 H8.4" strokeWidth="1.3" strokeLinecap="round"/>
+      <path d="M3.6,7.6 Q3.6,3.9 6,3.9 Q7.6,3.9 7.6,5.3 V7.6" strokeLinecap="round"/>
+      <circle cx="7.5" cy="3.5" r="1" fill="currentColor" stroke="none"/>
+    </svg>
+  ),
+
+  /* HPD — the Honda Performance Development H, chevron trailing it */
+  HPD: () => (
+    <svg viewBox="0 0 13 10" fill="none" stroke="currentColor" strokeWidth="1.3" strokeLinecap="round">
+      <path d="M2,1.5 V8.5 M7,1.5 V8.5 M2,5 H7"/>
+      <path d="M9.6,2.8 L12,5 L9.6,7.2" strokeWidth="1.1" strokeLinejoin="round"/>
+    </svg>
+  ),
+
+  /* Kia — KIA reversed out of the lens-shaped badge. Loose letter strokes on
+     their own read as a wordmark, which is not what sits on the car. */
+  Kia: () => (
+    <svg viewBox="0 620 2500 1160" fill="currentColor" fillRule="evenodd">
+      <path d="M2225.5,857.7c-298.8-150.8-635.7-216.5-969.3-216.5c-336.4,0-687.1,52.5-984.8,216.5C146.6,926.8,8,1047.7,8,1201.8h0 c0,152.4,136.4,278.9,262.4,342.4c299.3,151.3,636.8,216.5,970.9,216.5c336.3,0,687.1-52.5,984.7-215.9 c123.7-67.9,262.9-188.3,262.9-341.9C2488.9,1048.8,2353.6,921.8,2225.5,857.7z M808.8,1492.3l-203.3-244.7h-6.1v244.7h-158V946.7 h-34.8v-36.5h192.8v204.9h6.1l166.8-204.9h177.8l-220.9,271.7l256.3,310.4H808.8z M1314.7,1492.3h-157.9V948.9h-34.2v-40.3h192.2 V1492.3z M1925.6,1492.3l-129.8-380.5l-130.3,380.5h-172.3l189.4-545.7h0h-30.9v-35.9h243.6l198.3,581.6H1925.6z"/>
+    </svg>
+  ),
+
+  /* Ligier — L inside the hexagonal badge */
+  Ligier: () => (
+    <svg viewBox="0 0 12 11" fill="none" stroke="currentColor" strokeWidth="1" strokeLinejoin="round">
+      <path d="M6,0.8 L10.6,3.4 V8.2 L6,10.8 L1.4,8.2 V3.4 Z"/>
+      <path d="M4.4,3.3 V7.7 H8" strokeWidth="1.3" strokeLinecap="round"/>
+    </svg>
+  ),
+
+  /* Pontiac — the downward dart as it actually is: a hollow arrow nested inside
+     a second hollow arrow, with the four-pointed star up near the shoulder.
+     A solid wedge loses all three of those. */
+  Pontiac: () => (
+    <svg viewBox="80 0 216 352" fill="currentColor" fillRule="evenodd">
+      <path d="M188.2,41.2L88.1,0c0,0,100.2,346.8,99.7,348.7L288.4,0.4L188.2,41.2z M100.4,12.8l88.1,35.8l88.1-35.4l-88.5,301.9 C188.5,313.5,100.4,12.8,100.4,12.8z"/>
+      <path d="M188.5,56.8l-78.7-31.6c0,0,78.7,265.6,78.3,267l79.1-266.7L188.5,56.8z M187.8,126.8l-6.7-23.8l-36.6-6.1l37.3-5.3 l5.4-21.9l6.6,22.3l38.6,5.1l-39.3,5.4L187.8,126.8z"/>
+    </svg>
+  ),
+
+  /* RAM — the ram's head, both horns curling back on themselves */
+  RAM: () => (
+    <svg viewBox="0 0 15 10" fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinecap="round">
+      <path d="M7.5,2.6 Q4,1 2.4,3 Q0.9,5 3,5.9 Q4.6,6.3 4.9,4.8"/>
+      <path d="M7.5,2.6 Q11,1 12.6,3 Q14.1,5 12,5.9 Q10.4,6.3 10.1,4.8"/>
+      <path d="M7.5,2.4 V6.4"/>
+      <path d="M5.9,6.4 H9.1 L7.5,9 Z" fill="currentColor" stroke="none"/>
+    </svg>
+  ),
+
+  /* Ray — italic R, slanted to separate it from Radical's upright one */
+  Ray: () => (
+    <svg viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round">
+      <path d="M2.4,9.8 L4.4,1.2"/>
+      <path d="M4.4,1.2 Q8.9,1.2 8.4,3.7 Q8,5.9 3.6,5.9"/>
+      <path d="M5.7,5.9 L8,9.8"/>
+    </svg>
+  ),
+
+  /* Renault — the losange, banded */
+  Renault: () => (
+    <svg viewBox="0 0 11 13" fill="none" stroke="currentColor" strokeWidth="1.1" strokeLinejoin="round">
+      <path d="M5.5,1 L10,6.5 L5.5,12 L1,6.5 Z"/>
+      <path d="M5.5,3.6 L7.9,6.5 L5.5,9.4 L3.1,6.5 Z"/>
+    </svg>
+  ),
+
+  /* Riley — R set in the squared badge */
+  Riley: () => (
+    <svg viewBox="0 0 11 11" fill="none" stroke="currentColor" strokeWidth="1" strokeLinejoin="round">
+      <rect x="0.6" y="0.6" width="9.8" height="9.8" rx="2.2"/>
+      <path d="M3.7,8.3 V2.9 Q7.3,2.9 7.3,4.9 Q7.3,6.5 3.7,6.5 M5.7,6.5 L7.6,8.3" strokeWidth="1.2" strokeLinecap="round"/>
+    </svg>
+  ),
+
+  /* Ruf — the RUF wordmark; three letters, unlike the single-R marks */
+  Ruf: () => (
+    <svg viewBox="0 0 20 9" fill="none" stroke="currentColor" strokeWidth="1.15" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1,8 V1 Q4.7,1 4.7,3 Q4.7,4.9 1,4.9 M3,4.9 L5.1,8"/>
+      <path d="M7.6,1 V5.9 Q7.6,8 9.6,8 Q11.6,8 11.6,5.9 V1"/>
+      <path d="M14.4,8 V1 H18.6 M14.4,4.3 H17.6"/>
+    </svg>
+  ),
+
+  /* Williams — the speed-line W */
+  Williams: () => (
+    <svg viewBox="0 0 14 10" fill="none" stroke="currentColor" strokeWidth="1.2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M1,1.4 L4,8.6 L7,3.4 L10,8.6 L13,1.4"/>
     </svg>
   ),
 };
