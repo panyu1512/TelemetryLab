@@ -435,6 +435,17 @@ Not as a product — iRacing and `pyirsdk` are Windows-only. As a development en
 </details>
 
 <details>
+<summary><b>Why do Chinese (or Japanese, Korean, Cyrillic) driver names show as <code>?</code>?</b></summary>
+
+<br>
+
+Because iRacing writes its session string as ISO-8859-1 by default and replaces every character that codepage cannot hold with `?` — the substitution happens inside the sim, before the data reaches shared memory, so no overlay can recover the original name.
+
+Fix it in the sim: close iRacing, open `Documents\iRacing\app.ini`, set `irsdkUTF8SessionStr=1` (under `[Misc]`), and restart. The bridge logs a reminder with these steps whenever it connects to a session that is not UTF-8.
+
+</details>
+
+<details>
 <summary><b>Why does Windows say the publisher is unknown?</b></summary>
 
 <br>

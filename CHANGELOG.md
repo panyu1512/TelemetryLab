@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Non-Latin driver names no longer disappear silently into `?`.** iRacing
+  emits its session YAML as ISO-8859-1 unless `irsdkUTF8SessionStr=1` is set in
+  `app.ini`, and the sim itself substitutes every Chinese, Japanese, Korean or
+  Cyrillic character with `?` before the string ever reaches shared memory — so
+  the names cannot be recovered downstream. The bridge now detects the encoding
+  pyirsdk saw and prints the one-line sim-side fix on connect, and forces UTF-8
+  on its own stdout/stderr so a cp1252 console stops mangling the names it logs.
+  The FAQ documents the setting.
+
 ## [1.1.2] - 2026-08-13
 
 ### Fixed
