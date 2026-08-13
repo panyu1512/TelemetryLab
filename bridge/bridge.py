@@ -18,6 +18,7 @@ from __future__ import annotations
 
 import asyncio
 import math
+import sys
 from typing import Any
 
 import irsdk
@@ -28,6 +29,18 @@ from telemetrylab.ingest import CAR_IDX_VARS
 
 HOST = "0.0.0.0"
 PORT = 8765
+
+# iRacing writes its session YAML as ISO-8859-1 by default, and characters that
+# codepage cannot represent — Chinese, Japanese, Korean, Cyrillic driver names —
+# are substituted with "?" *by the sim*, before the string reaches shared memory.
+# Nothing downstream can recover them, so the only fix is the sim-side setting;
+# we detect the encoding pyirsdk saw and tell the user how to turn UTF-8 on.
+ENCODING_HINT = (
+    "[bridge] session string is ISO-8859-1: non-Latin driver names (Chinese, "
+    "Japanese, Korean, Cyrillic) will show up as '?'. To fix, close iRacing, set "
+    "irsdkUTF8SessionStr=1 in Documents\\iRacing\\app.ini (it sits under [Misc]; "
+    "search the file if your install differs), and restart the sim."
+)
 
 
 class IrsdkSource:
@@ -52,7 +65,19 @@ class IrsdkSource:
         elif not self._connected and self.ir.startup() and self.ir.is_connected:
             self._connected = True
             print("[bridge] iRacing connected", flush=True)
+            self._warn_if_not_utf8()
         return self._connected
+
+    def _warn_if_not_utf8(self) -> None:
+        """Warn once per connection if the sim is not emitting UTF-8 YAML.
+
+        pyirsdk sniffs the ``Encoding: UTF8`` marker at the head of the session
+        string and decodes as cp1252 when it is absent, so this flag is exactly
+        the condition under which non-Latin names arrive mangled.
+        """
+        is_utf8 = getattr(self.ir, "is_session_info_utf8", True)
+        if not is_utf8:
+            print(ENCODING_HINT, flush=True)
 
     # --- safe SDK access ----------------------------------------------------
     def _get(self, name: str, default: Any = None) -> Any:
@@ -139,7 +164,21 @@ class IrsdkSource:
         return {name: self._get(name) for name in CAR_IDX_VARS}
 
 
+def _force_utf8_stdio() -> None:
+    """Log in UTF-8 regardless of the console codepage.
+
+    A Windows console defaults to cp1252, which turns every non-Latin driver
+    name we print into "?" (or raises) — the same symptom as the sim-side
+    encoding, but purely cosmetic and entirely ours to fix.
+    """
+    for stream in (sys.stdout, sys.stderr):
+        reconfigure = getattr(stream, "reconfigure", None)
+        if reconfigure is not None:
+            reconfigure(encoding="utf-8", errors="replace")
+
+
 async def main() -> None:
+    _force_utf8_stdio()
     service = BridgeService(IrsdkSource())
     async with serve(service.publisher.register, HOST, PORT):
         print(f"[bridge] WebSocket server listening on ws://{HOST}:{PORT}", flush=True)
