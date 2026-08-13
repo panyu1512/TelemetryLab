@@ -7,7 +7,6 @@
   <a href="https://github.com/panyu1512/TelemetryLab/releases/latest/download/TelemetryLab-setup.exe">Download</a> •
   <a href="#quickstart">Quickstart</a> •
   <a href="#architecture">Architecture</a> •
-  <a href="ROADMAP.md">Roadmap</a> •
   <a href="CHANGELOG.md">Changelog</a>
 </div>
 
