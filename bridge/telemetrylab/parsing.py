@@ -120,6 +120,7 @@ _CAR_MAKES = (
     "Renault",
     "Riley",
     "Ruf",
+    "Skip Barber",
     "Subaru",
     "Toyota",
     "Volkswagen",
