@@ -308,11 +308,14 @@ a {
 }
 
 /* Brand icon: the SVG child fills the container height and auto-sizes its
- * width from the viewBox aspect ratio. The container uses align-items:stretch
- * (inline-flex default) so height:100% on the SVG resolves correctly. */
+ * width from the viewBox aspect ratio, up to a cap. Every viewBox is cropped to
+ * the mark's own ink, so height here is drawing rather than padding; the cap is
+ * what keeps a wide wordmark (Dallara is 5.6:1) from running over its neighbour
+ * — it fits to the cap and centres itself instead. */
 .brand-icon > svg {
   height: 100%;
   width: auto;
+  max-width: 40px;
   display: block;
 }
 
