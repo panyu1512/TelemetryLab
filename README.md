@@ -322,7 +322,7 @@ Each overlay window remembers its own position, size and lock state and is resto
 
 ## Wire protocol
 
-Since v0.3.0 the bridge multiplexes several **channels** over the single WebSocket, each in a versioned envelope so the frontend can route by `type` and pick a different cadence per channel:
+The bridge multiplexes several **channels** over the single WebSocket, each in a versioned envelope so the frontend can route by `type` and pick a different cadence per channel:
 
 ```jsonc
 { "v": 1, "type": "telemetry", "ts": 1719936000123, "seq": 4211, "payload": { … } }
