@@ -63,6 +63,33 @@ const STINT_LAPS = 20;
 const CLASS_GT3 = { id: 84, short: "GT3", color: "#ff4d4d", baseLap: 138 };
 const CLASS_GT4 = { id: 85, short: "GT4", color: "#4d9dff", baseLap: 150 };
 
+/**
+ * One make per car, not one make per class.
+ *
+ * The mock field used to be six Audis racing six McLarens, which made the brand
+ * column a column of identical glyphs — the one thing it exists to prevent. A
+ * real GT3 grid is a different manufacturer in almost every box, and that is
+ * also what makes the column worth reading, so the mock grid is now a plausible
+ * multi-make field. `Mercedes-AMG` is in here deliberately: it exercises the
+ * alias that maps it onto the Mercedes mark.
+ */
+const GT3_CARS: Array<[make: string, model: string]> = [
+  ["Audi", "Audi R8 LMS EVO II"],
+  ["Ferrari", "Ferrari 296 GT3"],
+  ["Porsche", "Porsche 911 GT3 R"],
+  ["BMW", "BMW M4 GT3"],
+  ["Mercedes-AMG", "Mercedes-AMG GT3 2020"],
+  ["Lamborghini", "Lamborghini Huracán GT3 EVO"],
+];
+const GT4_CARS: Array<[make: string, model: string]> = [
+  ["McLaren", "McLaren 570S GT4"],
+  ["Aston Martin", "Aston Martin Vantage GT4"],
+  ["Toyota", "Toyota GR86"],
+  ["Ford", "Ford Mustang GT4"],
+  ["Chevrolet", "Chevrolet Camaro GT4.R"],
+  ["Porsche", "Porsche 718 Cayman GT4 Clubsport"],
+];
+
 const FIRST = ["Kike", "Matt", "Ana", "Luca", "Sven", "Yuki", "Pia", "Omar", "Nils", "Rui", "Ivo", "Zoe"];
 const LAST = ["Ferrer", "Farrow", "Silva", "Rossi", "Berg", "Tanaka", "Costa", "Vega", "Moreau", "Klein", "Novak", "Reyes"];
 /** [name, alpha-3 code] pairs, aligned with FIRST/LAST by index. */
@@ -84,6 +111,9 @@ const COUNTRIES: Array<[string, string]> = [
 interface MockCar {
   idx: number;
   klass: typeof CLASS_GT3;
+  /** Manufacturer and model, drawn from this car's class roster. */
+  make: string;
+  model: string;
   number: string;
   name: string;
   iRating: number;
@@ -103,10 +133,14 @@ function rand(seed: number): number {
 /** The field is built once, deterministically, so identities are stable. */
 export const MOCK_FIELD: MockCar[] = Array.from({ length: MOCK_FIELD_SIZE }, (_, idx) => {
   const klass = idx % 2 === 0 ? CLASS_GT3 : CLASS_GT4;
+  const roster = klass === CLASS_GT3 ? GT3_CARS : GT4_CARS;
+  const [make, model] = roster[Math.floor(idx / 2) % roster.length];
   const iRating = Math.round(900 + rand(idx + 1) * 5000);
   return {
     idx,
     klass,
+    make,
+    model,
     number: String(1 + Math.floor(rand(idx + 7) * 98)),
     name: `${FIRST[idx % FIRST.length]} ${LAST[idx % LAST.length]}`,
     iRating,
@@ -495,9 +529,9 @@ function driverEntry(car: MockCar, t: number): DriverEntry {
     carClassId: car.klass.id,
     carClassShortName: car.klass.short,
     carPath: car.klass.short.toLowerCase(),
-    carMake: car.klass === CLASS_GT3 ? "Audi" : "McLaren",
-    carModel: car.klass === CLASS_GT3 ? "Audi R8 LMS EVO II" : "McLaren 570S GT4",
-    carScreenName: car.klass === CLASS_GT3 ? "Audi R8 LMS EVO II" : "McLaren 570S GT4",
+    carMake: car.make,
+    carModel: car.model,
+    carScreenName: car.model,
     iRating: car.iRating,
     licenseLevel: 13,
     licenseString: "A 3.50",

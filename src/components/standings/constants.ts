@@ -134,7 +134,7 @@ export const STANDINGS_COLUMNS: readonly ColumnDef[] = [
   // its container instead, which is how fixed columns ended up holding empty
   // space while `Francois Sieg…` clipped (rule 6).
   { id: "driver", label: "Driver", name: "Driver", width: "minmax(0, 1fr)", px: 136, align: "left", always: true },
-  { id: "brand", label: "Car", name: "Car brand", width: "2rem", px: 32, align: "center" },
+  { id: "brand", label: "Car", name: "Car brand", width: "2.75rem", px: 44, align: "center" },
   { id: "license", label: "Lic", name: "License / SR", width: "3.4rem", px: 54, align: "center" },
   { id: "irating", label: "iR", name: "iRating", width: "4.6rem", px: 74, align: "right" },
   { id: "gap", label: "Gap", name: "Gap to leader", width: "3.6rem", px: 58, align: "right" },

@@ -94,7 +94,7 @@ const REL_COLUMNS: { id: RelColumnId; width: string; px: number }[] = [
   // to truncate (`design.md` § Dense tabular overlays, rule 6). `px` stays a
   // target, so a narrow overlay drops a column before crushing the name.
   { id: "driver", width: "minmax(0, 1fr)", px: 112 },
-  { id: "brand", width: "2rem", px: 32 },
+  { id: "brand", width: "2.75rem", px: 44 },
   { id: "class", width: "3.2rem", px: 51 },
   { id: "gap", width: "4.8rem", px: 77 },
   { id: "last", width: "5rem", px: 80 },
