@@ -32,7 +32,7 @@
 <br>
 
 <div align="center">
-  <img src="site/assets/dashboard.png" alt="TelemetryLab dashboard" width="800">
+  <img src="site/assets/relative.png" alt="TelemetryLab dashboard" width="800">
 </div>
 
 <br>
