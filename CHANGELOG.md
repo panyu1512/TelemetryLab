@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **The car-brand marks are readable in the row now.** They were too small to
+  identify at a glance, and the size was mostly an illusion: each mark carried
+  its source file's padding, so most of the box was empty space — McLaren's
+  speedmark was 15% of its box and Audi's rings 35%, which left two or three
+  pixels of actual drawing. Every mark is now cropped to its own ink and drawn
+  at 24 px in pure white, with the car column widened to hold it, on both the
+  standings and the relative.
+- Makes without a badge show their first three letters at a readable size
+  rather than in a faint grey.
+
+### Changed
+
+- **The mock field is a multi-make grid.** It used to be six Audis racing six
+  McLarens, which made the car column a column of identical badges — the one
+  thing that column exists to prevent. It now runs a plausible GT3 and GT4
+  field, so the demo, the previews and the site's captures show what a real
+  grid looks like.
+
 ## [1.1.1] - 2026-08-13
 
 ### Fixed
