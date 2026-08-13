@@ -7,6 +7,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **The car-brand marks in the standings are the real logos now.** They had
+  been drawn by hand, and several were not the manufacturer's badge at all:
+  Chevrolet's bowtie was two arrowheads facing each other, Cadillac's crest an
+  undivided hexagon, RAM's head a stroke over a triangle. Twenty-one marks —
+  Toyota, Honda, Lamborghini, McLaren, Porsche, Ford, BMW, Ferrari, Audi,
+  Chevrolet, Cadillac, Acura, Mazda, Nissan, Hyundai, Subaru, Volkswagen,
+  Aston Martin, Kia, RAM and Renault — now use the manufacturer's own vector
+  art, and Dallara its wordmark. They still take the row's ink on any
+  background, exactly as before.
+- **Eleven makes show their name instead of a badge.** Lotus, Radical, Skip
+  Barber, Buick, Holden, HPD, Ligier, Ray, Riley, Ruf and Williams have no
+  authoritative single-colour logo to draw from, and a mark that identifies
+  the wrong car is worse than no mark: those rows now carry the first three
+  letters of the make until real art exists for them.
+
 ## [1.1.0] - 2026-08-12
 
 ### Added
