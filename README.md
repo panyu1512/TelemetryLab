@@ -13,9 +13,6 @@
 <br>
 
 <div align="center">
-  <a href="https://github.com/panyu1512/TelemetryLab/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/panyu1512/TelemetryLab/ci.yml?branch=main&style=for-the-badge&label=build" alt="Build Status"></a>
-  <a href="https://github.com/panyu1512/TelemetryLab/releases/latest"><img src="https://img.shields.io/github/v/release/panyu1512/TelemetryLab?style=for-the-badge&label=release" alt="Latest Release"></a>
-  <a href="https://github.com/panyu1512/TelemetryLab/releases"><img src="https://img.shields.io/github/downloads/panyu1512/TelemetryLab/total?style=for-the-badge&label=downloads" alt="Downloads"></a>
   <img src="https://img.shields.io/badge/platform-windows-blue?style=for-the-badge" alt="Platform">
 </div>
 
