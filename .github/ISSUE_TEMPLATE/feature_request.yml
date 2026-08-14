@@ -1,0 +1,57 @@
+name: Feature request
+description: Something the app should show, or should show differently.
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Worth knowing before you write: these overlays are read at speed with
+        your hands busy, so the bar for adding to them is high and the bar for
+        adding *chrome* — labels, controls, buttons — is higher still. The
+        timing screens carry no controls at all by design; everything
+        configurable lives in the Overlay Manager. See
+        [`design.md`](../../design.md) if you want the long version.
+
+        That is not a "no". It is what a good case here argues against.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: What are you trying to find out, mid-session?
+      description: >
+        The driving question, not the widget. "Whether the car behind is close
+        enough to defend into turn one" leads somewhere better than "add a gap
+        column".
+    validations:
+      required: true
+
+  - type: textarea
+    id: today
+    attributes:
+      label: What do you do about it today?
+      description: Guess, tab out, use another overlay, go without?
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where would it live?
+      options:
+        - Standings
+        - Relative
+        - Dashboard widgets
+        - Fuel & Strategy
+        - Overlay Manager
+        - A new overlay
+        - Not sure
+    validations:
+      required: true
+
+  - type: textarea
+    id: sketch
+    attributes:
+      label: What would it look like?
+      description: >
+        Optional, and rough is fine — ASCII, a photo of a napkin, or a shot of
+        another overlay doing it.

@@ -1,0 +1,105 @@
+name: Bug report
+description: Something in the app is wrong, missing or misleading.
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time. The two fields that save the most
+        back-and-forth are **Mock Data** and **session type** — between them
+        they usually say whether a bug is in the overlay or in the data
+        reaching it, which is the first thing anyone would otherwise have to
+        ask you.
+
+  - type: input
+    id: version
+    attributes:
+      label: TelemetryLab version
+      description: Shown in the installer filename, or in the Overlay Manager's title bar.
+      placeholder: "1.7.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Where does it happen?
+      options:
+        - Standings
+        - Relative
+        - Dashboard widgets
+        - Fuel & Strategy
+        - Overlay Manager
+        - The installer, or launching the app
+        - Somewhere else / not sure
+    validations:
+      required: true
+
+  - type: dropdown
+    id: mock
+    attributes:
+      label: Does it still happen with Mock Data switched on?
+      description: >
+        Global Settings → Mock Data runs the whole UI on a synthetic feed with
+        no sim and no bridge. If the bug survives that, it is in the overlay.
+        If it disappears, it is in the bridge or in what iRacing is sending.
+      options:
+        - "Yes — happens with Mock Data too"
+        - "No — only with real iRacing telemetry"
+        - "Haven't tried"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: session
+    attributes:
+      label: What kind of session?
+      description: >
+        Standings and Relative deliberately behave differently outside a race —
+        ranked by best lap, with the race-only columns dropped.
+      options:
+        - Race
+        - Qualifying
+        - Practice / testing
+        - Not in a session
+        - Not applicable
+    validations:
+      required: true
+
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened, and what did you expect instead?
+      placeholder: |
+        The tyre bar sat at full with my foot nowhere near the clutch pedal.
+        I expected it empty until I press it.
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Start a practice session at Spa in a GT3
+        2. Open the Standings overlay
+        3. Watch the position column through the first lap
+    validations:
+      required: true
+
+  - type: textarea
+    id: shot
+    attributes:
+      label: Screenshot
+      description: >
+        A capture of the overlay is worth a lot here — most of these bugs are
+        visual. Drag the image straight into this box.
+
+  - type: textarea
+    id: logs
+    attributes:
+      label: Bridge log
+      description: >
+        Overlay Manager → Debug has the bridge log and an export button. Paste
+        or attach it if the bug involves data rather than layout.
+      render: text

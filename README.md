@@ -7,13 +7,19 @@
   <a href="https://github.com/panyu1512/TelemetryLab/releases/latest/download/TelemetryLab-setup.exe">Download</a> •
   <a href="#quickstart">Quickstart</a> •
   <a href="#architecture">Architecture</a> •
+  <a href="#contributing">Contributing</a> •
   <a href="CHANGELOG.md">Changelog</a>
 </div>
 
 <br>
 
 <div align="center">
+  <a href="https://github.com/panyu1512/TelemetryLab/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/panyu1512/TelemetryLab/ci.yml?branch=main&style=for-the-badge&label=build" alt="Build Status"></a>
+  <a href="https://github.com/panyu1512/TelemetryLab/releases/latest"><img src="https://img.shields.io/github/v/release/panyu1512/TelemetryLab?style=for-the-badge&label=release" alt="Latest Release"></a>
+  <a href="https://github.com/panyu1512/TelemetryLab/releases"><img src="https://img.shields.io/github/downloads/panyu1512/TelemetryLab/total?style=for-the-badge&label=downloads" alt="Downloads"></a>
   <img src="https://img.shields.io/badge/platform-windows-blue?style=for-the-badge" alt="Platform">
+  <img src="https://img.shields.io/badge/license-MIT-22c55e?style=for-the-badge" alt="MIT licence">
+  <img src="https://img.shields.io/badge/PRs-welcome-8b5cf6?style=for-the-badge" alt="Pull requests welcome">
 </div>
 
 <br>
@@ -53,6 +59,7 @@
 - [Wire protocol](#wire-protocol)
 - [Contributing](#contributing)
 - [FAQ](#faq)
+- [Licence](#licence)
 
 <br>
 
@@ -350,7 +357,31 @@ The mock bridge synthesizes a full field (`MOCK_CARS`, `MOCK_MULTICLASS`) so the
 
 ## Contributing
 
-Issues and pull requests are welcome. Please open an issue before starting anything large, so the design can be agreed first.
+TelemetryLab is open source under the [MIT licence](LICENSE), and contributions are welcome — bug reports, design arguments and pull requests alike.
+
+**[CONTRIBUTING.md](CONTRIBUTING.md) is the full guide.** The short version:
+
+| | |
+| --- | --- |
+| **Found a bug?** | [Open an issue](https://github.com/panyu1512/TelemetryLab/issues/new/choose). The template asks two questions worth answering first: does it still happen with **Mock Data** on, and what kind of session were you in? Between them they usually say whether the bug is in the overlay or in the data reaching it. |
+| **Want a feature?** | [Open an issue](https://github.com/panyu1512/TelemetryLab/issues/new/choose) describing what you are trying to find out mid-session, rather than the widget you have in mind. These surfaces are read at speed, so the bar for adding to them is high — that is the case a good request argues against. |
+| **Sending a patch?** | Open an issue first for anything large. This app has a written design system, and the most common reason a good patch gets sent back is that it solved the problem in a way the surface had already argued against. |
+
+You do not need iRacing, or Windows, to work on almost any of it:
+
+```bash
+npm install
+npm run dev          # → http://localhost:1420
+```
+
+Then switch on **Global Settings → Mock Data** for a full twelve-car, two-class field at Spa — lap times, sector splits, fuel burn and pit windows, no sim required. The **Mock Session** switch beside it (Race / Qualifying / Practice) is the only way to see how the timing screens change outside a race.
+
+Two files are worth reading before you change anything visual:
+
+- **[`design.md`](design.md)** — the design system, and unusually it records the *arguments* rather than just the rules, including the ones that were later reversed. If your change contradicts it, that is allowed: say so in the PR and update the file in the same change.
+- **[`CHANGELOG.md`](CHANGELOG.md)** — anything user-visible gets a line under `## [Unreleased]`, written for someone deciding whether to update.
+
+Commits follow [Conventional Commits](https://www.conventionalcommits.org/) (`fix(standings): …`, `feat(inputs): …`); the changelog and release notes are written from them.
 
 ### Testing & quality gates
 
@@ -460,6 +491,15 @@ Yes. Nothing hardcodes localhost — set `VITE_WS_HOST` and `VITE_WS_PORT`, for 
 `pyirsdk` already handles iRacing's shared-memory layout and session YAML, which is the fiddly part. The sidecar keeps that dependency isolated behind a WebSocket, so the frontend has no sim-specific code at all and can be developed and tested off Windows.
 
 </details>
+
+<br>
+
+## Licence
+
+[MIT](LICENSE) — use it, fork it, ship it, sell it. Keep the copyright notice.
+
+The name and the artwork are the project's; the code is yours to do what you
+like with.
 
 <br>
 
