@@ -28,7 +28,7 @@
   <strong>Multi-class standings, an on-track relative, fuel strategy and a driving cluster — each in its own always-on-top window.</strong>
 </div>
 
-<br>
+<br> 
 
 - ⚡ **Live data straight from the sim** — a Python sidecar reads iRacing's shared memory and streams it over a local WebSocket at ~60 Hz.
 - 🪟 **One overlay per window** — frameless, always-on-top, lockable click-through, each remembering its own position and size.
