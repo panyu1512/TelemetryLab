@@ -1,0 +1,22 @@
+# https://telemetrylab.app/robots.txt
+
+User-agent: *
+Allow: /
+
+# AI search crawlers are listed explicitly rather than left to the wildcard,
+# so that blocking one later is a deliberate edit and not a side effect.
+# Each of these cites pages it is allowed to fetch; a Disallow removes
+# TelemetryLab from that assistant's answers.
+User-agent: OAI-SearchBot
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: ClaudeBot
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+Sitemap: https://telemetrylab.app/sitemap.xml
