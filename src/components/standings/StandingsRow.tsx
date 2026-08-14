@@ -3,6 +3,7 @@ import { Wrench, AlertTriangle } from "lucide-react";
 import { useStandingsRow } from "../../stores/useStandingsStore";
 import { useDriver } from "../../stores/useSessionStore";
 import {
+  CLASS_EDGE_WIDTH,
   COL_LABEL_H,
   GROUP_TONE,
   gridTemplate,
@@ -118,8 +119,11 @@ function StandingsRowInner({
           // 3 px, up from 2: on near-black paper a 2 px hairline of an arbitrary
           // hue was the first thing to disappear in peripheral vision, which is
           // where this surface is read. It is still the row's only carrier of
-          // class colour (§ Two colour systems, rule 2).
-          borderLeft: `3px solid ${row?.isClassLeader ? classColor : `${classColor}66`}`,
+          // class colour (§ Two colour systems, rule 2), and the one measurement
+          // that holds its drawn size as the table scales — see CLASS_EDGE_WIDTH.
+          borderLeftWidth: CLASS_EDGE_WIDTH,
+          borderLeftStyle: "solid",
+          borderLeftColor: row?.isClassLeader ? classColor : `${classColor}66`,
           // Clear the in-row column labels rather than centring under them.
           paddingTop: labelled ? COL_LABEL_H : undefined,
         }}

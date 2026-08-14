@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Standings and Relative scale to fit instead of dropping columns.** Making
+  either overlay smaller used to shed columns one by one — sectors first, then
+  position change, tyre, licence, iRating and on down a list — so the type
+  could stay full size. It meant resizing the window silently changed *what the
+  table showed*, with nothing on screen to distinguish a dropped column from
+  data that never arrived. Both surfaces now shrink whole: one factor scales
+  the type, rows, gaps, column widths and the session strip together, so every
+  column you asked for is there at every size and the layout tuned at full size
+  is the same layout at half. The table stops shrinking at half scale, below
+  which it scrolls sideways as before.
+- The 3 px class-colour edge on each row holds its drawn size as the table
+  scales. It went to 3 px to stop vanishing in peripheral vision, and scaling
+  it with everything else would take it back under the 2 px already rejected.
+
 ## [1.3.0] - 2026-08-14
 
 ### Changed

@@ -358,6 +358,42 @@ the fact that a header band and a row cost the same height.
    column is fixed-width and mono; the name absorbs all slack. A layout that
    clips `Francois Sieg…` while fixed columns hold empty space has its
    priorities backwards.
+
+   **A narrow overlay scales the table; it does not shorten it.** This rule
+   used to end by dropping a column — sectors first, then position change,
+   tyre, licence, iRating and on down a list — so that the type could stay at
+   the size rule 8 argues for. Both halves cannot be had, and the wrong half
+   was being kept: shedding columns means resizing the overlay silently changes
+   *what it shows*, and nothing on screen distinguishes a column that was
+   dropped from data that never arrived. A driver who sizes their standings to
+   sit beside the mirrors has asked for a smaller table, not a different one.
+
+   So the surface takes one scale factor — the width it has over the width its
+   columns want — and draws everything inside it: type, rows, gaps, column
+   widths, the § Session strip above them. The layout tuned at full size is the
+   same layout at half. It is `zoom` rather than `transform: scale()`, which
+   matters here more than most places: a transform resamples what it scales and
+   softens 12 px tabular digits at exactly the sizes where they are already
+   hard, where `zoom` re-lays the text out and keeps it hinted.
+   `lib/tableScale` owns the factor and is the only definition of what being
+   scaled means.
+
+   The scale never exceeds 1 — a wide overlay is a table with room around it,
+   not a table blown up — and stops at `MIN_TABLE_SCALE`, below which the
+   surface goes back to scrolling sideways. That floor is a backstop against a
+   table dragged to a sliver, not a claim about legibility; rule 8 is the claim
+   about legibility, and scaling is in tension with it by construction. What
+   settles the tension is who is choosing: the driver sizing the window is
+   making the call knowingly, where a column vanishing was the app making it
+   for them, silently.
+
+   **Two things do not scale.** The 3 px class-colour edge divides the factor
+   back out and holds its drawn size, because it went to 3 px precisely to stop
+   disappearing in peripheral vision and a uniform scale takes it back under
+   the 2 px already rejected — see `CLASS_EDGE_WIDTH`. And the § Session strip
+   and class band are handed the width they have to draw *in* rather than the
+   window's, so they keep every field at the sizes this rule exists to keep
+   them at. What holds its size is what carries presence rather than quantity.
 7. **Nothing on an overlay screen can be aimed at** — Standings, Relative and
    Fuel & Strategy. No title bar, no controls, no menus, no per-class
    affordances. These are the surfaces read while the user's hands are busy,

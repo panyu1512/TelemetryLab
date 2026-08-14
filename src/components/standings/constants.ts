@@ -109,8 +109,9 @@ interface ColumnDef {
    * Approx px width, used to compute the min table width.
    *
    * For the flexible `driver` column this is a *target*, not a floor: the
-   * column itself can shrink to nothing, but a table narrower than the sum of
-   * these drops an optional column instead of crushing the name (rule 6).
+   * column itself can shrink to nothing. The sum of these is the width the
+   * table wants, which is what it is scaled against rather than what it sheds
+   * columns to reach (rule 6, and `lib/tableScale`).
    */
   px: number;
   /** Header/label text alignment. */
@@ -222,12 +223,27 @@ const RACE_ONLY_COLUMNS: readonly StandingsColumnId[] = [
 const LAP_TIME_COLUMNS: readonly StandingsColumnId[] = ["best"];
 
 /**
+ * The 3 px class-colour edge, held at its drawn size however far the table
+ * scales down.
+ *
+ * It went from 2 px to 3 px because on near-black paper a 2 px hairline of an
+ * arbitrary hue was the first thing to disappear in peripheral vision, which is
+ * where this surface is read. A uniform scale takes it straight back under
+ * that: at 0.6 a 3 px border draws at 1.8 px, thinner than the width already
+ * rejected. Dividing by the scale inside the scaled box holds it at 3 px on
+ * screen — the one measurement on this surface that means the same thing at
+ * every size, because what it carries is presence rather than quantity.
+ */
+export const CLASS_EDGE_WIDTH = "calc(3px / var(--table-scale, 1))";
+
+/**
  * Narrow the user's chosen columns to the ones that tell the truth in this
  * session: outside a race, the race-only columns go and the ranking column
  * stays.
  *
- * Applied *before* {@link fitColumns} so a narrow overlay still drops columns
- * around the result rather than fighting it.
+ * This is the only thing that hides a column now. It is about meaning, not
+ * about room: the window decides how large the table is drawn, never what is
+ * in it.
  */
 export function scopeColumnsToSession(
   isVisible: ColumnVisibility,
@@ -241,53 +257,16 @@ export function scopeColumnsToSession(
   };
 }
 
-/** The columns {@link fitColumns} may never drop in a lap-time session. */
-export const LAP_TIME_PROTECTED: readonly StandingsColumnId[] = LAP_TIME_COLUMNS;
-
-/**
- * Auto-hide order (first dropped → last) when the window is too narrow for the
- * user's chosen columns. Position, driver, interval, last lap and status are
- * never auto-dropped — that set is the smallest useful timing table.
- */
-const RESPONSIVE_DROP_ORDER: StandingsColumnId[] = [
-  "sectors",
-  "change",
-  "tire",
-  "license",
-  "irating",
-  "country",
-  "num",
-  "brand",
-  "best",
-  "gap",
-];
-
-/**
- * Narrow the visible-column set to what fits in `width` CSS pixels, dropping
- * optional columns in {@link RESPONSIVE_DROP_ORDER} until the minimum table
- * width fits (or there is nothing left to drop). The user's own hidden columns
- * stay hidden; a zero/unknown width leaves the set untouched.
+/*
+ * There is deliberately no responsive column-dropping here any more.
  *
- * `protect` holds columns this pass may not drop however narrow the window
- * gets — the ranking column in a lap-time session, which is structural rather
- * than optional. The table scrolls sideways before it loses one of those.
+ * A `fitColumns` used to shed columns down a priority list as the overlay
+ * narrowed — sectors, then position change, tyre, licence, iRating, and on —
+ * so the type could stay at full size. It meant resizing the overlay silently
+ * changed what it showed, with nothing on screen to say a column had been
+ * dropped rather than never sent. The surface now scales instead, whole and
+ * with every column intact; see `lib/tableScale`.
  */
-export function fitColumns(
-  width: number,
-  sectorCount: number,
-  isVisible: ColumnVisibility,
-  protect: readonly StandingsColumnId[] = []
-): ColumnVisibility {
-  if (width <= 0) return isVisible;
-  const dropped = new Set<StandingsColumnId>();
-  const effective: ColumnVisibility = (id) => isVisible(id) && !dropped.has(id);
-  for (const id of RESPONSIVE_DROP_ORDER) {
-    if (tableMinWidth(sectorCount, effective) <= width) break;
-    if (protect.includes(id)) continue;
-    dropped.add(id);
-  }
-  return effective;
-}
 
 /** Sector-status → CSS color token. Drives purple/green/yellow/red. */
 export const SECTOR_COLOR: Record<string, string> = {
