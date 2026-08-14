@@ -173,6 +173,9 @@
           <a class="readout__field" href="#needs">
             Requirements
           </a>
+          <a class="readout__field" href="#source">
+            Source
+          </a>
         </nav>
       </div>
     </div>
@@ -617,6 +620,89 @@
             </div>
           </dl>
         </section>
+
+        <!-- Open source. Same band + definition-list grammar as § Requirements
+             above: this is the other half of "what you are getting into", and
+             giving it a different shape would have made it read as a footnote
+             rather than as one of the reasons to trust the download. -->
+        <section id="source" class="needs">
+          <div class="band">
+            <span class="band__chip">Open source</span>
+            <span class="band__field"><span class="band__k">LICENCE</span><b class="band__v">MIT</b></span>
+            <span class="band__field"><span class="band__k">STACK</span><b class="band__v">Tauri · React · Python</b></span>
+            <span class="band__field"><span class="band__k">PRS</span><b class="band__v">welcome</b></span>
+          </div>
+          <h2>All of it is on GitHub.</h2>
+          <dl class="needs__list">
+            <div>
+              <dt>MIT licensed</dt>
+              <dd>
+                Read it, fork it, change it, ship your own build of it —
+                commercially if you like. Keep the copyright notice and the rest
+                is yours. Nothing here phones home, and there is no account to
+                make.
+              </dd>
+            </div>
+            <div>
+              <dt>You can work on it without the sim</dt>
+              <dd>
+                The mock feed drives every overlay from synthetic telemetry — a
+                full multi-class field at Spa, with lap times, sector splits and
+                fuel burn — so the whole interface builds and runs on macOS and
+                Linux. You need Windows and iRacing to <em>use</em> it, and
+                neither to <em>improve</em> it.
+              </dd>
+            </div>
+            <div>
+              <dt>The arguments are written down, not just the rules</dt>
+              <dd>
+                <code>design.md</code> records why each of these surfaces looks
+                the way it does — including the decisions that were later
+                reversed, and what changed. It is meant to be argued with. If a
+                change contradicts it, the file moves too.
+              </dd>
+            </div>
+            <div>
+              <dt>Issues and pull requests</dt>
+              <dd>
+                Bug reports get two questions worth answering up front: does it
+                still happen with mock data on, and what kind of session were
+                you in. Between them they usually say whether a bug is in the
+                overlay or in the data reaching it.
+              </dd>
+            </div>
+          </dl>
+          <div class="hero__actions">
+            <!-- The mark is drawn here for the same reason the coffee cup is:
+                 this page makes no third-party requests for its own chrome. -->
+            <a
+              class="chip"
+              href="https://github.com/panyu1512/TelemetryLab"
+              rel="noopener"
+              target="_blank"
+            >
+              <svg
+                class="chip__icon"
+                viewBox="0 0 24 24"
+                aria-hidden="true"
+                focusable="false"
+              >
+                <path
+                  fill="currentColor"
+                  d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48l-.01-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85l-.01 2.75c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"
+                />
+              </svg>
+              View the source
+            </a>
+            <a
+              class="chip"
+              href="https://github.com/panyu1512/TelemetryLab/blob/main/CONTRIBUTING.md"
+              rel="noopener"
+              target="_blank"
+              >How to contribute</a
+            >
+          </div>
+        </section>
       </div>
     </main>
 
@@ -644,6 +730,13 @@
             >
             <a
               class="link-q"
+              href="https://github.com/panyu1512/TelemetryLab"
+              rel="noopener"
+              target="_blank"
+              >Source on GitHub</a
+            >
+            <a
+              class="link-q"
               href="https://buymeacoffee.com/panyu1512"
               rel="noopener"
               target="_blank"
@@ -651,7 +744,7 @@
             >
           </div>
           <p class="foot__colophon">
-            © 2026 TelemetryLab · not affiliated with iRacing
+            © 2026 TelemetryLab · MIT licensed · not affiliated with iRacing
           </p>
         </div>
       </div>

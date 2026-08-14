@@ -1,0 +1,8 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Download the latest installer
+    url: https://github.com/panyu1512/TelemetryLab/releases/latest
+    about: Windows .exe and .msi, with the release notes for that version.
+  - name: How the app is put together
+    url: https://github.com/panyu1512/TelemetryLab/blob/main/README.md#architecture
+    about: The bridge, the wire protocol and the overlay windows, before you open a PR.

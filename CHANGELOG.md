@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **TelemetryLab is open source, under the MIT licence.** A [`LICENSE`](LICENSE)
+  file, so the code can actually be forked and contributed to rather than only
+  read; [`CONTRIBUTING.md`](CONTRIBUTING.md), a code of conduct, a security
+  policy, and issue and pull-request templates. The bug template asks two
+  questions up front — does it still happen with mock data on, and what kind of
+  session were you in — because between them they usually say whether a bug is
+  in the overlay or in the data reaching it.
+- The site has a **Source** section saying what the licence allows, that the
+  whole interface builds and runs without a sim, and where the repository is.
+
 ## [1.7.0] - 2026-08-14
 
 ### Changed

@@ -4,6 +4,16 @@
   "version": "1.7.0",
   "type": "module",
   "description": "iRacing telemetry dashboard built with Tauri v2, React and a Python sidecar bridge.",
+  "license": "MIT",
+  "author": "panyu1512",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/panyu1512/TelemetryLab.git"
+  },
+  "bugs": {
+    "url": "https://github.com/panyu1512/TelemetryLab/issues"
+  },
+  "homepage": "https://github.com/panyu1512/TelemetryLab#readme",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
