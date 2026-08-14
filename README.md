@@ -4,6 +4,7 @@
   <img src="site/favicon.svg" alt="TelemetryLab" width="120">
   <h1>TelemetryLab</h1>
   <p><strong>Real-time iRacing telemetry overlays for your desktop</strong></p>
+  <a href="https://telemetrylab.app">Website</a> •
   <a href="https://github.com/panyu1512/TelemetryLab/releases/latest/download/TelemetryLab-setup.exe">Download</a> •
   <a href="#quickstart">Quickstart</a> •
   <a href="#architecture">Architecture</a> •

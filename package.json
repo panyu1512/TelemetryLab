@@ -13,7 +13,7 @@
   "bugs": {
     "url": "https://github.com/panyu1512/TelemetryLab/issues"
   },
-  "homepage": "https://github.com/panyu1512/TelemetryLab#readme",
+  "homepage": "https://telemetrylab.app",
   "scripts": {
     "dev": "vite",
     "build": "tsc && vite build",
