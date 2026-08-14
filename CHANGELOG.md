@@ -22,6 +22,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and the widget labels it `cold`, because it is the garage figure and holds
   for the stint rather than tracking the tyre.
 
+### Added
+
+- **The tyre widget says when it is showing you your last stop's numbers.**
+  `*tempCL/CM/CR` are the only per-corner temperatures in iRacing's live shared
+  memory, and for cars without real-life live telemetry the sim refreshes them
+  in the pit stall rather than per frame — the channel keeps delivering at
+  60 Hz, carrying the same numbers each time, so a held readout and a live one
+  are identical to look at. What separates them is time, so the widget now
+  times how long each corner has carried the same values: a corner that has not
+  moved in fifteen seconds fades, and when all four have, a strip under them
+  reads `since last stop` with how long it has been.
+
 ### Changed
 
 - The mock feed holds cold pressure static per corner instead of animating it,

@@ -17,6 +17,7 @@ export default defineConfig({
       include: [
         "src/lib/format.ts",
         "src/lib/scales.ts",
+        "src/lib/tyreFreshness.ts",
         "src/lib/fuelStrategy.ts",
         "src/telemetry/protocol.ts",
       ],
