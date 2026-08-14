@@ -79,20 +79,18 @@ function ClassBandInner({
         backgroundOrigin: "border-box",
       }}
     >
-      {/* The class name.
-          It used to be a pill filled with the class colour, which was the one
-          place identity colour was allowed to fill. The fill above replaced it
-          rather than joining it: an opaque pill sits exactly where the fill goes
-          and would have hidden it, and of the two the fill is the one that makes
-          the band part of its group instead of furniture above it. The name
-          keeps identity as ink instead, and starts where the row's *second*
-          column starts — past the fill, on the vertical the car numbers sit on. */}
+      {/* The class name, sitting *on* the fill rather than after it.
+          It used to be a pill filled with the class colour — the one place
+          identity colour was allowed to fill — and the pill had to go because an
+          opaque block sits exactly where the fill goes. As ink it does not: it
+          reads straight off the tint, the same way a row's position number reads
+          off the tint behind it. That parallel is the alignment. Its `ml-1`
+          matches the row's `px-1`, so the name and the leading column start on
+          one vertical and the band's content begins where the field's does,
+          rather than indented past a block of empty colour. */}
       <span
-        className="shrink-0 font-mono text-[11px] font-bold uppercase leading-none tracking-[0.08em]"
-        style={{
-          marginLeft: `calc(${fillStop} - ${CLASS_EDGE_WIDTH} + 0.25rem)`,
-          color,
-        }}
+        className="ml-1 shrink-0 font-mono text-[11px] font-bold uppercase leading-none tracking-[0.08em]"
+        style={{ color }}
       >
         {shortName || "—"}
       </span>

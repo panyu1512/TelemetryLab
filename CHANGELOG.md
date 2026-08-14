@@ -34,7 +34,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   while the rows compensated for the table scale, which quietly put the two on
   different verticals at anything below full size. The class name is no longer
   a filled pill — the pill sat exactly where the fill goes — and is set in the
-  class colour instead, starting on the vertical the car numbers sit on. A row still wears
+  class colour instead, sitting on the fill the way a row's leading number sits
+  on its own, and starting at the same inset so the band's content begins
+  exactly where the field's does. A row still wears
   exactly one ground: where "this is you" or "not on your lap" applies, the
   class colour gives way entirely and the leading edge carries class alone.
 

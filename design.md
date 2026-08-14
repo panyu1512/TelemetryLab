@@ -576,11 +576,15 @@ One line opening each class group on Standings:
   given a `border-box` origin; a padding-box origin would start it after the
   border and throw the stop out by exactly the edge width.
 
-  **The class name used to be a filled chip and is now ink.** The pill sat
-  exactly where the fill goes and would have hidden it, and of the two the fill
-  is the one that makes the band belong to its group. The name keeps identity
-  as colour rather than as a fill, and begins where the row's *second* column
-  does — past the fill, on the vertical the car numbers sit on.
+  **The class name used to be a filled chip and is now ink, sitting on the
+  fill.** The pill sat exactly where the fill goes and would have hidden it, and
+  of the two the fill is the one that makes the band belong to its group. As ink
+  the name does not hide anything: it reads straight off the tint, the same way
+  a row's leading number reads off the tint behind it, and that parallel is the
+  alignment. Its `ml-1` matches the row's `px-1`, so the band's content begins
+  exactly where the field's does — indenting it past the fill instead left a
+  block of empty colour at the head of every group and read as a different
+  kind of furniture, which is the opposite of the point.
 - **`BEST` turns `sector-purple`** when that class's fastest lap is also the
   session's, which is the same meaning purple carries in every row.
 - **It is a heading, so it is set apart from its group, not flush against it.**
