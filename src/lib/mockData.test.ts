@@ -28,6 +28,30 @@ describe("mockPlayerTelemetry", () => {
     expect(Object.keys(f.tyres)).toEqual(["lf", "rf", "lr", "rr"]);
   });
 
+  it("carries clutch both ways round, consistently", () => {
+    // The raw channel and the pedal travel must always sum to 1 — a frame
+    // where they drift apart is a frame where one of the two consumers is
+    // being lied to.
+    for (const t of [100, 140, 180, 220, 260]) {
+      const f = mockPlayerTelemetry(t);
+      expect(f.clutch! + f.clutchPedal!).toBeCloseTo(1, 2);
+      expect(f.clutchPedal!).toBeGreaterThanOrEqual(0);
+      expect(f.clutchPedal!).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it("leaves the clutch alone for most of a lap", () => {
+    // One hairpin's worth of clutch, not a pedal that is always busy.
+    // Sampled finely and over a couple of laps: the hairpin is a short window
+    // and a coarse sweep steps straight over it.
+    const samples = Array.from({ length: 2000 }, (_, i) =>
+      mockPlayerTelemetry(100 + i * 0.1).clutchPedal!,
+    );
+    const used = samples.filter((v) => v > 0.01).length;
+    expect(used).toBeGreaterThan(0);
+    expect(used).toBeLessThan(samples.length / 2);
+  });
+
   it("is deterministic for a given time", () => {
     expect(mockPlayerTelemetry(7)).toEqual(mockPlayerTelemetry(7));
   });

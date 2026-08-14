@@ -194,6 +194,42 @@ export function pedalsFor(corner: CornerPhase): PedalInputs {
 }
 
 /**
+ * Speed (km/h) below which the mock driver starts feeding the clutch in, and
+ * the speed by which it is on the floor. Spa's La Source, the one hairpin on
+ * the mock lap, bottoms out around 63 km/h, so the band sits either side of
+ * that: idle everywhere else, most of the way down through the hairpin.
+ *
+ * Tuned to the mock's own lap rather than to a real one, and worth being plain
+ * about why. A GT3 on a flying lap does not touch the clutch at all — it is a
+ * sequential box, and the clutch is for the standing start, the pit box and
+ * recovering from a spin, none of which this mock models. A mock that showed
+ * the truth here would show a bar that never moves, and then nobody could see
+ * whether the bar worked. This is the mock earning its keep as a demo (see
+ * `mockData`), not a claim about how the pedal is used.
+ */
+const CLUTCH_LIFT_KMH = 85;
+const CLUTCH_FLOOR_KMH = 58;
+
+/**
+ * Clutch **pedal travel** at a given speed: 0 = foot off, 1 = to the floor.
+ *
+ * Note the direction. iRacing's own `Clutch` channel runs the other way
+ * ("0=disengaged to 1=fully engaged"), and the bridge flips it before it
+ * reaches the app; this models what the driver's foot is doing, so it matches
+ * `clutchPedal` and reads like the throttle and brake beside it.
+ *
+ * Deliberately zero for nearly the whole lap. A clutch that was always doing
+ * something would make the third bar look busy and lie about how the pedal is
+ * actually used — it is idle from the exit of one hairpin to the entry of the
+ * next, and the bar sitting still is the honest picture.
+ */
+export function clutchFor(kmh: number): number {
+  if (kmh >= CLUTCH_LIFT_KMH) return 0;
+  const u = (CLUTCH_LIFT_KMH - kmh) / (CLUTCH_LIFT_KMH - CLUTCH_FLOOR_KMH);
+  return smoothstep(u);
+}
+
+/**
  * How slow a corner is, normalized to 0–1 from its apex speed in km/h.
  * A hairpin lands near 1, a fast sweeper near 0.
  */

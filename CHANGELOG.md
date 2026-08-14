@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A clutch bar in the Inputs widget**, beside throttle and brake. It shows
+  pedal travel — empty with your foot off, full with the pedal down — which is
+  the opposite of what iRacing publishes: the sim's `Clutch` channel runs
+  "0 = disengaged, 1 = fully engaged", so a bar drawn straight from it would
+  sit full whenever the clutch was *not* being used. The bridge sends both the
+  raw channel and the travel, and the flip happens once, next to the read.
+- **A steering wheel that turns with your hands**, in place of the linear
+  deflection bar. It is the same shape as the thing it reports, so a glance
+  lands as a position rather than as a measurement — and unlike the bar, which
+  pinned at ±120°, it keeps turning, so a big catch of oversteer or a hairpin's
+  worth of lock reads as movement instead of as a full bar holding still.
+
 ## [1.4.0] - 2026-08-14
 
 ### Changed

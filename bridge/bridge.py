@@ -118,6 +118,12 @@ class IrsdkSource:
         self.ir.freeze_var_buffer_latest()
         speed = self._get("Speed", 0.0) or 0.0
         steer = self._get("SteeringWheelAngle", 0.0) or 0.0
+        # `Clutch` is documented "0=disengaged to 1=fully engaged" — the inverse
+        # of a pedal position. A driver with their foot off the clutch reads
+        # 1.0, so the overlay wants the travel, and the flip happens here rather
+        # than in every consumer that might forget it.
+        clutch = self._get("Clutch")
+        clutch_pedal = None if clutch is None else 1.0 - clutch
         return {
             "sessionTime": self._get("SessionTime"),
             "speed": speed,
@@ -126,6 +132,8 @@ class IrsdkSource:
             "gear": self._get("Gear"),
             "throttle": self._get("Throttle"),
             "brake": self._get("Brake"),
+            "clutch": clutch,
+            "clutchPedal": clutch_pedal,
             "steeringWheelAngle": steer,
             "steeringDeg": round(math.degrees(steer), 1),
             "fuelLevel": self._get("FuelLevel"),
