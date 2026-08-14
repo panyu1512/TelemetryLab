@@ -21,13 +21,22 @@
  * (last lap, car number, flags, brand, class badge) drop out one by one as the
  * overlay gets narrower, so the essential pos/driver/gap trio never crushes.
  *
- * Lapped traffic is called out explicitly. `intervalToPlayer` is wrapped to
- * ±half a lap, so a car a lap down sitting alongside the player is
+ * Lapped traffic is called out explicitly **in a race**. `intervalToPlayer` is
+ * wrapped to ±half a lap, so a car a lap down sitting alongside the player is
  * indistinguishable from a rival by gap alone. Any neighbour not on the
  * player's lap therefore takes a danger-tinted row ground with a signed
  * `+1L` / `-1L` tag — the ground says "not your lap", the sign says which way
  * (see {@link lapRelation}; the entry's own `isLapped`/`lapsDown` are
  * leader-relative and cannot answer this).
+ *
+ * Outside a race the call-out is switched off entirely (see
+ * `lib/sessionKind`). Being a lap down only costs you something when there is a
+ * position attached to it; in practice or qualifying the field joins at
+ * different times and runs its own programmes, so lap numbers differ across the
+ * grid by design. Left on, every row would carry a tag over a danger ground —
+ * a table shouting at every row is a table saying nothing — and it would bury
+ * the one number that still matters there: the gap to the car about to arrive
+ * in your mirrors mid-lap.
  *
  * The call-out is the row's ground rather than its ink for the same reason the
  * player's own row is: ink in this table carries values, and red ink already
@@ -47,7 +56,7 @@ import {
   useStandingsClasses,
   useStandingsStore,
 } from "../../stores/useStandingsStore";
-import { useDriversByIdx } from "../../stores/useSessionStore";
+import { useDriversByIdx, useRanksByLapTime } from "../../stores/useSessionStore";
 import { useRelativeUiStore } from "../../stores/useRelativeUiStore";
 import type { DriverEntry, StandingsEntry } from "../../telemetry/types";
 import { lapTime } from "../../lib/format";
@@ -248,6 +257,17 @@ interface RowProps {
   playerClassId: number;
   /** Player lap position, for the lap-relation comparison. */
   playerLap: LapPositioned;
+  /**
+   * Whether "a lap ahead / a lap behind" is a thing worth saying at all.
+   *
+   * False outside a race. Lapped traffic is a race idea: it means someone is
+   * losing a position they hold, or about to take one. In a practice session
+   * drivers join whenever they like and run their own programmes, so lap
+   * numbers differ across the field by design — every row would carry a tag and
+   * a danger ground, which is the whole table shouting and therefore the whole
+   * table silent.
+   */
+  showLapRelation: boolean;
   isOn: RelVisibility;
   template: string;
   isPlayer?: boolean;
@@ -262,6 +282,7 @@ function RowInner({
   playerLastLap,
   playerClassId,
   playerLap,
+  showLapRelation,
   isOn,
   template,
   isPlayer = false,
@@ -283,10 +304,14 @@ function RowInner({
     closingRate > CLOSE_THRESHOLD &&
     Math.abs(gap ?? 0) < CLOSE_GAP_MAX;
 
-  // Lap standing vs. the player — the thing the wrapped gap cannot express.
-  const relation = isPlayer ? LapRelation.SameLap : lapRelation(entry, playerLap);
+  // Lap standing vs. the player — the thing the wrapped gap cannot express, and
+  // only worth expressing where being a lap down costs you something.
+  const comparable = showLapRelation && !isPlayer;
+  const relation = comparable
+    ? lapRelation(entry, playerLap)
+    : LapRelation.SameLap;
   const offLap = isOffLap(relation);
-  const tag = isPlayer ? null : lapTag(lapDelta(entry, playerLap));
+  const tag = comparable ? lapTag(lapDelta(entry, playerLap)) : null;
 
   const isDiffClass = !isPlayer && entry.carClassId !== playerClassId;
   const dimmed = !isPlayer && (entry.isRetired || !entry.isInWorld);
@@ -478,6 +503,7 @@ export function RelativeScreen() {
   const showCountry = useRelativeUiStore((s) => s.showCountry);
   const showSessionStrip = useRelativeUiStore((s) => s.showSessionStrip);
   const showColumnLabels = useRelativeUiStore((s) => s.showColumnLabels);
+  const byLapTime = useRanksByLapTime();
 
   // Measure our own width so the column set can adapt to the window.
   const bodyRef = useRef<HTMLDivElement>(null);
@@ -555,7 +581,14 @@ export function RelativeScreen() {
     [playerEntry?.lap, playerEntry?.lapDistPct]
   );
 
-  const rowProps = { playerLastLap, playerClassId, playerLap, isOn, template };
+  const rowProps = {
+    playerLastLap,
+    playerClassId,
+    playerLap,
+    showLapRelation: !byLapTime,
+    isOn,
+    template,
+  };
   // The first row of the table carries the labels when they are on: the
   // furthest car ahead, or the player when nobody is ahead of them.
   const labelRow = showColumnLabels;

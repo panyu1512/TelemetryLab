@@ -18,6 +18,7 @@
 
 import { create } from "zustand";
 import { getTheme, applyTheme } from "../themes";
+import type { MockSessionType } from "../lib/mockData";
 import { isSingleView } from "../lib/overlayWindows";
 import { broadcast, subscribe } from "../lib/windowBus";
 
@@ -65,6 +66,15 @@ export interface GlobalSettings {
    * screenshots.
    */
   mockDataEnabled: boolean;
+  /**
+   * Which session the mock feed reports it is in.
+   *
+   * Not a cosmetic label: the timing screens read a practice or qualifying
+   * session as a timesheet — ranked by best lap, with the race-only columns
+   * dropped — so this switch is the only way to see that half of Standings and
+   * Relative without a running sim. Ignored entirely when mock data is off.
+   */
+  mockSessionType: MockSessionType;
 }
 
 // ── defaults ─────────────────────────────────────────────────────────────────
@@ -94,6 +104,7 @@ function makeDefaultGlobalSettings(): GlobalSettings {
     bridgeEndpoint: "ws://127.0.0.1:8765",
     logLevel: "info",
     mockDataEnabled: false,
+    mockSessionType: "Race",
   };
 }
 

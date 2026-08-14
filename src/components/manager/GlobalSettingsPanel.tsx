@@ -1,6 +1,7 @@
 import { Info } from "lucide-react";
 import { useOverlayConfigStore } from "../../stores/useOverlayConfigStore";
 import { THEMES } from "../../themes";
+import type { MockSessionType } from "../../lib/mockData";
 import {
   InfoNote,
   SectionLabel,
@@ -58,6 +59,25 @@ export function GlobalSettingsPanel() {
               label={globalSettings.mockDataEnabled ? "On" : "Off"}
               onChange={(v) =>
                 store.setGlobalSettings({ mockDataEnabled: v })
+              }
+            />
+          </LabeledField>
+
+          <LabeledField
+            label="Mock Session"
+            hint="Which session the mock feed reports. Standings and Relative read a practice or qualifying session as a timesheet — ranked by best lap, without the gap and interval columns — so this is how to see that layout offline."
+          >
+            <SelectInput
+              value={globalSettings.mockSessionType}
+              options={[
+                { value: "Race", label: "Race" },
+                { value: "Open Qualify", label: "Qualifying" },
+                { value: "Practice", label: "Practice" },
+              ]}
+              onChange={(v) =>
+                store.setGlobalSettings({
+                  mockSessionType: v as MockSessionType,
+                })
               }
             />
           </LabeledField>

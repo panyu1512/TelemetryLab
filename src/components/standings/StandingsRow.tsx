@@ -33,6 +33,12 @@ interface StandingsRowProps {
   zebra: boolean;
   /** Grouped by class ⇒ show gap/interval relative to the class, not overall. */
   classRelative: boolean;
+  /**
+   * Rank derived by the layout, or null to print the car's own iRacing
+   * position. Non-null only in a lap-time session, where this app did the
+   * ordering and so has to supply the number that goes with it.
+   */
+  rank: number | null;
   /** Which columns to render (must match the labels). */
   isVisible: ColumnVisibility;
   /**
@@ -66,6 +72,7 @@ function StandingsRowInner({
   classColor,
   zebra,
   classRelative,
+  rank,
   isVisible,
   labelled,
   tone,
@@ -128,12 +135,15 @@ function StandingsRowInner({
           </div>
         )}
 
-        {/* position — class position when grouped by class, overall when flat.
+        {/* position — the layout's own rank in a lap-time session, otherwise
+            iRacing's: class position when grouped by class, overall when flat.
             A flat overall table numbered by class position reads as scrambled. */}
         <div className="text-center text-[14px] font-bold tabular-nums tnum">
-          {(classRelative
-            ? row?.classPosition ?? row?.position
-            : row?.position ?? row?.classPosition) ?? "—"}
+          {rank ??
+            (classRelative
+              ? row?.classPosition ?? row?.position
+              : row?.position ?? row?.classPosition) ??
+            "—"}
         </div>
 
         {/* car number — no pill: fill is rationed to the fastest-lap cell

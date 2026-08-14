@@ -197,6 +197,54 @@ export function tableMinWidth(
 }
 
 /**
+ * Columns that only mean something when the field is racing a common distance.
+ *
+ * `gap` and `interval` are measured to the car in front on the road; in a
+ * practice session that car may be on an out-lap, in the pits, or eight laps
+ * apart from you on the timesheet, and the number is noise dressed as timing.
+ * `change` is worse than noise: it counts positions gained against the *race*
+ * order the bridge tracks, so in a lap-time table — which this app ranks itself
+ * — it would report movement against an order that is not on screen.
+ */
+const RACE_ONLY_COLUMNS: readonly StandingsColumnId[] = [
+  "gap",
+  "interval",
+  "change",
+];
+
+/**
+ * Columns a lap-time session cannot do without, whatever the user turned off.
+ *
+ * `best` is the sort key there — it is what put the rows in the order they are
+ * in, which makes it structural in exactly the sense `pos` and `driver` are.
+ * A table ranked by a column you cannot see is a table in no order at all.
+ */
+const LAP_TIME_COLUMNS: readonly StandingsColumnId[] = ["best"];
+
+/**
+ * Narrow the user's chosen columns to the ones that tell the truth in this
+ * session: outside a race, the race-only columns go and the ranking column
+ * stays.
+ *
+ * Applied *before* {@link fitColumns} so a narrow overlay still drops columns
+ * around the result rather than fighting it.
+ */
+export function scopeColumnsToSession(
+  isVisible: ColumnVisibility,
+  ranksByLapTime: boolean,
+): ColumnVisibility {
+  if (!ranksByLapTime) return isVisible;
+  return (id) => {
+    if (RACE_ONLY_COLUMNS.includes(id)) return false;
+    if (LAP_TIME_COLUMNS.includes(id)) return true;
+    return isVisible(id);
+  };
+}
+
+/** The columns {@link fitColumns} may never drop in a lap-time session. */
+export const LAP_TIME_PROTECTED: readonly StandingsColumnId[] = LAP_TIME_COLUMNS;
+
+/**
  * Auto-hide order (first dropped → last) when the window is too narrow for the
  * user's chosen columns. Position, driver, interval, last lap and status are
  * never auto-dropped — that set is the smallest useful timing table.
@@ -219,17 +267,23 @@ const RESPONSIVE_DROP_ORDER: StandingsColumnId[] = [
  * optional columns in {@link RESPONSIVE_DROP_ORDER} until the minimum table
  * width fits (or there is nothing left to drop). The user's own hidden columns
  * stay hidden; a zero/unknown width leaves the set untouched.
+ *
+ * `protect` holds columns this pass may not drop however narrow the window
+ * gets — the ranking column in a lap-time session, which is structural rather
+ * than optional. The table scrolls sideways before it loses one of those.
  */
 export function fitColumns(
   width: number,
   sectorCount: number,
-  isVisible: ColumnVisibility
+  isVisible: ColumnVisibility,
+  protect: readonly StandingsColumnId[] = []
 ): ColumnVisibility {
   if (width <= 0) return isVisible;
   const dropped = new Set<StandingsColumnId>();
   const effective: ColumnVisibility = (id) => isVisible(id) && !dropped.has(id);
   for (const id of RESPONSIVE_DROP_ORDER) {
     if (tableMinWidth(sectorCount, effective) <= width) break;
+    if (protect.includes(id)) continue;
     dropped.add(id);
   }
   return effective;

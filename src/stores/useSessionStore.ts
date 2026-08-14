@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { useMemo } from "react";
 import type { DriverEntry, SessionInfo } from "../telemetry/types";
+import { ranksByLapTime, sessionKind, type SessionKind } from "../lib/sessionKind";
 
 /**
  * Low-frequency session state: roster + rules + track + weather + SOF.
@@ -20,6 +21,20 @@ export const useSessionStore = create<SessionState>((set) => ({
   setSession: (session) => set({ session }),
   clear: () => set({ session: null }),
 }));
+
+/**
+ * What kind of session is running. Selected as a derived string rather than as
+ * the whole `SessionInfo` so the timing screens re-render on a change of
+ * session, not on every 1 Hz weather tick.
+ */
+export function useSessionKind(): SessionKind {
+  return useSessionStore((s) => sessionKind(s.session?.sessionType));
+}
+
+/** True when the field is ranked by best lap rather than by distance covered. */
+export function useRanksByLapTime(): boolean {
+  return useSessionStore((s) => ranksByLapTime(sessionKind(s.session?.sessionType)));
+}
 
 /** Subscribe to a single driver by carIdx (roster changes are rare/cheap). */
 export function useDriver(carIdx: number): DriverEntry | undefined {

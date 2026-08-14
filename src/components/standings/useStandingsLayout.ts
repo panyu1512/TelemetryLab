@@ -1,8 +1,10 @@
 import { useMemo } from "react";
 import {
+  useStandingsBestLapOrder,
   useStandingsClasses,
   useStandingsOrder,
 } from "../../stores/useStandingsStore";
+import { useRanksByLapTime } from "../../stores/useSessionStore";
 import { useStandingsUiStore } from "../../stores/useStandingsUiStore";
 import { BAND_GAP, CLASS_BAND_H, CLASS_GAP, ROW_H } from "./constants";
 
@@ -44,6 +46,17 @@ export interface LayoutRow {
   tone: number;
   /** Zebra phase within the group — derived here so reorders stay stable. */
   zebra: boolean;
+  /**
+   * The rank to print in the position column, or null to use the car's own
+   * `position` from iRacing.
+   *
+   * Set only in a lap-time session, where the rows were ordered here rather
+   * than by the bridge. It has to come from the same pass that placed the row:
+   * a table sorted by best lap while printing iRacing's race position numbers
+   * the rows P1, P4, P2 down the page, which is worse than either ordering on
+   * its own.
+   */
+  rank: number | null;
 }
 
 /** The band that opens a class group and carries that class's own numbers. */
@@ -63,9 +76,16 @@ export interface StandingsLayout {
 
 export function useStandingsLayout(): StandingsLayout {
   const classes = useStandingsClasses();
-  const order = useStandingsOrder();
+  const raceOrder = useStandingsOrder();
+  const bestLapOrder = useStandingsBestLapOrder();
+  const byLapTime = useRanksByLapTime();
   const grouping = useStandingsUiStore((s) => s.grouping);
   const showClassBands = useStandingsUiStore((s) => s.showClassBands);
+
+  // In a lap-time session the whole table reads off the best-lap ranking; in a
+  // race it reads off the bridge's race order. Both arrays hold their identity
+  // between ticks, so this memo still only reruns when the field moves.
+  const order = byLapTime ? bestLapOrder : raceOrder;
 
   return useMemo(() => {
     const items: LayoutItem[] = [];
@@ -91,11 +111,25 @@ export function useStandingsLayout(): StandingsLayout {
           leader: i === 0,
           tone: 0,
           zebra: i % 2 === 1,
+          rank: byLapTime ? i + 1 : null,
         });
         top += ROW_H;
       });
       return { items, totalHeight: top };
     }
+
+    // Grouped by class. The bridge's per-class `order` is a race order, so a
+    // lap-time session rebuilds each group by filtering the best-lap ranking
+    // down to that class's members — which keeps one ranking behind both the
+    // flat table and the grouped one.
+    const memberships = byLapTime
+      ? new Map(
+          classes.map((c) => {
+            const members = new Set(c.order);
+            return [c.carClassId, order.filter((idx) => members.has(idx))];
+          }),
+        )
+      : null;
 
     classes.forEach((c, groupIndex) => {
       // A gap between groups, and none before the first, which would just be
@@ -110,7 +144,8 @@ export function useStandingsLayout(): StandingsLayout {
         });
         top += CLASS_BAND_H + BAND_GAP;
       }
-      c.order.forEach((carIdx, i) => {
+      const group = memberships?.get(c.carClassId) ?? c.order;
+      group.forEach((carIdx, i) => {
         items.push({
           kind: "row",
           key: `row-${carIdx}`,
@@ -120,10 +155,11 @@ export function useStandingsLayout(): StandingsLayout {
           leader: i === 0,
           tone: groupIndex % 2,
           zebra: i % 2 === 1,
+          rank: byLapTime ? i + 1 : null,
         });
         top += ROW_H;
       });
     });
     return { items, totalHeight: top };
-  }, [classes, order, grouping, showClassBands]);
+  }, [classes, order, byLapTime, grouping, showClassBands]);
 }

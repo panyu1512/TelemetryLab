@@ -428,6 +428,43 @@ the fact that a header band and a row cost the same height.
     permitted for exactly the reason that makes identity colour a separate
     system in the first place: the palette does not own it.
 
+12. **A column that would lie in this session is not shown in this session.**
+    Almost every number on these two surfaces is a race concept wearing a
+    neutral face. Gap to leader, interval, positions gained, `-1L` — each one
+    assumes the field is running a common distance and that track position is
+    worth something. In practice, qualifying or a test session none of that
+    holds: drivers join when they like, run their own programmes and pit at
+    will, so the car two seconds up the road may be eight laps apart from you
+    on the timesheet. The numbers keep rendering, and every one of them is
+    false.
+
+    So outside a race the two screens change what they are.
+    [`lib/sessionKind.ts`](src/lib/sessionKind.ts) answers one question —
+    is the field ranked by lap time or by distance covered — and:
+
+    - Standings becomes a **timesheet**: ranked by best lap, with `gap`,
+      `interval` and `change` dropped. The ranking is derived on the client, so
+      the position column prints *that* rank rather than iRacing's, and the
+      `best` column becomes structural in the sense `pos` and `driver` are —
+      never user-hidden, never auto-dropped, because a table ranked by a column
+      you cannot see is a table in no order at all.
+    - Relative **stops calling neighbours lapped traffic**. The tag and the
+      danger ground are a race warning: they mean someone is losing a position
+      or about to take one. Left on in practice they land on nearly every row —
+      a table shouting at every row is a table saying nothing — and they bury
+      the one number that still matters there, the gap to the car arriving in
+      your mirrors mid-lap.
+
+    **Nothing announces the switch**, and that is the restraint the rule turns
+    on. The § Session strip already names the session; the missing columns are
+    themselves the loudest possible signal; and a timesheet whose fastest-lap
+    fill (rule 5) is always its own first row says what it is without a label.
+    A banner reading `PRACTICE ORDER` would be a header band by another name,
+    which is what rules 2 and 3 spent their whole argument buying back.
+
+    An **unrecognised** session name keeps the race behaviour. Hiding columns
+    on a guess is worse than showing a number the driver can judge themselves.
+
 ### The class band
 
 One line opening each class group on Standings:
