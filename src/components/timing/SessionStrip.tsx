@@ -15,7 +15,7 @@
  * a glyph the user has to *learn* is not a readout, it is a quiz.
  *
  * Fields drop right-to-left as the overlay narrows, in {@link FIELDS} order, the
- * same way `fitColumns` narrows the table itself.
+ * same way the table itself scales to its window (`lib/tableScale`).
  */
 
 import { useEffect, useMemo, useState } from "react";

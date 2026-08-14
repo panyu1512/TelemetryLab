@@ -1,10 +1,9 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  fitColumns,
-  LAP_TIME_PROTECTED,
   scopeColumnsToSession,
   tableMinWidth,
+  visibleColumns,
   type ColumnVisibility,
 } from "./constants";
 
@@ -49,37 +48,30 @@ describe("scopeColumnsToSession", () => {
   });
 });
 
-describe("fitColumns", () => {
-  it("drops optional columns until the table fits", () => {
-    const wide = tableMinWidth(3, allOn);
-    const narrow = fitColumns(600, 3, allOn);
-    expect(tableMinWidth(3, narrow)).toBeLessThanOrEqual(600);
-    expect(tableMinWidth(3, narrow)).toBeLessThan(wide);
+describe("tableMinWidth", () => {
+  it("is the width the chosen columns want, gaps and padding included", () => {
+    const cols = visibleColumns(3, allOn);
+    const sum = cols.reduce((n, c) => n + c.col.px, 0);
+    expect(tableMinWidth(3, allOn)).toBe(sum + (cols.length - 1) * 4 + 16);
   });
 
-  it("stops at the smallest useful table rather than crushing it", () => {
-    // Position, driver, interval, last lap and status are never auto-dropped,
-    // so below their combined width the table scrolls sideways instead.
-    const floor = tableMinWidth(3, fitColumns(1, 3, allOn));
-    expect(tableMinWidth(3, fitColumns(120, 3, allOn))).toBe(floor);
-    for (const id of ["pos", "driver", "interval", "last", "state"] as const) {
-      expect(fitColumns(120, 3, allOn)(id)).toBe(true);
-    }
+  it("grows with the sector count", () => {
+    expect(tableMinWidth(3, allOn)).toBeGreaterThan(tableMinWidth(1, allOn));
   });
 
-  it("leaves the set alone when the width is unknown", () => {
-    expect(fitColumns(0, 3, allOn)("sectors")).toBe(true);
+  /*
+   * This is the number the table now scales *against*, rather than a threshold
+   * it sheds columns to reach, so it has to stay a function of the column set
+   * alone — never of the window.
+   */
+  it("shrinks when a column is switched off", () => {
+    const noSectors: ColumnVisibility = (id) => id !== "sectors";
+    expect(tableMinWidth(3, noSectors)).toBeLessThan(tableMinWidth(3, allOn));
   });
 
-  it("would drop the best-lap column on its own", () => {
-    // Establishes the baseline the protection below is actually protecting
-    // against, so the next test cannot pass by accident.
-    expect(fitColumns(220, 3, allOn)("best")).toBe(false);
-  });
-
-  it("never drops a protected column, however narrow the window", () => {
-    const scoped = scopeColumnsToSession(allOn, true);
-    const fitted = fitColumns(120, 3, scoped, LAP_TIME_PROTECTED);
-    expect(fitted("best")).toBe(true);
+  it("tracks the session scoping, so a timesheet asks for less room", () => {
+    const race = tableMinWidth(3, scopeColumnsToSession(allOn, false));
+    const timesheet = tableMinWidth(3, scopeColumnsToSession(allOn, true));
+    expect(timesheet).toBeLessThan(race);
   });
 });

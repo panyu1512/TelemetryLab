@@ -19,6 +19,7 @@ export default defineConfig({
         "src/lib/lapTimeOrder.ts",
         "src/lib/scales.ts",
         "src/lib/sessionKind.ts",
+        "src/lib/tableScale.ts",
         "src/lib/tyreFreshness.ts",
         "src/lib/fuelStrategy.ts",
         "src/telemetry/protocol.ts",

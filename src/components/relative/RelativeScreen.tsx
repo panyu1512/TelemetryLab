@@ -17,9 +17,11 @@
  * bridge from `CarIdxEstTime` and wrapped to ±half-lap — so this screen is
  * purely a frontend transform over the existing standings channel.
  *
- * Responsive: the column set adapts to the window width — optional columns
- * (last lap, car number, flags, brand, class badge) drop out one by one as the
- * overlay gets narrower, so the essential pos/driver/gap trio never crushes.
+ * Responsive by **scale**, not by subtraction: every column stays on screen at
+ * every size and the whole surface shrinks to fit the window (see
+ * `lib/tableScale`). It used to shed columns instead — last lap, then car
+ * number, flag, brand, class badge — which meant a driver who sized the overlay
+ * to fit beside their mirrors quietly lost data they had asked for.
  *
  * Lapped traffic is called out explicitly **in a race**. `intervalToPlayer` is
  * wrapped to ±half a lap, so a car a lap down sitting alongside the player is
@@ -69,9 +71,10 @@ import {
   lapTag,
 } from "../../lib/relativeLaps";
 import { BrandIcon } from "../standings/cells";
-import { LAP_UNDERLINE } from "../standings/constants";
+import { CLASS_EDGE_WIDTH, LAP_UNDERLINE } from "../standings/constants";
 import { CountryFlag } from "../ui/CountryFlag";
 import { SessionStrip } from "../timing/SessionStrip";
+import { scaleBox, tableScale, unscaled } from "../../lib/tableScale";
 
 // ─── Layout constants ────────────────────────────────────────────────────────
 
@@ -100,8 +103,9 @@ const REL_COLUMNS: { id: RelColumnId; width: string; px: number }[] = [
   { id: "num", width: "2.5rem", px: 40 },
   { id: "country", width: "1.7rem", px: 27 },
   // `minmax(0, 1fr)`: the name absorbs all slack and is the only column allowed
-  // to truncate (`design.md` § Dense tabular overlays, rule 6). `px` stays a
-  // target, so a narrow overlay drops a column before crushing the name.
+  // to truncate (`design.md` § Dense tabular overlays, rule 6). `px` is the
+  // width it would like, which is what the table's natural width is summed
+  // from — and therefore what the scale is measured against.
   { id: "driver", width: "minmax(0, 1fr)", px: 112 },
   { id: "brand", width: "2.75rem", px: 44 },
   { id: "class", width: "3.2rem", px: 51 },
@@ -110,47 +114,30 @@ const REL_COLUMNS: { id: RelColumnId; width: string; px: number }[] = [
   { id: "hint", width: "1.8rem", px: 29 },
 ];
 
-/** Auto-hide order (first dropped) when the window gets too narrow. */
-const REL_DROP_ORDER: RelColumnId[] = [
-  "last",
-  "num",
-  "country",
-  "brand",
-  "class",
-];
-
 type RelVisibility = (id: RelColumnId) => boolean;
 
 /**
- * Resolve the visible column set: the user's brand/country choices as the
- * upper bound, then columns auto-dropped in {@link REL_DROP_ORDER} until the
- * table fits the measured width.
+ * The visible column set: the user's brand/country choices, and nothing else.
+ *
+ * There used to be a width-driven drop order here too — last lap, then car
+ * number, flag, brand, class badge, shed one by one as the overlay narrowed.
+ * It is gone for the reason given in `lib/tableScale`: a smaller overlay should
+ * be a smaller table, not a different one.
  */
 function relVisibleColumns(
-  width: number,
   showBrand: boolean,
   showCountry: boolean
 ): RelVisibility {
-  const dropped = new Set<RelColumnId>();
-  const isOn: RelVisibility = (id) =>
-    !dropped.has(id) &&
-    (id === "brand" ? showBrand : id === "country" ? showCountry : true);
-  if (width > 0) {
-    // Column widths + the 4px inter-column gaps + the row's px-2 padding.
-    const minWidth = () => {
-      const on = REL_COLUMNS.filter((c) => isOn(c.id));
-      return (
-        on.reduce((sum, c) => sum + c.px, 0) +
-        Math.max(0, on.length - 1) * 4 +
-        20
-      );
-    };
-    for (const id of REL_DROP_ORDER) {
-      if (minWidth() <= width) break;
-      dropped.add(id);
-    }
-  }
-  return isOn;
+  return (id) =>
+    id === "brand" ? showBrand : id === "country" ? showCountry : true;
+}
+
+/** The width this column set wants: widths + 4 px gaps + the row's px-2. */
+function relNaturalWidth(isOn: RelVisibility): number {
+  const on = REL_COLUMNS.filter((c) => isOn(c.id));
+  return (
+    on.reduce((sum, c) => sum + c.px, 0) + Math.max(0, on.length - 1) * 4 + 20
+  );
 }
 
 function relGridTemplate(isOn: RelVisibility): string {
@@ -343,8 +330,11 @@ function RowInner({
         // The 2 px left border is this surface's single carrier of car-class
         // colour (§ Two colour systems, rule 2).
         // 3 px, up from 2: on near-black paper a 2 px hairline of an arbitrary
-        // hue was the first thing to go in peripheral vision.
-        borderLeft: `3px solid ${isPlayer ? classColor : `${classColor}66`}`,
+        // hue was the first thing to go in peripheral vision — so it holds its
+        // drawn size as the table scales down (see CLASS_EDGE_WIDTH).
+        borderLeftWidth: CLASS_EDGE_WIDTH,
+        borderLeftStyle: "solid",
+        borderLeftColor: isPlayer ? classColor : `${classColor}66`,
         // Clear the in-row column labels rather than centring under them.
         paddingTop: labelled ? REL_LABEL_H : undefined,
       }}
@@ -518,10 +508,15 @@ export function RelativeScreen() {
   }, []);
 
   const isOn = useMemo(
-    () => relVisibleColumns(width, showBrand, showCountry),
-    [width, showBrand, showCountry]
+    () => relVisibleColumns(showBrand, showCountry),
+    [showBrand, showCountry]
   );
   const template = useMemo(() => relGridTemplate(isOn), [isOn]);
+
+  // Scale the whole table to the width it has, rather than shedding columns to
+  // fit — see `lib/tableScale`.
+  const scale = tableScale(width, relNaturalWidth(isOn));
+  const innerWidth = unscaled(width, scale);
 
   // Build a color map keyed by carClassId.
   const classColorMap = useMemo(
@@ -598,14 +593,18 @@ export function RelativeScreen() {
       ref={bodyRef}
       className="overlay-card timing-surface @container flex h-full flex-col overflow-hidden rounded-card border border-border/60"
     >
-      {showSessionStrip && !isEmpty && <SessionStrip width={width} />}
+      {showSessionStrip && !isEmpty && (
+        <div style={scaleBox(scale)}>
+          <SessionStrip width={innerWidth} />
+        </div>
+      )}
       {isEmpty ? (
         <EmptyState iracingActive={iracingActive} />
       ) : (
         <div className="flex flex-1 flex-col overflow-auto">
           {/* No column-header band ever: when labels are on at all they ride in
               the first row's top slice, out of flow (rule 3). */}
-          <div className="flex flex-col gap-0.5 p-1">
+          <div className="flex flex-col gap-0.5 p-1" style={scaleBox(scale)}>
             {/* Cars ahead — furthest at top, closest just above player */}
             {ahead.map((entry, i) => (
               <Row
