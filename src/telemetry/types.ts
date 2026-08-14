@@ -22,6 +22,12 @@ export interface TyreData {
   tempL: number | null;
   tempM: number | null;
   tempR: number | null;
+  /**
+   * Cold pressure in kPa, as set in the garage. iRacing's live API has no
+   * per-corner hot pressure — only `*coldPressure` — so this is constant for
+   * a stint by definition, and the UI labels it "cold" rather than letting it
+   * read as a live value. See `IrsdkSource._tyre` in `bridge/bridge.py`.
+   */
   pressure: number | null;
 }
 

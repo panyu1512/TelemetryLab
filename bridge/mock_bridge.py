@@ -319,7 +319,10 @@ class MockField:
                     "tempL": round(base + 6 * math.sin(t * 0.5 + i) - 4, 1),
                     "tempM": round(base + 6 * math.sin(t * 0.5 + i), 1),
                     "tempR": round(base + 6 * math.sin(t * 0.5 + i) + 3, 1),
-                    "pressure": round(165 + 4 * math.sin(t * 0.2 + i), 1),
+                    # Static: this is the garage cold pressure, the only
+                    # per-corner pressure the live SDK exposes (see
+                    # `IrsdkSource._tyre`), so the mock must not animate it.
+                    "pressure": 165.0 + i,
                 }
                 for i, (corner, base) in enumerate(
                     (("lf", 85.0), ("rf", 88.0), ("lr", 80.0), ("rr", 82.0))

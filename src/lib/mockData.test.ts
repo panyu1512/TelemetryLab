@@ -9,6 +9,7 @@ import {
   mockSession,
   mockStandings,
 } from "./mockData";
+import { num } from "./format";
 
 describe("mockPlayerTelemetry", () => {
   it("produces a plausible player frame", () => {
@@ -27,6 +28,25 @@ describe("mockPlayerTelemetry", () => {
 
   it("is deterministic for a given time", () => {
     expect(mockPlayerTelemetry(7)).toEqual(mockPlayerTelemetry(7));
+  });
+
+  /*
+   * The Tyre temps widget renders `num(tempM, TEMP_DECIMALS)`. Carcass temps
+   * move slowly, so the *displayed* string is what decides whether the overlay
+   * looks live — at whole degrees it sat unchanged for a minute at a time.
+   * Assert at the widget's own resolution, over a couple of seconds of mock
+   * time, so a coarser format (or a frozen tyre model) fails here.
+   */
+  it("moves the tyre temps at the resolution the widget renders", () => {
+    const at = (t: number) => num(mockPlayerTelemetry(t).tyres.lf.tempM, 1);
+    const start = at(100);
+    const samples = [101, 102, 103, 104].map(at);
+    expect(samples.some((s) => s !== start)).toBe(true);
+  });
+
+  it("holds cold pressure static — the live SDK has no hot pressure", () => {
+    const p = (t: number) => mockPlayerTelemetry(t).tyres.lf.pressure;
+    expect(p(100)).toBe(p(180));
   });
 });
 

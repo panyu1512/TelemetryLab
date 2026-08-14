@@ -63,11 +63,28 @@ class IrsdkSource:
         return default if value is None else value
 
     def _tyre(self, prefix: str) -> dict[str, Any]:
+        """One corner's carcass temps + pressure, from the live SDK.
+
+        Two things the live API does *not* give us, spelled out because both
+        look like bugs from the overlay side:
+
+        - ``{prefix}tempCL/CM/CR`` are the only per-corner temperatures in the
+          live shared memory (``{prefix}tempL/M/R``, the surface temps, exist
+          only in exported .ibt files). For most cars iRacing refreshes them
+          when the car is in the pit stall, not every frame — so a frozen
+          readout on track is the sim, not the bridge. Cars that carry live
+          telemetry in real life do update them on track.
+        - ``{prefix}pressure`` is likewise .ibt-only. ``{prefix}coldPressure``
+          (kPa, as set in the garage) is what the live API exposes, which is
+          why the widget labels this value "cold". We previously read
+          ``{prefix}press``, which is not an SDK variable at all — every read
+          raised and fell through to ``None``, so pressures were always "—".
+        """
         return {
             "tempL": self._get(f"{prefix}tempCL"),
             "tempM": self._get(f"{prefix}tempCM"),
             "tempR": self._get(f"{prefix}tempCR"),
-            "pressure": self._get(f"{prefix}press"),
+            "pressure": self._get(f"{prefix}coldPressure"),
         }
 
     # --- session ------------------------------------------------------------
