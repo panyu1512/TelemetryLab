@@ -19,7 +19,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   deflection bar. It is the same shape as the thing it reports, so a glance
   lands as a position rather than as a measurement — and unlike the bar, which
   pinned at ±120°, it keeps turning, so a big catch of oversteer or a hairpin's
-  worth of lock reads as movement instead of as a full bar holding still.
+  worth of lock reads as movement instead of as a full bar holding still. It
+  sits to the right of the pedals as a fourth input column, in the same
+  value/body/label grammar the bars use, which also hands the trace back the
+  height the old full-width steering strip was taking from it.
 
 ## [1.4.0] - 2026-08-14
 
