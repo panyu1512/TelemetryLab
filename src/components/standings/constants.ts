@@ -176,6 +176,30 @@ export function visibleColumns(
   return out;
 }
 
+/**
+ * Where the first column ends, measured from the row's outer edge — the extent
+ * of the class-colour fill behind a Standings row.
+ *
+ * Built from the same column model the grid is, so the fill lands on the column
+ * boundary rather than near it. Three parts, in the order the row lays them
+ * out: the class edge itself, the row's `px-1`, then the first visible column's
+ * own width. The edge term carries the table scale for the reason
+ * {@link CLASS_EDGE_WIDTH} does — it is the one length on this surface that
+ * does not shrink, so the fill has to add back what the border kept.
+ *
+ * Which column is first depends on what is switched on: position change when
+ * the user has it, position otherwise. Both are narrow, which is the point —
+ * the fill is meant to sit under the row's leading number and stop.
+ */
+export function firstColumnStop(
+  sectorCount: number,
+  isVisible: ColumnVisibility
+): string {
+  const first = visibleColumns(sectorCount, isVisible)[0];
+  if (!first) return "0px";
+  return `calc(${CLASS_EDGE_WIDTH} + 0.25rem + ${first.col.width})`;
+}
+
 /** Build the CSS grid-template-columns string for the visible columns. */
 export function gridTemplate(
   sectorCount: number,

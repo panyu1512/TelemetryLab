@@ -74,24 +74,82 @@ There is a second, unrelated axis on the timing surfaces: **identity** — which
 class a car is in, and which car is yours. Conflating the two is how a
 standings table stops being readable at a glance.
 
-1. **Identity colour is data, not a token.** `carClassColor`
-   ([`src/telemetry/types.ts:99`](src/telemetry/types.ts)) is supplied by
-   iRacing per class. It is arbitrary, it sits outside this palette, and it can
-   land on any hue — including one that collides with `primary` or `danger`.
-   Never add it to `tokens.css`, never give it a meaning from the status table,
-   and never let a theme try to correct it.
-2. **Identity colour is quarantined to the leading edge.** On a standings or
-   relative row that carrier is the 3 px left border
-   ([`StandingsRow.tsx`](src/components/standings/StandingsRow.tsx)); on a class
-   band it is the band's own 3 px leading edge plus the chip that *is* the
-   band's subject. Those are one device at two scales, not two carriers. It may
-   not *additionally* tint a driver's name, fill a row, or colour a badge in a
-   data cell — one carrier, or an arbitrary hue starts competing with the status
-   colours sitting beside it in the same row.
+1. **Identity colour is ours, chosen against the status hues.** It used to be
+   `carClassColor`, taken from iRacing as given, on the principle that identity
+   is data rather than a token. That principle produced the collision it was
+   meant to describe: the sim's stock GT3 colour is `#ff4d4d`, this app spends
+   red on lapped traffic, and a red-edged row next to a red-grounded row is two
+   unrelated statements in one hue. At four or five classes some class landing
+   on red, on the blue that means "this is you", or on the amber that means
+   "pit" stops being a risk and becomes an expectation.
 
-   The chip is the single case where identity colour fills, and it takes the
-   computed ink of § Dense tabular overlays rule 11 rather than `on-accent`,
-   because a colour this palette does not own cannot be assumed light.
+   So the five class colours now come from
+   [`lib/classColors.ts`](src/lib/classColors.ts), spaced against every status
+   hue in all four themes: `danger` 24–28, `primary` 253–257 (and 45 in
+   Endurance), `warning` 81–82, `accent` 154–157, `sectorPurple` 295–302. Every
+   entry clears its nearest reserved hue by at least 25°, and consecutive
+   entries — which colour consecutive class groups down the screen — sit more
+   than 100° apart, so neighbouring groups can never blur into one another.
+
+   One exception is deliberate: **violet sits 3° from `sectorPurple`.** Nothing
+   fits between `primary` at 255 and `sectorPurple` at 300, and this is the
+   cheapest collision available — `sectorPurple` is ink on a single lap time,
+   transient and rare, where identity is a row's leading edge and its ground.
+   Different carrier, different place, never the same cell.
+
+   `carClassColor` is still on the wire and still unused for display. Do not
+   add it to `tokens.css`, and do not let a theme try to correct it.
+2. **Identity colour is the leading edge *and* the row's ground.** The edge —
+   3 px on a row ([`StandingsRow.tsx`](src/components/standings/StandingsRow.tsx)),
+   the same device one scale up on a class band, plus the chip that *is* the
+   band's subject — is joined by the same colour behind the row.
+
+   The two surfaces carry that ground differently, and the difference is the
+   shape of the tables rather than a loose end. **Standings runs the colour in
+   from the left edge and stops it hard at the end of the first column**, at
+   12 %: its rows come in runs of the same class stacked into groups, so the
+   fills line up into a bar of colour down the leading edge of each group that
+   the eye picks up without being asked to look. **Relative washes the whole
+   row at 14 %**: it is a handful of rows sorted by where cars physically are,
+   so same-class neighbours rarely sit together and there is no run for a
+   partial fill to build.
+
+   The stop is a **length from the column model**
+   (`firstColumnStop`), not a share of the row width. That is what lets it land
+   *on* the column boundary at any table scale and any column set — the first
+   column is position change when the user has it and position otherwise, and a
+   percentage would drift across the columns every time one was switched on or
+   off. It also means the fill sits directly behind the row's leading number,
+   which is why it is fainter here than the Relative's wash rather than
+   stronger: a ground under a number it has to keep legible can afford less
+   than one spread across empty width.
+
+   Nothing drives the extent per row, and nothing should. Everything on this
+   surface that could — lap progress, gap to the class leader — moves at 10 Hz,
+   and a fill redrawing itself on every row on every tick is motion in the
+   corner of the eye that means nothing.
+
+   The earlier rule quarantined identity to the edge alone, on the argument that
+   a second carrier would put an arbitrary hue in competition with the status
+   colours beside it. Two things retired that argument. The hue is no longer
+   arbitrary — rule 1 now guarantees the clearance the quarantine was standing
+   in for. And three pixels asks the eye to find a hairline before it can tell
+   one group from another, on the surface with the least attention to spare;
+   the tint spreads that answer across the whole block, so class registers from
+   shape rather than from a border.
+
+   **A row wears exactly one ground.** Where a status ground applies — the
+   player's `primary`, a lapped car's `danger` — the class tint gives way to it
+   entirely, and the leading edge carries class on its own. This is the rule
+   that keeps the new carrier from re-creating the collision it was introduced
+   to end: identity and status are never layered into the same statement. It is
+   enforced in the two row components, not by convention.
+
+   **Identity colour no longer fills anything.** The class band's chip was the
+   one exception, and it went when the band took the rows' fill: an opaque pill
+   sits exactly where that fill goes. Identity is now an edge, a low-alpha fill,
+   and ink — never a fill taking contrasting text. See § Dense tabular overlays
+   rule 11, whose premise this also retired.
 3. **"This is you" is `primary`, and it is the row's ground, not its ink.**
    `bg-primary/10` plus an inset `primary/35` ring. This is the "selection"
    sense of `primary` in the table above, which is why the token row now says
@@ -100,7 +158,9 @@ standings table stops being readable at a glance.
 
 The obvious alternative — amber for your own car, as several timing overlays do
 it — is banned here for the reason rule 2 of § Theme already gives: our
-`warning` is amber. "That's you" and "pit soon" would be the same colour.
+`warning` is amber. "That's you" and "pit soon" would be the same colour. That
+is the same argument rule 1 now makes about class colour, arrived at from the
+other direction.
 
 ## Typography
 
@@ -453,16 +513,18 @@ the fact that a header band and a row cost the same height.
     at no cost. `sector-purple` still colours the digits themselves, because a
     session-best lap is an event rather than a comparison.
 
-11. **Class colour picks its own ink.** § Theme rule 1 makes `on-accent` the
-    only ink allowed on a filled status colour, and that holds because every
-    status colour in this palette is light by construction. `carClassColor` is
-    not in this palette and is not light by construction — a class can land on
-    a navy that dark ink vanishes into. So the class chip on the band measures
-    the fill's WCAG luminance and picks dark or white
-    ([`lib/contrast.ts`](src/lib/contrast.ts)). This is the *only* place in the
-    app where ink on a fill is computed rather than declared, and it is
-    permitted for exactly the reason that makes identity colour a separate
-    system in the first place: the palette does not own it.
+11. **Nothing puts ink on identity colour any more.** This rule used to say
+    that the class chip measured its own fill's WCAG luminance and picked dark
+    or white ink, because `carClassColor` came from iRacing and could land on a
+    navy that dark ink vanishes into — the one place in the app where ink on a
+    fill was computed rather than declared.
+
+    Both halves of that premise are gone. § Two colour systems rule 1 moved
+    class colour into a palette this app owns and can therefore reason about,
+    and rule 2's band fill replaced the filled chip with ink. `readableInk` in
+    [`lib/contrast.ts`](src/lib/contrast.ts) is kept, tested and currently
+    uncalled: the moment identity colour fills anything again it is the correct
+    answer, and the argument for it is worth not having to rediscover.
 
 12. **A column that would lie in this session is not shown in this session.**
     Almost every number on these two surfaces is a race concept wearing a
@@ -506,10 +568,23 @@ the fact that a header band and a row cost the same height.
 One line opening each class group on Standings:
 `[GT3] · CARS 6 · SOF 4.1k · BEST 2:06.652`.
 
-- **The chip is the band's subject**, so identity colour is allowed to fill it
-  here — with ink chosen by rule 11. The band's 3 px leading edge takes the
-  same colour, which is the row's own left border one scale up rather than a
-  second carrier (§ Two colour systems, rule 2).
+- **The band is part of its group, not furniture above it.** It carries the
+  same leading edge as a row and the same class fill, stopping at the same
+  `firstColumnStop` — so the fills of the band and every row beneath it line up
+  into one unbroken bar of class colour down the group's leading edge. Because
+  the band carries its border on the same element as the fill, that fill is
+  given a `border-box` origin; a padding-box origin would start it after the
+  border and throw the stop out by exactly the edge width.
+
+  **The class name used to be a filled chip and is now ink, sitting on the
+  fill.** The pill sat exactly where the fill goes and would have hidden it, and
+  of the two the fill is the one that makes the band belong to its group. As ink
+  the name does not hide anything: it reads straight off the tint, the same way
+  a row's leading number reads off the tint behind it, and that parallel is the
+  alignment. Its `ml-1` matches the row's `px-1`, so the band's content begins
+  exactly where the field's does — indenting it past the fill instead left a
+  block of empty colour at the head of every group and read as a different
+  kind of furniture, which is the opposite of the point.
 - **`BEST` turns `sector-purple`** when that class's fastest lap is also the
   session's, which is the same meaning purple carries in every row.
 - **It is a heading, so it is set apart from its group, not flush against it.**

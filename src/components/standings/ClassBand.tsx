@@ -1,7 +1,8 @@
 import { memo } from "react";
 import type { ClassStanding } from "../../telemetry/types";
 import { kilo, lapTime } from "../../lib/format";
-import { readableInk } from "../../lib/contrast";
+import { classRowFill } from "../../lib/classColors";
+import { CLASS_EDGE_WIDTH } from "./constants";
 
 
 /**
@@ -25,10 +26,25 @@ import { readableInk } from "../../lib/contrast";
  */
 function ClassBandInner({
   standing,
+  color,
+  fillStop,
   fastestIsOverall,
   width,
 }: {
   standing: ClassStanding;
+  /**
+   * This class's identity colour, from `lib/classColors` rather than from
+   * `standing.color`. The sim's own hue is not used any more — see that module
+   * for why red in particular had to go.
+   */
+  color: string;
+  /**
+   * Where the class-colour fill stops, as a CSS length — the same
+   * `firstColumnStop` the rows are given, which is the whole point of passing
+   * it in rather than recomputing it here. Band and rows share one vertical or
+   * the effect is just a stripe that nearly lines up.
+   */
+  fillStop: string;
   /** This class's fastest lap is also the fastest in the field. */
   fastestIsOverall: boolean;
   /**
@@ -39,28 +55,42 @@ function ClassBandInner({
    */
   width: number;
 }) {
-  const { color, shortName, carCount, sof, fastestLap } = standing;
+  const { shortName, carCount, sof, fastestLap } = standing;
 
   return (
     <div
       className="flex h-full items-center gap-3 overflow-hidden rounded-sm bg-white/[0.045] pr-2"
       style={{
-        // The band's leading edge carries the class colour at full strength: the
-        // row's 3 px left border, one scale up (§ Two colour systems, rule 2).
-        // Being the same device, it has to sit at the same x — so the band's
-        // wrapper carries no horizontal padding, and the chip's own `ml-1`
-        // matches the row's `px-1`, putting chip and position column on one
-        // vertical.
-        borderLeft: `3px solid ${color}`,
+        // The band's leading edge is the row's, one scale up — the same device,
+        // so it takes the same width and holds the same drawn size as the table
+        // scales (§ Two colour systems, rule 2). It was a flat `3px` here while
+        // the rows compensated for scale, which quietly put the two on different
+        // verticals at anything below full size.
+        borderLeftWidth: CLASS_EDGE_WIDTH,
+        borderLeftStyle: "solid",
+        borderLeftColor: color,
+        // The same fill the rows carry, stopping at the same x, so band and
+        // group read as one unbroken bar of class colour down the leading edge.
+        // `border-box` origin because unlike a row — whose fill sits on a
+        // wrapper outside the border — this element carries the border itself,
+        // and a padding-box origin would start the gradient after it and throw
+        // the stop out by exactly the edge width.
+        backgroundImage: classRowFill(color, fillStop),
+        backgroundOrigin: "border-box",
       }}
     >
-      {/* The class chip. Identity colour is the subject of this band, so here it
-          is allowed to fill — and because `carClassColor` is arbitrary rather
-          than one of this palette's (uniformly light) status colours, the ink is
-          measured off the fill instead of assuming `on-accent`. */}
+      {/* The class name, sitting *on* the fill rather than after it.
+          It used to be a pill filled with the class colour — the one place
+          identity colour was allowed to fill — and the pill had to go because an
+          opaque block sits exactly where the fill goes. As ink it does not: it
+          reads straight off the tint, the same way a row's position number reads
+          off the tint behind it. That parallel is the alignment. Its `ml-1`
+          matches the row's `px-1`, so the name and the leading column start on
+          one vertical and the band's content begins where the field's does,
+          rather than indented past a block of empty colour. */}
       <span
-        className="ml-1 shrink-0 rounded-[3px] px-1.5 py-1 font-mono text-[11px] font-bold uppercase leading-none tracking-[0.08em]"
-        style={{ background: color, color: readableInk(color) }}
+        className="ml-1 shrink-0 font-mono text-[11px] font-bold uppercase leading-none tracking-[0.08em]"
+        style={{ color }}
       >
         {shortName || "—"}
       </span>

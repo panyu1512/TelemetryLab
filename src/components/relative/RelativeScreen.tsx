@@ -75,6 +75,7 @@ import { CLASS_EDGE_WIDTH, LAP_UNDERLINE } from "../standings/constants";
 import { CountryFlag } from "../ui/CountryFlag";
 import { SessionStrip } from "../timing/SessionStrip";
 import { scaleBox, tableScale, unscaled } from "../../lib/tableScale";
+import { CLASS_RAMP, classColorFor, classTint } from "../../lib/classColors";
 
 // ─── Layout constants ────────────────────────────────────────────────────────
 
@@ -326,6 +327,13 @@ function RowInner({
         .join(" ")}
       style={{
         gridTemplateColumns: template,
+        // One ground per row. The class tint says which class; `primary` says
+        // this is you; `danger` says this car is not on your lap. Painting
+        // identity underneath a status ground is exactly the confusion this
+        // ramp was introduced to end, so status takes the row outright and the
+        // leading edge is left to carry class on its own.
+        background:
+          isPlayer || offLap ? undefined : classTint(classColor),
         height: ROW_H,
         // The 2 px left border is this surface's single carrier of car-class
         // colour (§ Two colour systems, rule 2).
@@ -518,9 +526,11 @@ export function RelativeScreen() {
   const scale = tableScale(width, relNaturalWidth(isOn));
   const innerWidth = unscaled(width, scale);
 
-  // Build a color map keyed by carClassId.
+  // Identity colour from this app's ramp, keyed by the class's position in the
+  // field's order — not iRacing's `carClassColor`, which is free to land on the
+  // red this screen spends on lapped traffic (see `lib/classColors`).
   const classColorMap = useMemo(
-    () => new Map(classes.map((c) => [c.carClassId, c.color])),
+    () => new Map(classes.map((c, i) => [c.carClassId, classColorFor(i)])),
     [classes]
   );
 
@@ -558,7 +568,7 @@ export function RelativeScreen() {
   }, [order, byIdx, windowSize]);
 
   const playerClassId = playerEntry?.carClassId ?? -1;
-  const playerClassColor = classColorMap.get(playerClassId) ?? "#666666";
+  const playerClassColor = classColorMap.get(playerClassId) ?? CLASS_RAMP[0];
   const playerLastLap = playerEntry?.lastLapTime ?? null;
 
   const isEmpty = order.length === 0;
@@ -611,7 +621,7 @@ export function RelativeScreen() {
                 key={entry.carIdx}
                 entry={entry}
                 driver={driversByIdx.get(entry.carIdx)}
-                classColor={classColorMap.get(entry.carClassId) ?? "#666666"}
+                classColor={classColorMap.get(entry.carClassId) ?? CLASS_RAMP[0]}
                 labelled={labelRow && i === 0}
                 {...rowProps}
               />
@@ -640,7 +650,7 @@ export function RelativeScreen() {
                 key={entry.carIdx}
                 entry={entry}
                 driver={driversByIdx.get(entry.carIdx)}
-                classColor={classColorMap.get(entry.carClassId) ?? "#666666"}
+                classColor={classColorMap.get(entry.carClassId) ?? CLASS_RAMP[0]}
                 {...rowProps}
               />
             ))}

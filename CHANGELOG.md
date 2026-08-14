@@ -7,6 +7,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Class colours are the app's own now, and never red.** They came from
+  iRacing, which hands out whatever hue it likes — its stock GT3 colour is
+  `#ff4d4d` — while this app spends red on lapped traffic. A red-edged row
+  beside a red-grounded row was two unrelated things in one colour, and at four
+  or five classes some class landing on red, on the blue that means "this is
+  you", or on the amber that means "pit" was a matter of time. The five class
+  colours are now picked against every status hue in all four themes, each
+  clearing its nearest by at least 25°, with consecutive classes more than 100°
+  apart so neighbouring groups can never blur together.
+- **A class now colours its rows, not just their leading edge.** Three pixels
+  asks the eye to find a hairline before it can tell one group from another.
+  On **Standings** the class colour runs in from the left edge and stops at the
+  end of the first column, at 12 % — its rows come in runs of the same class, so
+  the fills line up into a bar of colour down the leading edge of each group.
+  The stop is taken from the column model rather than being a share of the row,
+  so it lands on the column boundary whichever columns are switched on and
+  however far the table has scaled. On the **Relative** it stays a full-row wash
+  at 14 %, because that table is sorted by where cars physically are, so
+  same-class rows rarely sit together and there is no run to build a bar from.
+- **The class band joins its group.** It now carries the same leading edge and
+  the same fill, stopping at the same place, so the band and every row beneath
+  it line up into one unbroken bar of class colour. Its edge was a flat 3 px
+  while the rows compensated for the table scale, which quietly put the two on
+  different verticals at anything below full size. The class name is no longer
+  a filled pill — the pill sat exactly where the fill goes — and is set in the
+  class colour instead, sitting on the fill the way a row's leading number sits
+  on its own, and starting at the same inset so the band's content begins
+  exactly where the field's does. A row still wears
+  exactly one ground: where "this is you" or "not on your lap" applies, the
+  class colour gives way entirely and the leading edge carries class alone.
+
 ## [1.5.0] - 2026-08-14
 
 ### Added
