@@ -18,6 +18,7 @@ import {
   mockStandings,
 } from "../lib/mockData";
 import { useBridgeStore } from "../stores/useBridgeStore";
+import { useOverlayConfigStore } from "../stores/useOverlayConfigStore";
 import { useSessionStore } from "../stores/useSessionStore";
 import { useStandingsStore } from "../stores/useStandingsStore";
 import { useTelemetryStore } from "../stores/useTelemetryStore";
@@ -93,7 +94,14 @@ export class MockFeed {
       .setStandings(mockStandings(this.elapsed()), this.seq++);
   }
 
+  /**
+   * Read on every push rather than captured at start: switching the mock
+   * session in the Manager should change the open overlays there and then, the
+   * same way the theme and column toggles already do.
+   */
   private pushSession(): void {
-    useSessionStore.getState().setSession(mockSession(this.elapsed()));
+    const sessionType =
+      useOverlayConfigStore.getState().globalSettings.mockSessionType;
+    useSessionStore.getState().setSession(mockSession(this.elapsed(), sessionType));
   }
 }

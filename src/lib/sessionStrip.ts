@@ -8,6 +8,7 @@
  */
 
 import type { SessionInfo } from "../telemetry/types";
+import { SessionKind, sessionKind } from "./sessionKind";
 
 /* -------------------------------------------------------------------------- */
 /*  Flags                                                                     */
@@ -68,14 +69,25 @@ export function activeFlag(flags: readonly string[]): FlagTone | null {
  * iRacing's `sessionType` is free text that varies by series ("Lone Qualify",
  * "Open Qualify", "Offline Testing"…). Collapse it to a four-character token so
  * the strip's leading field is a fixed width whatever series is loaded.
+ *
+ * Built on {@link sessionKind} so there is one definition of what counts as a
+ * qualifying session — the strip's label and the timing screens' behaviour must
+ * never disagree about which session the driver is in. Warmup is the one token
+ * finer than the kinds: {@link SessionKind.Practice} covers it, but the strip
+ * has room to say which practice it is.
  */
 export function sessionTag(type: string): string {
-  const t = type.toLowerCase();
-  if (t.includes("race")) return "RACE";
-  if (t.includes("qual")) return "QUAL";
-  if (t.includes("warm")) return "WARM";
-  if (t.includes("practice") || t.includes("test")) return "PRAC";
-  return type.slice(0, 4).toUpperCase() || "—";
+  if (type.toLowerCase().includes("warm")) return "WARM";
+  switch (sessionKind(type)) {
+    case SessionKind.Race:
+      return "RACE";
+    case SessionKind.Qualify:
+      return "QUAL";
+    case SessionKind.Practice:
+      return "PRAC";
+    default:
+      return type.slice(0, 4).toUpperCase() || "—";
+  }
 }
 
 /* -------------------------------------------------------------------------- */

@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { orderByBestLap } from "../lib/lapTimeOrder";
 import type {
   ClassStanding,
   SectorSplit,
@@ -33,6 +34,18 @@ export interface StandingsMeta {
 
 export interface StandingsState {
   order: number[];
+  /**
+   * The same field ranked by best lap — the order a practice or qualifying
+   * session is read in (see `lib/sessionKind`).
+   *
+   * Computed here rather than in the screen because this is where the identity
+   * discipline lives: it is recomputed every tick but only *replaces* the array
+   * when the resulting sequence changes, which for a lap-time order is once a
+   * lap per car rather than ten times a second. That stable identity is what
+   * lets `useStandingsLayout` keep memoizing on the order instead of on row
+   * data, which is the whole reason the table holds 60 fps at 100 cars.
+   */
+  bestLapOrder: number[];
   byIdx: Record<number, StandingsEntry>;
   classes: ClassStanding[];
   meta: StandingsMeta;
@@ -139,6 +152,7 @@ function metaEqual(a: StandingsMeta, b: StandingsMeta): boolean {
 
 export const useStandingsStore = create<StandingsState>((set) => ({
   order: [],
+  bestLapOrder: [],
   byIdx: {},
   classes: [],
   meta: EMPTY_META,
@@ -164,8 +178,16 @@ export const useStandingsStore = create<StandingsState>((set) => ({
         overallBestSectors: payload.overallBestSectors,
       };
 
+      const bestLapOrder = orderByBestLap(
+        order,
+        (idx) => nextByIdx[idx]?.bestLapTime,
+      );
+
       return {
         order: sameOrder(prev.order, order) ? prev.order : order,
+        bestLapOrder: sameOrder(prev.bestLapOrder, bestLapOrder)
+          ? prev.bestLapOrder
+          : bestLapOrder,
         byIdx: nextByIdx,
         classes: classesEqual(prev.classes, payload.classes)
           ? prev.classes
@@ -175,7 +197,14 @@ export const useStandingsStore = create<StandingsState>((set) => ({
       };
     }),
   clear: () =>
-    set({ order: [], byIdx: {}, classes: [], meta: EMPTY_META, seq: -1 }),
+    set({
+      order: [],
+      bestLapOrder: [],
+      byIdx: {},
+      classes: [],
+      meta: EMPTY_META,
+      seq: -1,
+    }),
 }));
 
 /** Subscribe to a single standings row; re-renders only when that row changes. */
@@ -196,4 +225,9 @@ export function useStandingsMeta(): StandingsMeta {
 /** The overall carIdx order (drives grouping fallback + row mounting). */
 export function useStandingsOrder(): number[] {
   return useStandingsStore((s) => s.order);
+}
+
+/** The field ranked by best lap — the reading order of a lap-time session. */
+export function useStandingsBestLapOrder(): number[] {
+  return useStandingsStore((s) => s.bestLapOrder);
 }

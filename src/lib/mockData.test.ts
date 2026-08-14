@@ -1,8 +1,10 @@
 import { describe, expect, it } from "vitest";
 
+import { ranksByLapTime, sessionKind } from "./sessionKind";
 import {
   MOCK_FIELD,
   MOCK_FIELD_SIZE,
+  MOCK_SESSION_TYPES,
   MOCK_PLAYER_IDX,
   MOCK_START_OFFSET_S,
   mockPlayerTelemetry,
@@ -51,6 +53,21 @@ describe("mockPlayerTelemetry", () => {
 });
 
 describe("mockSession", () => {
+  it("runs a race unless told otherwise", () => {
+    expect(mockSession(30).sessionType).toBe("Race");
+    expect(ranksByLapTime(sessionKind(mockSession(30).sessionType))).toBe(false);
+  });
+
+  it("can report a session the timing screens read as a timesheet", () => {
+    // The mock is the only way to see the practice/qualifying layout without a
+    // running sim, so the names it emits must classify the way iRacing's do.
+    for (const type of MOCK_SESSION_TYPES.filter((t) => t !== "Race")) {
+      const s = mockSession(30, type);
+      expect(s.sessionType).toBe(type);
+      expect(ranksByLapTime(sessionKind(s.sessionType))).toBe(true);
+    }
+  });
+
   it("builds a full roster and two classes", () => {
     const s = mockSession(30);
     expect(s.drivers).toHaveLength(MOCK_FIELD_SIZE);

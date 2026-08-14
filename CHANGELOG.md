@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Standings is a timesheet in practice and qualifying, not a running order.**
+  It ranked by iRacing's race position and showed gap to leader and interval
+  alongside it — numbers measured against a race nobody in a test session is
+  running. Outside a race the table now ranks by best lap, prints that ranking
+  in the position column, and drops the three columns that describe a race:
+  gap, interval and positions gained. Best and last lap are what is left,
+  which is what the session is about.
+- **The Relative stops calling neighbours lapped traffic outside a race.**
+  Being a lap down is a race warning — it means a position is changing hands.
+  In practice, drivers join when they like and run their own programmes, so lap
+  numbers differ across the field by design: every row was taking a `-1L` tag
+  over a red ground, which is the whole table shouting and therefore the whole
+  table silent. The gap to the car ahead and behind is now all it says, which
+  is the number that still means something when you are on a lap.
+
+### Added
+
+- **A Mock Session setting** (Global Settings, under Mock Data) switching the
+  mock feed between Race, Qualifying and Practice. The timing screens read very
+  differently in each, and this is the only way to see the practice layout
+  without a running sim.
+
 ## [1.2.0] - 2026-08-14
 
 ### Fixed

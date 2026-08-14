@@ -559,7 +559,22 @@ function driverEntry(car: MockCar, t: number): DriverEntry {
   };
 }
 
-export function mockSession(t: number): SessionInfo {
+/**
+ * iRacing session names the mock can run as, in the sim's own spelling so they
+ * exercise the real `lib/sessionKind` classifier rather than a stand-in.
+ *
+ * The mock exists to drive the overlays offline, and the timing screens now
+ * read very differently depending on this one string — a practice session ranks
+ * by best lap and drops the race-only columns. A mock that could only ever be a
+ * race left half of both screens with no way to be seen before shipping.
+ */
+export const MOCK_SESSION_TYPES = ["Race", "Open Qualify", "Practice"] as const;
+export type MockSessionType = (typeof MOCK_SESSION_TYPES)[number];
+
+export function mockSession(
+  t: number,
+  sessionType: MockSessionType = "Race",
+): SessionInfo {
   const drivers = MOCK_FIELD.map((car) => driverEntry(car, t));
   const timeRemain = Math.max(0, 3600 - t);
   /*
@@ -580,8 +595,8 @@ export function mockSession(t: number): SessionInfo {
   return {
     sessionId: "mock",
     sessionNum: 0,
-    sessionType: "Race",
-    sessionName: "RACE",
+    sessionType,
+    sessionName: sessionType.toUpperCase(),
     sessionState: t < 10 ? 2 : 4,
     sessionStateLabel: t < 10 ? "Warmup" : "Racing",
     sessionTimeRemain: timeRemain,

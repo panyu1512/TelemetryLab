@@ -16,7 +16,9 @@ export default defineConfig({
       // meaningful instead of diluted by UI/Tauri modules exercised elsewhere.
       include: [
         "src/lib/format.ts",
+        "src/lib/lapTimeOrder.ts",
         "src/lib/scales.ts",
+        "src/lib/sessionKind.ts",
         "src/lib/tyreFreshness.ts",
         "src/lib/fuelStrategy.ts",
         "src/telemetry/protocol.ts",

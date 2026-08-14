@@ -6,10 +6,13 @@ import {
   useStandingsMeta,
 } from "../../stores/useStandingsStore";
 import { useStandingsUiStore } from "../../stores/useStandingsUiStore";
+import { useRanksByLapTime } from "../../stores/useSessionStore";
 import {
   CLASS_BAND_H,
+  LAP_TIME_PROTECTED,
   ROW_H,
   fitColumns,
+  scopeColumnsToSession,
   tableMinWidth,
   type ColumnVisibility,
 } from "./constants";
@@ -41,6 +44,15 @@ const OVERSCAN = 320;
  * offset), each row subscribes to just its own entry, and reorders animate
  * purely via CSS transforms. That keeps 100+ cars at 60 Hz telemetry comfortably
  * inside a 60 fps frame.
+ *
+ * **Outside a race the screen is a timesheet, not a running order** (see
+ * `lib/sessionKind`). Practice and qualifying rank by best lap, so the rows are
+ * ordered here rather than by the bridge, the position column prints that
+ * ranking, and the columns that describe a race — gap, interval, positions
+ * gained — are dropped rather than left to report distances nobody is racing.
+ * No new chrome announces the switch: the session strip already names the
+ * session, and a timesheet whose fastest-lap cell is always its first row says
+ * what it is without a label.
  */
 export function StandingsScreen() {
   const iracingActive = useBridgeStore((s) => s.iracingActive);
@@ -49,6 +61,7 @@ export function StandingsScreen() {
   const grouping = useStandingsUiStore((s) => s.grouping);
   const followPlayer = useStandingsUiStore((s) => s.followPlayer);
   const columns = useStandingsUiStore((s) => s.columns);
+  const byLapTime = useRanksByLapTime();
   const showSessionStrip = useStandingsUiStore((s) => s.showSessionStrip);
   const showColumnLabels = useStandingsUiStore((s) => s.showColumnLabels);
   const { items, totalHeight } = useStandingsLayout();
@@ -89,8 +102,16 @@ export function StandingsScreen() {
   // growing a horizontal scrollbar.
   const isVisible = useMemo<ColumnVisibility>(() => {
     const chosen: ColumnVisibility = (id) => columns[id] !== false;
-    return fitColumns(viewW, meta.sectorCount, chosen);
-  }, [columns, viewW, meta.sectorCount]);
+    // Session scoping first — drop the columns that would lie outside a race
+    // and pin the ranking column — then fit what is left to the window.
+    const scoped = scopeColumnsToSession(chosen, byLapTime);
+    return fitColumns(
+      viewW,
+      meta.sectorCount,
+      scoped,
+      byLapTime ? LAP_TIME_PROTECTED : []
+    );
+  }, [columns, viewW, meta.sectorCount, byLapTime]);
 
   const classById = useMemo(
     () => new Map(classes.map((c) => [c.carClassId, c])),
@@ -194,6 +215,7 @@ export function StandingsScreen() {
                     classColor={classById.get(it.classId)?.color ?? "#666"}
                     zebra={it.zebra}
                     classRelative={classRelative}
+                    rank={it.rank}
                     isVisible={isVisible}
                     labelled={showColumnLabels && it.leader}
                     tone={it.tone}
