@@ -1,6 +1,12 @@
 import { describe, expect, it } from "vitest";
 
-import { CLASS_RAMP, classColorFor, classRowFill, classTint } from "./classColors";
+import {
+  CLASS_RAMP,
+  classBandFill,
+  classColorFor,
+  classRowFill,
+  classTint,
+} from "./classColors";
 import { THEMES } from "../themes";
 
 /* -------------------------------------------------------------------------- */
@@ -191,5 +197,25 @@ describe("classRowFill", () => {
 
   it("works on the darkened colours a sixth class would get", () => {
     expect(classRowFill(classColorFor(5), STOP)).toContain("linear-gradient");
+  });
+});
+
+describe("classBandFill", () => {
+  it("covers the whole band, not a stripe of it", () => {
+    // A band is the heading; its rows are what it heads. A clipped fill made it
+    // read as one of them.
+    const f = classBandFill(CLASS_RAMP[0]);
+    expect(f).not.toContain("linear-gradient");
+    expect(f).toContain(CLASS_RAMP[0]);
+  });
+
+  it("sits a step above the rows it opens, and above the Relative's wash", () => {
+    expect(classBandFill(CLASS_RAMP[0])).toContain("22%");
+    expect(classRowFill(CLASS_RAMP[0], "1rem")).toContain("12%");
+    expect(classTint(CLASS_RAMP[0])).toContain("14%");
+  });
+
+  it("works on the darkened colours a sixth class would get", () => {
+    expect(classBandFill(classColorFor(5))).toContain("color-mix");
   });
 });

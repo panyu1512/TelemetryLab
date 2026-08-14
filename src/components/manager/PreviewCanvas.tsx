@@ -552,13 +552,10 @@ function WidgetPreviewCard({
       className="overlay-card widget-card timing-surface pointer-events-none flex flex-col overflow-hidden rounded-card border border-border/60 shadow-2xl ring-1 ring-white/5"
       style={{ height: widgetPreviewHeight(def) }}
     >
-      <header className="flex shrink-0 items-center gap-2">
-        <def.icon className="size-3.5 shrink-0 text-faint" strokeWidth={2} />
-        <h3 className="widget-title select-none truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">
-          {def.title}
-        </h3>
-        <span className="header-rule" aria-hidden />
-      </header>
+      {/* Headerless, because the overlay is. The comment above is the reason:
+          a preview that carries a name and an icon the real widget does not is
+          a preview that lies about the thing it is previewing. The config panel
+          beside this canvas is where the widgets are listed by name. */}
       <div
         className="min-h-0 flex-1 overflow-hidden"
         style={{ containerType: "size" }}

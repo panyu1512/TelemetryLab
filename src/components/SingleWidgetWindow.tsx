@@ -58,15 +58,10 @@ export function SingleWidgetWindow({ id }: { id: string }) {
       <OverlayChrome kind="widget" id={id} />
 
       {/* Same paper as the widget in the dashboard grid — a widget popped into
-          its own window is the same widget. */}
+          its own window is the same widget, headerless included. The window's
+          own title bar already says which widget this is, so a name inside it
+          was saying it twice. */}
       <section className="overlay-card widget-card timing-surface flex min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-border/60">
-        <header className="flex shrink-0 items-center gap-2">
-          <def.icon className="size-3.5 shrink-0 text-faint" strokeWidth={2} />
-          <h3 className="widget-title select-none truncate text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">
-            {def.title}
-          </h3>
-          <span className="header-rule" aria-hidden />
-        </header>
         <div
           className="min-h-0 flex-1 overflow-hidden"
           style={{ containerType: "size" }}

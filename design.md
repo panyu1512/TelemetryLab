@@ -568,13 +568,17 @@ the fact that a header band and a row cost the same height.
 One line opening each class group on Standings:
 `[GT3] · CARS 6 · SOF 4.1k · BEST 2:06.652`.
 
-- **The band is part of its group, not furniture above it.** It carries the
-  same leading edge as a row and the same class fill, stopping at the same
-  `firstColumnStop` — so the fills of the band and every row beneath it line up
-  into one unbroken bar of class colour down the group's leading edge. Because
-  the band carries its border on the same element as the fill, that fill is
-  given a `border-box` origin; a padding-box origin would start it after the
-  border and throw the stop out by exactly the edge width.
+- **The band is part of its group, not furniture above it — and it is the
+  heading, so it carries more of the colour than the rows do.** It takes the
+  same leading edge as a row, and then the class colour across its whole width
+  (`classBandFill`, 22 %) where a row takes it only to the end of its first
+  column (`classRowFill`, 12 %). That difference is the hierarchy: masthead
+  solid, rows striped, the group legible as one block.
+
+  It briefly carried the rows' clipped fill instead, stopping at the same
+  `firstColumnStop`, over the plain white wash the band used to sit on. That
+  lined the fills up but made the band read as a row that happened to be
+  lighter — its own colour a detail rather than its subject.
 
   **The class name used to be a filled chip and is now ink, sitting on the
   fill.** The pill sat exactly where the fill goes and would have hidden it, and
@@ -896,14 +900,20 @@ band's actual job (per-class data).
   change still dates the screenshots silently until someone runs it. Wiring it
   into a release step would close that.
 
-- ~~The overlay widgets' own header labels are still sans.~~ **Done** — the
-  widget header and the two micro-labels in `widgets/primitives.tsx` are mono
-  now, which is what § Typography always said they should be: a widget header
-  names a channel, and a channel name is nomenclature rather than prose. The
-  caveat this entry carried still stands and has not been discharged: it was
-  verified in the Manager preview and against the mock feed, **not against real
-  footage**. If mono at 10 px reads worse over a bright kerb than sans did,
-  that is the finding this entry was reserving judgement for.
+- ~~The overlay widgets' own header labels are still sans.~~ **Moot** — there
+  is no widget header left to set. The two micro-labels in
+  `widgets/primitives.tsx` are still mono, which is what § Typography always
+  said they should be, but the header this entry was really about — icon, name,
+  rule — is gone from the dashboard widgets, their popped-out windows and the
+  Manager preview alike. A label you have already learned costs a glance every
+  time you skip it, and a speed gauge does not need the word "speed" on it. The
+  card is content edge to edge now, and the whole of it is the drag target,
+  since there is no header to grab and nothing in a readout to grab by mistake.
+  Its actions live in the top-right corner and appear on hover.
+
+  The unresolved half of this entry went with it: there is no longer a 10 px
+  header label whose legibility over a bright kerb was being reserved for
+  judgement.
 - `--color-danger` and `--color-warning` have no `-dim` counterpart, so a
   filled destructive button has no hover fill. Not needed yet: destructive
   actions here are outline-at-rest.
