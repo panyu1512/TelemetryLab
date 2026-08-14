@@ -6,19 +6,83 @@
     <title>TelemetryLab — timing and telemetry overlays for iRacing</title>
     <meta
       name="description"
-      content="A multi-class timing, relative, fuel and telemetry overlay for iRacing. Each screen is its own window over the game, built to be read at a glance. Free for Windows."
+      content="Multi-class timing, relative, fuel and telemetry overlays for iRacing. Each screen is its own window over the game, read at a glance. Free, open source, Windows."
     />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta name="theme-color" content="#12161d" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="canonical" href="https://telemetrylab.app/" />
 
+    <!-- Open Graph and Twitter image URLs must be absolute — a relative path
+         resolves against the scraper, not the page, and the card renders with
+         no image at all. -->
     <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="TelemetryLab" />
+    <meta property="og:locale" content="en" />
+    <meta property="og:url" content="https://telemetrylab.app/" />
     <meta property="og:title" content="TelemetryLab — read the field without looking" />
     <meta
       property="og:description"
       content="Multi-class standings, an on-track relative, fuel strategy and a driving cluster. Each one its own window over iRacing."
     />
-    <meta property="og:image" content="assets/standings.png" />
+    <meta property="og:image" content="https://telemetrylab.app/assets/standings.png" />
+    <meta property="og:image:width" content="2360" />
+    <meta property="og:image:height" content="1024" />
+    <meta
+      property="og:image:alt"
+      content="The TelemetryLab standings overlay showing two class groups, GT3 and GT4, with gaps and lap times."
+    />
     <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="TelemetryLab — read the field without looking" />
+    <meta
+      name="twitter:description"
+      content="Multi-class standings, an on-track relative, fuel strategy and a driving cluster. Each one its own window over iRacing."
+    />
+    <meta name="twitter:image" content="https://telemetrylab.app/assets/standings.png" />
+    <meta
+      name="twitter:image:alt"
+      content="The TelemetryLab standings overlay showing two class groups, GT3 and GT4, with gaps and lap times."
+    />
+
+    <!-- Structured data. Every field here is a fact stated elsewhere on the
+         page or in package.json — no rating, no download count, per
+         README.md § "Nothing on the page may be invented". Note that without
+         an aggregateRating Google will not draw a rich result for this; the
+         markup is here because AI summarisers parse it more reliably than
+         they parse the prose. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "TelemetryLab",
+        "url": "https://telemetrylab.app/",
+        "description": "Multi-class timing, relative, fuel and telemetry overlays for iRacing. Each screen is its own window over the game, read at a glance.",
+        "applicationCategory": "UtilitiesApplication",
+        "applicationSubCategory": "Sim racing overlay",
+        "operatingSystem": "Windows",
+        "softwareVersion": "1.7.0",
+        "isAccessibleForFree": true,
+        "license": "https://opensource.org/licenses/MIT",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "USD"
+        },
+        "downloadUrl": "https://github.com/panyu1512/TelemetryLab/releases/latest",
+        "author": {
+          "@type": "Person",
+          "name": "panyu1512",
+          "url": "https://github.com/panyu1512"
+        },
+        "sameAs": ["https://github.com/panyu1512/TelemetryLab"],
+        "screenshot": [
+          "https://telemetrylab.app/assets/standings.png",
+          "https://telemetrylab.app/assets/relative.png",
+          "https://telemetrylab.app/assets/fuel.png",
+          "https://telemetrylab.app/assets/manager.png"
+        ]
+      }
+    </script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
