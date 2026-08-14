@@ -44,6 +44,14 @@ import fs from "node:fs";
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const OUT = path.join(HERE, "assets");
 const BASE = process.env.SITE_CAPTURE_BASE ?? "http://localhost:1420";
+/**
+ * Comma-separated shot names to re-shoot, or all of them when unset. Every shot
+ * waits out a lap boundary, so a full pass is minutes — and most re-shoots are
+ * one image whose frame moved.
+ *
+ *   SITE_CAPTURE_ONLY=standings-compact node site/capture.mjs
+ */
+const ONLY = process.env.SITE_CAPTURE_ONLY?.split(",").map((n) => n.trim());
 
 /**
  * Long enough for a lap boundary to pass at `MOCK_TIME_SCALE`, so the fuel
@@ -70,14 +78,27 @@ const PAST_A_LAP_MS = 40_000;
  * The boundaries at these widths, from the live app: the standings field runs
  * strip 26 · [band 30 + gap 4 + 6 rows] · CLASS_GAP 10 · [band 30 + gap 4 +
  * 6 rows], with row bottoms at 71 · 107 · 139 … 267 for GT3 and 307 · 343 …
- * 503 for GT4. Re-measure after any change to `constants.ts` geometry.
+ * 503 for GT4.
+ *
+ * **Those are full-size numbers, and a narrow shot is not full size.** The
+ * timing tables scale themselves to their window now, so below the width its
+ * columns want, every one of those boundaries multiplies by the same factor
+ * (`lib/tableScale`) — a 620 px standings draws at ~0.61 and its field ends
+ * near 300, not 500. Re-measure after any change to `constants.ts` geometry
+ * *or* to the scale floor, and re-measure by looking at the file rather than
+ * by arithmetic: an over-tall frame shows as a band of empty paper that no
+ * test will ever catch.
  */
 const SHOTS = [
   // The hero capture. Narrow on purpose — it doubles as the proof that the
-  // table drops columns to fit rather than growing a scrollbar.
-  // 381 = the second GT4 row's bottom (375) plus margin, so the group that
-  // proves the field is multi-class is not cut through its first two entries.
-  { name: "standings-compact", route: "?overlay=standings", w: 620, h: 381 },
+  // table *scales* to fit rather than shedding columns or growing a scrollbar:
+  // at 620 px every one of the fifteen columns is still there, drawn smaller.
+  // (It used to prove the opposite. Columns stopped dropping when the tables
+  // learned to scale — see `lib/tableScale`.)
+  // 306, down from 381: at this width the table no longer sheds columns, it
+  // draws them all at ~0.61 — so the field itself is ~0.61 as tall, and the old
+  // frame closed on 75 px of empty paper below the last row.
+  { name: "standings-compact", route: "?overlay=standings", w: 620, h: 306 },
   // 512 = the whole two-class field (ends 503). This capture is the page's
   // proof that the table groups by class; at 420 it cropped the GT4 group
   // mid-row, which showed the reader four of six cars and a sliced fifth.
@@ -98,6 +119,7 @@ fs.mkdirSync(OUT, { recursive: true });
 const browser = await chromium.launch();
 
 for (const { name, route, w, h, wait = PAST_A_LAP_MS } of SHOTS) {
+  if (ONLY && !ONLY.includes(name)) continue;
   const ctx = await browser.newContext({
     viewport: { width: w, height: h },
     deviceScaleFactor: 2,
