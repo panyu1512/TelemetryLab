@@ -476,7 +476,10 @@ export function mockPlayerTelemetry(t: number): PlayerTelemetry {
       tempL: round(mid - spread, 1),
       tempM: round(mid, 1),
       tempR: round(mid + spread, 1),
-      pressure: round(168 + 3 * load + Math.sin(t * 0.05 + i), 1),
+      // Static per corner: `pressure` is the garage cold pressure, the only
+      // per-corner pressure iRacing's live API exposes (see `TyreData`).
+      // Animating it here would have the mock promise data the bridge cannot.
+      pressure: 168 + i,
     };
   };
 

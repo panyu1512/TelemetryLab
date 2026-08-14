@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **The tyre temperatures update as you drive now.** The corners were arriving
+  every frame all along — the readout just rounded them to a whole degree, and
+  carcass temperature has enough thermal mass behind it that whole degrees can
+  sit unchanged for a minute at a time. Next to the speed and the pedal traces
+  the widget looked dead. It reads to a tenth now, which is the resolution the
+  quantity actually moves at.
+- **Tyre pressures are no longer permanently "—".** The bridge asked the SDK
+  for `LFpress`, which is not an iRacing variable: every read raised and fell
+  through to `None`, so no pressure ever reached the overlay. It reads
+  `LFcoldPressure` now — the only per-corner pressure the live API exposes —
+  and the widget labels it `cold`, because it is the garage figure and holds
+  for the stint rather than tracking the tyre.
+
+### Changed
+
+- The mock feed holds cold pressure static per corner instead of animating it,
+  so the mock promises exactly what the real bridge can deliver.
+
 ## [1.1.2] - 2026-08-13
 
 ### Fixed
