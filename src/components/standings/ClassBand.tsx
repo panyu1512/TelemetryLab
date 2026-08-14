@@ -1,7 +1,8 @@
 import { memo } from "react";
 import type { ClassStanding } from "../../telemetry/types";
 import { kilo, lapTime } from "../../lib/format";
-import { readableInk } from "../../lib/contrast";
+import { classRowFill } from "../../lib/classColors";
+import { CLASS_EDGE_WIDTH } from "./constants";
 
 
 /**
@@ -26,6 +27,7 @@ import { readableInk } from "../../lib/contrast";
 function ClassBandInner({
   standing,
   color,
+  fillStop,
   fastestIsOverall,
   width,
 }: {
@@ -36,6 +38,13 @@ function ClassBandInner({
    * for why red in particular had to go.
    */
   color: string;
+  /**
+   * Where the class-colour fill stops, as a CSS length — the same
+   * `firstColumnStop` the rows are given, which is the whole point of passing
+   * it in rather than recomputing it here. Band and rows share one vertical or
+   * the effect is just a stripe that nearly lines up.
+   */
+  fillStop: string;
   /** This class's fastest lap is also the fastest in the field. */
   fastestIsOverall: boolean;
   /**
@@ -52,22 +61,38 @@ function ClassBandInner({
     <div
       className="flex h-full items-center gap-3 overflow-hidden rounded-sm bg-white/[0.045] pr-2"
       style={{
-        // The band's leading edge carries the class colour at full strength: the
-        // row's 3 px left border, one scale up (§ Two colour systems, rule 2).
-        // Being the same device, it has to sit at the same x — so the band's
-        // wrapper carries no horizontal padding, and the chip's own `ml-1`
-        // matches the row's `px-1`, putting chip and position column on one
-        // vertical.
-        borderLeft: `3px solid ${color}`,
+        // The band's leading edge is the row's, one scale up — the same device,
+        // so it takes the same width and holds the same drawn size as the table
+        // scales (§ Two colour systems, rule 2). It was a flat `3px` here while
+        // the rows compensated for scale, which quietly put the two on different
+        // verticals at anything below full size.
+        borderLeftWidth: CLASS_EDGE_WIDTH,
+        borderLeftStyle: "solid",
+        borderLeftColor: color,
+        // The same fill the rows carry, stopping at the same x, so band and
+        // group read as one unbroken bar of class colour down the leading edge.
+        // `border-box` origin because unlike a row — whose fill sits on a
+        // wrapper outside the border — this element carries the border itself,
+        // and a padding-box origin would start the gradient after it and throw
+        // the stop out by exactly the edge width.
+        backgroundImage: classRowFill(color, fillStop),
+        backgroundOrigin: "border-box",
       }}
     >
-      {/* The class chip. Identity colour is the subject of this band, so here it
-          is allowed to fill — and because identity colour sits outside this
-          palette's (uniformly light) status colours, the ink is measured off the
-          fill instead of assuming `on-accent`. */}
+      {/* The class name.
+          It used to be a pill filled with the class colour, which was the one
+          place identity colour was allowed to fill. The fill above replaced it
+          rather than joining it: an opaque pill sits exactly where the fill goes
+          and would have hidden it, and of the two the fill is the one that makes
+          the band part of its group instead of furniture above it. The name
+          keeps identity as ink instead, and starts where the row's *second*
+          column starts — past the fill, on the vertical the car numbers sit on. */}
       <span
-        className="ml-1 shrink-0 rounded-[3px] px-1.5 py-1 font-mono text-[11px] font-bold uppercase leading-none tracking-[0.08em]"
-        style={{ background: color, color: readableInk(color) }}
+        className="shrink-0 font-mono text-[11px] font-bold uppercase leading-none tracking-[0.08em]"
+        style={{
+          marginLeft: `calc(${fillStop} - ${CLASS_EDGE_WIDTH} + 0.25rem)`,
+          color,
+        }}
       >
         {shortName || "—"}
       </span>

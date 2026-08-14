@@ -27,7 +27,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   so it lands on the column boundary whichever columns are switched on and
   however far the table has scaled. On the **Relative** it stays a full-row wash
   at 14 %, because that table is sorted by where cars physically are, so
-  same-class rows rarely sit together and there is no run to build a bar from. A row still wears
+  same-class rows rarely sit together and there is no run to build a bar from.
+- **The class band joins its group.** It now carries the same leading edge and
+  the same fill, stopping at the same place, so the band and every row beneath
+  it line up into one unbroken bar of class colour. Its edge was a flat 3 px
+  while the rows compensated for the table scale, which quietly put the two on
+  different verticals at anything below full size. The class name is no longer
+  a filled pill — the pill sat exactly where the fill goes — and is set in the
+  class colour instead, starting on the vertical the car numbers sit on. A row still wears
   exactly one ground: where "this is you" or "not on your lap" applies, the
   class colour gives way entirely and the leading edge carries class alone.
 
