@@ -106,18 +106,28 @@ standings table stops being readable at a glance.
 
    The two surfaces carry that ground differently, and the difference is the
    shape of the tables rather than a loose end. **Standings runs the colour in
-   from the left edge and stops it hard at 35 %**, leaving the rest bare: its
-   rows come in runs of the same class stacked into groups, so a partial fill
-   builds a column of colour down the group that the eye picks up without being
-   asked to look. **Relative washes the whole row at 14 %**: it is a handful of
-   rows sorted by where cars physically are, so same-class neighbours rarely sit
-   together and there is no run for a partial fill to build — a lone 35 % block
-   there would read as a value rather than as a class.
+   from the left edge and stops it hard at the end of the first column**, at
+   12 %: its rows come in runs of the same class stacked into groups, so the
+   fills line up into a bar of colour down the leading edge of each group that
+   the eye picks up without being asked to look. **Relative washes the whole
+   row at 14 %**: it is a handful of rows sorted by where cars physically are,
+   so same-class neighbours rarely sit together and there is no run for a
+   partial fill to build.
 
-   The Standings stop is a fixed extent, not a number. Everything on that
-   surface that could drive a bar moves at 10 Hz, and a fill redrawing itself on
-   every row on every tick is motion in the corner of the eye that means
-   nothing.
+   The stop is a **length from the column model**
+   (`firstColumnStop`), not a share of the row width. That is what lets it land
+   *on* the column boundary at any table scale and any column set — the first
+   column is position change when the user has it and position otherwise, and a
+   percentage would drift across the columns every time one was switched on or
+   off. It also means the fill sits directly behind the row's leading number,
+   which is why it is fainter here than the Relative's wash rather than
+   stronger: a ground under a number it has to keep legible can afford less
+   than one spread across empty width.
+
+   Nothing drives the extent per row, and nothing should. Everything on this
+   surface that could — lap progress, gap to the class leader — moves at 10 Hz,
+   and a fill redrawing itself on every row on every tick is motion in the
+   corner of the eye that means nothing.
 
    The earlier rule quarantined identity to the edge alone, on the argument that
    a second carrier would put an arbitrary hue in competition with the status

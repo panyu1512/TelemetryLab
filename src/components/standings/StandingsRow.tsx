@@ -5,6 +5,7 @@ import { useDriver } from "../../stores/useSessionStore";
 import {
   CLASS_EDGE_WIDTH,
   COL_LABEL_H,
+  firstColumnStop,
   GROUP_TONE,
   gridTemplate,
   LAP_COLOR,
@@ -114,7 +115,9 @@ function StandingsRowInner({
         // Painted on the wrapper rather than the row itself, so the zebra tone
         // (a translucent white utility class) still layers over it instead of
         // being overwritten by an inline background.
-        background: wearsStatusGround ? undefined : classRowFill(classColor),
+        background: wearsStatusGround
+          ? undefined
+          : classRowFill(classColor, firstColumnStop(sectorCount, isVisible)),
       }}
     >
       <div

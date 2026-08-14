@@ -20,12 +20,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   apart so neighbouring groups can never blur together.
 - **A class now colours its rows, not just their leading edge.** Three pixels
   asks the eye to find a hairline before it can tell one group from another.
-  On **Standings** the class colour runs in from the left edge and stops at
-  35 % of the row, leaving the rest bare — its rows come in runs of the same
-  class, so the fills stack into a column of colour down each group. On the
-  **Relative** it stays a full-row wash at 14 %, because that table is sorted
-  by where cars physically are, so same-class rows rarely sit together and a
-  lone block would read as a value rather than as a class. A row still wears
+  On **Standings** the class colour runs in from the left edge and stops at the
+  end of the first column, at 12 % — its rows come in runs of the same class, so
+  the fills line up into a bar of colour down the leading edge of each group.
+  The stop is taken from the column model rather than being a share of the row,
+  so it lands on the column boundary whichever columns are switched on and
+  however far the table has scaled. On the **Relative** it stays a full-row wash
+  at 14 %, because that table is sorted by where cars physically are, so
+  same-class rows rarely sit together and there is no run to build a bar from. A row still wears
   exactly one ground: where "this is you" or "not on your lap" applies, the
   class colour gives way entirely and the leading edge carries class alone.
 

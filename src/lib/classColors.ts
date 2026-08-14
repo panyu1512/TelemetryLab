@@ -59,24 +59,15 @@ export const CLASS_RAMP: readonly string[] = [
 const TINT_ALPHA = 0.14;
 
 /**
- * How far across a **Standings** row the class colour reaches, and how strong
- * it is there.
+ * Strength of the class-colour fill behind a **Standings** row.
  *
- * A fixed extent, not a value. Every number on this surface that *could* drive
- * a bar — lap progress, gap to the class leader — moves at 10 Hz, and a fill
- * redrawing itself on every row on every tick is motion in the corner of the
- * eye that means nothing. Held still, the block reads as what it is: a field of
- * the class's colour, wide enough to register as a shape rather than as a
- * hairline. These two constants are the whole treatment — move them and it
- * moves with them, and binding `FILL_EXTENT` to a per-row number later is a
- * one-line change to {@link classRowFill}.
- *
- * A little stronger than the Relative's full-row wash. Concentrated into a
- * third of the row it has to carry the same weight over less ground, and a
- * block that reads as an accident is worse than one that reads as a choice.
+ * Fainter than the Relative's full-row wash rather than stronger. The fill
+ * stops at the end of the first column now, so it sits directly behind the
+ * row's leading number — and a ground under a number it has to keep legible
+ * can afford far less than one spread across empty width. It is a bed for the
+ * position to sit on, not a bar.
  */
-const FILL_EXTENT = 0.35;
-const FILL_ALPHA = 0.18;
+const FILL_ALPHA = 0.12;
 
 /**
  * The identity colour for the class at `index` in the field's class order.
@@ -130,18 +121,23 @@ export function classTint(color: string): string {
 
 /**
  * The ground a **Standings** row sits on: the class's colour running in from
- * the left edge and stopping partway across, the rest left as bare paper.
+ * the left edge, stopping at `extent`, the rest left as bare paper.
  *
  * A hard stop, not a fade. The edge is the point — it gives the colour a shape,
- * and a shape is what the eye picks up from a group of rows without being
- * asked to look. A gradient petering out would read as a smudge behind the
- * values instead, which is the thing a table this dense can least afford.
+ * and a shape is what the eye picks up from a group of rows without being asked
+ * to look. A gradient petering out would read as a smudge behind the values
+ * instead, which is the thing a table this dense can least afford.
+ *
+ * `extent` is a CSS length, not a percentage, and it comes from the column
+ * model — `firstColumnStop` in the standings constants. That is what lets the
+ * fill land *on* the first column's boundary at any table scale and any column
+ * set, instead of near it: a share of the row width would drift across the
+ * columns every time one was switched on or off.
  *
  * Same one-ground rule as {@link classTint}: a player or lapped row takes its
  * status ground instead, and its leading edge carries class alone.
  */
-export function classRowFill(color: string): string {
-  const stop = `${Math.round(FILL_EXTENT * 100)}%`;
+export function classRowFill(color: string, extent: string): string {
   const c = tint(color, FILL_ALPHA);
-  return `linear-gradient(to right, ${c} 0, ${c} ${stop}, transparent ${stop})`;
+  return `linear-gradient(to right, ${c} 0, ${c} ${extent}, transparent ${extent})`;
 }

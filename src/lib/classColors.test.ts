@@ -149,37 +149,47 @@ describe("classTint", () => {
 });
 
 describe("classRowFill", () => {
-  it("runs in from the left edge and stops partway across", () => {
-    const f = classRowFill(CLASS_RAMP[0]);
+  const STOP = "calc(3px + 0.25rem + 2.1rem)";
+
+  it("runs in from the left edge and stops at the extent it is given", () => {
+    const f = classRowFill(CLASS_RAMP[0], STOP);
     expect(f).toMatch(/^linear-gradient\(to right,/);
     expect(f).toContain(CLASS_RAMP[0]);
-    expect(f).toContain("transparent");
+    expect(f).toContain(STOP);
   });
 
-  it("stops hard — same position twice, no fade", () => {
+  it("stops hard — the same extent twice, no fade", () => {
     // The edge is the point: it gives the colour a shape. A gradient petering
     // out would read as a smudge behind the values.
-    const stops = [...classRowFill(CLASS_RAMP[0]).matchAll(/(\d+)%\)?(?=[,)])/g)];
-    const positions = classRowFill(CLASS_RAMP[0]).match(/ (\d+)%/g);
-    expect(positions).not.toBeNull();
-    // The colour's end stop and transparent's start stop are the same number.
-    const last = positions!.slice(-2).map((p) => p.trim());
-    expect(last[0]).toBe(last[1]);
-    expect(stops.length).toBeGreaterThan(0);
+    const f = classRowFill(CLASS_RAMP[0], STOP);
+    expect(f.split(STOP)).toHaveLength(3); // once to end the colour, once to start transparent
+    expect(f).toContain(`transparent ${STOP}`);
   });
 
   it("leaves the rest of the row as bare paper", () => {
-    // Anything after the stop must be fully transparent, not a darker tint —
-    // the row's own ground shows through there.
-    expect(classRowFill(CLASS_RAMP[2])).toMatch(/transparent \d+%\)$/);
+    // Fully transparent past the stop, not a darker tint — the row's own zebra
+    // ground is what shows through there.
+    expect(classRowFill(CLASS_RAMP[2], STOP)).toMatch(/transparent .+\)$/);
   });
 
-  it("is stronger than the full-row wash it is concentrated from", () => {
-    expect(classRowFill(CLASS_RAMP[0])).toContain("18%");
+  it("is fainter than the Relative's full-row wash", () => {
+    // It sits directly behind the leading number now, so it can afford less
+    // than a ground spread across empty width.
+    expect(classRowFill(CLASS_RAMP[0], STOP)).toContain("12%");
     expect(classTint(CLASS_RAMP[0])).toContain("14%");
   });
 
+  it("takes a length, not a share of the row", () => {
+    // A percentage stop would drift across the columns every time one was
+    // switched on or off; a length lands on the column boundary at any table
+    // scale. Checked with the colour's own alpha stripped out, since that is a
+    // percentage too and not a stop position.
+    const stops = classRowFill(CLASS_RAMP[0], STOP).replace(/color-mix\([^)]*\)/g, "C");
+    expect(stops).not.toMatch(/\d+%/);
+    expect(stops).toContain(STOP);
+  });
+
   it("works on the darkened colours a sixth class would get", () => {
-    expect(classRowFill(classColorFor(5))).toContain("linear-gradient");
+    expect(classRowFill(classColorFor(5), STOP)).toContain("linear-gradient");
   });
 });
