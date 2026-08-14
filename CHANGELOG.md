@@ -18,13 +18,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   colours are now picked against every status hue in all four themes, each
   clearing its nearest by at least 25°, with consecutive classes more than 100°
   apart so neighbouring groups can never blur together.
-- **A class now tints its rows, not just their leading edge.** Three pixels of
-  colour asks the eye to find a hairline before it can tell one group from
-  another; a 14 % tint of the same colour behind the row lets class register
-  from the shape of the block instead. A row still wears exactly one ground —
-  where "this is you" or "not on your lap" applies, the class tint gives way
-  entirely and the leading edge carries class alone, which is what stops the
-  new tint from re-creating the collision it was added to end.
+- **A class now colours its rows, not just their leading edge.** Three pixels
+  asks the eye to find a hairline before it can tell one group from another.
+  On **Standings** the class colour runs in from the left edge and stops at
+  35 % of the row, leaving the rest bare — its rows come in runs of the same
+  class, so the fills stack into a column of colour down each group. On the
+  **Relative** it stays a full-row wash at 14 %, because that table is sorted
+  by where cars physically are, so same-class rows rarely sit together and a
+  lone block would read as a value rather than as a class. A row still wears
+  exactly one ground: where "this is you" or "not on your lap" applies, the
+  class colour gives way entirely and the leading edge carries class alone.
 
 ## [1.5.0] - 2026-08-14
 

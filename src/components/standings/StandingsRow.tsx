@@ -13,7 +13,7 @@ import {
   type ColumnVisibility,
 } from "./constants";
 import { ColumnLabels } from "./ColumnLabels";
-import { classTint } from "../../lib/classColors";
+import { classRowFill } from "../../lib/classColors";
 import { CountryFlag } from "../ui/CountryFlag";
 import {
   BrandIcon,
@@ -114,7 +114,7 @@ function StandingsRowInner({
         // Painted on the wrapper rather than the row itself, so the zebra tone
         // (a translucent white utility class) still layers over it instead of
         // being overwritten by an inline background.
-        background: wearsStatusGround ? undefined : classTint(classColor),
+        background: wearsStatusGround ? undefined : classRowFill(classColor),
       }}
     >
       <div

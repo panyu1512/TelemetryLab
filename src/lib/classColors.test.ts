@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { CLASS_RAMP, classColorFor, classTint } from "./classColors";
+import { CLASS_RAMP, classColorFor, classRowFill, classTint } from "./classColors";
 import { THEMES } from "../themes";
 
 /* -------------------------------------------------------------------------- */
@@ -137,7 +137,7 @@ describe("classColorFor", () => {
 });
 
 describe("classTint", () => {
-  it("is the same colour, kept to a whisper behind the values", () => {
+  it("washes the whole row, kept to a whisper behind the values", () => {
     const t = classTint(CLASS_RAMP[0]);
     expect(t).toContain(CLASS_RAMP[0]);
     expect(t).toMatch(/color-mix\(in oklab, .+ 14%, transparent\)/);
@@ -145,5 +145,41 @@ describe("classTint", () => {
 
   it("works on the darkened colours a sixth class would get", () => {
     expect(classTint(classColorFor(5))).toContain("color-mix");
+  });
+});
+
+describe("classRowFill", () => {
+  it("runs in from the left edge and stops partway across", () => {
+    const f = classRowFill(CLASS_RAMP[0]);
+    expect(f).toMatch(/^linear-gradient\(to right,/);
+    expect(f).toContain(CLASS_RAMP[0]);
+    expect(f).toContain("transparent");
+  });
+
+  it("stops hard — same position twice, no fade", () => {
+    // The edge is the point: it gives the colour a shape. A gradient petering
+    // out would read as a smudge behind the values.
+    const stops = [...classRowFill(CLASS_RAMP[0]).matchAll(/(\d+)%\)?(?=[,)])/g)];
+    const positions = classRowFill(CLASS_RAMP[0]).match(/ (\d+)%/g);
+    expect(positions).not.toBeNull();
+    // The colour's end stop and transparent's start stop are the same number.
+    const last = positions!.slice(-2).map((p) => p.trim());
+    expect(last[0]).toBe(last[1]);
+    expect(stops.length).toBeGreaterThan(0);
+  });
+
+  it("leaves the rest of the row as bare paper", () => {
+    // Anything after the stop must be fully transparent, not a darker tint —
+    // the row's own ground shows through there.
+    expect(classRowFill(CLASS_RAMP[2])).toMatch(/transparent \d+%\)$/);
+  });
+
+  it("is stronger than the full-row wash it is concentrated from", () => {
+    expect(classRowFill(CLASS_RAMP[0])).toContain("18%");
+    expect(classTint(CLASS_RAMP[0])).toContain("14%");
+  });
+
+  it("works on the darkened colours a sixth class would get", () => {
+    expect(classRowFill(classColorFor(5))).toContain("linear-gradient");
   });
 });

@@ -55,8 +55,28 @@ export const CLASS_RAMP: readonly string[] = [
   "#2ab5a6", // teal     — 184°
 ];
 
-/** Alpha of the class tint behind a row. */
+/** Alpha of the full-row class tint, used on the Relative. */
 const TINT_ALPHA = 0.14;
+
+/**
+ * How far across a **Standings** row the class colour reaches, and how strong
+ * it is there.
+ *
+ * A fixed extent, not a value. Every number on this surface that *could* drive
+ * a bar — lap progress, gap to the class leader — moves at 10 Hz, and a fill
+ * redrawing itself on every row on every tick is motion in the corner of the
+ * eye that means nothing. Held still, the block reads as what it is: a field of
+ * the class's colour, wide enough to register as a shape rather than as a
+ * hairline. These two constants are the whole treatment — move them and it
+ * moves with them, and binding `FILL_EXTENT` to a per-row number later is a
+ * one-line change to {@link classRowFill}.
+ *
+ * A little stronger than the Relative's full-row wash. Concentrated into a
+ * third of the row it has to carry the same weight over less ground, and a
+ * block that reads as an accident is worse than one that reads as a choice.
+ */
+const FILL_EXTENT = 0.35;
+const FILL_ALPHA = 0.18;
 
 /**
  * The identity colour for the class at `index` in the field's class order.
@@ -82,14 +102,22 @@ export function classColorFor(index: number): string {
 }
 
 /**
- * The ground a row of this class sits on: the same colour as its leading edge,
- * at a whisper.
+ * The ground a **Relative** row of this class sits on: the same colour as its
+ * leading edge, across the whole row, at a whisper.
  *
- * The edge alone was the whole of identity on this surface, and at three pixels
- * it asks the eye to find a hairline before it can tell one group from another.
- * A tint spreads that answer across the row, so class registers from the shape
- * of the block rather than from its border — while staying quiet enough that
- * the values keep their contrast.
+ * The edge alone was the whole of identity on these surfaces, and at three
+ * pixels it asks the eye to find a hairline before it can tell one group from
+ * another. A tint spreads that answer across the row, so class registers from
+ * the shape of the block rather than from its border — while staying quiet
+ * enough that the values keep their contrast.
+ *
+ * The Relative keeps the full wash rather than taking Standings' partial fill,
+ * and the difference is not an oversight. A Relative is a handful of rows with
+ * no grouping and no repetition: its rows are sorted by where cars physically
+ * are, so two neighbours in the same class rarely sit together and there is no
+ * block of colour for a partial fill to build. Standings is the opposite —
+ * runs of same-class rows stacked into groups, which is what gives a leading
+ * fill a column of its own to draw.
  *
  * A row only ever wears **one** ground. Where a status ground applies — the
  * player's row, a lapped car's — the tint gives way to it entirely, which is
@@ -98,4 +126,22 @@ export function classColorFor(index: number): string {
  */
 export function classTint(color: string): string {
   return tint(color, TINT_ALPHA);
+}
+
+/**
+ * The ground a **Standings** row sits on: the class's colour running in from
+ * the left edge and stopping partway across, the rest left as bare paper.
+ *
+ * A hard stop, not a fade. The edge is the point — it gives the colour a shape,
+ * and a shape is what the eye picks up from a group of rows without being
+ * asked to look. A gradient petering out would read as a smudge behind the
+ * values instead, which is the thing a table this dense can least afford.
+ *
+ * Same one-ground rule as {@link classTint}: a player or lapped row takes its
+ * status ground instead, and its leading edge carries class alone.
+ */
+export function classRowFill(color: string): string {
+  const stop = `${Math.round(FILL_EXTENT * 100)}%`;
+  const c = tint(color, FILL_ALPHA);
+  return `linear-gradient(to right, ${c} 0, ${c} ${stop}, transparent ${stop})`;
 }

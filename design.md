@@ -102,7 +102,22 @@ standings table stops being readable at a glance.
 2. **Identity colour is the leading edge *and* the row's ground.** The edge —
    3 px on a row ([`StandingsRow.tsx`](src/components/standings/StandingsRow.tsx)),
    the same device one scale up on a class band, plus the chip that *is* the
-   band's subject — is joined by a 14 % tint of the same colour behind the row.
+   band's subject — is joined by the same colour behind the row.
+
+   The two surfaces carry that ground differently, and the difference is the
+   shape of the tables rather than a loose end. **Standings runs the colour in
+   from the left edge and stops it hard at 35 %**, leaving the rest bare: its
+   rows come in runs of the same class stacked into groups, so a partial fill
+   builds a column of colour down the group that the eye picks up without being
+   asked to look. **Relative washes the whole row at 14 %**: it is a handful of
+   rows sorted by where cars physically are, so same-class neighbours rarely sit
+   together and there is no run for a partial fill to build — a lone 35 % block
+   there would read as a value rather than as a class.
+
+   The Standings stop is a fixed extent, not a number. Everything on that
+   surface that could drive a bar moves at 10 Hz, and a fill redrawing itself on
+   every row on every tick is motion in the corner of the eye that means
+   nothing.
 
    The earlier rule quarantined identity to the edge alone, on the argument that
    a second carrier would put an arbitrary hue in competition with the status
