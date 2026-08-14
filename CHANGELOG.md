@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.7.0] - 2026-08-14
+
 ### Changed
 
 - **Dashboard widgets lost their name and icon.** Every card was headed by one
@@ -263,7 +265,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.6.0...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.7.0...HEAD
+[1.7.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.5.0...v1.6.0
 [1.5.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.4.0...v1.5.0
 [1.4.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.3.0...v1.4.0
