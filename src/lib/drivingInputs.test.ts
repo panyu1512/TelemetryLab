@@ -3,6 +3,7 @@ import { describe, expect, it } from "vitest";
 import type { Equals, Expect } from "./typeAssert";
 import type { CornerPhase, PedalInputs } from "./drivingInputs";
 import {
+  clutchFor,
   cornerSeverity,
   DrivePhase,
   drivePhase,
@@ -208,3 +209,48 @@ export type _PhaseUnion = Expect<
 export type _PedalsReadonly = Expect<
   Equals<PedalInputs, { readonly throttle: number; readonly brake: number }>
 >;
+
+describe("clutchFor", () => {
+  it("is idle at every speed but the hairpin", () => {
+    // The bar sitting still for most of the lap is the honest picture: a
+    // clutch is untouched from one hairpin exit to the next. The mock lap's
+    // median is around 230 km/h and only its slowest corner enters the band.
+    for (const kmh of [85, 100, 140, 232, 288]) {
+      expect(clutchFor(kmh)).toBe(0);
+    }
+  });
+
+  it("feeds in as the car drops towards the hairpin apex", () => {
+    expect(clutchFor(80)).toBeGreaterThan(0);
+    expect(clutchFor(72)).toBeGreaterThan(clutchFor(80));
+    expect(clutchFor(63)).toBeGreaterThan(clutchFor(72));
+  });
+
+  it("is most of the way down by the mock lap's slowest point", () => {
+    // ~63 km/h at La Source. If the band ever drifts above that the bar stops
+    // moving at all and the demo silently loses its only clutch application.
+    expect(clutchFor(63)).toBeGreaterThan(0.75);
+  });
+
+  it("reaches the floor and stays there", () => {
+    expect(clutchFor(58)).toBeCloseTo(1);
+    expect(clutchFor(20)).toBe(1);
+    expect(clutchFor(0)).toBe(1);
+  });
+
+  it("stays within 0..1 either side of the band", () => {
+    for (const kmh of [-50, 0, 58, 72, 85, 500]) {
+      const v = clutchFor(kmh);
+      expect(v).toBeGreaterThanOrEqual(0);
+      expect(v).toBeLessThanOrEqual(1);
+    }
+  });
+
+  it("is pedal travel, the opposite of iRacing's own channel", () => {
+    // `clutchFor` says how far the pedal is pressed; iRacing's `Clutch` says
+    // how engaged the clutch is. Getting these the same way round is the bug
+    // this whole pair of fields exists to prevent.
+    expect(clutchFor(200)).toBe(0); // foot off  → travel 0, SDK would say 1
+    expect(clutchFor(0)).toBe(1); // to the floor → travel 1, SDK would say 0
+  });
+});

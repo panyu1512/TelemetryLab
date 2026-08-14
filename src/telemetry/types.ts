@@ -49,6 +49,24 @@ export interface PlayerTelemetry {
   gear: number | null;
   throttle: number | null;
   brake: number | null;
+  /**
+   * Raw iRacing `Clutch`: **0 = disengaged, 1 = fully engaged**.
+   *
+   * The inverse of a pedal position, and the trap this field exists to make
+   * obvious. A driver with their foot nowhere near the clutch reads 1.0 here,
+   * so anything drawing a bar from this value directly sits full whenever the
+   * clutch is *not* being used. Use {@link clutchPedal} for that.
+   */
+  clutch: number | null;
+  /**
+   * Clutch pedal travel: 0 = foot off, 1 = pedal to the floor.
+   *
+   * `1 - clutch`, derived in the bridge so the inversion happens once, next to
+   * the SDK read that explains it, rather than in every consumer. Reads the
+   * same way as {@link throttle} and {@link brake}, which is what lets the
+   * three sit in a row and be compared at a glance.
+   */
+  clutchPedal: number | null;
 
   steeringWheelAngle: number | null;
   steeringDeg: number | null;

@@ -77,7 +77,7 @@ export const DASHBOARDS: DashboardDef[] = [
       {
         id: "inputs",
         title: "Inputs",
-        description: "Throttle/brake trace, input bars and a steering indicator.",
+        description: "Throttle/brake trace, pedal bars and a wheel that turns with your hands.",
         icon: SlidersHorizontal,
         defaultSize: "lg",
         defaultLayout: { w: 6, h: 3 },

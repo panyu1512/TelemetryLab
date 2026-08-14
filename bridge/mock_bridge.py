@@ -289,6 +289,10 @@ class MockField:
         speed_kmh = 80.0 + 160.0 * throttle
         rpm = 4000.0 + 3600.0 * throttle
         steer = 0.6 * math.sin(t * 0.6)
+        # Only fed in below a crawl, the way a clutch actually gets used on
+        # track. This field never drops that slow, so the bar stays at rest —
+        # which is the honest shape for it.
+        clutch_pedal = max(0.0, min(1.0, (70.0 - speed_kmh) / 28.0))
         fuel_pct = max(0.05, 1.0 - (t % (c.pace * 20)) / (c.pace * 20))
         return {
             "sessionTime": round(t, 3),
@@ -298,6 +302,10 @@ class MockField:
             "gear": max(1, min(6, int(1 + throttle * 5))),
             "throttle": round(throttle, 3),
             "brake": round(braking, 3),
+            # `Clutch` runs 0=disengaged to 1=fully engaged, so a foot off the
+            # pedal reads 1.0 — the app is sent both that and the travel.
+            "clutch": round(1.0 - clutch_pedal, 3),
+            "clutchPedal": round(clutch_pedal, 3),
             "steeringWheelAngle": round(steer, 4),
             "steeringDeg": round(math.degrees(steer), 1),
             "fuelLevel": round(TANK_CAPACITY * fuel_pct, 2),

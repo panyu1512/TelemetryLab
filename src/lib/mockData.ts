@@ -10,7 +10,7 @@
  * actually pushes these into the stores lives in `telemetry/mockFeed.ts`.
  */
 
-import { cornerSeverity, pedalsFor } from "./drivingInputs";
+import { clutchFor, cornerSeverity, pedalsFor } from "./drivingInputs";
 import type {
   ClassStanding,
   DriverEntry,
@@ -449,6 +449,9 @@ export function mockPlayerTelemetry(t: number): PlayerTelemetry {
    * model around the pedal shape.
    */
   const { throttle, brake } = pedalsFor(cornerPhaseAt(pct, lap));
+  // Idle for nearly the whole lap — see `clutchFor`. Only La Source is slow
+  // enough to need it.
+  const clutchPedal = clutchFor(kmh);
   const steer = near.dir * nearness * (1 - kmh / (V_MAX * 1.6));
 
   const gear = gearFor(kmh);
@@ -491,6 +494,10 @@ export function mockPlayerTelemetry(t: number): PlayerTelemetry {
     gear,
     throttle: round(throttle, 3),
     brake: round(brake, 3),
+    // Both directions carried, exactly as the bridge sends them: the raw SDK
+    // channel (1 = engaged, foot off) and the pedal travel the overlay draws.
+    clutch: round(1 - clutchPedal, 3),
+    clutchPedal: round(clutchPedal, 3),
     steeringWheelAngle: round(steer, 4),
     steeringDeg: round((steer * 180) / Math.PI, 1),
     fuelLevel: round(fuelLevel, 2),
