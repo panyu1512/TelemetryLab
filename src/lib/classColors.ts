@@ -59,6 +59,19 @@ export const CLASS_RAMP: readonly string[] = [
 const TINT_ALPHA = 0.14;
 
 /**
+ * Alpha of the class band's ground, which covers the whole band row.
+ *
+ * A step above the rows' fill and above the Relative's wash, because the band
+ * is a heading and the rows are the thing it heads. That is the whole hierarchy
+ * on this surface: the group's masthead is a solid field of its colour, its
+ * rows a stripe of the same colour at the leading edge. The band used to carry
+ * a plain white wash with the rows' partial fill laid over its first column,
+ * which read as a row that happened to be lighter rather than as the thing
+ * opening the group.
+ */
+const BAND_ALPHA = 0.22;
+
+/**
  * Strength of the class-colour fill behind a **Standings** row.
  *
  * Fainter than the Relative's full-row wash rather than stronger. The fill
@@ -140,4 +153,18 @@ export function classTint(color: string): string {
 export function classRowFill(color: string, extent: string): string {
   const c = tint(color, FILL_ALPHA);
   return `linear-gradient(to right, ${c} 0, ${c} ${extent}, transparent ${extent})`;
+}
+
+/**
+ * The ground under a class band: the class's colour across the whole row.
+ *
+ * Full width, unlike the rows it opens. A band is a heading, and a heading that
+ * carried the same clipped stripe as its rows read as one of them — the fill
+ * stopped at the first column and left the rest on a plain white wash, so the
+ * band's own colour was a detail rather than its subject. Running the colour
+ * the length of the row makes the group legible as a block: masthead solid,
+ * rows striped.
+ */
+export function classBandFill(color: string): string {
+  return tint(color, BAND_ALPHA);
 }

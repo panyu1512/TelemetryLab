@@ -9,7 +9,6 @@ import { useStandingsUiStore } from "../../stores/useStandingsUiStore";
 import { useRanksByLapTime } from "../../stores/useSessionStore";
 import {
   CLASS_BAND_H,
-  firstColumnStop,
   ROW_H,
   scopeColumnsToSession,
   tableMinWidth,
@@ -226,7 +225,6 @@ export function StandingsScreen() {
                       <ClassBand
                         standing={standing}
                         color={classColorById.get(it.classId) ?? CLASS_RAMP[0]}
-                        fillStop={firstColumnStop(meta.sectorCount, isVisible)}
                         fastestIsOverall={
                           standing.fastestLapCarIdx != null &&
                           fastestByCar.get(standing.fastestLapCarIdx) ===

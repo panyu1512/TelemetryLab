@@ -520,19 +520,14 @@ html.overlay-locked * {
 .widget-card {
   padding: clamp(0.45rem, 4cqmin, 0.875rem);
 }
-.widget-card > header {
-  margin-bottom: clamp(0.3rem, 3.5cqmin, 0.75rem);
-}
-@container (max-height: 7rem) {
-  .widget-card > header .widget-title {
-    display: none;
-  }
-}
-@container (max-width: 9rem) {
-  .widget-card > header .widget-title {
-    display: none;
-  }
-}
+/*
+ * A widget has no header any more — no icon, no name, no rule. What used to be
+ * here was that header's margin, plus two container queries that hid the name
+ * once a card got short or narrow. Those queries were the argument for cutting
+ * it outright: a label the layout already drops the moment space is tight is a
+ * label the surface does not need, and this one is read in peripheral vision at
+ * speed where every skipped glance is a real cost.
+ */
 
 /* --- react-grid-layout theming ------------------------------------------- */
 

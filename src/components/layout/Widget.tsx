@@ -3,9 +3,14 @@ import type { WidgetDef } from "../../dashboards/registry";
 import type { TelemetryData } from "../../hooks/useTelemetry";
 import { useActiveOverlaysStore } from "../../stores/useActiveOverlaysStore";
 
-/** Class react-grid-layout uses to know where a widget can be grabbed. */
-export const WIDGET_DRAG_HANDLE = "widget-drag-handle";
-/** Class react-grid-layout treats as "don't start a drag here". */
+/**
+ * Class react-grid-layout treats as "don't start a drag here".
+ *
+ * There is no matching *handle* class any more. A widget used to be grabbed by
+ * its header; the header is gone, so the whole card is the grab target and this
+ * is what carves the buttons back out of it. Nothing else in a widget is
+ * interactive — they are readouts — so there is nothing else to protect.
+ */
 export const WIDGET_NO_DRAG = "widget-no-drag";
 
 interface WidgetProps {
@@ -15,13 +20,18 @@ interface WidgetProps {
 }
 
 /**
- * The shell every dashboard widget lives in: a titled card. The header is
- * always a drag handle (grab it to reposition; the grid provides the resize
- * handle in the corner) and reveals a "hide" button on hover. There is no
- * separate edit mode — arrangements are live and auto-persisted.
+ * The shell every dashboard widget lives in: a card of pure content.
+ *
+ * It used to be a *titled* card — icon, name, a rule, and the actions on hover.
+ * The title and icon are gone: a label you have already learned costs a glance
+ * every time you skip it, and this is a surface read without looking. The
+ * actions moved into the top-right corner, where they still appear on hover.
+ *
+ * Grab anywhere to reposition (the grid supplies the resize handle in the
+ * corner). There is no separate edit mode — arrangements are live and
+ * auto-persisted.
  */
 export function Widget({ def, data, onHide }: WidgetProps) {
-  const Icon = def.icon;
   const isOpen = useActiveOverlaysStore((s) => s.isWidgetOpen(def.id));
   const openWidget = useActiveOverlaysStore((s) => s.openWidget);
   const closeWidget = useActiveOverlaysStore((s) => s.closeWidget);
@@ -32,48 +42,52 @@ export function Widget({ def, data, onHide }: WidgetProps) {
     // rather than as graphite cards next to a black table. It also means a
     // widget keeps that paper over live footage instead of dropping to glass —
     // see the exception in styles.css.
-    <section className="overlay-card widget-card timing-surface group flex h-full flex-col overflow-hidden rounded-card border border-border/60 transition-colors">
-      <header
-        className={`${WIDGET_DRAG_HANDLE} flex shrink-0 cursor-grab items-center gap-2 active:cursor-grabbing`}
-      >
-        <Icon className="size-3.5 shrink-0 text-faint" strokeWidth={2} />
-        <h3 className="widget-title select-none truncate font-mono text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">
-          {def.title}
-        </h3>
-        <span className="header-rule" aria-hidden />
+    <section className="overlay-card widget-card timing-surface group relative flex h-full cursor-grab flex-col overflow-hidden rounded-card border border-border/60 transition-colors active:cursor-grabbing">
+      {/*
+        The widget's name and icon used to head every card. They are gone, and
+        the argument for cutting them is the same one that took the standings'
+        column labels off by default: a label you have already learned costs a
+        glance every time you skip it, and these are read in peripheral vision
+        at speed. A speedometer does not need the word "speed" on it — the
+        needle, the gauge and the KM/H under the number all say so, and every
+        widget here is as self-evident. The card is now content edge to edge.
 
-        <div className="flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100">
-          {/* Once this widget has its own window, the only action is to close
-              it again — not to open a second one. */}
-          {isOpen ? (
-            <button
-              type="button"
-              onClick={() => closeWidget(def.id)}
-              title="Close this widget's window"
-              className={`${WIDGET_NO_DRAG} grid size-6 place-items-center rounded-ctl text-primary transition-colors hover:bg-surface-2 hover:text-danger`}
-            >
-              <X className="size-3.5" />
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={() => openWidget(def.id, def.title)}
-              title="Open this widget in its own window"
-              className={`${WIDGET_NO_DRAG} grid size-6 place-items-center rounded-ctl text-muted transition-colors hover:bg-surface-2 hover:text-primary`}
-            >
-              <ExternalLink className="size-3.5" />
-            </button>
-          )}
+        Which is also why the whole card is the drag target. There is no header
+        left to grab, and nothing inside a readout to grab it by mistake.
+      */}
+      <div
+        className={`${WIDGET_NO_DRAG} absolute right-1 top-1 z-10 flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100`}
+      >
+        {/* Once this widget has its own window, the only action is to close
+            it again — not to open a second one. */}
+        {isOpen ? (
           <button
             type="button"
-            onClick={onHide}
-            title="Hide widget"
-            className={`${WIDGET_NO_DRAG} grid size-6 place-items-center rounded-ctl text-muted transition-colors hover:bg-surface-2 hover:text-danger`}
+            onClick={() => closeWidget(def.id)}
+            title="Close this widget's window"
+            className="grid size-6 place-items-center rounded-ctl bg-bg/70 text-primary backdrop-blur-sm transition-colors hover:bg-surface-2 hover:text-danger"
           >
-            <EyeOff className="size-3.5" />
+            <X className="size-3.5" />
           </button>
-        </div>
-      </header>
+        ) : (
+          <button
+            type="button"
+            onClick={() => openWidget(def.id, def.title)}
+            title="Open this widget in its own window"
+            className="grid size-6 place-items-center rounded-ctl bg-bg/70 text-muted backdrop-blur-sm transition-colors hover:bg-surface-2 hover:text-primary"
+          >
+            <ExternalLink className="size-3.5" />
+          </button>
+        )}
+        <button
+          type="button"
+          onClick={onHide}
+          title="Hide widget"
+          className="grid size-6 place-items-center rounded-ctl bg-bg/70 text-muted backdrop-blur-sm transition-colors hover:bg-surface-2 hover:text-danger"
+        >
+          <EyeOff className="size-3.5" />
+        </button>
+      </div>
 
       {/*
         `container-type: size` makes this body a query container so widgets can

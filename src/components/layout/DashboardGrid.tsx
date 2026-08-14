@@ -10,7 +10,7 @@ import {
   type DashboardLayout,
 } from "../../hooks/useDashboardLayout";
 import type { TelemetryData } from "../../hooks/useTelemetry";
-import { Widget, WIDGET_DRAG_HANDLE, WIDGET_NO_DRAG } from "./Widget";
+import { Widget, WIDGET_NO_DRAG } from "./Widget";
 
 interface DashboardGridProps {
   layout: DashboardLayout;
@@ -107,7 +107,10 @@ export function DashboardGrid({ layout, data, autoHeight = false }: DashboardGri
         containerPadding={[0, 0]}
         isDraggable
         isResizable
-        draggableHandle={`.${WIDGET_DRAG_HANDLE}`}
+        // No `draggableHandle`: the header that used to be one is gone, so the
+        // whole card is the grab target. `draggableCancel` carves the hover
+        // actions back out of it — nothing else in a readout can be grabbed by
+        // mistake.
         draggableCancel={`.${WIDGET_NO_DRAG}`}
         resizeHandles={["se"]}
         onLayoutChange={onLayoutChange}

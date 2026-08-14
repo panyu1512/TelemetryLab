@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Dashboard widgets lost their name and icon.** Every card was headed by one
+  or the other; neither was doing much. A label you have already learned costs
+  a glance every time you skip it, and these are read in peripheral vision at
+  speed — a speed gauge does not need the word "speed" on it, and the layout
+  was already hiding those names the moment a card got short or narrow. The
+  card is content edge to edge now, in the dashboard, in a popped-out widget
+  window and in the Manager's preview. Grab anywhere on a widget to move it;
+  its actions sit in the top-right corner and appear on hover.
+- **A class band carries its colour across the whole row.** It used to sit on a
+  plain white wash with the rows' clipped fill laid over its first column, which
+  read as a row that happened to be lighter rather than as the thing opening the
+  group. The band is the heading and the rows are what it heads, so it takes the
+  colour at full width and a step stronger: masthead solid, rows striped.
+
 ## [1.6.0] - 2026-08-14
 
 ### Changed
