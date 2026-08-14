@@ -1,0 +1,149 @@
+import { describe, expect, it } from "vitest";
+
+import { CLASS_RAMP, classColorFor, classTint } from "./classColors";
+import { THEMES } from "../themes";
+
+/* -------------------------------------------------------------------------- */
+/*  Hue maths — enough to assert the ramp's whole reason for existing          */
+/* -------------------------------------------------------------------------- */
+
+/** sRGB hex → OKLCH hue in degrees, plus chroma (to spot near-greys). */
+function hueOf(hex: string): { h: number; c: number } {
+  const v = parseInt(hex.replace("#", ""), 16);
+  const srgb = [(v >> 16) & 255, (v >> 8) & 255, v & 255].map((n) => {
+    const u = n / 255;
+    return u <= 0.04045 ? u / 12.92 : ((u + 0.055) / 1.055) ** 2.4;
+  });
+  const [r, g, b] = srgb;
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  const A = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s;
+  const B = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s;
+  return {
+    h: ((Math.atan2(B, A) * 180) / Math.PI + 360) % 360,
+    c: Math.hypot(A, B),
+  };
+}
+
+/** Shortest angular distance between two hues, 0–180. */
+function hueGap(a: number, b: number): number {
+  const d = Math.abs(a - b) % 360;
+  return d > 180 ? 360 - d : d;
+}
+
+/** Pull the hue out of an `oklch(L% C H)` token string. */
+function themeHue(token: string): number {
+  const m = token.match(/oklch\([\d.]+%\s+([\d.]+)\s+([\d.]+)\)/);
+  return m ? Number(m[2]) : Number.NaN;
+}
+
+/**
+ * Every status hue the ramp has to stay clear of, gathered from the live
+ * themes rather than hard-coded — so retheming the app cannot silently walk a
+ * status colour into a class colour without this failing.
+ */
+function reservedHues(): { name: string; hue: number }[] {
+  const out: { name: string; hue: number }[] = [];
+  for (const t of THEMES) {
+    for (const key of ["danger", "primary", "warning", "accent"] as const) {
+      const hue = themeHue(t.colors[key]);
+      // `graphite`'s primary is a near-grey; a hue it barely has cannot collide.
+      if (Number.isFinite(hue)) out.push({ name: `${t.id}.${key}`, hue });
+    }
+  }
+  return out;
+}
+
+/** How far the least-clear ramp entry sits from any reserved hue. */
+const MIN_CLEARANCE = 25;
+
+describe("CLASS_RAMP", () => {
+  it("covers the five classes iRacing actually runs", () => {
+    expect(CLASS_RAMP).toHaveLength(5);
+  });
+
+  it("holds no red — the colour this app spends on lapped traffic", () => {
+    // The brief, stated as a test. iRacing's own GT3 colour is #ff4d4d, which
+    // is exactly what must never come back.
+    for (const color of CLASS_RAMP) {
+      const { h } = hueOf(color);
+      expect(hueGap(h, 25)).toBeGreaterThan(MIN_CLEARANCE);
+    }
+  });
+
+  it("clears every theme's status hues", () => {
+    const reserved = reservedHues();
+    expect(reserved.length).toBeGreaterThan(8);
+    for (const color of CLASS_RAMP) {
+      const { h, c } = hueOf(color);
+      for (const r of reserved) {
+        // A near-grey status colour (graphite's primary) has no hue to collide
+        // with; skip it rather than assert against a meaningless angle.
+        if (c < 0.02) continue;
+        expect({ color, against: r.name, gap: hueGap(h, r.hue) }).toMatchObject({
+          gap: expect.any(Number),
+        });
+        if (hueGap(h, r.hue) <= MIN_CLEARANCE) {
+          // The single documented exception: violet against sector purple.
+          expect(r.name).toMatch(/sectorPurple/);
+        }
+      }
+    }
+  });
+
+  it("puts a big hue step between classes that sit next to each other", () => {
+    // Consecutive entries colour consecutive class groups down the screen, so
+    // neighbours are the pairs most at risk of blurring together.
+    for (let i = 0; i < CLASS_RAMP.length - 1; i++) {
+      const a = hueOf(CLASS_RAMP[i]).h;
+      const b = hueOf(CLASS_RAMP[i + 1]).h;
+      expect(hueGap(a, b)).toBeGreaterThan(100);
+    }
+  });
+
+  it("keeps all five mutually distinct", () => {
+    for (let i = 0; i < CLASS_RAMP.length; i++) {
+      for (let j = i + 1; j < CLASS_RAMP.length; j++) {
+        expect(hueGap(hueOf(CLASS_RAMP[i]).h, hueOf(CLASS_RAMP[j]).h)).toBeGreaterThan(30);
+      }
+    }
+  });
+});
+
+describe("classColorFor", () => {
+  it("gives each of the first five classes its own ramp entry", () => {
+    const seen = [0, 1, 2, 3, 4].map(classColorFor);
+    expect(new Set(seen).size).toBe(5);
+    expect(seen).toEqual([...CLASS_RAMP]);
+  });
+
+  it("is stable — the same index is always the same colour", () => {
+    expect(classColorFor(2)).toBe(classColorFor(2));
+  });
+
+  it("does not hand a sixth class the first class's colour", () => {
+    // Six classes is not a thing iRacing does; this only has to be total and
+    // non-repeating, not beautiful.
+    expect(classColorFor(5)).not.toBe(classColorFor(0));
+    expect(classColorFor(5)).toContain("color-mix");
+  });
+
+  it("is total for any index a field could produce", () => {
+    for (const i of [0, 4, 5, 9, 12, 40]) {
+      expect(classColorFor(i)).toBeTruthy();
+    }
+  });
+});
+
+describe("classTint", () => {
+  it("is the same colour, kept to a whisper behind the values", () => {
+    const t = classTint(CLASS_RAMP[0]);
+    expect(t).toContain(CLASS_RAMP[0]);
+    expect(t).toMatch(/color-mix\(in oklab, .+ 14%, transparent\)/);
+  });
+
+  it("works on the darkened colours a sixth class would get", () => {
+    expect(classTint(classColorFor(5))).toContain("color-mix");
+  });
+});

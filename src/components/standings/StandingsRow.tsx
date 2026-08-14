@@ -13,6 +13,7 @@ import {
   type ColumnVisibility,
 } from "./constants";
 import { ColumnLabels } from "./ColumnLabels";
+import { classTint } from "../../lib/classColors";
 import { CountryFlag } from "../ui/CountryFlag";
 import {
   BrandIcon,
@@ -97,10 +98,24 @@ function StandingsRowInner({
   // (§ Two colour systems, rule 3).
   const [toneBase, toneZebra] = GROUP_TONE[tone % GROUP_TONE.length];
 
+  // A row wears exactly one ground. Class tint is identity; the player's
+  // `primary` ground is status; letting both paint would be the collision this
+  // whole change is about, one layer down. Status wins — you can always find
+  // your class from the leading edge, but "which of these is me" has to be
+  // unambiguous.
+  const wearsStatusGround = row?.isPlayer === true;
+
   return (
     <div
-      className="row-glide absolute inset-x-0 will-change-transform"
-      style={{ height: ROW_H, transform: `translateY(${top}px)` }}
+      className="row-glide absolute inset-x-0 rounded-sm will-change-transform"
+      style={{
+        height: ROW_H,
+        transform: `translateY(${top}px)`,
+        // Painted on the wrapper rather than the row itself, so the zebra tone
+        // (a translucent white utility class) still layers over it instead of
+        // being overwritten by an inline background.
+        background: wearsStatusGround ? undefined : classTint(classColor),
+      }}
     >
       <div
         className={[

@@ -25,10 +25,17 @@ import { readableInk } from "../../lib/contrast";
  */
 function ClassBandInner({
   standing,
+  color,
   fastestIsOverall,
   width,
 }: {
   standing: ClassStanding;
+  /**
+   * This class's identity colour, from `lib/classColors` rather than from
+   * `standing.color`. The sim's own hue is not used any more — see that module
+   * for why red in particular had to go.
+   */
+  color: string;
   /** This class's fastest lap is also the fastest in the field. */
   fastestIsOverall: boolean;
   /**
@@ -39,7 +46,7 @@ function ClassBandInner({
    */
   width: number;
 }) {
-  const { color, shortName, carCount, sof, fastestLap } = standing;
+  const { shortName, carCount, sof, fastestLap } = standing;
 
   return (
     <div
@@ -55,9 +62,9 @@ function ClassBandInner({
       }}
     >
       {/* The class chip. Identity colour is the subject of this band, so here it
-          is allowed to fill — and because `carClassColor` is arbitrary rather
-          than one of this palette's (uniformly light) status colours, the ink is
-          measured off the fill instead of assuming `on-accent`. */}
+          is allowed to fill — and because identity colour sits outside this
+          palette's (uniformly light) status colours, the ink is measured off the
+          fill instead of assuming `on-accent`. */}
       <span
         className="ml-1 shrink-0 rounded-[3px] px-1.5 py-1 font-mono text-[11px] font-bold uppercase leading-none tracking-[0.08em]"
         style={{ background: color, color: readableInk(color) }}

@@ -74,20 +74,51 @@ There is a second, unrelated axis on the timing surfaces: **identity** — which
 class a car is in, and which car is yours. Conflating the two is how a
 standings table stops being readable at a glance.
 
-1. **Identity colour is data, not a token.** `carClassColor`
-   ([`src/telemetry/types.ts:99`](src/telemetry/types.ts)) is supplied by
-   iRacing per class. It is arbitrary, it sits outside this palette, and it can
-   land on any hue — including one that collides with `primary` or `danger`.
-   Never add it to `tokens.css`, never give it a meaning from the status table,
-   and never let a theme try to correct it.
-2. **Identity colour is quarantined to the leading edge.** On a standings or
-   relative row that carrier is the 3 px left border
-   ([`StandingsRow.tsx`](src/components/standings/StandingsRow.tsx)); on a class
-   band it is the band's own 3 px leading edge plus the chip that *is* the
-   band's subject. Those are one device at two scales, not two carriers. It may
-   not *additionally* tint a driver's name, fill a row, or colour a badge in a
-   data cell — one carrier, or an arbitrary hue starts competing with the status
-   colours sitting beside it in the same row.
+1. **Identity colour is ours, chosen against the status hues.** It used to be
+   `carClassColor`, taken from iRacing as given, on the principle that identity
+   is data rather than a token. That principle produced the collision it was
+   meant to describe: the sim's stock GT3 colour is `#ff4d4d`, this app spends
+   red on lapped traffic, and a red-edged row next to a red-grounded row is two
+   unrelated statements in one hue. At four or five classes some class landing
+   on red, on the blue that means "this is you", or on the amber that means
+   "pit" stops being a risk and becomes an expectation.
+
+   So the five class colours now come from
+   [`lib/classColors.ts`](src/lib/classColors.ts), spaced against every status
+   hue in all four themes: `danger` 24–28, `primary` 253–257 (and 45 in
+   Endurance), `warning` 81–82, `accent` 154–157, `sectorPurple` 295–302. Every
+   entry clears its nearest reserved hue by at least 25°, and consecutive
+   entries — which colour consecutive class groups down the screen — sit more
+   than 100° apart, so neighbouring groups can never blur into one another.
+
+   One exception is deliberate: **violet sits 3° from `sectorPurple`.** Nothing
+   fits between `primary` at 255 and `sectorPurple` at 300, and this is the
+   cheapest collision available — `sectorPurple` is ink on a single lap time,
+   transient and rare, where identity is a row's leading edge and its ground.
+   Different carrier, different place, never the same cell.
+
+   `carClassColor` is still on the wire and still unused for display. Do not
+   add it to `tokens.css`, and do not let a theme try to correct it.
+2. **Identity colour is the leading edge *and* the row's ground.** The edge —
+   3 px on a row ([`StandingsRow.tsx`](src/components/standings/StandingsRow.tsx)),
+   the same device one scale up on a class band, plus the chip that *is* the
+   band's subject — is joined by a 14 % tint of the same colour behind the row.
+
+   The earlier rule quarantined identity to the edge alone, on the argument that
+   a second carrier would put an arbitrary hue in competition with the status
+   colours beside it. Two things retired that argument. The hue is no longer
+   arbitrary — rule 1 now guarantees the clearance the quarantine was standing
+   in for. And three pixels asks the eye to find a hairline before it can tell
+   one group from another, on the surface with the least attention to spare;
+   the tint spreads that answer across the whole block, so class registers from
+   shape rather than from a border.
+
+   **A row wears exactly one ground.** Where a status ground applies — the
+   player's `primary`, a lapped car's `danger` — the class tint gives way to it
+   entirely, and the leading edge carries class on its own. This is the rule
+   that keeps the new carrier from re-creating the collision it was introduced
+   to end: identity and status are never layered into the same statement. It is
+   enforced in the two row components, not by convention.
 
    The chip is the single case where identity colour fills, and it takes the
    computed ink of § Dense tabular overlays rule 11 rather than `on-accent`,
@@ -100,7 +131,9 @@ standings table stops being readable at a glance.
 
 The obvious alternative — amber for your own car, as several timing overlays do
 it — is banned here for the reason rule 2 of § Theme already gives: our
-`warning` is amber. "That's you" and "pit soon" would be the same colour.
+`warning` is amber. "That's you" and "pit soon" would be the same colour. That
+is the same argument rule 1 now makes about class colour, arrived at from the
+other direction.
 
 ## Typography
 

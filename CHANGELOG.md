@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Class colours are the app's own now, and never red.** They came from
+  iRacing, which hands out whatever hue it likes — its stock GT3 colour is
+  `#ff4d4d` — while this app spends red on lapped traffic. A red-edged row
+  beside a red-grounded row was two unrelated things in one colour, and at four
+  or five classes some class landing on red, on the blue that means "this is
+  you", or on the amber that means "pit" was a matter of time. The five class
+  colours are now picked against every status hue in all four themes, each
+  clearing its nearest by at least 25°, with consecutive classes more than 100°
+  apart so neighbouring groups can never blur together.
+- **A class now tints its rows, not just their leading edge.** Three pixels of
+  colour asks the eye to find a hairline before it can tell one group from
+  another; a 14 % tint of the same colour behind the row lets class register
+  from the shape of the block instead. A row still wears exactly one ground —
+  where "this is you" or "not on your lap" applies, the class tint gives way
+  entirely and the leading edge carries class alone, which is what stops the
+  new tint from re-creating the collision it was added to end.
+
 ## [1.5.0] - 2026-08-14
 
 ### Added

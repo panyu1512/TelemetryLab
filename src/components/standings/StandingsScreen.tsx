@@ -15,6 +15,7 @@ import {
   type ColumnVisibility,
 } from "./constants";
 import { scaleBox, tableScale, unscaled } from "../../lib/tableScale";
+import { CLASS_RAMP, classColorFor } from "../../lib/classColors";
 import { StandingsRow } from "./StandingsRow";
 import { useStandingsLayout } from "./useStandingsLayout";
 import { SessionStrip } from "../timing/SessionStrip";
@@ -119,6 +120,14 @@ export function StandingsScreen() {
     [classes]
   );
 
+  // Identity colour comes from this app's ramp, keyed by the class's position
+  // in the field's own order, rather than from iRacing's `carClassColor` — see
+  // `lib/classColors` for why the sim's palette had to go.
+  const classColorById = useMemo(
+    () => new Map(classes.map((c, i) => [c.carClassId, classColorFor(i)])),
+    [classes]
+  );
+
   // Who holds a fastest lap: one car per class, plus the single car whose class
   // best is also the field best. This drives the surface's only filled cell
   // (`design.md` § Dense tabular overlays, rule 5), so it is resolved once here
@@ -215,6 +224,7 @@ export function StandingsScreen() {
                     >
                       <ClassBand
                         standing={standing}
+                        color={classColorById.get(it.classId) ?? CLASS_RAMP[0]}
                         fastestIsOverall={
                           standing.fastestLapCarIdx != null &&
                           fastestByCar.get(standing.fastestLapCarIdx) ===
@@ -231,7 +241,7 @@ export function StandingsScreen() {
                     carIdx={it.carIdx}
                     top={it.top}
                     sectorCount={meta.sectorCount}
-                    classColor={classById.get(it.classId)?.color ?? "#666"}
+                    classColor={classColorById.get(it.classId) ?? CLASS_RAMP[0]}
                     zebra={it.zebra}
                     classRelative={classRelative}
                     rank={it.rank}
