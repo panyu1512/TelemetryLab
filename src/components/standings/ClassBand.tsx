@@ -1,7 +1,8 @@
-import { memo } from "react";
+import { memo, type ReactNode } from "react";
 import type { ClassStanding } from "../../telemetry/types";
 import { kilo, lapTime } from "../../lib/format";
 import { classBandFill } from "../../lib/classColors";
+import { RacingHelmet } from "../ui/RacingHelmet";
 import { CLASS_EDGE_WIDTH } from "./constants";
 
 
@@ -85,7 +86,21 @@ function ClassBandInner({
         {shortName || "—"}
       </span>
 
-      <BandField label="Cars" value={carCount > 0 ? String(carCount) : "—"} />
+      {/* The car count wears a helmet where the other two fields wear words.
+          Not decoration, and not an inconsistency either: `SoF` and `Best` are
+          *measures* of a class, this is the population they are measured over,
+          and a glyph is what says so at a glance. It takes the class's colour
+          for the same reason the name above it does — on this band colour is
+          identity and white is data, so the label joins the chip and the value
+          stays with the numbers. That also buys the contrast the artwork needs:
+          it is an outline, and at `text-faint` its strokes fall under a pixel
+          and grey out into a smudge. */}
+      <BandField
+        label={<RacingHelmet size="12px" label="Cars" />}
+        value={carCount > 0 ? String(carCount) : "—"}
+        labelColor={color}
+        title="Cars in class"
+      />
       {fits(width, 230) && <BandField label="SoF" value={kilo(sof)} />}
       {fits(width, 300) && (
         <BandField
@@ -114,16 +129,39 @@ function BandField({
   label,
   value,
   color,
+  labelColor,
   title,
 }: {
-  label: string;
+  /**
+   * A mono micro-label, or a glyph standing in for one. Anything passed here
+   * has to carry its own accessible name — see {@link RacingHelmet}.
+   */
+  label: ReactNode;
   value: string;
   color?: string;
+  /**
+   * Overrides the label's `text-faint`. Only the helmet uses it: faint is the
+   * right weight for a word and too little for a sub-pixel outline.
+   */
+  labelColor?: string;
   title?: string;
 }) {
+  // `tracking-[0.14em]` puts a trailing letter-space after a word's last
+  // character, so a text label's `gap-1` is really 4 px + 1.12 px. A glyph gets
+  // no such trailing space and lands visibly tighter against its value than the
+  // fields either side of it. Paying it back in the same unit that owes it keeps
+  // the three gaps identical, and stays correct if the tracking is ever retuned.
+  const isGlyph = typeof label !== "string";
+
   return (
     <span className="flex shrink-0 items-baseline gap-1" title={title}>
-      <span className="font-mono text-[8px] font-semibold uppercase leading-none tracking-[0.14em] text-faint">
+      <span
+        className="font-mono text-[8px] font-semibold uppercase leading-none tracking-[0.14em] text-faint"
+        style={{
+          ...(labelColor ? { color: labelColor } : null),
+          ...(isGlyph ? { paddingRight: "0.14em" } : null),
+        }}
+      >
         {label}
       </span>
       <span
