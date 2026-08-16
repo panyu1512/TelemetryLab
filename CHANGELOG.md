@@ -19,6 +19,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - The site has a **Source** section saying what the licence allows, that the
   whole interface builds and runs without a sim, and where the repository is.
 
+### Changed
+
+- **A class band counts its cars under a helmet, not the word "CARS".** The
+  band carried three interchangeable mono labels — `CARS`, `SoF`, `Best` — which
+  flattened a real distinction: the last two are *measures* of a class, where
+  the car count is the population those measures are taken over. The glyph says
+  so at a glance, and takes the class's own identity colour, keeping the band's
+  rule intact — colour is identity, white is data.
+
 ## [1.7.0] - 2026-08-14
 
 ### Changed
