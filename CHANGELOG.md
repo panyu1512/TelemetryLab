@@ -7,6 +7,47 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The whole interface moves to a pit-wall graphic language.** Radii go
+  near-square (2 px, everywhere — controls, cards and panels alike), the
+  neutrals drop a step so solid colour blocks read as blocks, `border-strong`
+  comes up a step because at this radius the 1 px edge is what draws a control's
+  shape, and elevation tightens: a hard-edged panel casting a soft wide shadow
+  reads as two materials at once. All four themes move together, so Carbon,
+  Midnight, Graphite and Endurance stay comparable channel-by-channel.
+- **The brand mark's 13.5° shear is now a system device.** The title bar's
+  status readout, the profile chip, the section legends and every CTA are cut on
+  the same diagonal the TL monogram is. It stops at the edge of the data: the
+  timing tables, the widgets and anything drawn over the game stay square,
+  because a surface read in peripheral vision needs its column edges vertical.
+- **CTAs are set in caps.** 11 px bold, tracked — capitals carry no descenders
+  and read a size larger than they measure, so a button keeps its row's height
+  while gaining the weight the cut asks for.
+- **A class band is a solid block of its class's colour.** It was a 22 % tint,
+  which in a four-class field produced four bands of roughly equal darkness
+  whose hue you had to look *for* — in a list meant to be parsed without
+  looking. Masthead solid, rows striped, is the hierarchy. Everything on the
+  band now prints in ink measured against its own fill, so a violet class and a
+  lime one are both legible; overall-best moves from purple ink to a purple
+  fill for the same reason.
+- **A row's position number sits in a block of its class's colour**, and the
+  class edge widens from 3 px to 4 px to match. Rank and class are the two facts
+  taken off a row without reading it, and this is the one cell where they can be
+  a single glance.
+- **Driver names are set in caps on both timing surfaces.** It holds one optical
+  weight down the only ragged column on the surface. It costs real legibility —
+  caps are read by outline and run ~12 % wider, so the one column allowed to
+  truncate truncates sooner — and it is the only data field that earns the
+  trade.
+- **The rev strip is a segmented bar rather than a row of round LEDs.** A lit
+  dot beside an unlit one leaves soft shapes with paper between them, so the
+  *number* of lit lights had to be counted; a bar of hard-edged blocks reads as
+  a length, and a length is answered without counting.
+- The section legend in the Overlay Manager is a solid block on the shear rather
+  than a hairline fading out of the heading — a marker on one thing rather than
+  a divider between two.
+
 ## [1.8.0] - 2026-08-16
 
 ### Added

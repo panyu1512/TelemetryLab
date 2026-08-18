@@ -98,13 +98,16 @@ export function Bar({
   className = "",
 }: BarProps) {
   const v = Math.max(0, Math.min(1, value ?? 0));
+  // Square ends, not a pill. A rounded cap tapers the last few pixels of the
+  // fill, so a bar at 4 % and a bar at 0 % look the same — and these bars carry
+  // fuel and revs, where the bottom of the range is the part you are watching.
   return (
     <div
-      className={`w-full shrink-0 overflow-hidden rounded-full ${className}`}
+      className={`w-full shrink-0 overflow-hidden ${className}`}
       style={{ height, background: track }}
     >
       <div
-        className="h-full rounded-full transition-[width] duration-100"
+        className="h-full transition-[width] duration-100"
         style={{ width: `${v * 100}%`, background: color }}
       />
     </div>

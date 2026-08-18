@@ -193,7 +193,7 @@ function CanvasToolbar({
       </p>
 
       {/* Mode toggle */}
-      <div className="flex items-center gap-0.5 rounded-lg border border-border bg-bg p-0.5">
+      <div className="flex items-center gap-0.5 rounded-ctl border border-border bg-bg p-0.5">
         <SegBtn active={mode === "single"} onClick={() => onMode("single")}>
           <Square className="size-3.5" />
           Single
@@ -214,7 +214,7 @@ function CanvasToolbar({
         {mode === "single" && (
           <>
             {/* Backdrop: judge readability against different scenes */}
-            <div className="flex items-center gap-0.5 rounded-lg border border-border bg-bg p-0.5">
+            <div className="flex items-center gap-0.5 rounded-ctl border border-border bg-bg p-0.5">
               {(Object.keys(BACKDROPS) as Backdrop[]).map((b) => (
                 <SegBtn
                   key={b}
@@ -227,7 +227,7 @@ function CanvasToolbar({
             </div>
             {/* Zoom presets (the widget stack sizes itself, so none there) */}
             {dashboard.widgets.length === 0 && (
-              <div className="flex items-center gap-0.5 rounded-lg border border-border bg-bg p-0.5">
+              <div className="flex items-center gap-0.5 rounded-ctl border border-border bg-bg p-0.5">
                 {ZOOM_PRESETS.map((z) => (
                   <SegBtn key={z} active={zoom === z} onClick={() => onZoom(z)}>
                     {z === "fit" ? "Fit" : `${Math.round(z * 100)}%`}
@@ -662,7 +662,7 @@ function Thumbnail({
         </span>
         <span
           className={[
-            "rounded-full px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide",
+            "rounded-ctl px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide",
             enabled ? "bg-accent/15 text-accent" : "bg-surface-2 text-faint",
           ].join(" ")}
         >

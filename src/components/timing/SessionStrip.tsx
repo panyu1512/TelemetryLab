@@ -138,7 +138,7 @@ export function SessionStrip({ width }: SessionStripProps) {
           is the one thing allowed a fill — and filled ink is `on-accent`
           (§ Theme, rule 1), never white on a light accent. */}
       <span
-        className="shrink-0 rounded-[3px] px-1.5 py-0.5 font-mono text-[11px] font-bold uppercase leading-none tracking-[0.1em]"
+        className="shrink-0 rounded-ctl px-1.5 py-0.5 font-mono text-[11px] font-bold uppercase leading-none tracking-[0.1em]"
         style={
           flag
             ? { background: flag.color, color: "var(--color-on-accent)" }

@@ -2,6 +2,7 @@ import { memo, type ReactNode } from "react";
 import type { ClassStanding } from "../../telemetry/types";
 import { kilo, lapTime } from "../../lib/format";
 import { classBandFill } from "../../lib/classColors";
+import { readableInk } from "../../lib/contrast";
 import { RacingHelmet } from "../ui/RacingHelmet";
 import { CLASS_EDGE_WIDTH } from "./constants";
 
@@ -50,6 +51,19 @@ function ClassBandInner({
 }) {
   const { shortName, carCount, sof, fastestLap } = standing;
 
+  /*
+   * Everything on the band prints in ink measured against the band's own fill,
+   * not in a palette token. The fill is identity colour, which arrives per class
+   * and can land anywhere on the wheel — white reads on a violet class and
+   * disappears on a lime one, so neither white nor `on-accent` can be assumed.
+   *
+   * `labelInk` is the same ink held back rather than a second colour. `faint`
+   * used to carry the micro-labels and cannot any more: it is tuned against the
+   * app's dark surfaces and lands somewhere near invisible on a light fill.
+   */
+  const ink = readableInk(color);
+  const labelInk = `color-mix(in oklab, ${ink} 72%, transparent)`;
+
   return (
     <div
       className="flex h-full items-center gap-3 overflow-hidden rounded-sm pr-2"
@@ -62,26 +76,23 @@ function ClassBandInner({
         borderLeftWidth: CLASS_EDGE_WIDTH,
         borderLeftStyle: "solid",
         borderLeftColor: color,
-        // The class's colour across the whole band, where a row carries it only
-        // to the end of its first column. The band is the heading and the rows
-        // are what it heads, and that is the hierarchy: masthead solid, rows
-        // striped. It replaces the plain white wash the band used to sit on,
-        // which made its own colour a detail rather than its subject.
+        // The class's colour, solid, across the whole band, where a row carries
+        // it only to the end of its first column. The band is the heading and
+        // the rows are what it heads, and that is the hierarchy: masthead solid,
+        // rows striped. See `classBandFill` for why the tint it replaces was
+        // the wrong instrument for a heading.
         backgroundColor: classBandFill(color),
       }}
     >
-      {/* The class name, sitting *on* the fill rather than after it.
-          It used to be a pill filled with the class colour — the one place
-          identity colour was allowed to fill — and the pill had to go because an
-          opaque block sits exactly where the fill goes. As ink it does not: it
-          reads straight off the tint, the same way a row's position number reads
-          off the tint behind it. That parallel is the alignment. Its `ml-1`
-          matches the row's `px-1`, so the name and the leading column start on
-          one vertical and the band's content begins where the field's does,
-          rather than indented past a block of empty colour. */}
+      {/* The class name, knocked out of the fill rather than printed in the
+          class's colour on top of it — which is what it used to do, and which
+          stops working the moment the fill *is* that colour. Its `ml-1` matches
+          the row's `px-1`, so the name and the leading column start on one
+          vertical and the band's content begins where the field's does, rather
+          than indented past a block of empty colour. */}
       <span
         className="ml-1 shrink-0 font-mono text-[11px] font-bold uppercase leading-none tracking-[0.08em]"
-        style={{ color }}
+        style={{ color: ink }}
       >
         {shortName || "—"}
       </span>
@@ -89,26 +100,32 @@ function ClassBandInner({
       {/* The car count wears a helmet where the other two fields wear words.
           Not decoration, and not an inconsistency either: `SoF` and `Best` are
           *measures* of a class, this is the population they are measured over,
-          and a glyph is what says so at a glance. It takes the class's colour
-          for the same reason the name above it does — on this band colour is
-          identity and white is data, so the label joins the chip and the value
-          stays with the numbers. That also buys the contrast the artwork needs:
-          it is an outline, and at `text-faint` its strokes fall under a pixel
-          and grey out into a smudge. */}
+          and a glyph is what says so at a glance. It takes the band's full-
+          strength ink rather than the held-back label ink the words take: it is
+          an outline, and at 72 % its strokes fall under a pixel and grey out
+          into a smudge. */}
       <BandField
         label={<RacingHelmet size="12px" label="Cars" />}
         value={carCount > 0 ? String(carCount) : "—"}
-        labelColor={color}
+        ink={ink}
+        labelInk={ink}
         title="Cars in class"
       />
-      {fits(width, 230) && <BandField label="SoF" value={kilo(sof)} />}
+      {fits(width, 230) && (
+        <BandField label="SoF" value={kilo(sof)} ink={ink} labelInk={labelInk} />
+      )}
       {fits(width, 300) && (
         <BandField
           label="Best"
           value={lapTime(fastestLap)}
-          // The class's fastest lap is purple when it also leads the field, which
-          // is the same meaning `--color-sector-purple` carries in every row.
-          color={fastestIsOverall ? "var(--color-sector-purple)" : undefined}
+          ink={ink}
+          labelInk={labelInk}
+          // Overall-best used to be purple *ink* here, as it is in every row.
+          // On a solid band that fails outright — purple on lime, purple on
+          // violet — so the mark moves from the ink to a fill behind it. Same
+          // token, same meaning, and a filled chip is legible on any class
+          // colour the sim can hand us.
+          fill={fastestIsOverall ? "var(--color-sector-purple)" : undefined}
           title={
             fastestIsOverall
               ? "Fastest lap in class — and in the session"
@@ -128,8 +145,9 @@ function fits(width: number, minWidth: number): boolean {
 function BandField({
   label,
   value,
-  color,
-  labelColor,
+  ink,
+  labelInk,
+  fill,
   title,
 }: {
   /**
@@ -138,12 +156,15 @@ function BandField({
    */
   label: ReactNode;
   value: string;
-  color?: string;
+  /** Ink for the value, measured against the band's fill by the caller. */
+  ink: string;
+  /** Ink for the micro-label — the same colour, held back. */
+  labelInk: string;
   /**
-   * Overrides the label's `text-faint`. Only the helmet uses it: faint is the
-   * right weight for a word and too little for a sub-pixel outline.
+   * A ground behind the value, for the one field that has to say something the
+   * band's own colour has already spoken for. Brings `on-accent` with it.
    */
-  labelColor?: string;
+  fill?: string;
   title?: string;
 }) {
   // `tracking-[0.14em]` puts a trailing letter-space after a word's last
@@ -156,9 +177,9 @@ function BandField({
   return (
     <span className="flex shrink-0 items-baseline gap-1" title={title}>
       <span
-        className="font-mono text-[8px] font-semibold uppercase leading-none tracking-[0.14em] text-faint"
+        className="font-mono text-[8px] font-semibold uppercase leading-none tracking-[0.14em]"
         style={{
-          ...(labelColor ? { color: labelColor } : null),
+          color: labelInk,
           ...(isGlyph ? { paddingRight: "0.14em" } : null),
         }}
       >
@@ -166,7 +187,16 @@ function BandField({
       </span>
       <span
         className="tnum font-mono text-[11px] font-bold leading-none"
-        style={{ color: color ?? "var(--color-text)" }}
+        style={
+          fill
+            ? {
+                background: fill,
+                color: "var(--color-on-accent)",
+                padding: "2px 4px",
+                borderRadius: "var(--radius-ctl)",
+              }
+            : { color: ink }
+        }
       >
         {value}
       </span>

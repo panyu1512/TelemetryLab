@@ -122,7 +122,7 @@ function VisibilityRule({
         <span className="flex items-center gap-2">
           <span className="text-xs font-medium text-text">{label}</span>
           {currentlyActive && (
-            <span className="whitespace-nowrap rounded-full bg-warning/15 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.12em] text-warning">
+            <span className="whitespace-nowrap rounded-ctl bg-warning/15 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.12em] text-warning">
               Active now
             </span>
           )}
@@ -161,7 +161,7 @@ function Row({
 
 function FlagBadge({ flag }: { flag: string }) {
   return (
-    <span className="whitespace-nowrap rounded-full bg-surface-2 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.12em] text-muted">
+    <span className="whitespace-nowrap rounded-ctl bg-surface-2 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.12em] text-muted">
       {flag.replace(/_/g, " ")}
     </span>
   );

@@ -15,6 +15,7 @@ import {
 } from "./constants";
 import { ColumnLabels } from "./ColumnLabels";
 import { classRowFill } from "../../lib/classColors";
+import { readableInk } from "../../lib/contrast";
 import { CountryFlag } from "../ui/CountryFlag";
 import {
   BrandIcon,
@@ -159,8 +160,18 @@ function StandingsRowInner({
 
         {/* position — the layout's own rank in a lap-time session, otherwise
             iRacing's: class position when grouped by class, overall when flat.
-            A flat overall table numbered by class position reads as scrambled. */}
-        <div className="text-center text-[14px] font-bold tabular-nums tnum">
+            A flat overall table numbered by class position reads as scrambled.
+
+            It sits in a block of the class's colour, which is the row's answer
+            to the solid band that opens its group: the masthead is a block, and
+            the first thing in every row under it is the same block one column
+            wide. Rank and class are the two facts you take off a row without
+            reading it, and this is the one cell where they can be the same
+            glance. Ink is measured, not assumed — see `readableInk`. */}
+        <div
+          className="tnum rounded-ctl py-0.5 text-center text-[14px] font-bold leading-none tabular-nums"
+          style={{ background: classColor, color: readableInk(classColor) }}
+        >
           {rank ??
             (classRelative
               ? row?.classPosition ?? row?.position
@@ -190,9 +201,17 @@ function StandingsRowInner({
           </div>
         )}
 
-        {/* driver */}
+        {/* driver.
+
+            Caps, as a timing graphic sets them. It costs something real: caps
+            are read by outline and lose the ascender/descender silhouette that
+            makes a name recognisable at a glance, and they run ~12 % wider, so
+            the only column allowed to truncate truncates sooner. What they buy
+            is a single optical weight down the one ragged column on the
+            surface, which is what stops the field reading as a list of strings
+            of different heights. */}
         <div className="flex min-w-0 items-center">
-          <span className="truncate text-[13px] font-semibold text-text">
+          <span className="truncate text-[13px] font-bold uppercase tracking-[0.01em] text-text">
             {driver?.userName ?? `Car ${carIdx}`}
           </span>
         </div>

@@ -30,7 +30,7 @@ function tracePoints(
 
 function InputTrace({ samples }: { samples: InputSample[] }) {
   return (
-    <div className="relative min-w-0 flex-1 overflow-hidden rounded-md border border-border bg-bg">
+    <div className="relative min-w-0 flex-1 overflow-hidden rounded-ctl border border-border bg-bg">
       <svg
         viewBox="0 0 100 100"
         preserveAspectRatio="none"
@@ -93,13 +93,13 @@ function VBar({
       >
         {Math.round(v * 100)}
       </span>
-      <div className="relative w-full flex-1 overflow-hidden rounded-sm bg-surface-2">
+      <div className="relative w-full flex-1 overflow-hidden bg-surface-2">
         {/* No CSS transition: frames arrive at 30 Hz, which is already smooth,
             and a 75 ms ease on `height` low-passed the very thing this bar
             exists to show — the initial stab at the brake never reached its
             peak before the pedal had started trailing off again. */}
         <div
-          className="absolute inset-x-0 bottom-0 rounded-sm"
+          className="absolute inset-x-0 bottom-0"
           style={{ height: `${v * 100}%`, background: fill }}
         />
       </div>

@@ -1,7 +1,7 @@
 /* Hallmark · genre: modern-minimal · macrostructure: Workbench
  * design-system: design.md · designed-as-app
- * theme: custom (tuned) · vibe: "cool graphite instrument panel, signal blue"
- * paper oklch(19% 0.0094 256) dark · display grotesk-sans (Inter) · accent cool (254°)
+ * theme: custom (tuned) · vibe: "pit wall — hard edges, solid blocks, 13.5° shear"
+ * paper oklch(16% 0.01 256) dark · display grotesk-sans (Inter) · accent cool (254°)
  */
 
 /*
@@ -30,17 +30,20 @@
      iRacing footage instead of reading as warm grey boxes. Accents are never
      decorative — each one carries exactly one meaning. */
 
-  /* Paper / surfaces — elevation reads through lightness, not shadow */
-  --color-bg: oklch(19% 0.0094 256);
-  --color-surface: oklch(23.4% 0.0131 258);
-  --color-surface-2: oklch(26.3% 0.0167 260);
-  --color-border: oklch(31.5% 0.0182 258);
-  --color-border-strong: oklch(37.6% 0.0217 256);
+  /* Paper / surfaces — elevation reads through lightness, not shadow. Deep,
+     because this surface carries solid colour blocks and a block only reads as
+     one against a ground darker than itself; `border-strong` goes the other way
+     because at 2 px radii the 1 px edge is what draws a control's shape. */
+  --color-bg: oklch(16% 0.01 256);
+  --color-surface: oklch(20% 0.013 258);
+  --color-surface-2: oklch(24.5% 0.017 260);
+  --color-border: oklch(30% 0.018 258);
+  --color-border-strong: oklch(40% 0.022 256);
 
   /* Ink — a three-step scale. `faint` is pinned at L 62%: the floor that
      clears 4.5:1 against `surface`, because it carries 10–11 px labels. */
   --color-text: oklch(100% 0 0);
-  --color-muted: oklch(81.1% 0.0166 254);
+  --color-muted: oklch(80% 0.017 254);
   --color-faint: oklch(62% 0.021 256);
 
   /* Status — one colour, one meaning */
@@ -55,7 +58,7 @@
   /* Text on top of ANY filled status colour. Every accent here is light and
      every paper dark, so white-on-accent measures 2.2–2.9:1; this reads at
      6.5–8.7:1. Filled controls must use it — never white. */
-  --color-on-accent: oklch(19% 0.0094 256);
+  --color-on-accent: oklch(14% 0.008 256);
 
   /* Focus ring. Its own token, not an alias of `primary`, so a theme whose
      interactive hue nears `warning` can move one without the other. Clears
@@ -84,16 +87,18 @@
   --space-2xl: 4.5rem;
 
   /* ── Radius ──────────────────────────────────────────────────────────────
-     Tight radii: this is an instrument panel, not a consumer app. */
-  --radius-ctl: 6px;
-  --radius-card: 10px;
-  --radius-panel: 12px;
+     Near-square throughout: this is an instrument panel, not a consumer app,
+     and a pit-wall graphic is cut rather than moulded. 2 px is enough to stop a
+     1 px border pixel-stepping without softening the shape. */
+  --radius-ctl: 2px;
+  --radius-card: 2px;
+  --radius-panel: 2px;
 
   /* ── Elevation ───────────────────────────────────────────────────────────
      Tight and dark. On dark surfaces a soft coloured halo reads as glow, not
      height — height comes from a brighter surface. */
-  --shadow-raise: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 12px rgb(0 0 0 / 0.25);
-  --shadow-float: 0 4px 8px rgb(0 0 0 / 0.35), 0 12px 32px rgb(0 0 0 / 0.4);
+  --shadow-raise: 0 1px 0 rgb(0 0 0 / 0.4), 0 2px 6px rgb(0 0 0 / 0.3);
+  --shadow-float: 0 2px 0 rgb(0 0 0 / 0.45), 0 8px 20px rgb(0 0 0 / 0.45);
 
   /* ── Motion ──────────────────────────────────────────────────────────────
      Three easings, three durations. No bare `ease`, no overshoot on UI state.
@@ -105,4 +110,12 @@
   --dur-instant: 80ms;
   --dur-short: 140ms;
   --dur-mid: 220ms;
+
+  /* ── Shear ───────────────────────────────────────────────────────────────
+     The brand mark's own cut, promoted to a system device. It goes on the
+     app's chrome — chips, section legends, CTAs — and never on a data surface:
+     a table read in peripheral vision needs its column edges vertical. See the
+     `.shear` pair in `src/styles.css` for the counter-transform that keeps the
+     type upright inside a sheared box. */
+  --shear: -13.5deg;
 }

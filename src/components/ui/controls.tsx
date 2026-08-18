@@ -4,7 +4,7 @@
  * segmented controls, section labels, cards).
  *
  * Design language:
- *   - controls sit on `surface-2` cards with 6 px radii and 1 px borders
+ *   - controls sit on `surface-2` cards with 2 px radii and 1 px borders
  *   - the interactive color is `primary` (blue) — status greens/reds/yellows
  *     are reserved for telemetry meaning, never for chrome
  *   - text follows the three-step scale: text (white) / muted / faint
@@ -126,7 +126,7 @@ export function Checkbox({
       }}
       className={[
         HIT,
-        "flex size-4 shrink-0 items-center justify-center rounded-[5px] border transition-colors",
+        "flex size-4 shrink-0 items-center justify-center rounded-ctl border transition-colors",
         disabled
           ? "cursor-not-allowed border-border bg-surface opacity-55"
           : checked
@@ -158,6 +158,19 @@ type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
  * White-on-accent measures 2.2–2.9:1 across the four themes — well under the
  * 4.5:1 floor — because every status accent in this system is a light color.
  * Dark ink on the same fill reads at 6.5–8.7:1.
+ *
+ * Every variant is cut on `--shear` and set in caps.
+ *
+ * The cut belongs to the app's *chrome* and stops at the edge of the data: the
+ * title bar, the manager's chips and every CTA take it; the timing tables, the
+ * widgets and anything drawn over the game do not. A driver reading a lap time
+ * in peripheral vision needs the column edges vertical, and a surface where
+ * half the boxes lean is a surface where nothing lines up. So the frame is cut
+ * and the instruments are square.
+ *
+ * Caps at 11 px rather than 12 px mixed case — capitals carry no descenders and
+ * read a size larger than they measure, so the label keeps the row's height
+ * while gaining the weight the shear asks for.
  */
 const BUTTON_VARIANT: Record<ButtonVariant, string> = {
   primary:
@@ -211,15 +224,19 @@ export function Button({
       className={[
         // `whitespace-nowrap`: a clickable label that wraps to two lines reads
         // as a rendering fault, and breaks the row's vertical rhythm.
-        "flex items-center gap-1.5 whitespace-nowrap rounded-ctl px-3 py-1.5 text-xs font-medium transition-colors",
+        "shear whitespace-nowrap rounded-ctl px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.06em] transition-colors",
         inert
           ? "cursor-not-allowed border border-border bg-surface-2 text-faint"
           : BUTTON_VARIANT[variant],
         stateTone,
       ].join(" ")}
     >
-      {busy ? <Spinner /> : icon}
-      {children}
+      {/* Single child, per `.shear`: the counter-transform lives on it, and two
+          siblings would each need their own. */}
+      <span className="gap-1.5">
+        {busy ? <Spinner /> : icon}
+        {children}
+      </span>
     </button>
   );
 }
@@ -281,7 +298,7 @@ export function Segmented({ children }: { children: ReactNode }) {
   return (
     <div
       role="group"
-      className="flex items-center gap-0.5 rounded-lg border border-border bg-bg p-0.5"
+      className="flex items-center gap-0.5 rounded-ctl border border-border bg-bg p-0.5"
     >
       {children}
     </div>
