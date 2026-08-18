@@ -61,19 +61,19 @@ export const THEMES: readonly Theme[] = [
     name: "Carbon",
     description: "Default · graphite neutrals, racing green + signal blue",
     colors: {
-      bg: "oklch(19% 0.0094 256)",
-      surface: "oklch(23.4% 0.0131 258)",
-      surface2: "oklch(26.3% 0.0167 260)",
-      border: "oklch(31.5% 0.0182 258)",
-      borderStrong: "oklch(37.6% 0.0217 256)",
+      bg: "oklch(16% 0.01 256)",
+      surface: "oklch(20% 0.013 258)",
+      surface2: "oklch(24.5% 0.017 260)",
+      border: "oklch(30% 0.018 258)",
+      borderStrong: "oklch(40% 0.022 256)",
       accent: "oklch(77.4% 0.181 154)",
       accentDim: "oklch(64.6% 0.1526 155)",
       primary: "oklch(68.6% 0.1569 254)",
       primaryDim: "oklch(58.5% 0.1568 255)",
-      onAccent: "oklch(19% 0.0094 256)",
+      onAccent: "oklch(14% 0.008 256)",
       focus: "oklch(68.6% 0.1569 254)",
       text: "oklch(100% 0 0)",
-      muted: "oklch(81.1% 0.0166 254)",
+      muted: "oklch(80% 0.017 254)",
       faint: "oklch(62% 0.021 256)",
       danger: "oklch(66.5% 0.195 26)",
       warning: "oklch(80.7% 0.1472 81)",
@@ -85,19 +85,19 @@ export const THEMES: readonly Theme[] = [
     name: "Midnight",
     description: "Deep blue-black for night racing",
     colors: {
-      bg: "oklch(16.9% 0.0155 267)",
-      surface: "oklch(21.1% 0.0289 269)",
-      surface2: "oklch(24.6% 0.0319 268)",
-      border: "oklch(29.9% 0.0365 267)",
-      borderStrong: "oklch(35.7% 0.0407 265)",
+      bg: "oklch(13.9% 0.0155 267)",
+      surface: "oklch(17.7% 0.0289 269)",
+      surface2: "oklch(22.8% 0.0319 268)",
+      border: "oklch(28.4% 0.0365 267)",
+      borderStrong: "oklch(38.1% 0.0407 265)",
       accent: "oklch(78.2% 0.1725 157)",
       accentDim: "oklch(64.8% 0.146 156)",
       primary: "oklch(70.9% 0.1534 257)",
       primaryDim: "oklch(60.9% 0.1589 257)",
-      onAccent: "oklch(16.9% 0.0155 267)",
+      onAccent: "oklch(11.9% 0.0155 267)",
       focus: "oklch(70.9% 0.1534 257)",
       text: "oklch(97.3% 0.0128 267)",
-      muted: "oklch(77.3% 0.029 258)",
+      muted: "oklch(76.2% 0.029 258)",
       faint: "oklch(60.7% 0.0369 261)",
       danger: "oklch(67.3% 0.1884 24)",
       warning: "oklch(81.3% 0.1392 82)",
@@ -109,19 +109,19 @@ export const THEMES: readonly Theme[] = [
     name: "Graphite",
     description: "Pure neutral grays · minimum color, maximum focus",
     colors: {
-      bg: "oklch(17.3% 0 0)",
-      surface: "oklch(20.9% 0 0)",
-      surface2: "oklch(23.9% 0 0)",
-      border: "oklch(28.9% 0 0)",
-      borderStrong: "oklch(34.8% 0 0)",
+      bg: "oklch(14.3% 0 0)",
+      surface: "oklch(17.5% 0 0)",
+      surface2: "oklch(22.1% 0 0)",
+      border: "oklch(27.4% 0 0)",
+      borderStrong: "oklch(37.2% 0 0)",
       accent: "oklch(76% 0.1641 156)",
       accentDim: "oklch(63.2% 0.1388 156)",
       primary: "oklch(67.6% 0.0193 253)",
       primaryDim: "oklch(56.9% 0.0201 253)",
-      onAccent: "oklch(17.3% 0 0)",
+      onAccent: "oklch(12.3% 0 0)",
       focus: "oklch(67.6% 0.0193 253)",
       text: "oklch(100% 0 0)",
-      muted: "oklch(79.4% 0.0096 258)",
+      muted: "oklch(78.3% 0.0096 258)",
       faint: "oklch(60.6% 0.0116 262)",
       danger: "oklch(65.4% 0.1926 25)",
       warning: "oklch(78.4% 0.1405 81)",
@@ -140,19 +140,19 @@ export const THEMES: readonly Theme[] = [
     name: "Endurance",
     description: "Warm graphite with copper accents for long stints",
     colors: {
-      bg: "oklch(18.3% 0.0026 68)",
-      surface: "oklch(21.9% 0.005 68)",
-      surface2: "oklch(25.1% 0.0049 39)",
-      border: "oklch(30.4% 0.0079 59)",
-      borderStrong: "oklch(36.4% 0.0097 61)",
+      bg: "oklch(15.3% 0.0026 68)",
+      surface: "oklch(18.5% 0.005 68)",
+      surface2: "oklch(23.3% 0.0049 39)",
+      border: "oklch(28.9% 0.0079 59)",
+      borderStrong: "oklch(38.8% 0.0097 61)",
       accent: "oklch(77.4% 0.1667 156)",
       accentDim: "oklch(63.6% 0.1389 156)",
       primary: "oklch(70% 0.15 45)",
       primaryDim: "oklch(62% 0.145 44)",
-      onAccent: "oklch(18.3% 0.0026 68)",
+      onAccent: "oklch(13.3% 0.0026 68)",
       focus: "oklch(70% 0.15 45)",
       text: "oklch(98.6% 0.0062 75)",
-      muted: "oklch(80.8% 0.0148 74)",
+      muted: "oklch(79.7% 0.0148 74)",
       faint: "oklch(61.4% 0.0146 71)",
       danger: "oklch(66.6% 0.1891 28)",
       warning: "oklch(80.7% 0.1472 81)",
@@ -238,9 +238,15 @@ export function applyTheme(
   // styles.css). Over live footage it stays *opaque enough to read as its own
   // panel* rather than following the other surfaces down to 0.66 glass — a
   // 30 px row of 12 px type has no room to lose contrast to a bright sky.
+  //
+  // 68 % of `bg`, not 30 %: the ground under the field is no longer the only
+  // thing separating one class group from the next — a solid class band and a
+  // 4 px edge now do that — so the paper can come up far enough for those
+  // blocks to read *as* blocks rather than as light in a void. It is still the
+  // darkest surface in the app by a wide margin.
   const timingBg = overlay
     ? "rgb(0 0 0 / 0.82)"
-    : `color-mix(in oklab, ${c.bg} 30%, #000)`;
+    : `color-mix(in oklab, ${c.bg} 68%, #000)`;
 
   el.style.setProperty("--color-bg", bg);
   el.style.setProperty("--color-timing-bg", timingBg);

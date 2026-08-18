@@ -1,7 +1,7 @@
 /* Hallmark · genre: modern-minimal · macrostructure: Workbench
  * design-system: design.md · designed-as-app
- * theme: custom (tuned) · vibe: "cool graphite instrument panel, signal blue"
- * paper oklch(19% 0.0094 256) dark · display grotesk-sans (Inter) · accent cool (254°)
+ * theme: custom (tuned) · vibe: "pit wall — hard edges, solid blocks, 13.5° shear"
+ * paper oklch(16% 0.01 256) dark · display grotesk-sans (Inter) · accent cool (254°)
  * nav: N3 side-rail · footer: Ft2 inline · enrichment: none (typography only)
  * pre-emit critique: P5 H4 E5 S5 R5 V4
  */
@@ -33,17 +33,21 @@
  * ═══════════════════════════════════════════════════════════════════════════
  */
 @theme {
-  /* Base neutrals */
-  --color-bg: oklch(19% 0.0094 256);
-  --color-surface: oklch(23.4% 0.0131 258);
-  --color-surface-2: oklch(26.3% 0.0167 260);
-  --color-border: oklch(31.5% 0.0182 258);
-  --color-border-strong: oklch(37.6% 0.0217 256);
+  /* Base neutrals. Deepened a step from the graphite set: this surface now
+     carries solid colour blocks rather than tinted ones, and a block only reads
+     as a block against a ground darker than itself. `border-strong` moves the
+     other way — with radii at 2 px the 1 px edge is what draws a control's
+     shape, so it has to be visible on its own. */
+  --color-bg: oklch(16% 0.01 256);
+  --color-surface: oklch(20% 0.013 258);
+  --color-surface-2: oklch(24.5% 0.017 260);
+  --color-border: oklch(30% 0.018 258);
+  --color-border-strong: oklch(40% 0.022 256);
 
   /* Typography colors. `faint` sits at L 62% — the floor that clears 4.5:1
      against `surface`, since it carries 10–11 px labels on cards. */
   --color-text: oklch(100% 0 0);
-  --color-muted: oklch(81.1% 0.0166 254); /* secondary text */
+  --color-muted: oklch(80% 0.017 254); /* secondary text */
   --color-faint: oklch(62% 0.021 256); /* disabled / tertiary text */
 
   /* The ground the dense timing surfaces paint on.
@@ -54,7 +58,7 @@
    * palette can give it. `applyTheme` recomputes it per theme (and drops it to
    * a translucent black over live footage); this literal is the Carbon value,
    * so the surface is right before any theme is applied. */
-  --color-timing-bg: color-mix(in oklab, oklch(19% 0.0094 256) 30%, #000);
+  --color-timing-bg: color-mix(in oklab, oklch(16% 0.01 256) 68%, #000);
 
   /* Status accents — never decorative */
   --color-accent: oklch(77.4% 0.181 154); /* positive */
@@ -68,7 +72,7 @@
   /* The text color to use on top of ANY filled status color. Every accent in
      this system is light and every paper is dark, so white-on-accent lands at
      2.2–2.9:1 — far under 4.5:1. Dark ink on the fill reads at 6.5–8.7:1. */
-  --color-on-accent: oklch(19% 0.0094 256);
+  --color-on-accent: oklch(14% 0.008 256);
 
   /* The focus ring. A dedicated token rather than an alias of `primary`, so a
      theme whose interactive hue collides with `warning` can move one without
@@ -83,15 +87,19 @@
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
     "Liberation Mono", monospace;
 
-  /* Radius scale — 8–12 px surfaces, 6 px controls */
-  --radius-ctl: 6px;
-  --radius-card: 10px;
-  --radius-panel: 12px;
+  /* Radius scale — near-square throughout. A pit-wall graphic is cut, not
+     moulded: the corner is where that reads first, and 2 px is enough to stop
+     a 1 px border pixel-stepping without softening the shape. */
+  --radius-ctl: 2px;
+  --radius-card: 2px;
+  --radius-panel: 2px;
 
   /* Elevation. On dark surfaces height reads through *lightness*, not glow —
-     these shadows only anchor a floating layer, they never halo it. */
-  --shadow-raise: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 12px rgb(0 0 0 / 0.25);
-  --shadow-float: 0 4px 8px rgb(0 0 0 / 0.35), 0 12px 32px rgb(0 0 0 / 0.4);
+     these shadows only anchor a floating layer, they never halo it. Tightened
+     a step: a hard-edged panel that casts a soft, wide shadow reads as two
+     different materials at once. */
+  --shadow-raise: 0 1px 0 rgb(0 0 0 / 0.4), 0 2px 6px rgb(0 0 0 / 0.3);
+  --shadow-float: 0 2px 0 rgb(0 0 0 / 0.45), 0 8px 20px rgb(0 0 0 / 0.45);
 
   /* Motion. Three named easings and three durations — no bare `ease`, no
      overshoot on UI state. Overriding Tailwind's transition defaults means
@@ -123,6 +131,13 @@
   --danger: var(--color-danger);
   --warning: var(--color-warning);
   --focus: var(--color-focus);
+
+  /* The brand mark's shear, promoted to a system device. Every free terminal
+     on the TL monogram is cut on this diagonal; `.shear` puts the same cut on
+     chips, blocks and CTAs so the chrome speaks the mark's language instead of
+     merely sitting next to it. One angle, declared once — a second value would
+     read as a mistake rather than as a system. */
+  --shear: -13.5deg;
 
   color-scheme: dark;
   font-family: var(--font-sans);
@@ -248,6 +263,43 @@ a {
 /* --- signature details ----------------------------------------------------- */
 
 /*
+ * Shear pair. The outer element takes the cut; the single child takes it back,
+ * so the *box* is a parallelogram and the type inside stays upright — a sheared
+ * letterform is a different typeface, not a graphic device.
+ *
+ * The child must be the only child, and it becomes an inline-flex box: two
+ * siblings would each need their own counter-transform, and an inline child
+ * cannot carry one at all.
+ *
+ * Hit areas follow the transform, which is what you want — the pointer target
+ * matches the painted shape. What it does *not* do is grow the layout box, so
+ * anything sheared needs ~0.24 × its own height of horizontal breathing room
+ * (the tangent of 13.5°) or its corners will graze a neighbour.
+ */
+.shear {
+  transform: skewX(var(--shear));
+}
+.shear > * {
+  display: inline-flex;
+  align-items: center;
+  transform: skewX(calc(-1 * var(--shear)));
+}
+
+/*
+ * The section legend: a solid block on the shear, set before the heading. It
+ * replaces the hairline that used to run out of the title and fade — a rule
+ * that reads as a divider between things, where this reads as a marker on one
+ * thing. Sized to the cap height of the 13 px heading beside it.
+ */
+.section-block {
+  width: 4px;
+  height: 14px;
+  flex: none;
+  background: var(--color-primary);
+  transform: skewX(var(--shear));
+}
+
+/*
  * Blueprint dot grid: an ultra-subtle technical texture for the manager's
  * chrome (never for overlays over the game). Sits under panels and cards.
  */
@@ -260,23 +312,17 @@ a {
 }
 
 /*
- * Glass top-light: a hairline highlight along a card's top edge that makes
- * the surface read as machined glass. Only for framed cards — real overlay
- * windows are frameless, so the strip rule below removes it there.
+ * Framed cards are drawn by their edge, not by a highlight.
+ *
+ * This used to be a glass top-light — an inset white hairline that made the
+ * surface read as machined glass. Glass is the wrong material now: the panel is
+ * a cut plate, so the edge does the work, and a highlight riding on top of a
+ * 1 px border only muddies which of the two is the boundary. Kept as a rule
+ * rather than folded into the border utility because the overlay-mode block
+ * below has to be able to take it off again over live footage.
  */
 .overlay-card {
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.05);
-}
-
-/*
- * Header rule: a hairline that fades out to the right, finishing a widget or
- * section title the way timing graphics underline a caption.
- */
-.header-rule {
-  height: 1px;
-  flex: 1 1 auto;
-  min-width: 0.75rem;
-  background: linear-gradient(90deg, var(--color-border), transparent);
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
 }
 
 /* --- standings / timing screen ------------------------------------------- */
@@ -473,7 +519,7 @@ html.overlay-mode:not(.overlay-locked) #root::after {
   z-index: 60;
   pointer-events: none;
   border: 1px solid transparent;
-  border-radius: 10px;
+  border-radius: var(--radius-card);
   transition: border-color 140ms ease;
 }
 html.overlay-mode:not(.overlay-locked) body:hover #root::after {
@@ -535,7 +581,7 @@ html.overlay-locked * {
 .react-grid-item.react-grid-placeholder {
   background: var(--color-primary);
   opacity: 0.12;
-  border-radius: 10px;
+  border-radius: var(--radius-card);
 }
 
 /* Lift the card while it's being moved. */
@@ -565,7 +611,6 @@ html.overlay-locked * {
   height: 8px;
   border-right: 2px solid var(--color-faint);
   border-bottom: 2px solid var(--color-faint);
-  border-bottom-right-radius: 3px;
 }
 /* Widgets are always rearrangeable, so the resize grip fades in on hover of
    the card rather than requiring a separate edit mode. */
