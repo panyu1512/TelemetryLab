@@ -50,10 +50,13 @@ export function TitleBar({ status }: { status: ConnectionStatus }) {
       data-tauri-drag-region
       className="relative flex h-11 flex-none items-center gap-3 border-b border-border bg-surface px-4"
     >
-      {/* Signature speed stripe: the brand mark's two hues, racing off-edge. */}
+      {/* Signature speed stripe: the brand mark's two hues, racing off-edge.
+          3 px rather than a hairline — at 1 px it was a detail you found on the
+          second look, and this is the one piece of chrome that has to say which
+          product you are in from across a room. */}
       <span
         aria-hidden
-        className="absolute bottom-[-1px] left-0 h-px w-44"
+        className="absolute bottom-[-1px] left-0 h-[3px] w-44"
         style={{
           background:
             "linear-gradient(90deg, var(--color-primary), var(--color-accent) 65%, transparent)",
@@ -74,13 +77,17 @@ export function TitleBar({ status }: { status: ConnectionStatus }) {
         </span>
       </div>
 
-      {/* Connection status pill */}
-      <div className="ml-2 flex items-center gap-1.5 rounded-full border border-border bg-surface-2 px-2.5 py-1 text-[11px] font-medium">
-        <span
-          className="inline-block size-1.5 rounded-full"
-          style={{ background: status.color }}
-        />
-        <span className="text-muted">{status.label}</span>
+      {/* Connection status readout, cut on the mark's diagonal. `ml-3` rather
+          than `ml-2`: the shear pushes the corners ~3 px past the layout box on
+          each side, and the brand name is what they would graze. */}
+      <div className="shear ml-3 rounded-ctl border border-border bg-surface-2 px-2.5 py-1 text-[11px] font-medium">
+        <span className="gap-1.5">
+          <span
+            className="inline-block size-1.5 rounded-full"
+            style={{ background: status.color }}
+          />
+          <span className="text-muted">{status.label}</span>
+        </span>
       </div>
 
       {/* Standard window controls */}

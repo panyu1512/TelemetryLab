@@ -402,9 +402,11 @@ function WidgetRow({ widget }: { widget: WidgetDef }) {
             {widget.title}
           </span>
           {open && (
-            <span className="flex items-center gap-1 whitespace-nowrap rounded-full bg-primary/10 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.12em] text-primary">
-              <span aria-hidden className="size-1 rounded-full bg-primary" />
-              Open
+            <span className="shear mx-0.5 whitespace-nowrap rounded-ctl bg-primary/15 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.12em] text-primary">
+              <span className="gap-1">
+                <span aria-hidden className="size-1 rounded-full bg-primary" />
+                Open
+              </span>
             </span>
           )}
         </div>
@@ -424,11 +426,13 @@ function WidgetRow({ widget }: { widget: WidgetDef }) {
 /**
  * A tuning section.
  *
- * The divider is a rule that runs from the heading and fades out to the right
- * — the same `.header-rule` idiom the widget headers use — rather than a
- * full-width border above every block. It reads as a panel legend instead of
- * a stack of identical horizontal bands, and it ties the Manager's chrome to
- * the vocabulary the overlays already speak.
+ * The legend is a solid block set on the mark's shear before the heading,
+ * rather than a rule running out of it and fading. Both beat a full-width
+ * border above every block — that reads as a stack of identical bands — but a
+ * rule is a divider *between* things where a block is a marker *on* one, and
+ * what this needs to say is "a new group starts here", not "the last one
+ * ended". It is also the same cut the CTAs and chips take, so the chrome
+ * speaks one language rather than two.
  */
 function ConfigSection({
   title,
@@ -442,11 +446,11 @@ function ConfigSection({
   return (
     <section className="pt-8 first:pt-0">
       <div className="mb-4">
-        <div className="flex items-center gap-3">
-          <h2 className="whitespace-nowrap text-sm font-semibold tracking-tight text-text">
+        <div className="flex items-center gap-2.5">
+          <span className="section-block" aria-hidden />
+          <h2 className="whitespace-nowrap text-[13px] font-bold uppercase tracking-[0.06em] text-text">
             {title}
           </h2>
-          <span className="header-rule" aria-hidden />
         </div>
         <p className="mt-1 max-w-prose text-xs text-muted">{description}</p>
       </div>
@@ -475,31 +479,36 @@ function EnableToggle({
       role="switch"
       aria-checked={enabled}
       onClick={() => onChange(!enabled)}
-      className="flex items-center gap-2 whitespace-nowrap rounded-ctl border border-border bg-surface-2 px-2.5 py-1.5 transition-colors hover:border-border-strong active:brightness-95"
+      className="shear mx-1 whitespace-nowrap rounded-ctl border border-border bg-surface-2 px-2.5 py-1.5 transition-colors hover:border-border-strong active:brightness-95"
     >
-      <span
-        className={[
-          "text-xs font-medium",
-          enabled ? "text-text" : "text-faint",
-        ].join(" ")}
-      >
-        {enabled ? "Enabled" : "Disabled"}
-      </span>
-      <span
-        aria-hidden
-        className={[
-          "relative h-4 w-7 shrink-0 rounded-full transition-colors",
-          enabled
-            ? "bg-primary"
-            : "border border-border-strong bg-surface",
-        ].join(" ")}
-      >
+      <span className="gap-2">
         <span
           className={[
-            "absolute top-0.5 size-3 rounded-full bg-text shadow-sm transition-[left]",
-            enabled ? "left-[14px]" : "left-0.5",
+            "text-[11px] font-bold uppercase tracking-[0.06em]",
+            enabled ? "text-text" : "text-faint",
           ].join(" ")}
-        />
+        >
+          {enabled ? "Enabled" : "Disabled"}
+        </span>
+        {/* The track keeps its pill. A switch is the one control whose *shape*
+            is its affordance — squaring it would leave a rectangle sliding
+            inside a rectangle, which reads as a progress bar. */}
+        <span
+          aria-hidden
+          className={[
+            "relative h-4 w-7 shrink-0 rounded-full transition-colors",
+            enabled
+              ? "bg-primary"
+              : "border border-border-strong bg-surface",
+          ].join(" ")}
+        >
+          <span
+            className={[
+              "absolute top-0.5 size-3 rounded-full bg-text shadow-sm transition-[left]",
+              enabled ? "left-[14px]" : "left-0.5",
+            ].join(" ")}
+          />
+        </span>
       </span>
     </button>
   );
@@ -510,7 +519,7 @@ function EnableToggle({
 function ManagerHeader() {
   return (
     <header className="flex h-12 flex-none items-center gap-4 border-b border-border px-4">
-      <span className="text-sm font-semibold tracking-tight text-text">
+      <span className="text-[13px] font-bold uppercase tracking-[0.06em] text-text">
         Overlay Manager
       </span>
 
@@ -584,15 +593,17 @@ function ProfileSelector() {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="flex items-center gap-2 whitespace-nowrap rounded-ctl border border-border bg-surface-2 px-3 py-1.5 text-xs transition-colors hover:border-border-strong active:brightness-95"
+        className="shear mr-1 whitespace-nowrap rounded-ctl border border-border bg-surface-2 px-3 py-1.5 text-xs transition-colors hover:border-border-strong active:brightness-95"
       >
-        <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-faint">
-          Profile
+        <span className="gap-2">
+          <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-faint">
+            Profile
+          </span>
+          <span className="max-w-32 truncate font-medium text-text">
+            {activeProfile?.name ?? "Default"}
+          </span>
+          <ChevronDown className="size-3 text-faint" />
         </span>
-        <span className="max-w-32 truncate font-medium text-text">
-          {activeProfile?.name ?? "Default"}
-        </span>
-        <ChevronDown className="size-3 text-faint" />
       </button>
 
       {open && (
@@ -833,10 +844,12 @@ function OverlaySidebarItem({
       >
         <span
           aria-hidden
-          className={[
-            "h-5 w-[3px] shrink-0 rounded-full transition-colors",
-            rail,
-          ].join(" ")}
+          // 4 px and square, matching the class edge on the timing surfaces —
+          // one leading mark, one drawn width, wherever it appears. Selection
+          // is deliberately *not* folded into it: the row's filled ground says
+          // "you are looking at this", and the rail keeps its three liveness
+          // states to itself.
+          className={["h-5 w-1 shrink-0 transition-colors", rail].join(" ")}
         />
         <Icon className="size-3.5 shrink-0" />
         <span className="truncate text-xs font-medium">{dashboard.label}</span>
