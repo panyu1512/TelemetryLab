@@ -48,7 +48,7 @@ function Corner({
   const color = heatColor(temp);
   return (
     <div
-      className="flex flex-col justify-center overflow-hidden rounded-md bg-surface-2 px-2.5 py-1.5"
+      className="flex flex-col justify-center overflow-hidden rounded-ctl bg-surface-2 px-2.5 py-1.5"
       style={{
         borderLeft: `3px solid ${color}`,
         // Fade the whole corner rather than recolouring the number: the heat
@@ -72,9 +72,9 @@ function Corner({
           {num(temp, TEMP_DECIMALS)}°
         </span>
       </div>
-      <div className="mt-1 h-1 shrink-0 overflow-hidden rounded-full bg-bg">
+      <div className="mt-1 h-1 shrink-0 overflow-hidden bg-bg">
         <div
-          className="h-full rounded-full transition-all duration-200"
+          className="h-full transition-all duration-200"
           style={{ width: `${tempFrac(temp) * 100}%`, background: color }}
         />
       </div>
@@ -92,7 +92,7 @@ function Corner({
 function HeldNote({ heldMs }: { heldMs: number }) {
   return (
     <div
-      className="flex shrink-0 items-center justify-center gap-1.5 rounded-md bg-warning/15 px-2 py-1 text-warning"
+      className="flex shrink-0 items-center justify-center gap-1.5 rounded-ctl bg-warning/15 px-2 py-1 text-warning"
       title={
         "iRacing only refreshes carcass temperatures in the pit stall for this car, " +
         "so these are the temperatures your tyres had at your last stop."

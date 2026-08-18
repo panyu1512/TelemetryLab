@@ -5,13 +5,27 @@ import { Bar, Gauge } from "./primitives";
 
 const SHIFT_LIGHTS = 8;
 
-/** A rev strip of round LEDs, like a wheel display: green → yellow → red. */
+/**
+ * The rev strip: a segmented bar running green → yellow → red.
+ *
+ * It was a row of round LEDs, copying the wheel display it stands in for. The
+ * segments are the better read at the size this actually gets drawn: a circle
+ * carries its ink in the middle and thins to nothing at the edges, so a lit dot
+ * next to an unlit one leaves a gap of paper between two soft shapes, and the
+ * *number* of lit lights — which is the whole reading — has to be counted. A
+ * bar of hard-edged blocks reads as a length instead, and length is answered
+ * without counting.
+ *
+ * Aspect ratio goes with the circles: segments are full-height and share the
+ * strip's width, so the bar grows and shrinks with the card rather than pinning
+ * itself to an 11 px cap.
+ */
 function ShiftLights({ frac }: { frac: number }) {
   const lit = Math.round(frac * SHIFT_LIGHTS);
   const atRedline = frac >= 0.97;
   return (
     <div
-      className={`flex min-w-0 flex-1 items-center gap-1 ${atRedline ? "animate-pulse" : ""}`}
+      className={`flex min-w-0 flex-1 items-center gap-0.5 ${atRedline ? "animate-pulse" : ""}`}
       style={{ maxWidth: "55%" }}
     >
       {Array.from({ length: SHIFT_LIGHTS }).map((_, i) => {
@@ -25,9 +39,9 @@ function ShiftLights({ frac }: { frac: number }) {
         return (
           <span
             key={i}
-            className="aspect-square min-w-0 flex-1 rounded-full transition-colors"
+            className="min-w-0 flex-1 transition-colors"
             style={{
-              maxWidth: 11,
+              height: "clamp(6px, 9cqmin, 11px)",
               background: on ? color : "var(--color-surface-2)",
               boxShadow: on
                 ? `0 0 5px ${color}`
