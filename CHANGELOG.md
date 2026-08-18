@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.9.0] - 2026-08-18
+
 ### Changed
 
 - **The whole interface moves to a pit-wall graphic language.** Radii go
@@ -329,7 +331,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.8.0...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.9.0...HEAD
+[1.9.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.7.0...v1.8.0
 [1.7.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.6.0...v1.7.0
 [1.6.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.5.0...v1.6.0
