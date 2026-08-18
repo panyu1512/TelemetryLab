@@ -73,10 +73,15 @@ export const BAND_GAP = 4;
  * *colour* change and white simply reads as one step lighter. It also keeps the
  * banding identical across all four themes, which is what a banding device
  * carrying no meaning should do.
+ *
+ * Every value went up a step when the paper did. These are alphas, so the
+ * banding's *contrast* against a lighter ground falls unless the alpha rises —
+ * the tone shift has to stay the same perceived distance whatever the paper is
+ * mixed to, or the class boundary it draws goes with it.
  */
 export const GROUP_TONE: readonly (readonly [base: string, zebra: string])[] = [
-  ["", "bg-white/[0.035]"],
-  ["bg-white/[0.025]", "bg-white/[0.06]"],
+  ["", "bg-white/[0.05]"],
+  ["bg-white/[0.035]", "bg-white/[0.085]"],
 ];
 
 /** Every column in the timing table, in render order. */
@@ -254,11 +259,18 @@ const LAP_TIME_COLUMNS: readonly StandingsColumnId[] = ["best"];
  * arbitrary hue was the first thing to disappear in peripheral vision, which is
  * where this surface is read. A uniform scale takes it straight back under
  * that: at 0.6 a 3 px border draws at 1.8 px, thinner than the width already
- * rejected. Dividing by the scale inside the scaled box holds it at 3 px on
- * screen — the one measurement on this surface that means the same thing at
- * every size, because what it carries is presence rather than quantity.
+ * rejected. Dividing by the scale inside the scaled box holds it at its drawn
+ * width on screen — the one measurement on this surface that means the same
+ * thing at every size, because what it carries is presence rather than
+ * quantity.
+ *
+ * 4 px, not 3, now that the band above the group is a solid block of the same
+ * colour: the edge is the row's link back to that block, and at 3 px it read as
+ * a hairline that happened to match rather than as the same device one scale
+ * down. It is also the widest this can go — a fifth pixel starts eating the
+ * position column it sits against.
  */
-export const CLASS_EDGE_WIDTH = "calc(3px / var(--table-scale, 1))";
+export const CLASS_EDGE_WIDTH = "calc(4px / var(--table-scale, 1))";
 
 /**
  * Narrow the user's chosen columns to the ones that tell the truth in this

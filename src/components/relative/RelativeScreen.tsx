@@ -372,9 +372,17 @@ function RowInner({
       )}
 
       {/* driver name — plain `text` even for the player; the row's ground says
-          "you" (§ Two colour systems, rule 3) */}
+          "you" (§ Two colour systems, rule 3). Caps, matching Standings: the two
+          surfaces are read the same way and must not set the same fact two ways.
+
+          What does *not* cross over from Standings is the class-coloured block
+          behind the position. There the block is the row's tie back to a solid
+          class band, and position is the sort key; here the whole row already
+          wears the class as a wash and the number is *overall* position, which
+          is not what put the row where it is. A block would spend the loudest
+          device on the surface saying something the ground has already said. */}
       <div className="flex min-w-0 items-center gap-1">
-        <span className="truncate text-[13px] font-semibold text-text">
+        <span className="truncate text-[13px] font-bold uppercase tracking-[0.01em] text-text">
           {driver?.userName ?? `Car ${entry.carIdx}`}
         </span>
         {tag && (

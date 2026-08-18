@@ -178,11 +178,15 @@ describe("classRowFill", () => {
     expect(classRowFill(CLASS_RAMP[2], STOP)).toMatch(/transparent .+\)$/);
   });
 
-  it("is fainter than the Relative's full-row wash", () => {
-    // It sits directly behind the leading number now, so it can afford less
-    // than a ground spread across empty width.
-    expect(classRowFill(CLASS_RAMP[0], STOP)).toContain("12%");
-    expect(classTint(CLASS_RAMP[0])).toContain("14%");
+  it("stays a tint, where the band it answers to is solid", () => {
+    // The row's stripe and the group's band are the same colour said at two
+    // volumes: the band is the class colour outright, the stripe a whisper of
+    // it behind the leading number. If the stripe ever went solid too there
+    // would be no hierarchy left between a heading and the rows under it.
+    const f = classRowFill(CLASS_RAMP[0], STOP);
+    expect(f).toContain("color-mix");
+    expect(f).toContain("transparent");
+    expect(classBandFill(CLASS_RAMP[0])).not.toContain("color-mix");
   });
 
   it("takes a length, not a share of the row", () => {
@@ -209,9 +213,11 @@ describe("classBandFill", () => {
     expect(f).toContain(CLASS_RAMP[0]);
   });
 
-  it("sits a step above the rows it opens, and above the Relative's wash", () => {
-    expect(classBandFill(CLASS_RAMP[0])).toContain("22%");
-    expect(classRowFill(CLASS_RAMP[0], "1rem")).toContain("12%");
+  it("is the class colour outright — the rows it opens only tint it", () => {
+    // Masthead solid, rows striped. A block is the shape the eye finds in
+    // peripheral vision without being sent looking for a hue.
+    expect(classBandFill(CLASS_RAMP[0])).toBe(CLASS_RAMP[0]);
+    expect(classRowFill(CLASS_RAMP[0], "1rem")).toContain("color-mix");
     expect(classTint(CLASS_RAMP[0])).toContain("14%");
   });
 

@@ -59,19 +59,6 @@ export const CLASS_RAMP: readonly string[] = [
 const TINT_ALPHA = 0.14;
 
 /**
- * Alpha of the class band's ground, which covers the whole band row.
- *
- * A step above the rows' fill and above the Relative's wash, because the band
- * is a heading and the rows are the thing it heads. That is the whole hierarchy
- * on this surface: the group's masthead is a solid field of its colour, its
- * rows a stripe of the same colour at the leading edge. The band used to carry
- * a plain white wash with the rows' partial fill laid over its first column,
- * which read as a row that happened to be lighter rather than as the thing
- * opening the group.
- */
-const BAND_ALPHA = 0.22;
-
-/**
  * Strength of the class-colour fill behind a **Standings** row.
  *
  * Fainter than the Relative's full-row wash rather than stronger. The fill
@@ -79,8 +66,13 @@ const BAND_ALPHA = 0.22;
  * row's leading number — and a ground under a number it has to keep legible
  * can afford far less than one spread across empty width. It is a bed for the
  * position to sit on, not a bar.
+ *
+ * Lifted from 0.12 to 0.16 with the band going solid: the stripe is what ties a
+ * row back to the block of colour above it, and against a masthead at full
+ * strength the old value read as a smudge rather than as the same colour said
+ * quietly.
  */
-const FILL_ALPHA = 0.12;
+const FILL_ALPHA = 0.16;
 
 /**
  * The identity colour for the class at `index` in the field's class order.
@@ -156,15 +148,31 @@ export function classRowFill(color: string, extent: string): string {
 }
 
 /**
- * The ground under a class band: the class's colour across the whole row.
+ * The ground under a class band: the class's colour, **solid**, across the
+ * whole row.
  *
- * Full width, unlike the rows it opens. A band is a heading, and a heading that
- * carried the same clipped stripe as its rows read as one of them — the fill
- * stopped at the first column and left the rest on a plain white wash, so the
- * band's own colour was a detail rather than its subject. Running the colour
- * the length of the row makes the group legible as a block: masthead solid,
- * rows striped.
+ * It used to be a 22 % tint of the same hue, on the argument that identity
+ * colour whispers where status colour speaks. What that produced in a
+ * four-class field was four bands of roughly equal darkness whose hue you had
+ * to look *for*, in a list meant to be parsed without looking — the tint put
+ * the class's colour behind the band rather than making it the band.
+ *
+ * Solid inverts that: a group's masthead is a block of the class's colour, and
+ * the rows under it keep the clipped stripe they always had. Masthead solid,
+ * rows striped, is the hierarchy — and a block is the one shape the eye finds
+ * in peripheral vision without being sent.
+ *
+ * The cost is real and belongs here rather than in a commit message: filled
+ * identity is the loudest device on a surface whose rules ration fill to a
+ * single cell (`design.md` § Dense tabular overlays, rule 5). The band gets
+ * away with it because it is a *heading* — it carries no timing value a fill
+ * could be mistaken for, and there is exactly one per group. Nothing else on
+ * this surface may take a solid identity fill.
+ *
+ * Ink on top is {@link readableInk}'s problem, not this function's: a class
+ * colour can land anywhere on the wheel, so the band measures its fill rather
+ * than assuming the palette's dark ink will do.
  */
 export function classBandFill(color: string): string {
-  return tint(color, BAND_ALPHA);
+  return color;
 }
