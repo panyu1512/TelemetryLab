@@ -25,7 +25,7 @@ export function PosChange({ value }: { value: number }) {
   // arrow with its count without spending the surface's one fill (rule 5).
   return (
     <span
-      className="flex items-center justify-center gap-px rounded-[3px] px-0.5 py-0.5 text-[11px] font-bold leading-none tnum"
+      className="flex items-center justify-center gap-px rounded-ctl px-0.5 py-0.5 text-[11px] font-bold leading-none tnum"
       style={{ color, background: tint(color, 0.14) }}
       title={`${up ? "Gained" : "Lost"} ${Math.abs(value)} since start`}
     >
@@ -61,7 +61,7 @@ export function IRatingCell({
     // the ratings themselves on different verticals, which is the one thing a
     // column of numbers must never do.
     <div
-      className="tnum flex w-full items-baseline justify-end gap-1 rounded-[3px] px-1 py-0.5"
+      className="tnum flex w-full items-baseline justify-end gap-1 rounded-ctl px-1 py-0.5"
       style={{ background: "rgb(255 255 255 / 0.05)" }}
     >
       <span className="text-[12px] font-semibold text-text">
@@ -97,7 +97,7 @@ export function LicenseBadge({
   // together or not at all — at a fraction of a fill's weight.
   return (
     <span
-      className="tnum inline-flex items-center rounded-[3px] px-1 py-0.5 text-[11px] font-bold leading-none"
+      className="tnum inline-flex items-center rounded-ctl px-1 py-0.5 text-[11px] font-bold leading-none"
       style={{ color, background: tint(color, 0.16) }}
       title={`${group} ${safetyRating.toFixed(2)}`}
     >
@@ -429,7 +429,7 @@ export function LapCell({
   if (fill) {
     return (
       <span
-        className={`justify-self-end rounded-[3px] px-1.5 py-0.5 text-right text-[12px] font-bold tabular-nums tnum ${flash ? "sec-flash" : ""}`}
+        className={`justify-self-end rounded-ctl px-1.5 py-0.5 text-right text-[12px] font-bold tabular-nums tnum ${flash ? "sec-flash" : ""}`}
         style={{ background: fill, color: "var(--color-on-accent)" }}
         title={fillTitle}
       >
