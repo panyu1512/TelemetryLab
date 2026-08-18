@@ -50,6 +50,14 @@ Four runtime themes (Carbon, Midnight, Graphite, Endurance) vary the temperature
 of the neutrals and the exact accent hues. **They never vary what a colour
 means.**
 
+The neutrals sit a step deeper than a graphite panel would want, and
+`border-strong` a step lighter, because this surface carries **solid** colour
+blocks: a block only reads as a block against a ground darker than itself, and
+at 2 px radii the 1 px edge is what draws a control's shape, so it has to be
+visible on its own. `--color-timing-bg` follows at 68 % of `bg` toward black
+rather than 30 % — the ground under the field is no longer the only thing
+separating one class group from the next.
+
 | Token | Meaning | Never used for |
 | --- | --- | --- |
 | `--color-accent` | positive: personal best, faster, healthy | chrome, decoration |
@@ -99,15 +107,17 @@ standings table stops being readable at a glance.
 
    `carClassColor` is still on the wire and still unused for display. Do not
    add it to `tokens.css`, and do not let a theme try to correct it.
-2. **Identity colour is the leading edge *and* the row's ground.** The edge —
-   3 px on a row ([`StandingsRow.tsx`](src/components/standings/StandingsRow.tsx)),
-   the same device one scale up on a class band, plus the chip that *is* the
-   band's subject — is joined by the same colour behind the row.
+2. **Identity colour is the leading edge, the row's ground, and the two blocks
+   that head a group.** The edge —
+   4 px on a row ([`StandingsRow.tsx`](src/components/standings/StandingsRow.tsx)),
+   the same device one scale up on a class band — is joined by the same colour
+   behind the row, by the band's solid fill, and by the block behind each row's
+   position number.
 
    The two surfaces carry that ground differently, and the difference is the
    shape of the tables rather than a loose end. **Standings runs the colour in
    from the left edge and stops it hard at the end of the first column**, at
-   12 %: its rows come in runs of the same class stacked into groups, so the
+   16 %: its rows come in runs of the same class stacked into groups, so the
    fills line up into a bar of colour down the leading edge of each group that
    the eye picks up without being asked to look. **Relative washes the whole
    row at 14 %**: it is a handful of rows sorted by where cars physically are,
@@ -145,11 +155,30 @@ standings table stops being readable at a glance.
    to end: identity and status are never layered into the same statement. It is
    enforced in the two row components, not by convention.
 
-   **Identity colour no longer fills anything.** The class band's chip was the
-   one exception, and it went when the band took the rows' fill: an opaque pill
-   sits exactly where that fill goes. Identity is now an edge, a low-alpha fill,
-   and ink — never a fill taking contrasting text. See § Dense tabular overlays
-   rule 11, whose premise this also retired.
+   **Identity colour fills exactly two things, and both are headings.** The
+   class band is a solid block of its class's colour, and the first cell of
+   every row under it — the position number — is the same block one column
+   wide. Nothing else on the surface may take a solid identity fill.
+
+   This reverses the previous rule, which quarantined identity to edges, tints
+   and ink. What retired it is what a four-class field actually looked like
+   under it: four bands of roughly equal darkness whose hue you had to look
+   *for*, in a list meant to be parsed without looking. A 22 % tint puts the
+   class's colour *behind* the band rather than making it the band. Solid
+   inverts that — masthead a block, rows striped — and a block is the one shape
+   the eye finds in peripheral vision unprompted.
+
+   The position block is the row's half of the same statement. Rank and class
+   are the two facts taken off a row without reading it, and this is the one
+   cell where they can be a single glance.
+
+   The cost is that identity now spends the loudest device on the surface, which
+   rule 5 of § Dense tabular overlays rations. It is affordable only because
+   both carriers are **headings** — neither holds a timing value a fill could
+   be mistaken for, and there is exactly one band per group and one block per
+   row. Ink on both is measured by `readableInk`, not declared: a class colour
+   can land anywhere on the wheel, so neither white nor `on-accent` can be
+   assumed. See § Dense tabular overlays rule 11, whose premise this restores.
 3. **"This is you" is `primary`, and it is the row's ground, not its ink.**
    `bg-primary/10` plus an inset `primary/35` ring. This is the "selection"
    sense of `primary` in the table above, which is why the token row now says
@@ -164,9 +193,10 @@ other direction.
 
 ## Typography
 
-- **Display and body: Inter** (`--font-sans`), weights 400/500/600. A
+- **Display and body: Inter** (`--font-sans`), weights 400/500/600/700. A
   single-family system — this genre allows it, and a second display face on a
-  panel this dense would be noise.
+  panel this dense would be noise. 700 is reserved: CTAs, headings, and the
+  values on the timing surfaces.
 - **Mono** (`--font-mono`) is the third voice, and it is *semantic*, not
   stylistic. It marks **instrument nomenclature**: measured values, coordinates,
   counts, protocol versions, log lines, channel labels, status readouts.
@@ -176,6 +206,14 @@ other direction.
 - Numerals in any column or ticking value carry `.tnum`.
 - Micro-labels are mono, uppercase, `tracking-[0.12em]`–`[0.14em]`, `text-faint`.
 - **Headings are roman.** No italic display type anywhere.
+- **Caps are structural, not emphatic.** Three things are set in capitals and
+  nothing else is: mono micro-labels, section and page headings, and CTAs
+  (§ CTA voice). The driver-name column on both timing surfaces is the one
+  data field in caps, and it is there to hold a single optical weight down the
+  only ragged column on the surface. It costs something real — caps are read by
+  outline, lose the ascender/descender silhouette that makes a name
+  recognisable at a glance, and run ~12 % wider, so the one column allowed to
+  truncate truncates sooner. Nothing else earns that trade.
 
 ## Spacing
 
@@ -223,11 +261,15 @@ and a stable one-line helper row, so neither appearing reflows the panel.
 
 ## CTA voice
 
-- Primary: `bg-primary` fill + `text-on-accent`, `--radius-ctl` (6 px), label
+- Primary: `bg-primary` fill + `text-on-accent`, `--radius-ctl` (2 px), label
   is a verb phrase, always `whitespace-nowrap`.
 - Secondary: `bg-surface-2` + 1 px `--color-border`, same geometry.
 - Destructive: secondary geometry; `danger` arrives only on hover, never at
   rest.
+- **Every variant is cut on `--shear` and set in caps** — 11 px, bold,
+  `tracking-[0.06em]`. Caps carry no descenders and read a size larger than
+  they measure, so the label keeps the row's height while gaining the weight
+  the cut asks for. See § The mark rule 5 for where the cut may and may not go.
 
 ## The mark
 
@@ -263,6 +305,23 @@ Four rules:
    cap height sets the mark visibly short.
 4. **It is always `aria-hidden`.** The product name is next to it in every
    place it appears.
+5. **The 13.5° shear is a system device, and it stops at the edge of the
+   data.** `--shear` and the `.shear` pair in
+   [`src/styles.css`](src/styles.css) put the mark's own cut on the app's
+   chrome: the title bar's status readout, the profile chip, the section
+   legends, every CTA. The timing tables, the widgets and anything drawn over
+   the game never take it.
+
+   The boundary is not taste. A driver reading a lap time in peripheral vision
+   needs the column edges vertical, and a surface where half the boxes lean is
+   a surface where nothing lines up. So the frame is cut and the instruments
+   are square.
+
+   The pair is an outer skew and a counter-skew on its single child, so the
+   *box* is a parallelogram and the type inside stays upright — a sheared
+   letterform is a different typeface, not a graphic device. Anything sheared
+   needs ~0.24 × its own height of horizontal clearance, or its corners graze
+   a neighbour.
 
 `public/favicon.svg` is the source. The platform icons in `src-tauri/icons` are
 generated from it with `npm run tauri icon public/favicon.svg`;
@@ -277,7 +336,7 @@ the nav and title bar inline the two paths so they can take `currentColor`.
 - Inter + mono, with mono reserved for instrument nomenclature.
 - The mark, and the four rules under § The mark.
 - The control contract and the 8 states.
-- 6 px controls / 10 px cards / 12 px panels.
+- 2 px radii throughout — controls, cards and panels alike.
 - `.tnum` on every column of numbers.
 
 ## What surfaces MAY differ on
@@ -289,7 +348,8 @@ the nav and title bar inline the two paths so they can take `currentColor`.
 ## Per-surface allowances
 
 - **Manager chrome** speaks the instrument voice: mono channel labels, the
-  fading `.header-rule` as section divider, the three-state sidebar rail.
+  `.section-block` legend on the shear, the three-state sidebar rail, and the
+  shear on its chips and CTAs (§ The mark rule 5).
 - **Overlay widgets** are legibility-first over footage: `.timing-surface`
   paper (§ Dense tabular overlays rule 9), text-shadow, no scrollbars, no
   frame. They must never gain manager chrome.
@@ -390,11 +450,19 @@ the fact that a header band and a row cost the same height.
 4. **Compound cells over extra columns.** A value and its delta are one cell in
    two voices — mono value in `text`, delta in `accent` or `danger` — not two
    columns. iRating + its change is the canonical case.
-5. **Fill is rationed to one meaning per surface; tint is not fill.** A *fill*
+5. **Fill is rationed by meaning, not by count; tint is not fill.** A *fill*
    is opaque and takes contrasting ink, and it is the loudest tool on this
-   surface — on Standings it is spent on fastest-lap-in-class and nothing else.
-   Filled cells obey `on-accent` (§ Theme, rule 1), with the one exception in
-   rule 11.
+   surface. Standings spends it on exactly three things, and each one is a
+   different kind of statement:
+
+   - **status** — fastest-lap-in-class, the one *computed* fill, obeying
+     `on-accent` (§ Theme, rule 1);
+   - **identity, as a heading** — the class band and the position block, both
+     taking measured ink per rule 11.
+
+   Nothing else may fill. The test is whether the cell is a heading or the
+   surface's single graded value; a fill on anything that merely reports is
+   ink spent where a colour of text would have done.
 
    A **tint** is a different device: the same hue as its ink, at ≤ 18 % alpha,
    behind that ink. It does not compete with a fill for attention; it *binds a
@@ -513,18 +581,22 @@ the fact that a header band and a row cost the same height.
     at no cost. `sector-purple` still colours the digits themselves, because a
     session-best lap is an event rather than a comparison.
 
-11. **Nothing puts ink on identity colour any more.** This rule used to say
-    that the class chip measured its own fill's WCAG luminance and picked dark
-    or white ink, because `carClassColor` came from iRacing and could land on a
-    navy that dark ink vanishes into — the one place in the app where ink on a
-    fill was computed rather than declared.
+11. **Ink on identity colour is measured, never declared.** The class band and
+    the position block are solid class colour (§ Two colour systems rule 2), so
+    both print in ink chosen from their own fill's WCAG luminance by
+    `readableInk` in [`lib/contrast.ts`](src/lib/contrast.ts) — the only place
+    in the app where ink on a fill is computed.
 
-    Both halves of that premise are gone. § Two colour systems rule 1 moved
-    class colour into a palette this app owns and can therefore reason about,
-    and rule 2's band fill replaced the filled chip with ink. `readableInk` in
-    [`lib/contrast.ts`](src/lib/contrast.ts) is kept, tested and currently
-    uncalled: the moment identity colour fills anything again it is the correct
-    answer, and the argument for it is worth not having to rediscover.
+    It has to be. Even inside a palette this app owns, the five-colour ramp
+    spans violet at L≈0.24 and lime at L≈0.65: white reads on one and vanishes
+    on the other, and `on-accent` does the reverse. A single declared ink is
+    wrong for half the ramp whichever one you pick.
+
+    One consequence worth stating, because it looks like an inconsistency and
+    is not: **on a solid band, overall-best stops being purple ink and becomes
+    a purple fill.** `sector-purple` on lime or on violet is unreadable, so the
+    mark moves from the ink to a ground behind it. Same token, same meaning,
+    legible on any class colour the sim can hand us.
 
 12. **A column that would lie in this session is not shown in this session.**
     Almost every number on these two surfaces is a race concept wearing a
@@ -569,28 +641,29 @@ One line opening each class group on Standings:
 `[GT3] · CARS 6 · SOF 4.1k · BEST 2:06.652`.
 
 - **The band is part of its group, not furniture above it — and it is the
-  heading, so it carries more of the colour than the rows do.** It takes the
-  same leading edge as a row, and then the class colour across its whole width
-  (`classBandFill`, 22 %) where a row takes it only to the end of its first
-  column (`classRowFill`, 12 %). That difference is the hierarchy: masthead
-  solid, rows striped, the group legible as one block.
+  heading, so it carries the colour outright where the rows only tint it.** It
+  takes the same leading edge as a row, and then the class colour **solid**
+  across its whole width (`classBandFill`) where a row takes it to the end of
+  its first column at 16 % (`classRowFill`). That difference is the hierarchy:
+  masthead solid, rows striped, the group legible as one block.
 
-  It briefly carried the rows' clipped fill instead, stopping at the same
-  `firstColumnStop`, over the plain white wash the band used to sit on. That
-  lined the fills up but made the band read as a row that happened to be
-  lighter — its own colour a detail rather than its subject.
+  It was a 22 % tint of the same hue for exactly one reason — that identity
+  colour whispers where status colour speaks. What that produced in a
+  four-class field was four bands of roughly equal darkness whose hue you had
+  to look *for*. The tint put the class's colour behind the band; solid makes
+  it the band.
 
-  **The class name used to be a filled chip and is now ink, sitting on the
-  fill.** The pill sat exactly where the fill goes and would have hidden it, and
-  of the two the fill is the one that makes the band belong to its group. As ink
-  the name does not hide anything: it reads straight off the tint, the same way
-  a row's leading number reads off the tint behind it, and that parallel is the
-  alignment. Its `ml-1` matches the row's `px-1`, so the band's content begins
-  exactly where the field's does — indenting it past the fill instead left a
-  block of empty colour at the head of every group and read as a different
-  kind of furniture, which is the opposite of the point.
-- **`BEST` turns `sector-purple`** when that class's fastest lap is also the
-  session's, which is the same meaning purple carries in every row.
+  **Everything on the band prints in measured ink** (§ Dense tabular overlays
+  rule 11), including the class name — which was ink in the class's own colour
+  and could not stay that way once the fill became the same colour. The
+  micro-labels take the same ink held back to 72 % rather than `faint`, which
+  is tuned against the app's dark surfaces and lands near invisible on a light
+  fill. The name's `ml-1` still matches the row's `px-1`, so the band's content
+  begins exactly where the field's does.
+- **`BEST` takes a `sector-purple` fill** when that class's fastest lap is also
+  the session's — the same meaning purple carries in every row, moved from the
+  ink to a ground behind it because purple on lime is not a colour anyone can
+  read. See rule 11.
 - **It is a heading, so it is set apart from its group, not flush against it.**
   `CLASS_BAND_H` 30 plus `BAND_GAP` 4: a band sitting directly on the first row
   reads as that group's first entry rather than as the thing that opens it. Its
@@ -871,6 +944,17 @@ line of session state, per-class mastheads, and compound cells bound by a tint
 system's. Rule 2 was rewritten rather than patched, because the first pass had
 banned the class band on grounds (separation) that turned out not to be the
 band's actual job (per-class data).
+
+**Pit Wall, 2026-08-18.** The near-square radii, the 13.5° shear as a system
+device, the solid class band, the position block, the caps on CTAs and driver
+names, and the deepened neutrals were chosen from four directions drawn on a
+design canvas and reviewed side by side against the shipped v1.8 UI. Nothing
+was taken from an outside reference on this pass: the shear is the app's own
+mark (§ The mark), and the rest is this system's tokens re-rationed. The
+sections it rewrote — § Two colour systems rule 2, § Dense tabular overlays
+rules 5 and 11, § The class band — were rewritten rather than patched, because
+each had banned in principle the thing the direction turned out to need, and a
+patch would have left the ban standing next to its exception.
 
 ## Known follow-ups
 
