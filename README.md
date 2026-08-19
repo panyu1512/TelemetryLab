@@ -39,7 +39,7 @@
 <br>
 
 <div align="center">
-  <img src="site/assets/standings-compact.png" alt="TelemetryLab dashboard" width="800">
+  <img src="site/assets/standings-compact.png" alt="The TelemetryLab standings overlay: a session strip, then GT3 and GT4 class groups with the full running order under each" width="800">
 </div>
 
 <br>
