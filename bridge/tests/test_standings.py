@@ -2,9 +2,11 @@
 
 from __future__ import annotations
 
+from telemetrylab.enums import CAR_FLAG_DISQUALIFY, CAR_FLAG_REPAIR
 from telemetrylab.models import CarTiming
 from telemetrylab.parsing import parse_session_info
 from telemetrylab.standings import (
+    RECENT_LAPS,
     StandingsEngine,
     _projected_irating_changes,
     _sort_key,
@@ -25,6 +27,7 @@ def _timing(
     surface=3,
     pit=False,
     tire=0,
+    flags=None,
 ):
     return CarTiming(
         car_idx=car_idx,
@@ -44,6 +47,7 @@ def _timing(
         ],
         timestamp=0,
         tire_compound=tire,
+        session_flags=flags,
     )
 
 
@@ -223,3 +227,137 @@ class TestStandingsEngine:
         session = _session(drivers=[make_driver(0, is_pace_car=True)])
         snap = StandingsEngine().compute(session, _drivers_by_idx(session), {}, 0)
         assert snap.entries == []
+
+
+def _entry(snap, car_idx):
+    return next(e for e in snap.entries if e.car_idx == car_idx)
+
+
+class TestRecentLaps:
+    def test_records_each_new_lap_once(self):
+        session = _session()
+        engine = StandingsEngine()
+        dbi = _drivers_by_idx(session)
+        snap = None
+        # The same last-lap value on several ticks is one lap, not several.
+        for tick, last in enumerate([92.0, 92.0, 92.0, 91.5, 91.5, 93.25]):
+            snap = engine.compute(session, dbi, {0: _timing(0, position=1, last=last)}, tick)
+        assert _entry(snap, 0).recent_laps == [92.0, 91.5, 93.25]
+
+    def test_keeps_only_the_latest_laps_oldest_first(self):
+        session = _session()
+        engine = StandingsEngine()
+        dbi = _drivers_by_idx(session)
+        snap = None
+        laps = [90.0 + i for i in range(RECENT_LAPS + 3)]
+        for tick, last in enumerate(laps):
+            snap = engine.compute(session, dbi, {0: _timing(0, position=1, last=last)}, tick)
+        assert _entry(snap, 0).recent_laps == laps[-RECENT_LAPS:]
+
+    def test_no_valid_time_records_nothing(self):
+        session = _session()
+        snap = StandingsEngine().compute(
+            session, _drivers_by_idx(session), {0: _timing(0, position=1, last=None)}, 0
+        )
+        assert _entry(snap, 0).recent_laps == []
+
+    def test_new_session_starts_a_fresh_trend(self):
+        engine = StandingsEngine()
+        first = _session()
+        engine.compute(first, _drivers_by_idx(first), {0: _timing(0, position=1, last=92.0)}, 0)
+        second = _session(session_num=1, sessions=[{}, {"SessionType": "Race"}])
+        snap = engine.compute(
+            second, _drivers_by_idx(second), {0: _timing(0, position=1, last=95.0)}, 1
+        )
+        assert _entry(snap, 0).recent_laps == [95.0]
+
+    def test_on_the_wire(self):
+        session = _session()
+        snap = StandingsEngine().compute(
+            session, _drivers_by_idx(session), {0: _timing(0, position=1, last=92.0)}, 0
+        )
+        assert snap.to_dict()["entries"][0]["recentLaps"] == [92.0]
+
+
+class TestCarFlags:
+    def test_disqualified_and_meatball_from_the_per_car_mask(self):
+        session = _session()
+        timings = {
+            0: _timing(0, position=1, flags=0),
+            1: _timing(1, position=2, flags=CAR_FLAG_DISQUALIFY),
+            2: _timing(2, position=3, flags=CAR_FLAG_REPAIR),
+        }
+        snap = StandingsEngine().compute(session, _drivers_by_idx(session), timings, 0)
+        assert (_entry(snap, 0).is_disqualified, _entry(snap, 0).needs_repair) == (False, False)
+        assert _entry(snap, 1).is_disqualified is True
+        assert _entry(snap, 2).needs_repair is True
+
+    def test_missing_mask_means_no_flags(self):
+        session = _session()
+        snap = StandingsEngine().compute(
+            session, _drivers_by_idx(session), {0: _timing(0, position=1, flags=None)}, 0
+        )
+        wire = snap.to_dict()["entries"][0]
+        assert wire["isDisqualified"] is False
+        assert wire["needsRepair"] is False
+
+
+class TestRaceEnd:
+    """The final lap and the finish are derived from SessionFlags + lap counts."""
+
+    def _tick(self, engine, *, flags, state, laps):
+        session = _session(session_flags=flags)
+        session.session_state = state
+        timings = {
+            idx: _timing(idx, position=pos, lap=lap) for pos, (idx, lap) in enumerate(laps, 1)
+        }
+        return engine.compute(session, _drivers_by_idx(session), timings, 0)
+
+    def test_nothing_before_the_white(self):
+        snap = self._tick(StandingsEngine(), flags=0x4, state=4, laps=[(0, 20), (1, 20)])
+        assert not any(e.on_final_lap or e.has_finished for e in snap.entries)
+
+    def test_the_leader_is_on_its_final_lap_the_moment_the_white_shows(self):
+        engine = StandingsEngine()
+        # The leader's counter has already ticked to 21 on the white frame.
+        snap = self._tick(engine, flags=0x2, state=4, laps=[(0, 21), (1, 20), (2, 19)])
+        assert _entry(snap, 0).on_final_lap is True
+        assert _entry(snap, 1).on_final_lap is False
+        # Car 1 crosses the line: its final lap starts. Car 2 (lapped) too, later.
+        snap = self._tick(engine, flags=0x2, state=4, laps=[(0, 21), (1, 21), (2, 19)])
+        assert _entry(snap, 1).on_final_lap is True
+        assert _entry(snap, 2).on_final_lap is False
+        snap = self._tick(engine, flags=0x2, state=4, laps=[(0, 21), (1, 21), (2, 20)])
+        assert _entry(snap, 2).on_final_lap is True
+
+    def test_finish_follows_the_chequer_car_by_car(self):
+        engine = StandingsEngine()
+        self._tick(engine, flags=0x2, state=4, laps=[(0, 21), (1, 21), (2, 20)])
+        # The leader takes the chequer: it is done, everyone else is on the last lap.
+        snap = self._tick(engine, flags=0x1, state=5, laps=[(0, 22), (1, 21), (2, 20)])
+        assert _entry(snap, 0).has_finished is True
+        assert _entry(snap, 0).on_final_lap is False
+        assert _entry(snap, 1).on_final_lap is True
+        assert _entry(snap, 1).has_finished is False
+        # Car 1 crosses the line after the chequer; car 2 has not yet.
+        snap = self._tick(engine, flags=0x1, state=5, laps=[(0, 22), (1, 22), (2, 20)])
+        assert _entry(snap, 1).has_finished is True
+        assert _entry(snap, 2).on_final_lap is True
+        assert snap.to_dict()["entries"][1]["hasFinished"] is True
+
+    def test_a_chequer_without_a_white_still_counts(self):
+        # Connected during the last lap: the white was never seen.
+        engine = StandingsEngine()
+        snap = self._tick(engine, flags=0x1, state=5, laps=[(0, 22), (1, 21)])
+        assert _entry(snap, 0).has_finished is True
+        assert _entry(snap, 1).on_final_lap is True
+
+    def test_a_new_session_forgets_the_flags(self):
+        engine = StandingsEngine()
+        self._tick(engine, flags=0x1, state=5, laps=[(0, 22), (1, 21)])
+        session = _session(session_num=1, sessions=[{}, {"SessionType": "Race"}])
+        snap = engine.compute(
+            session, _drivers_by_idx(session), {0: _timing(0, position=1, lap=1)}, 0
+        )
+        assert _entry(snap, 0).has_finished is False
+        assert _entry(snap, 0).on_final_lap is False

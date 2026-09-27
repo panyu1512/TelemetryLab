@@ -22,6 +22,7 @@ from .models import (
     ClassEntry,
     DriverEntry,
     SessionInfo,
+    TireCompound,
     TrackInfo,
     WeatherInfo,
 )
@@ -239,6 +240,27 @@ def parse_drivers(driver_info: dict[str, Any], category: str) -> list[DriverEntr
     return drivers
 
 
+def parse_tire_compounds(driver_info: dict[str, Any]) -> list[TireCompound]:
+    """The series' tyres by index, from ``DriverInfo:DriverTires``.
+
+    Added to the session string in the 2025 S3 build: each entry pairs a
+    ``TireIndex`` (the number ``CarIdxTireCompound`` reports) with a
+    ``TireCompoundType`` name — "Hard", "Soft", "Qualifying", "Wet",
+    "All-Purpose" and so on. Older builds and cars without the list simply yield
+    nothing, and the timing screen falls back to printing the index.
+    """
+    out: list[TireCompound] = []
+    for tyre in driver_info.get("DriverTires", []) or []:
+        if not isinstance(tyre, dict):
+            continue
+        index = _int(tyre.get("TireIndex"), -1)
+        kind = str(tyre.get("TireCompoundType", "") or "").strip().strip("\"'")
+        if index < 0 or not kind:
+            continue
+        out.append(TireCompound(index=index, type=kind))
+    return out
+
+
 def _build_classes(drivers: list[DriverEntry]) -> list[ClassEntry]:
     """Group the roster by car class and compute a per-class SOF."""
     buckets: dict[int, list[DriverEntry]] = {}
@@ -394,4 +416,5 @@ def parse_session_info(raw: dict[str, Any]) -> SessionInfo:
         if raw.get("car_est_lap_time") is not None
         else _num(driver_info.get("DriverCarEstLapTime")),
         sector_starts=sector_starts,
+        tire_compounds=parse_tire_compounds(driver_info),
     )

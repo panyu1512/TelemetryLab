@@ -212,8 +212,12 @@ class MockField:
                 "CarIdxOnPitRoad",
                 "CarIdxTrackSurface",
                 "CarIdxTireCompound",
+                "CarIdxSessionFlags",
             )
         }
+        # One car at a time carries the meatball, rotating every two minutes, so
+        # the per-car flag path is exercised end to end rather than always zero.
+        meatball_idx = int(t // 120) % n
         for c in self.cars:
             prog = c.progress(t)
             lap = int(prog)
@@ -232,6 +236,7 @@ class MockField:
             arr["CarIdxTrackSurface"][c.idx] = 1 if on_pit else 3
             # Alternate compound every ~20 laps to exercise the tyre column.
             arr["CarIdxTireCompound"][c.idx] = (lap // 20) % 2
+            arr["CarIdxSessionFlags"][c.idx] = 0x00100000 if c.idx == meatball_idx else 0
         return arr
 
     def session_raw(self, t: float, active_state: int, flags: int) -> dict[str, Any]:
@@ -253,6 +258,11 @@ class MockField:
                 "DriverCarRedLine": 7800,
                 "DriverCarEstLapTime": self.player.pace,
                 "Drivers": [c.driver_dict() for c in self.cars],
+                # What CarIdxTireCompound's 0 and 1 mean in this series.
+                "DriverTires": [
+                    {"TireIndex": 0, "TireCompoundType": "Hard"},
+                    {"TireIndex": 1, "TireCompoundType": "Soft"},
+                ],
             },
             "sessions": [
                 {

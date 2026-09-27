@@ -83,3 +83,20 @@ def decode_flags(mask: int | None) -> list[str]:
     if not mask:
         return []
     return [name for bit, name in SESSION_FLAGS if mask & bit]
+
+
+# ---------------------------------------------------------------------------
+# CarIdxSessionFlags — the same irsdk_Flags layout, one mask per car.
+#
+# The sim only puts *driver-directed* flags in the per-car mask: black, blue,
+# the meatball and the DQ. The race-wide ones — white, chequered — are never in
+# it; they live in ``SessionFlags`` alone, which is why the standings engine
+# works out each car's final lap itself rather than reading a bit.
+# ---------------------------------------------------------------------------
+CAR_FLAG_DISQUALIFY: Final[int] = 0x00020000
+CAR_FLAG_REPAIR: Final[int] = 0x00100000
+
+
+def has_car_flag(mask: int | None, bit: int) -> bool:
+    """Whether ``bit`` is set in a car's ``CarIdxSessionFlags`` mask."""
+    return bool(mask) and bool(mask & bit)

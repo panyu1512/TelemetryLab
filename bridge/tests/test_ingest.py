@@ -23,6 +23,7 @@ def _arrays(**overrides):
         "CarIdxOnPitRoad": [False, False, True],
         "CarIdxTrackSurface": [3, 3, 1],
         "CarIdxTireCompound": [0, 0, 1],
+        "CarIdxSessionFlags": [0, 0x00100000, 0x00020000],
     }
     base.update(overrides)
     return base
@@ -140,5 +141,22 @@ class TestIngestCarTimings:
             "CarIdxLap",
             "CarIdxEstTime",
             "CarIdxTireCompound",
+            "CarIdxSessionFlags",
         ):
             assert var in CAR_IDX_VARS
+
+    def test_per_car_session_flags_pass_through_raw(self):
+        out = ingest_car_timings(
+            _arrays(), timestamp=0, player_car_idx=0, est_lap_time=90.0, include=[0, 1, 2]
+        )
+        assert out[0].session_flags == 0
+        assert out[1].session_flags == 0x00100000
+        assert out[2].session_flags == 0x00020000
+
+    def test_missing_session_flags_array_is_none(self):
+        arrays = _arrays()
+        del arrays["CarIdxSessionFlags"]
+        out = ingest_car_timings(
+            arrays, timestamp=0, player_car_idx=0, est_lap_time=90.0, include=[1]
+        )
+        assert out[1].session_flags is None

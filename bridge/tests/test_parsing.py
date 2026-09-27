@@ -15,6 +15,7 @@ from telemetrylab.parsing import (
     _num,
     parse_drivers,
     parse_session_info,
+    parse_tire_compounds,
     strength_of_field,
 )
 
@@ -302,3 +303,41 @@ class TestParseSessionInfo:
         raw["driver_info"].pop("DriverCarIdx")
         raw["player_car_idx"] = 4
         assert parse_session_info(raw).driver_car_idx == 4
+
+
+class TestTireCompounds:
+    def test_pairs_each_index_with_its_type(self):
+        info = {
+            "DriverTires": [
+                {"TireIndex": 0, "TireCompoundType": "Hard"},
+                {"TireIndex": 1, "TireCompoundType": "Wet"},
+            ]
+        }
+        out = parse_tire_compounds(info)
+        assert [(t.index, t.type) for t in out] == [(0, "Hard"), (1, "Wet")]
+
+    def test_quoted_yaml_values_are_unquoted(self):
+        info = {"DriverTires": [{"TireIndex": "2", "TireCompoundType": '"Soft"'}]}
+        out = parse_tire_compounds(info)
+        assert [(t.index, t.type) for t in out] == [(2, "Soft")]
+
+    def test_older_builds_without_the_list_yield_nothing(self):
+        assert parse_tire_compounds({}) == []
+        assert parse_tire_compounds({"DriverTires": None}) == []
+
+    def test_malformed_entries_are_skipped(self):
+        info = {
+            "DriverTires": [
+                "Hard",
+                {"TireIndex": -1, "TireCompoundType": "Soft"},
+                {"TireIndex": 0, "TireCompoundType": ""},
+                {"TireIndex": 1, "TireCompoundType": "Medium"},
+            ]
+        }
+        assert [(t.index, t.type) for t in parse_tire_compounds(info)] == [(1, "Medium")]
+
+    def test_session_info_carries_them_on_the_wire(self):
+        raw = make_session_raw()
+        raw["driver_info"]["DriverTires"] = [{"TireIndex": 0, "TireCompoundType": "Hard"}]
+        wire = parse_session_info(raw).to_dict()
+        assert wire["tireCompounds"] == [{"index": 0, "type": "Hard"}]

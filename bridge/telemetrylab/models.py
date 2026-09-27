@@ -152,6 +152,23 @@ class ClassEntry:
 
 
 @dataclass(slots=True)
+class TireCompound:
+    """One tyre the series runs, from ``DriverInfo:DriverTires[]``.
+
+    ``CarIdxTireCompound`` is only an index, and what an index means varies by
+    series — 0 is a hard in one and a wet in another. Since the 2025 S3 build
+    the session string names each one, so this is the table that turns the index
+    into something a driver can read.
+    """
+
+    index: int  # TireIndex — what CarIdxTireCompound holds
+    type: str  # TireCompoundType, as iRacing spells it: "Hard", "Soft", "Wet", …
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"index": self.index, "type": self.type}
+
+
+@dataclass(slots=True)
 class SessionInfo:
     """A snapshot of the whole session: what/where/when + the roster."""
 
@@ -181,6 +198,9 @@ class SessionInfo:
     # Sector boundaries as lap-distance fractions (from SplitTimeInfo). Static per
     # track/config; the standings engine times sectors against these.
     sector_starts: list[float] = field(default_factory=list)
+    # The series' tyres by index (DriverInfo:DriverTires). Empty on a build or a
+    # car that doesn't publish them; the UI then falls back to the bare index.
+    tire_compounds: list[TireCompound] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -207,6 +227,7 @@ class SessionInfo:
             "carRedlineRpm": self.car_redline_rpm,
             "carEstLapTime": self.car_est_lap_time,
             "sectorStarts": self.sector_starts,
+            "tireCompounds": [c.to_dict() for c in self.tire_compounds],
         }
 
 
@@ -237,6 +258,7 @@ class CarTiming:
     track_surface_label: str
     timestamp: int  # server ms when sampled
     tire_compound: int | None = None  # CarIdxTireCompound (series-specific int)
+    session_flags: int | None = None  # CarIdxSessionFlags (irsdk_Flags, per car)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -255,6 +277,7 @@ class CarTiming:
             "trackSurfaceLabel": self.track_surface_label,
             "timestamp": self.timestamp,
             "tireCompound": self.tire_compound,
+            "sessionFlags": self.session_flags,
         }
 
 
@@ -324,6 +347,16 @@ class StandingsEntry:
     tire_compound: int | None = None  # direct: CarIdxTireCompound (series-specific)
     tire_laps: int = 0  # derived: laps on the current tyre set
 
+    # --- driver-directed flags and the end of the race ----------------------
+    is_disqualified: bool = False  # direct: CarIdxSessionFlags & disqualify
+    needs_repair: bool = False  # direct: CarIdxSessionFlags & repair (meatball)
+    on_final_lap: bool = False  # derived: crossed the line after the leader's white
+    has_finished: bool = False  # derived: crossed the line after the chequer
+
+    # --- lap trend -------------------------------------------------------------
+    # derived: the car's last completed laps, oldest first, at most RECENT_LAPS.
+    recent_laps: list[float] = field(default_factory=list)
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "carIdx": self.car_idx,
@@ -362,6 +395,11 @@ class StandingsEntry:
             "isLapped": self.is_lapped,
             "tireCompound": self.tire_compound,
             "tireLaps": self.tire_laps,
+            "isDisqualified": self.is_disqualified,
+            "needsRepair": self.needs_repair,
+            "onFinalLap": self.on_final_lap,
+            "hasFinished": self.has_finished,
+            "recentLaps": self.recent_laps,
         }
 
 

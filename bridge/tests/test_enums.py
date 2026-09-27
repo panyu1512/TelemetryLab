@@ -5,8 +5,11 @@ from __future__ import annotations
 import pytest
 
 from telemetrylab.enums import (
+    CAR_FLAG_DISQUALIFY,
+    CAR_FLAG_REPAIR,
     SESSION_FLAGS,
     decode_flags,
+    has_car_flag,
     session_state,
     track_surface,
 )
@@ -87,3 +90,20 @@ class TestDecodeFlags:
     def test_unknown_bits_ignored(self):
         # A bit with no mapping contributes nothing.
         assert decode_flags(0x08000000) == []
+
+
+class TestCarFlags:
+    def test_bits_match_the_session_flag_layout(self):
+        # CarIdxSessionFlags uses the same irsdk_Flags layout as SessionFlags.
+        names = dict(SESSION_FLAGS)
+        assert names[CAR_FLAG_DISQUALIFY] == "disqualify"
+        assert names[CAR_FLAG_REPAIR] == "repair"
+
+    @pytest.mark.parametrize("mask", [None, 0])
+    def test_empty_mask_has_no_flags(self, mask):
+        assert has_car_flag(mask, CAR_FLAG_DISQUALIFY) is False
+
+    def test_reads_one_bit_among_several(self):
+        mask = CAR_FLAG_REPAIR | 0x00000020  # meatball + blue
+        assert has_car_flag(mask, CAR_FLAG_REPAIR) is True
+        assert has_car_flag(mask, CAR_FLAG_DISQUALIFY) is False

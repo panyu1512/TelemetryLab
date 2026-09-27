@@ -30,7 +30,9 @@ sector splits are derived from lap-distance crossings (see :mod:`sectors`).
 from __future__ import annotations
 
 import math
+from collections import deque
 
+from .enums import CAR_FLAG_DISQUALIFY, CAR_FLAG_REPAIR, has_car_flag
 from .models import (
     CarTiming,
     ClassEntry,
@@ -56,6 +58,9 @@ _IR_SCALE = 50.0
 # A car must be gaining at least this many seconds per lap on the car ahead for a
 # catch-time estimate to be meaningful (avoids dividing by pace noise).
 _MIN_CLOSING_RATE = 0.05
+
+#: How many completed laps each row carries for the timing screen's pace trend.
+RECENT_LAPS = 5
 
 
 def _sort_key(timing: CarTiming) -> tuple[float, float]:
@@ -111,6 +116,18 @@ class StandingsEngine:
         # Tyre stint tracking: detect pit-stall exit → assume fresh tyres.
         self._prev_in_pit_stall: dict[int, bool] = {}
         self._tire_stint_start_lap: dict[int, int] = {}
+        # Pace trend: each car's last few completed laps, oldest first.
+        self._recent_laps: dict[int, deque[float]] = {}
+        self._prev_last_lap: dict[int, float | None] = {}
+        # The end of the race. iRacing puts the white and the chequer in
+        # SessionFlags only — never in a car's own CarIdxSessionFlags — so each
+        # car's final lap is derived: the lap it starts after the white is out,
+        # and it has finished once it crosses the line after the chequer. These
+        # hold every car's CarIdxLap at the moment each flag first appeared.
+        self._white_laps: dict[int, int] | None = None
+        self._white_leader: int | None = None
+        self._chequer_laps: dict[int, int] | None = None
+        self._chequer_leader: int | None = None
 
     # -- lifecycle -----------------------------------------------------------
     def _sync_session(self, session: SessionInfo) -> None:
@@ -126,9 +143,69 @@ class StandingsEngine:
             self._seen_in_world.clear()
             self._prev_in_pit_stall.clear()
             self._tire_stint_start_lap.clear()
+            self._recent_laps.clear()
+            self._prev_last_lap.clear()
+            self._white_laps = None
+            self._white_leader = None
+            self._chequer_laps = None
+            self._chequer_leader = None
             self._sectors = FieldSectorState(starts)
         else:
             self._sectors.retune(starts)
+
+    # -- per-tick pace trend -------------------------------------------------
+    def _track_recent_lap(self, car_idx: int, last_lap: float | None) -> None:
+        """Append a newly completed lap to the car's trend.
+
+        Keyed on the *value* changing rather than on ``CarIdxLap`` ticking over:
+        the sim publishes ``CarIdxLastLapTime`` a few frames after the lap
+        counter moves, so a lap-keyed read would record the previous lap twice.
+        Two consecutive laps identical to the tenth of a millisecond would be
+        merged into one point, which is a price worth paying for that.
+        """
+        prev = self._prev_last_lap.get(car_idx)
+        self._prev_last_lap[car_idx] = last_lap
+        if last_lap is None or last_lap <= 0 or last_lap == prev:
+            return
+        laps = self._recent_laps.get(car_idx)
+        if laps is None:
+            laps = self._recent_laps[car_idx] = deque(maxlen=RECENT_LAPS)
+        laps.append(round(last_lap, 3))
+
+    # -- the end of the race -------------------------------------------------
+    def _track_race_end(self, session: SessionInfo, rows: list[CarTiming]) -> None:
+        """Snapshot every car's lap the first time the white, then the chequer, shows."""
+        if not rows:
+            return
+        leader = rows[0].car_idx
+        if self._white_laps is None and "white" in session.flags:
+            self._white_laps = {t.car_idx: t.lap or 0 for t in rows}
+            self._white_leader = leader
+        if self._chequer_laps is None and session.session_state == 5:  # checkered
+            self._chequer_laps = {t.car_idx: t.lap or 0 for t in rows}
+            self._chequer_leader = leader
+
+    def _race_end(self, car_idx: int, lap: int | None) -> tuple[bool, bool]:
+        """``(on_final_lap, has_finished)`` for one car.
+
+        The leader at each flag is special-cased because its lap counter has
+        already ticked over on the very frame the flag appears — it crossed the
+        line to trigger it. Everyone else has to cross the line *after* the
+        snapshot. Once the chequer is out, every car still running is on its
+        final lap: the next time it crosses the line, it is done.
+        """
+        finished = False
+        if self._chequer_laps is not None:
+            finished = car_idx == self._chequer_leader or (
+                lap is not None and lap > self._chequer_laps.get(car_idx, lap)
+            )
+            return (not finished, finished)
+        if self._white_laps is not None:
+            final = car_idx == self._white_leader or (
+                lap is not None and lap > self._white_laps.get(car_idx, lap)
+            )
+            return (final, False)
+        return (False, False)
 
     # -- per-tick position-change tracking -----------------------------------
     def _track_position(
@@ -182,6 +259,7 @@ class StandingsEngine:
             and not d.is_spectator
         ]
         rows.sort(key=_sort_key)
+        self._track_race_end(session, rows)
 
         # Pass 1: fold every car into the persistent state (sectors, best lap,
         # position history, presence) so per-row grading below sees fresh bests.
@@ -191,6 +269,7 @@ class StandingsEngine:
             in_world = t.track_surface is not None and t.track_surface >= 0
             self._sectors.observe(t.car_idx, t.lap_dist_pct, t.lap, t.last_lap_time, now_ms)
             self._track_position(t.car_idx, t.position, t.lap, racing)
+            self._track_recent_lap(t.car_idx, t.last_lap_time)
             retired_by_idx[t.car_idx] = self._track_presence(t.car_idx, in_world)
             # Tyre stint: when a car leaves the pit stall, start a new set.
             in_pit_stall = t.track_surface_label == "in_pit_stall"
@@ -244,6 +323,7 @@ class StandingsEngine:
             is_class_leader = driver.car_class_id not in class_leader_seen
             if is_class_leader:
                 class_leader_seen.add(driver.car_class_id)
+            on_final_lap, has_finished = self._race_end(t.car_idx, t.lap)
 
             entries.append(
                 StandingsEntry(
@@ -283,6 +363,11 @@ class StandingsEngine:
                     is_lapped=gap_is_laps,
                     tire_compound=t.tire_compound,
                     tire_laps=tire_laps_by_idx.get(t.car_idx, 0),
+                    is_disqualified=has_car_flag(t.session_flags, CAR_FLAG_DISQUALIFY),
+                    needs_repair=has_car_flag(t.session_flags, CAR_FLAG_REPAIR),
+                    on_final_lap=on_final_lap,
+                    has_finished=has_finished,
+                    recent_laps=list(self._recent_laps.get(t.car_idx, ())),
                 )
             )
             prev_row = t
