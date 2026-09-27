@@ -58,6 +58,64 @@ export function readableInk(fill: string): string {
 }
 
 /**
+ * WCAG contrast ratio between two hex colours, 1–21. `null` when either side
+ * isn't a parseable hex (a `color-mix()` string, a CSS variable).
+ */
+export function contrastRatio(a: string, b: string): number | null {
+  const la = relativeLuminance(a);
+  const lb = relativeLuminance(b);
+  if (la == null || lb == null) return null;
+  const [hi, lo] = la >= lb ? [la, lb] : [lb, la];
+  return (hi + 0.05) / (lo + 0.05);
+}
+
+/**
+ * Composite `rgba(r,g,b,a)` over an opaque hex ground, the way a browser
+ * paints a translucent tint, and return the result as hex. A plain hex `fg`
+ * comes back unchanged. Used to measure ink that sits on a tint.
+ */
+export function composite(fg: string, bg: string): string {
+  const m = fg
+    .replace(/\s+/g, "")
+    .match(/^rgba\((\d+),(\d+),(\d+),([\d.]+)\)$/i);
+  if (!m) return fg;
+  const base = parseHex(bg);
+  if (!base) return fg;
+  const a = Number(m[4]);
+  const mix = [Number(m[1]), Number(m[2]), Number(m[3])].map((c, i) =>
+    Math.round(c * a + base[i] * (1 - a))
+  );
+  return `#${mix.map((c) => c.toString(16).padStart(2, "0")).join("")}`;
+}
+
+/**
+ * OKLCH of a hex colour: lightness 0–1, chroma, hue in degrees (0 for a grey).
+ * `null` for anything that isn't a parseable hex. The hue is what the class
+ * colour picker measures a pick against, so a warning means the same thing to
+ * the eye whatever the lightness.
+ */
+export function toOklch(color: string): { l: number; c: number; h: number } | null {
+  const rgb = parseHex(color);
+  if (!rgb) return null;
+  const [r, g, b] = rgb.map(linearize);
+  const l = Math.cbrt(0.4122214708 * r + 0.5363325363 * g + 0.0514459929 * b);
+  const m = Math.cbrt(0.2119034982 * r + 0.6806995451 * g + 0.1073969566 * b);
+  const s = Math.cbrt(0.0883024619 * r + 0.2817188376 * g + 0.6299787005 * b);
+  const L = 0.2104542553 * l + 0.793617785 * m - 0.0040720468 * s;
+  const A = 1.9779984951 * l - 2.428592205 * m + 0.4505937099 * s;
+  const B = 0.0259040371 * l + 0.7827717662 * m - 0.808675766 * s;
+  const c = Math.hypot(A, B);
+  const h = c < 1e-4 ? 0 : ((Math.atan2(B, A) * 180) / Math.PI + 360) % 360;
+  return { l: L, c, h };
+}
+
+/** Shortest distance between two hues, in degrees (0–180). */
+export function hueDistance(a: number, b: number): number {
+  const d = Math.abs(a - b) % 360;
+  return d > 180 ? 360 - d : d;
+}
+
+/**
  * A **tint**: the same hue as `color`, at `alpha`, as a ground for coloured ink.
  *
  * Deliberately a different device from a *fill* (`design.md` § Dense tabular

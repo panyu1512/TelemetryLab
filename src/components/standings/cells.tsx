@@ -1,80 +1,556 @@
-import { ChevronDown, ChevronUp } from "lucide-react";
+/**
+ * The timing tower's cells, one component per column, in the look of the
+ * design canvas (2026-09-27).
+ *
+ * Every number here is right-aligned with tabular figures and a fixed number
+ * of decimals per column, so decimal points line up down a column without a
+ * decimal tab. Cells that sit in a chip (the gap pill, a best-lap fill, a
+ * sector fill) give *every* value in the column the same padding, chip or not,
+ * for the same reason: a filled value two pixels in from its neighbours is a
+ * column whose decimals no longer line up.
+ */
+
+import type { CSSProperties } from "react";
 import type { SectorSplit } from "../../telemetry/types";
-import {
-  delta as fmtDelta,
-  gap as fmtGap,
-  interval as fmtInterval,
-  lapTime,
-  sectorTime,
-} from "../../lib/format";
-import { LAP_COLOR, SECTOR_COLOR } from "./constants";
+import { delta as fmtDelta, lapTime, sectorTime } from "../../lib/format";
 import { tint } from "../../lib/contrast";
+import { lapTrend, TREND_HEIGHT, TREND_WIDTH } from "../../lib/lapTrend";
+import type { ChipKind } from "../../lib/rowState";
+import { gradeSector } from "../../lib/sectorBests";
+import { TOWER, towerInk } from "../../lib/towerPalette";
+import type { CompoundKind, CompoundLook } from "../../lib/tyreCompound";
+import {
+  BattleGlyph,
+  ChequerGlyph,
+  DropGlyph,
+  FlagGlyph,
+  OffTrackGlyph,
+  OutGlyph,
+  WrenchGlyph,
+} from "./glyphs";
 
 /* -------------------------------------------------------------------------- */
-/*  Position-change arrow (▲2 / ▼1) — gain since the green flag                */
+/*  Position block — rank, in the class's colour                              */
 /* -------------------------------------------------------------------------- */
 
-export function PosChange({ value }: { value: number }) {
-  if (!value) {
-    return <span className="text-[10px] leading-none text-faint/50">·</span>;
-  }
-  const up = value > 0;
-  const Icon = up ? ChevronUp : ChevronDown;
-  const color = up ? "var(--color-accent)" : "var(--color-danger)";
-  // A *tint*, not a fill: same hue behind ink of that hue, which groups the
-  // arrow with its count without spending the surface's one fill (rule 5).
+/**
+ * Rank and class are the two facts taken off a row without reading it, and this
+ * is the one cell where they are a single glance: the position, in a block of
+ * the class's colour, in ink measured against it.
+ *
+ * A disqualified car's block stops being a rank at all — it reads DSQ, on the
+ * red of a penalty, because the number it would otherwise print is a position
+ * the car no longer holds.
+ */
+export function PosBlock({
+  value,
+  color,
+  dsq,
+  height,
+}: {
+  value: number | string;
+  color: string;
+  dsq: boolean;
+  height: number;
+}) {
+  const style: CSSProperties = dsq
+    ? { background: TOWER.dsq, color: TOWER.onDsq, fontSize: 15, letterSpacing: "0.04em" }
+    : { background: color, color: towerInk(color), fontSize: 22 };
   return (
     <span
-      className="flex items-center justify-center gap-px rounded-ctl px-0.5 py-0.5 text-[11px] font-bold leading-none tnum"
-      style={{ color, background: tint(color, 0.14) }}
-      title={`${up ? "Gained" : "Lost"} ${Math.abs(value)} since start`}
+      className="tower-cond flex items-center justify-center rounded-[4px] font-bold leading-none"
+      style={{ height, ...style }}
+      title={dsq ? "Disqualified" : undefined}
     >
-      <Icon className="size-3" strokeWidth={3.5} />
-      {Math.abs(value)}
+      {dsq ? "DSQ" : value}
     </span>
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/*  iRating + projected live change (8895 ▲14)                                */
+/*  Position change — ▲ 5 / ▼ 2                                                */
 /* -------------------------------------------------------------------------- */
 
+/**
+ * Places gained or lost since the start. Blue up, orange down — the pair that
+ * survives red-green colour blindness — and the arrow says which way on its
+ * own, so the colour is never the only cue.
+ */
+export function PosChange({ value, dim }: { value: number; dim: boolean }) {
+  const up = value > 0;
+  const color = dim
+    ? TOWER.dim
+    : value === 0
+      ? TOWER.text3
+      : up
+        ? TOWER.up
+        : TOWER.down;
+  return (
+    <span
+      className="text-right text-[13px] font-semibold"
+      style={{ color }}
+      title={
+        value
+          ? `${up ? "Gained" : "Lost"} ${Math.abs(value)} since the start`
+          : "No change since the start"
+      }
+    >
+      {value === 0 ? "–" : `${up ? "▲" : "▼"} ${Math.abs(value)}`}
+    </span>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  iRating + projected change — 5.6k ▼4                                       */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * A quiet column on purpose: the rating is context for the name, not a number
+ * the eye should land on before the gap. The value and its projected change
+ * each get a fixed right-aligned slot, so the ratings keep one decimal column
+ * whether or not a delta sits beside them.
+ */
 export function IRatingCell({
   iRating,
   change,
+  dim,
 }: {
   iRating: number;
   change: number;
+  dim: boolean;
 }) {
-  const up = change > 0;
-  const delta = up ? "var(--color-accent)" : "var(--color-danger)";
+  const deltaColor = dim
+    ? TOWER.dim
+    : change > 0
+      ? TOWER.up
+      : change < 0
+        ? TOWER.down
+        : "transparent";
   return (
-    // Rating and its projected change are one compound cell in two voices
-    // (rule 4). The tint binds them into a chip; the value keeps `text` and only
-    // the delta takes status colour, so the number itself never has to be read
-    // as a status.
-    //
-    // The chip fills its column rather than hugging its contents, and the delta
-    // sits in a fixed-width slot. A chip sized to `3.7k ▲29` and one sized to
-    // `1.9k` are different widths in the same column, which turns a quiet
-    // grouping device into a ragged edge running down the table — and it puts
-    // the ratings themselves on different verticals, which is the one thing a
-    // column of numbers must never do.
-    <div
-      className="tnum flex w-full items-baseline justify-end gap-1 rounded-ctl px-1 py-0.5"
-      style={{ background: "rgb(255 255 255 / 0.05)" }}
-    >
-      <span className="text-[12px] font-semibold text-text">
-        {iRating > 0 ? (iRating / 1000).toFixed(1) + "k" : "—"}
+    <div className="flex items-baseline justify-end gap-1">
+      <span
+        className="w-[38px] text-right text-[14px]"
+        style={{ color: dim ? TOWER.dim : TOWER.text3 }}
+      >
+        {iRating > 0 ? `${(iRating / 1000).toFixed(1)}k` : "—"}
       </span>
       <span
-        className="w-[1.9rem] shrink-0 text-right text-[10px] font-bold leading-none"
-        style={{ color: change !== 0 ? delta : "transparent" }}
+        className="w-[30px] text-right text-[12px] font-semibold"
+        style={{ color: deltaColor }}
         title={change !== 0 ? "Projected iRating change (estimate)" : undefined}
       >
-        {change !== 0 ? `${up ? "▲" : "▼"}${Math.abs(change)}` : "·"}
+        {change !== 0 ? `${change > 0 ? "▲" : "▼"}${Math.abs(change)}` : "·"}
       </span>
     </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Gap / interval                                                             */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * One of the two gap columns. The primary one — whichever the Manager's gap
+ * reference points at — is a size up and in full ink, the third thing the eye
+ * reads after position and name; the other is secondary grey.
+ *
+ * A **battle** — within a second of the car ahead in class — puts the value on
+ * a tint of the class's own colour, in bold, behind the closing-arrows glyph.
+ * The glyph is what a colour-blind reader keys on; the tint is what makes a
+ * fight visible from the corner of the eye.
+ */
+export function GapValue({
+  text,
+  primary,
+  battle,
+  dim,
+  accent,
+}: {
+  text: string;
+  primary: boolean;
+  battle: boolean;
+  dim: boolean;
+  accent: string;
+}) {
+  const fight = battle && !dim;
+  return (
+    <div className="flex justify-end">
+      <span
+        className="flex items-center gap-1 rounded-[4px] px-1.5 py-0.5 leading-[1.2]"
+        style={{
+          fontSize: primary ? 16 : 15,
+          fontWeight: fight ? 600 : 400,
+          color: dim ? TOWER.dim : fight || primary ? TOWER.text : TOWER.text2,
+          background: fight ? tint(accent, 0.24) : undefined,
+        }}
+        title={fight ? "Within a second of the car ahead in class" : undefined}
+      >
+        {fight && <BattleGlyph />}
+        {text}
+      </span>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Last lap / best lap                                                        */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * The last lap keeps its ink and takes its grade as a rule under the digits —
+ * green for a personal best, violet for the fastest lap on track — so it stays
+ * readable as a time first (`design.md` § The timing tower, rule 5).
+ */
+export function LastLapCell({
+  time,
+  status,
+  dim,
+}: {
+  time: number | null;
+  status: string;
+  dim: boolean;
+}) {
+  const rule =
+    status === "overall_best"
+      ? TOWER.sessionBestRule
+      : status === "personal_best"
+        ? TOWER.personalBest
+        : undefined;
+  return (
+    <span
+      className={`text-right text-[15px] ${status === "overall_best" && !dim ? "sec-flash" : ""}`}
+      style={{
+        color: dim ? TOWER.dim : TOWER.text2,
+        ...(rule && !dim
+          ? {
+              textDecoration: "underline",
+              textDecorationColor: rule,
+              textDecorationThickness: 2,
+              textUnderlineOffset: 3,
+            }
+          : null),
+      }}
+      title={
+        status === "overall_best"
+          ? "Fastest lap on track"
+          : status === "personal_best"
+            ? "Personal best"
+            : undefined
+      }
+    >
+      {lapTime(time)}
+    </span>
+  );
+}
+
+/**
+ * The best lap, in the class-best fill when this car holds its class's fastest
+ * lap. Every value takes the chip's padding, so the column's decimals line up
+ * whether a value is filled or not.
+ */
+export function BestLapCell({
+  time,
+  fastest,
+  dim,
+}: {
+  time: number | null;
+  fastest: "class" | "overall" | null;
+  dim: boolean;
+}) {
+  return (
+    <div className="flex justify-end">
+      <span
+        className="rounded-[4px] px-1.5 py-0.5 text-[15px] leading-[1.2]"
+        style={
+          fastest
+            ? { background: TOWER.classBest, color: TOWER.onClassBest, fontWeight: 600 }
+            : { color: dim ? TOWER.dim : TOWER.text2 }
+        }
+        title={
+          fastest === "overall"
+            ? "Fastest lap in class — and of the session"
+            : fastest === "class"
+              ? "Fastest lap in class"
+              : undefined
+        }
+      >
+        {lapTime(time)}
+      </span>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Pace trend — the last five laps                                            */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * A sparkline of the car's last five laps against its own best (the dotted
+ * line). Higher is slower. Every row is drawn on the same scale — see
+ * `lib/lapTrend` for why a fitted scale would lie.
+ */
+export function TrendCell({
+  laps,
+  best,
+  dim,
+}: {
+  laps: number[] | undefined;
+  best: number | null;
+  dim: boolean;
+}) {
+  const g = lapTrend(laps, best);
+  if (!g) {
+    return (
+      <span aria-hidden className="text-center text-[11px]" style={{ color: TOWER.dim }}>
+        ·
+      </span>
+    );
+  }
+  const ink = dim ? TOWER.dim : TOWER.text2;
+  return (
+    <svg
+      width={TREND_WIDTH}
+      height={TREND_HEIGHT}
+      viewBox={`0 0 ${TREND_WIDTH} ${TREND_HEIGHT}`}
+      role="img"
+      aria-label={g.label}
+      className="block justify-self-center"
+    >
+      <title>{g.label}</title>
+      <line
+        x1="2"
+        y1={g.baselineY}
+        x2={TREND_WIDTH - 2}
+        y2={g.baselineY}
+        stroke={TOWER.divider}
+        strokeWidth="1"
+        strokeDasharray="2 2"
+      />
+      <polyline
+        points={g.points}
+        fill="none"
+        stroke={ink}
+        strokeWidth="1.5"
+        strokeLinejoin="round"
+        strokeLinecap="round"
+      />
+      <circle
+        cx={g.last.x}
+        cy={g.last.y}
+        r="2.25"
+        fill={dim ? TOWER.dim : TOWER.text}
+        stroke={ink}
+        strokeWidth="1.25"
+      />
+    </svg>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Tyre — compound ring + laps on the set                                     */
+/* -------------------------------------------------------------------------- */
+
+const RING: Record<CompoundKind, string> = {
+  soft: TOWER.soft,
+  medium: TOWER.medium,
+  hard: TOWER.hard,
+  inter: TOWER.inter,
+  wet: TOWER.wet,
+  other: TOWER.otherTyre,
+};
+
+/**
+ * The compound as a tyre: a ring in the compound's colour with its letter
+ * inside — S, M, H, I — and, for a wet, a dashed ring round a drop. The letter
+ * and the dash carry the compound on their own; the colour is the broadcast
+ * convention on top of them.
+ */
+export function TyreRing({ look, size = 20 }: { look: CompoundLook; size?: number }) {
+  return (
+    <span
+      className="tower-cond flex shrink-0 items-center justify-center rounded-full font-bold leading-none"
+      style={{
+        width: size,
+        height: size,
+        boxSizing: "border-box",
+        border: `2.5px ${look.kind === "wet" ? "dashed" : "solid"} ${RING[look.kind]}`,
+        fontSize: 11,
+        color: TOWER.text,
+      }}
+      aria-hidden
+    >
+      {look.kind === "wet" ? <DropGlyph /> : look.letter}
+    </span>
+  );
+}
+
+export function TyreCell({
+  look,
+  laps,
+  dim,
+}: {
+  look: CompoundLook | null;
+  laps: number;
+  dim: boolean;
+}) {
+  if (!look) {
+    return (
+      <span className="text-right text-[11px]" style={{ color: TOWER.dim }}>
+        ·
+      </span>
+    );
+  }
+  const title = `${look.label} · ${laps} ${laps === 1 ? "lap" : "laps"} on the set`;
+  return (
+    <div className="flex items-center justify-end gap-1.5" title={title} aria-label={title}>
+      <TyreRing look={look} />
+      <span
+        className="w-[28px] text-right text-[14px]"
+        style={{ color: dim ? TOWER.dim : TOWER.text3 }}
+      >
+        {laps}L
+      </span>
+    </div>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Sector                                                                     */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * A sector as the canvas draws it: the class-best time on a violet fill, a
+ * personal best on a green tint with its own hairline ring, a big loss as bold
+ * orange delta, anything else as a plain grey delta. The fill and the ring are
+ * different *shapes* as well as different colours, so the two achievements
+ * stay apart for a colour-blind reader; the losses are numbers, and the number
+ * says how big.
+ */
+export function SectorCell({
+  sector,
+  classBest,
+  dim,
+}: {
+  sector: SectorSplit | undefined;
+  classBest: number | null | undefined;
+  dim: boolean;
+}) {
+  const grade = gradeSector(sector, classBest);
+  if (!sector || grade === "none") {
+    return (
+      <span className="pr-2 text-right text-[11px]" style={{ color: TOWER.dim }}>
+        ·
+      </span>
+    );
+  }
+  const showTime = grade === "class_best" || grade === "personal_best";
+  // A loss is always signed: a delta that rounds to nothing still lost time,
+  // and a bare "0.0" in a column of "+0.3"s reads as a different kind of value.
+  const label = showTime
+    ? sectorTime(sector.lastTime)
+    : sector.delta != null && sector.delta >= 0
+      ? `+${sector.delta.toFixed(1)}`
+      : fmtDelta(sector.delta);
+  const style: CSSProperties = dim
+    ? { color: TOWER.dim }
+    : grade === "class_best"
+      ? { background: TOWER.classBest, color: TOWER.onClassBest, fontWeight: 600 }
+      : grade === "personal_best"
+        ? {
+            background: TOWER.personalBestTint,
+            color: TOWER.personalBest,
+            boxShadow: `inset 0 0 0 1px ${TOWER.personalBestRing}`,
+          }
+        : grade === "much_slower"
+          ? { color: TOWER.slower, fontWeight: 600 }
+          : { color: TOWER.text2 };
+  return (
+    <span
+      key={`${grade}-${sector.lastTime}`}
+      className="sec-cell rounded-[4px] py-0.5 pr-2 text-right text-[14px] leading-[1.2]"
+      style={style}
+      title={`S${sector.index + 1}: ${sectorTime(sector.lastTime)}${
+        sector.bestTime != null ? ` (best ${sectorTime(sector.bestTime)})` : ""
+      }`}
+    >
+      {label}
+    </span>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  State chips                                                                */
+/* -------------------------------------------------------------------------- */
+
+const CHIPS: Record<
+  Exclude<ChipKind, "pit">,
+  { text: string; background: string; ink: string; title: string; Glyph: typeof FlagGlyph }
+> = {
+  out: {
+    text: "OUT",
+    background: TOWER.disconnectedTint,
+    ink: TOWER.disconnected,
+    title: "Not in the world — disconnected, or being towed",
+    Glyph: OutGlyph,
+  },
+  off: {
+    text: "OFF TRACK",
+    background: TOWER.cautionTint,
+    ink: TOWER.caution,
+    title: "Off the track",
+    Glyph: OffTrackGlyph,
+  },
+  repair: {
+    text: "DAMAGE",
+    background: TOWER.cautionTint,
+    ink: TOWER.caution,
+    title: "Shown the meatball — must pit for repairs",
+    Glyph: WrenchGlyph,
+  },
+  final: {
+    text: "FINAL LAP",
+    background: TOWER.finalLapTint,
+    ink: TOWER.finalLap,
+    title: "On the final lap",
+    Glyph: FlagGlyph,
+  },
+  finished: {
+    text: "FINISHED",
+    background: TOWER.finalLapTint,
+    ink: TOWER.finalLap,
+    title: "Took the chequered flag",
+    Glyph: ChequerGlyph,
+  },
+};
+
+/**
+ * One state beside the driver's name. Every chip is a word *and* a glyph, never
+ * a colour alone. PIT is the exception in form, not in principle: it is a
+ * filled badge, because a car in the pit lane is the state that most changes
+ * how the rest of its row should be read — its live timing is greyed out.
+ */
+export function StateChip({ kind }: { kind: ChipKind }) {
+  if (kind === "pit") {
+    return (
+      <span
+        className="tower-cond flex h-5 shrink-0 items-center rounded-[3px] px-[7px] text-[14px] font-bold leading-none tracking-[0.1em]"
+        style={{ background: TOWER.pit, color: TOWER.onPit }}
+        title="In the pit lane"
+      >
+        PIT
+      </span>
+    );
+  }
+  const c = CHIPS[kind];
+  return (
+    <span
+      className="flex h-5 shrink-0 items-center gap-1 whitespace-nowrap rounded-[4px] px-1.5 text-[11px] font-semibold leading-none tracking-[0.06em]"
+      style={{ background: c.background, color: c.ink }}
+      title={c.title}
+    >
+      <c.Glyph />
+      {c.text}
+    </span>
   );
 }
 
@@ -91,13 +567,11 @@ export function LicenseBadge({
   safetyRating: number;
   color: string;
 }) {
-  // A tinted chip, not a fill: the fastest-lap cell still holds this surface's
-  // only fill (`design.md` § Dense tabular overlays, rule 5). The tint groups
-  // the class letter and the safety rating into one token — they are read
-  // together or not at all — at a fraction of a fill's weight.
+  // A tinted chip: the tint groups the class letter and the safety rating into
+  // one token — they are read together or not at all.
   return (
     <span
-      className="tnum inline-flex items-center rounded-ctl px-1 py-0.5 text-[11px] font-bold leading-none"
+      className="inline-flex items-center rounded-[4px] px-1 py-0.5 text-[12px] font-semibold leading-none"
       style={{ color, background: tint(color, 0.16) }}
       title={`${group} ${safetyRating.toFixed(2)}`}
     >
@@ -331,10 +805,13 @@ export const BRAND_ICON_H = 24;
 export function BrandIcon({
   make,
   height = BRAND_ICON_H,
+  color = "#fff",
 }: {
   make: string;
   /** Override the mark height in px (the width follows from the viewBox). */
   height?: number;
+  /** Ink for the mark. White, except on a row the tower has greyed out. */
+  color?: string;
 }) {
   if (!make) return null;
   const Icon = BRAND_ICONS[make];
@@ -351,7 +828,7 @@ export function BrandIcon({
     return (
       <span
         className="brand-icon inline-flex shrink-0 items-center justify-center"
-        style={{ height, color: "#fff" }}
+        style={{ height, color }}
         title={make}
       >
         <Icon />
@@ -362,7 +839,8 @@ export function BrandIcon({
   // mark — no pill, since fill is rationed to the fastest-lap cell (rule 5).
   return (
     <span
-      className="shrink-0 font-mono text-[12px] font-bold uppercase leading-none tracking-[0.02em] text-white"
+      className="shrink-0 font-mono text-[12px] font-bold uppercase leading-none tracking-[0.02em]"
+      style={{ color }}
       title={make}
     >
       {make.slice(0, 3)}
@@ -370,189 +848,3 @@ export function BrandIcon({
   );
 }
 
-/* -------------------------------------------------------------------------- */
-/*  Gap / interval / lap cells                                                */
-/* -------------------------------------------------------------------------- */
-
-export function GapCell({
-  value,
-  isLaps,
-}: {
-  value: number | null;
-  isLaps: boolean;
-}) {
-  return (
-    <span className="text-right text-[12px] font-semibold tabular-nums text-text tnum">
-      {fmtGap(value, isLaps)}
-    </span>
-  );
-}
-
-export function IntervalCell({ value }: { value: number | null }) {
-  return (
-    <span className="text-right text-[12px] font-semibold tabular-nums text-text tnum">
-      {fmtInterval(value)}
-    </span>
-  );
-}
-
-export function LapCell({
-  time,
-  color,
-  underline,
-  flash,
-  fill,
-  fillTitle,
-}: {
-  time: number | null;
-  color?: string;
-  /**
-   * Rule the value with this colour.
-   *
-   * A lap that is a personal best has to stay *readable as a time* first — it
-   * is the number the driver is actually comparing — so grading it by recolouring
-   * the digits trades legibility for the grade. An underline carries the grade
-   * in the same glyph box without touching the digits, which is why the last-lap
-   * cell now keeps white ink and takes a green rule instead of turning green.
-   */
-  underline?: string;
-  flash?: boolean;
-  /**
-   * Paint the cell as a filled chip in this colour. Rationed to one meaning per
-   * surface (`design.md` § Dense tabular overlays, rule 5) — on Standings that
-   * is the fastest lap and nothing else. Filled ink is always `on-accent`
-   * (§ Theme, rule 1), never the fill colour's own foreground.
-   */
-  fill?: string;
-  fillTitle?: string;
-}) {
-  if (fill) {
-    return (
-      <span
-        className={`justify-self-end rounded-ctl px-1.5 py-0.5 text-right text-[12px] font-bold tabular-nums tnum ${flash ? "sec-flash" : ""}`}
-        style={{ background: fill, color: "var(--color-on-accent)" }}
-        title={fillTitle}
-      >
-        {lapTime(time)}
-      </span>
-    );
-  }
-  return (
-    <span
-      className={`text-right text-[12px] font-semibold tabular-nums tnum ${flash ? "sec-flash" : ""}`}
-      style={{
-        color: color ?? "var(--color-text)",
-        ...(underline
-          ? {
-              textDecoration: "underline",
-              textDecorationColor: underline,
-              textDecorationThickness: 2,
-              textUnderlineOffset: 3,
-            }
-          : null),
-      }}
-    >
-      {lapTime(time)}
-    </span>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Sector delta cell — the colored .3 / .7 / .7                              */
-/* -------------------------------------------------------------------------- */
-
-export function SectorCell({ sector }: { sector: SectorSplit | undefined }) {
-  if (!sector || sector.lastTime == null) {
-    return <span className="text-center text-[10px] text-faint/40">·</span>;
-  }
-  const color = SECTOR_COLOR[sector.status] ?? "var(--color-muted)";
-  // Purple/green sectors read as the achievement (show the time); yellow/red
-  // read as the loss (show the signed delta vs personal best).
-  const isBest =
-    sector.status === "overall_best" || sector.status === "personal_best";
-  const showDelta = !isBest && sector.delta != null;
-  const label = showDelta ? fmtDelta(sector.delta) : sectorTime(sector.lastTime);
-  return (
-    <span
-      key={`${sector.status}-${sector.lastTime}`}
-      className="sec-cell text-center text-[11px] font-semibold tabular-nums tnum"
-      style={{ color }}
-      title={`S${sector.index + 1}: ${sectorTime(sector.lastTime)}${
-        sector.bestTime != null ? ` (best ${sectorTime(sector.bestTime)})` : ""
-      }`}
-    >
-      {label}
-    </span>
-  );
-}
-
-/* -------------------------------------------------------------------------- */
-/*  Tyre compound + age cell                                                  */
-/* -------------------------------------------------------------------------- */
-
-/**
- * Compound label + laps-on-tyre indicator.
- *
- * iRacing uses 0 for the primary compound and 1 for the alternate in most
- * series; higher values appear in series with three or more compounds.
- * We label them P/A/B/… rather than hard-coding "soft/medium/hard" because
- * compound naming varies by series.
- */
-const COMPOUND_LABEL: Record<number, string> = { 0: "P", 1: "A", 2: "B", 3: "C" };
-const COMPOUND_COLOR: Record<number, string> = {
-  0: "var(--color-accent)",
-  1: "var(--color-warning)",
-  2: "var(--color-danger)",
-  3: "var(--color-sector-purple)",
-};
-
-/** Tire viewed from the side: thick sidewall ring + rim ring + cross spokes. */
-function TireCompoundIcon({ compound }: { compound: number }) {
-  const color = COMPOUND_COLOR[compound] ?? "var(--color-muted)";
-  return (
-    <svg
-      viewBox="0 0 14 14"
-      style={{ height: 14, width: 14, display: "block", flexShrink: 0 }}
-      fill="none"
-    >
-      {/* Outer tire ring (sidewall / tread) */}
-      <circle cx="7" cy="7" r="6" stroke={color} strokeWidth="2.5" strokeOpacity="0.7" />
-      {/* Rim */}
-      <circle cx="7" cy="7" r="2.8" stroke={color} strokeWidth="1.2" />
-      {/* Cross spokes */}
-      <line x1="7" y1="4.2" x2="7" y2="9.8" stroke={color} strokeWidth="0.9" strokeOpacity="0.45" />
-      <line x1="4.2" y1="7" x2="9.8" y2="7" stroke={color} strokeWidth="0.9" strokeOpacity="0.45" />
-    </svg>
-  );
-}
-
-export function TireCell({
-  compound,
-  laps,
-}: {
-  compound: number | null;
-  laps: number;
-}) {
-  if (compound == null) {
-    return <span className="text-center text-[10px] text-faint/40">·</span>;
-  }
-  const label = COMPOUND_LABEL[compound] ?? String(compound);
-  const color = COMPOUND_COLOR[compound] ?? "var(--color-muted)";
-  return (
-    <div className="flex items-center justify-center gap-0.5">
-      <TireCompoundIcon compound={compound} />
-      <span
-        className="text-[10px] font-bold leading-none"
-        style={{ color }}
-        title={`Compound ${label}`}
-      >
-        {label}
-      </span>
-      <span className="text-[10px] font-semibold tabular-nums tnum" style={{ color: "var(--color-muted)" }} title={`${laps} laps on tyres`}>
-        {laps}
-      </span>
-    </div>
-  );
-}
-
-export { LAP_COLOR };

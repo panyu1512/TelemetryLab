@@ -1,8 +1,13 @@
+import type { GapReference } from "../../stores/useStandingsUiStore";
+import { TOWER } from "../../lib/towerPalette";
 import {
-  COL_LABEL_H,
+  COL_GAP,
   gridTemplate,
+  LABEL_ROW_H,
+  ROW_PAD_X,
   visibleColumns,
   type ColumnVisibility,
+  type StandingsColumnId,
 } from "./constants";
 
 const ALIGN: Record<string, string> = {
@@ -12,36 +17,50 @@ const ALIGN: Record<string, string> = {
 };
 
 /**
- * The column labels, printed in the top slice of the class leader's row rather
- * than in a band of their own (`design.md` § Dense tabular overlays, rule 3).
+ * The column labels: a row of their own under each class header, when the
+ * Manager's "Column labels" is on. Off by default — a driver who knows the
+ * columns reads past them every lap (`design.md` § Dense tabular overlays,
+ * rule 3).
  *
- * It renders as an absolutely positioned overlay inside the row, sharing that
- * row's grid template and horizontal padding so every label lands over its own
- * column. Because it is out of flow it costs zero height; the host row only
- * pushes its own values down by {@link COL_LABEL_H} to clear it.
- *
- * Mono, uppercase, tracked and `faint` per § Typography — these are micro-labels,
- * the quietest voice in the system.
+ * The two gap columns are labelled by what they measure *now*: with the gap
+ * reference set to the car ahead, the primary column is still "Gap" — gap to
+ * the car in front — and the other one becomes "Leader".
  */
 export function ColumnLabels({
   sectorCount,
   isVisible,
+  gapReference,
 }: {
   sectorCount: number;
   isVisible: ColumnVisibility;
+  gapReference: GapReference;
 }) {
+  const label = (id: StandingsColumnId, text: string, sectorIndex?: number): string => {
+    if (id === "sectors") return `S${(sectorIndex ?? 0) + 1}`;
+    if (id === "interval" && gapReference === "ahead") return "LEADER";
+    if (id === "irating") return "iRATING";
+    return text.toUpperCase();
+  };
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute inset-x-0 top-0 grid items-start gap-x-1 px-1 font-mono text-[8px] font-semibold uppercase leading-none tracking-[0.14em] text-faint"
+      className="grid items-center text-[11px] font-semibold tracking-[0.1em]"
       style={{
-        height: COL_LABEL_H,
+        height: LABEL_ROW_H,
         gridTemplateColumns: gridTemplate(sectorCount, isVisible),
+        columnGap: COL_GAP,
+        padding: `0 ${ROW_PAD_X}px`,
+        background: TOWER.labelRow,
+        color: TOWER.text3,
       }}
     >
       {visibleColumns(sectorCount, isVisible).map(({ key, col, sectorIndex }) => (
-        <span key={key} className={`truncate ${ALIGN[col.align]}`}>
-          {col.id === "sectors" ? `S${(sectorIndex ?? 0) + 1}` : col.label}
+        <span
+          key={key}
+          className={`truncate ${ALIGN[col.align]}`}
+          style={{ paddingRight: col.labelInset }}
+        >
+          {label(col.id, col.label, sectorIndex)}
         </span>
       ))}
     </div>

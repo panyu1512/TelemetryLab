@@ -121,6 +121,12 @@ interface MockCar {
   pace: number;
   phase: number;
   wobble: number;
+  /** [name, alpha-3] — the standard field takes these from `COUNTRIES` by index. */
+  country?: [string, string];
+  /** A state this car holds for the whole run (the stress field only). */
+  state?: "dsq" | "disconnected" | "repair";
+  /** A fixed CarIdxTireCompound, overriding the field-wide rotation. */
+  tyre?: number;
 }
 
 /** Deterministic pseudo-random in [0, 1) from a seed (mulberry32-ish). */
@@ -201,6 +207,106 @@ export const MOCK_FIELD: MockCar[] = Array.from({ length: MOCK_FIELD_SIZE }, (_,
   gt4.phase = me.phase + 0.03; // ~4 s up the road, a lap down
 }
 
+// ── the stress field ─────────────────────────────────────────────────────────
+
+/** Which field the mock feed runs. */
+export type MockFieldKind = "standard" | "stress";
+
+/**
+ * The flag the mock race runs under — the only way to see the tower's
+ * race-control bar change, or a car on its final lap, without a sim.
+ */
+export type MockRaceControl = "green" | "yellow" | "safety_car" | "white";
+
+/** Options every generator takes, so the three channels agree on the field. */
+export interface MockOptions {
+  field?: MockFieldKind;
+  raceControl?: MockRaceControl;
+}
+
+/** A third, faster class for the stress field. Its colour is the sim's, unused. */
+const CLASS_LMP2 = { id: 83, short: "LMP2", color: "#ffda59", baseLap: 126 };
+
+/**
+ * Eighteen more cars on top of the standard twelve: thirty in three classes,
+ * the size of field the timing tower has to survive.
+ *
+ * Built to break things. Names long enough to truncate next to a state chip,
+ * three-digit numbers, a rating in five figures, and four cars given a pace
+ * penalty big enough to go a lap down *in their own class* over the fourteen
+ * laps the feed opens on. Each of the states a row can wear is held by one of
+ * them for the whole run, so a single capture shows every one.
+ */
+const STRESS_EXTRAS: ReadonlyArray<{
+  name: string;
+  country: [string, string];
+  klass: typeof CLASS_GT3;
+  make: string;
+  model: string;
+  number: string;
+  iRating: number;
+  /** Seconds a lap added to the class pace. */
+  penalty?: number;
+  state?: MockCar["state"];
+  tyre?: number;
+}> = [
+  { name: "Aleksandr Volkovskiy", country: ["Estonia", "EST"], klass: CLASS_LMP2, make: "Dallara", model: "Dallara P217 LMP2", number: "22", iRating: 8900 },
+  { name: "Martina Álvarez", country: ["Argentina", "ARG"], klass: CLASS_LMP2, make: "Dallara", model: "Dallara P217 LMP2", number: "118", iRating: 7400 },
+  { name: "Henrik Lund", country: ["Norway", "NOR"], klass: CLASS_LMP2, make: "Dallara", model: "Dallara P217 LMP2", number: "8", iRating: 6100 },
+  { name: "Jean-Baptiste Lavallée", country: ["France", "FRA"], klass: CLASS_LMP2, make: "Dallara", model: "Dallara P217 LMP2", number: "404", iRating: 10400 },
+  { name: "Tomáš Novotný", country: ["Czechia", "CZE"], klass: CLASS_LMP2, make: "Dallara", model: "Dallara P217 LMP2", number: "31", iRating: 5200 },
+  { name: "Dan Okafor", country: ["Nigeria", "NGA"], klass: CLASS_LMP2, make: "Dallara", model: "Dallara P217 LMP2", number: "5", iRating: 4800 },
+  { name: "Sofía Bergamaschi", country: ["Italy", "ITA"], klass: CLASS_LMP2, make: "Dallara", model: "Dallara P217 LMP2", number: "77", iRating: 3900 },
+  { name: "Liam O'Sullivan", country: ["Ireland", "IRL"], klass: CLASS_LMP2, make: "Dallara", model: "Dallara P217 LMP2", number: "13", iRating: 2700, penalty: 10, state: "repair" },
+  { name: "Chiara Dell'Acqua-Moretti", country: ["Italy", "ITA"], klass: CLASS_GT3, make: "Ferrari", model: "Ferrari 296 GT3", number: "311", iRating: 6200 },
+  { name: "Owen Price", country: ["United Kingdom", "GBR"], klass: CLASS_GT3, make: "McLaren", model: "McLaren 720S GT3 EVO", number: "44", iRating: 3200 },
+  { name: "Kaito Mori", country: ["Japan", "JPN"], klass: CLASS_GT3, make: "Lexus", model: "Lexus RC F GT3", number: "29", iRating: 5900 },
+  { name: "Bartłomiej Wiśniewski", country: ["Poland", "POL"], klass: CLASS_GT3, make: "BMW", model: "BMW M4 GT3", number: "3", iRating: 2400 },
+  { name: "Noah Fischer", country: ["Austria", "AUT"], klass: CLASS_GT3, make: "Porsche", model: "Porsche 911 GT3 R", number: "51", iRating: 2100, penalty: 12, state: "disconnected" },
+  { name: "Elena Marchetti", country: ["Italy", "ITA"], klass: CLASS_GT3, make: "Lamborghini", model: "Lamborghini Huracán GT3 EVO", number: "19", iRating: 1600, penalty: 11 },
+  { name: "Gustavo Henrique da Silva", country: ["Brazil", "BRA"], klass: CLASS_GT4, make: "Mercedes-AMG", model: "Mercedes-AMG GT4", number: "206", iRating: 3800 },
+  { name: "Ingrid Sørensen", country: ["Denmark", "DNK"], klass: CLASS_GT4, make: "Aston Martin", model: "Aston Martin Vantage GT4", number: "9", iRating: 2900 },
+  { name: "Przemysław Kowalczyk-Nowak", country: ["Poland", "POL"], klass: CLASS_GT4, make: "BMW", model: "BMW M4 GT4", number: "262", iRating: 1200 },
+  { name: "Amir Haddad", country: ["Lebanon", "LBN"], klass: CLASS_GT4, make: "Toyota", model: "Toyota GR86", number: "55", iRating: 1100, penalty: 14, state: "dsq", tyre: 3 },
+];
+
+/** The standard twelve plus the eighteen above. */
+export const MOCK_STRESS_FIELD: MockCar[] = [
+  ...MOCK_FIELD,
+  ...STRESS_EXTRAS.map((spec, i): MockCar => {
+    const idx = MOCK_FIELD_SIZE + i;
+    return {
+      idx,
+      klass: spec.klass,
+      make: spec.make,
+      model: spec.model,
+      number: spec.number,
+      name: spec.name,
+      iRating: spec.iRating,
+      isAI: false,
+      pace:
+        spec.klass.baseLap * (1 + (2500 - spec.iRating) / 200000) +
+        rand(idx + 11) * 1.5 +
+        (spec.penalty ?? 0),
+      phase: rand(idx + 5) * 0.4,
+      wobble: 0.3 + rand(idx + 13) * 0.9,
+      country: spec.country,
+      state: spec.state,
+      tyre: spec.tyre,
+    };
+  }),
+];
+
+/** The field a set of options asks for. */
+export function mockField(kind: MockFieldKind | undefined): MockCar[] {
+  return kind === "stress" ? MOCK_STRESS_FIELD : MOCK_FIELD;
+}
+
+/** Classes in the field, fastest first — the order a timing tower stacks them. */
+function classesOf(field: readonly MockCar[]): (typeof CLASS_GT3)[] {
+  return [...new Set(field.map((c) => c.klass))].sort((a, b) => a.baseLap - b.baseLap);
+}
+
 /**
  * Total laps completed (float): integer part = lap, fraction = lapDistPct.
  *
@@ -235,8 +341,41 @@ function progress(car: MockCar, t: number): number {
  * visibly blink.
  */
 function lapTime(car: MockCar, t: number): number {
-  const lap = Math.floor(progress(car, t));
+  return lapTimeAt(car, Math.floor(progress(car, t)));
+}
+
+/** The lap time for lap index `lap` — what `lapTime` reads for the current one. */
+function lapTimeAt(car: MockCar, lap: number): number {
   return car.pace + car.wobble * Math.sin(lap * 1.7 + car.idx);
+}
+
+/**
+ * The car's last five completed laps, oldest first — what the bridge now keeps
+ * per car for the tower's pace sparkline. Derived from the same per-lap
+ * function as the last lap itself, so the line always ends on the time printed
+ * beside it.
+ */
+function recentLaps(car: MockCar, t: number): number[] {
+  const lap = Math.floor(progress(car, t));
+  const out: number[] = [];
+  for (let l = Math.max(1, lap - 4); l <= lap; l++) out.push(round(lapTimeAt(car, l), 3));
+  return out;
+}
+
+/**
+ * The car's best lap *so far*: the quickest lap it has actually completed.
+ *
+ * It used to be a constant a little under the car's pace, which the per-lap
+ * swing was free to beat — so the demo could show a last lap quicker than the
+ * best lap printed beside it, the one thing a real timing feed can never do.
+ * Taking the minimum of the laps run keeps the two honest, and makes a new
+ * personal best an event the screen can show.
+ */
+function bestLapSoFar(car: MockCar, t: number): number {
+  const lap = Math.floor(progress(car, t));
+  let best = Infinity;
+  for (let l = 1; l <= lap; l++) best = Math.min(best, lapTimeAt(car, l));
+  return Number.isFinite(best) ? best : car.pace - 0.8;
 }
 
 // ── the lap, as a shape ────────────────────────────────────────────────────
@@ -420,7 +559,10 @@ function rpmFor(kmh: number, gear: number): number {
 
 // ── player telemetry ───────────────────────────────────────────────────────
 
-export function mockPlayerTelemetry(t: number): PlayerTelemetry {
+export function mockPlayerTelemetry(
+  t: number,
+  options: MockOptions = {},
+): PlayerTelemetry {
   const car = MOCK_FIELD[MOCK_PLAYER_IDX];
   const prog = progress(car, t);
   const lap = Math.floor(prog);
@@ -456,7 +598,7 @@ export function mockPlayerTelemetry(t: number): PlayerTelemetry {
 
   const gear = gearFor(kmh);
   const rpm = rpmFor(kmh, gear);
-  const pos = playerPosition(t);
+  const pos = playerPosition(t, mockField(options.field));
 
   // Fuel: burned down a stint, refilled at the stop. Monotonic within a stint,
   // which is what lets both fuel readouts sample a per-lap burn from it.
@@ -503,7 +645,7 @@ export function mockPlayerTelemetry(t: number): PlayerTelemetry {
     fuelLevel: round(fuelLevel, 2),
     fuelLevelPct: round(fuelPct, 3),
     lapCurrentLapTime: round(pct * car.pace, 3),
-    lapBestLapTime: round(car.pace - 0.8, 3),
+    lapBestLapTime: round(bestLapSoFar(car, t), 3),
     lapLastLapTime: round(lapTime(car, t), 3),
     lap,
     lapDistPct: round(pct, 4),
@@ -551,8 +693,8 @@ function driverEntry(car: MockCar, t: number): DriverEntry {
     licenseColor: "#00ff88",
     carClassColor: car.klass.color,
     clubName: "Iberia",
-    countryName: COUNTRIES[car.idx % COUNTRIES.length][0],
-    countryCode: COUNTRIES[car.idx % COUNTRIES.length][1],
+    countryName: (car.country ?? COUNTRIES[car.idx % COUNTRIES.length])[0],
+    countryCode: (car.country ?? COUNTRIES[car.idx % COUNTRIES.length])[1],
     division: (car.idx % 5) + 1,
     /* Incidents accumulate. The player's used to be a flat 0 — which is the one
        value that makes the session strip's INC field impossible to understand,
@@ -578,11 +720,33 @@ function driverEntry(car: MockCar, t: number): DriverEntry {
 export const MOCK_SESSION_TYPES = ["Race", "Open Qualify", "Practice"] as const;
 export type MockSessionType = (typeof MOCK_SESSION_TYPES)[number];
 
+/** The session flags each race-control option runs under, as mask and names. */
+const RACE_CONTROL_FLAGS: Record<MockRaceControl, [names: string[], raw: number]> = {
+  green: [["green"], 0x00000004],
+  yellow: [["yellow"], 0x00000008],
+  safety_car: [["caution"], 0x00004000],
+  white: [["white"], 0x00000002],
+};
+
+/**
+ * What each `tireCompound` index means in the mock series — the table the
+ * bridge now reads from `DriverInfo:DriverTires`. Wet is in it so the stress
+ * field's one car on wets has a name.
+ */
+const MOCK_TIRES = [
+  { index: 0, type: "Medium" },
+  { index: 1, type: "Soft" },
+  { index: 2, type: "Hard" },
+  { index: 3, type: "Wet" },
+];
+
 export function mockSession(
   t: number,
   sessionType: MockSessionType = "Race",
+  options: MockOptions = {},
 ): SessionInfo {
-  const drivers = MOCK_FIELD.map((car) => driverEntry(car, t));
+  const field = mockField(options.field);
+  const drivers = field.map((car) => driverEntry(car, t));
   const timeRemain = Math.max(0, 3600 - t);
   /*
    * A predicted lap count for a timed race.
@@ -596,9 +760,10 @@ export function mockSession(
    */
   const lapsRemain = Math.max(
     0,
-    Math.ceil(timeRemain / runningOrder(t)[0].pace)
+    Math.ceil(timeRemain / runningOrder(t, field)[0].pace)
   );
-  const classIds = [...new Set(MOCK_FIELD.map((c) => c.klass))];
+  const classIds = classesOf(field);
+  const [flags, flagsRaw] = RACE_CONTROL_FLAGS[options.raceControl ?? "green"];
   return {
     sessionId: "mock",
     sessionNum: 0,
@@ -611,10 +776,10 @@ export function mockSession(
     sessionTimeTotal: 3600,
     sessionLapsTotal: null,
     isTimed: true,
-    flags: ["green"],
-    flagsRaw: 0x00000004,
+    flags,
+    flagsRaw,
     category: "Road",
-    sof: Math.round(avg(MOCK_FIELD.map((c) => c.iRating))),
+    sof: Math.round(avg(field.map((c) => c.iRating))),
     track: {
       trackId: 266,
       name: "Circuit de Spa-Francorchamps",
@@ -631,7 +796,7 @@ export function mockSession(
       trackWetness: "Dry",
     },
     classes: classIds.map((k) => {
-      const cars = MOCK_FIELD.filter((c) => c.klass === k);
+      const cars = field.filter((c) => c.klass === k);
       return {
         carClassId: k.id,
         shortName: k.short,
@@ -645,6 +810,7 @@ export function mockSession(
     carRedlineRpm: 7800,
     carEstLapTime: MOCK_FIELD[MOCK_PLAYER_IDX].pace,
     sectorStarts: [0, 0.34, 0.71],
+    tireCompounds: MOCK_TIRES,
   };
 }
 
@@ -656,24 +822,41 @@ export function mockSession(
  */
 const SECTOR_SHARE = [0.34, 0.37, 0.29];
 
-/** This car's best time for sector `i`, derived from its best lap. */
-function sectorBest(car: MockCar, i: number): number {
+/** This car's typical time for sector `i`, derived from its pace. */
+function sectorBase(car: MockCar, i: number): number {
   return (car.pace - 0.8) * SECTOR_SHARE[i];
 }
 
 /**
- * This car's last time for sector `i`.
+ * This car's time for sector `i` on lap `lap`.
  *
  * The three sectors are perturbed on different periods so a car can be up in
  * one and down in another — which is the whole point of a sector column, and
  * what a flat "lap × share" split cannot show.
  */
-function sectorLast(car: MockCar, t: number, i: number): number {
-  // Per completed lap, like `lapTime` — see the note there on why this must not
-  // vary continuously.
-  const lap = Math.floor(progress(car, t));
+function sectorAt(car: MockCar, lap: number, i: number): number {
   const swing = car.wobble * 0.5 * Math.sin(lap * 2.3 + car.idx + i * 2.1);
-  return sectorBest(car, i) + Math.max(-0.45, swing);
+  return sectorBase(car, i) + Math.max(-0.45, swing);
+}
+
+/**
+ * This car's last time for sector `i` — per completed lap, like `lapTime`; see
+ * the note there on why this must not vary continuously.
+ */
+function sectorLast(car: MockCar, t: number, i: number): number {
+  return sectorAt(car, Math.floor(progress(car, t)), i);
+}
+
+/**
+ * The car's best time for sector `i` *so far* — the quickest it has actually
+ * done, for the same reason as {@link bestLapSoFar}: a best that the current
+ * split can beat is a best no real feed would send.
+ */
+function sectorBestSoFar(car: MockCar, t: number, i: number): number {
+  const lap = Math.floor(progress(car, t));
+  let best = Infinity;
+  for (let l = 1; l <= lap; l++) best = Math.min(best, sectorAt(car, l, i));
+  return Number.isFinite(best) ? best : sectorBase(car, i);
 }
 
 /**
@@ -681,15 +864,23 @@ function sectorLast(car: MockCar, t: number, i: number): number {
  * qualifying result and — being derived from the stable field — keeps
  * `positionsGainedTotal` deterministic in `t` like everything else here.
  */
-const GRID_POS = new Map<number, number>(
-  [...MOCK_FIELD]
-    .sort((a, b) => b.iRating - a.iRating)
-    .map((car, i) => [car.idx, i + 1])
-);
+const gridCache = new WeakMap<readonly MockCar[], Map<number, number>>();
+function gridPos(field: readonly MockCar[]): Map<number, number> {
+  let grid = gridCache.get(field);
+  if (!grid) {
+    grid = new Map(
+      [...field]
+        .sort((a, b) => b.iRating - a.iRating)
+        .map((car, i) => [car.idx, i + 1]),
+    );
+    gridCache.set(field, grid);
+  }
+  return grid;
+}
 
 /** The running order at `t`, leader first. */
-function runningOrder(t: number): MockCar[] {
-  return [...MOCK_FIELD].sort((a, b) => progress(b, t) - progress(a, t));
+function runningOrder(t: number, field: readonly MockCar[] = MOCK_FIELD): MockCar[] {
+  return [...field].sort((a, b) => progress(b, t) - progress(a, t));
 }
 
 /**
@@ -697,8 +888,11 @@ function runningOrder(t: number): MockCar[] {
  * standings payload uses, exposed so the telemetry frame can carry iRacing's
  * `PlayerCarPosition` channels rather than nulls.
  */
-function playerPosition(t: number): { overall: number; inClass: number } {
-  const ordered = runningOrder(t);
+function playerPosition(
+  t: number,
+  field: readonly MockCar[] = MOCK_FIELD,
+): { overall: number; inClass: number } {
+  const ordered = runningOrder(t, field);
   const me = MOCK_FIELD[MOCK_PLAYER_IDX];
   const overall = ordered.findIndex((c) => c.idx === me.idx) + 1;
   const inClass =
@@ -706,12 +900,16 @@ function playerPosition(t: number): { overall: number; inClass: number } {
   return { overall, inClass };
 }
 
-export function mockStandings(t: number): StandingsPayload {
-  const ordered = runningOrder(t);
+export function mockStandings(t: number, options: MockOptions = {}): StandingsPayload {
+  const field = mockField(options.field);
+  const ordered = runningOrder(t, field);
   /* The order one lap ago, so the position-change arrow has something to show.
      It was hard-coded to 0, which meant the column existed in every screenshot
      and never once demonstrated what it is for. */
-  const prevOrder = runningOrder(Math.max(0, t - MOCK_FIELD[MOCK_PLAYER_IDX].pace));
+  const prevOrder = runningOrder(
+    Math.max(0, t - MOCK_FIELD[MOCK_PLAYER_IDX].pace),
+    field,
+  );
   const prevPos = new Map(prevOrder.map((c, i) => [c.idx, i + 1]));
   const leaderProg = progress(ordered[0], t);
   // Track position of the player, so we can express each car's on-track gap
@@ -734,13 +932,24 @@ export function mockStandings(t: number): StandingsPayload {
      left most of the surface's colour system impossible to see (which is
      exactly how it shipped). */
   const lastLapOf = new Map<number, number>(
-    MOCK_FIELD.map((c) => [c.idx, lapTime(c, t)])
+    field.map((c) => [c.idx, lapTime(c, t)])
   );
-  const fieldBestLap = Math.min(...MOCK_FIELD.map((c) => c.pace - 0.8));
-  const fastestLapNow = Math.min(...lastLapOf.values());
+  const bestLapOf = new Map<number, number>(
+    field.map((c) => [c.idx, bestLapSoFar(c, t)])
+  );
+  const fieldBestLap = Math.min(...bestLapOf.values());
   const fieldBestSector = SECTOR_SHARE.map((_, i) =>
-    Math.min(...MOCK_FIELD.map((c) => sectorLast(c, t, i)))
+    Math.min(...field.map((c) => sectorBestSoFar(c, t, i)))
   );
+
+  /* The white flag, when the race runs under it: the leader started its final
+     lap the last time it crossed the line, and every other car starts its own
+     as it next crosses — which is how the bridge derives the same state. */
+  const leader = ordered[0];
+  const whiteAt =
+    options.raceControl === "white"
+      ? t - (leaderProg - Math.floor(leaderProg)) * leader.pace
+      : null;
 
   /* Gaps to the leader, in running order — the source for each car's interval
      to the one directly ahead of it (overall and in class). */
@@ -779,21 +988,20 @@ export function mockStandings(t: number): StandingsPayload {
     const intervalToPlayer =
       car.idx === MOCK_PLAYER_IDX ? 0 : round(relLaps * car.pace, 3);
 
-    // Lap grade. Purple only for the single quickest lap on track right now,
-    // and only when it actually beats the field's best; green whenever a car
-    // improves on its own.
+    // Lap grade, the way the bridge grades it: purple when the last lap *is*
+    // the fastest anyone has done, green when it is this car's own best.
     const last = lastLapOf.get(car.idx) ?? lapTime(car, t);
-    const best = car.pace - 0.8;
+    const best = bestLapOf.get(car.idx) ?? last;
     const lastLapStatus: StandingsEntry["lastLapStatus"] =
-      last <= fastestLapNow && last < fieldBestLap
+      last <= fieldBestLap + 1e-6
         ? "overall_best"
-        : last <= best
+        : last <= best + 1e-6
           ? "personal_best"
           : "normal";
 
     const sectors: SectorSplit[] = SECTOR_SHARE.map((_, i) => {
       const lastTime = sectorLast(car, t, i);
-      const bestTime = sectorBest(car, i);
+      const bestTime = sectorBestSoFar(car, t, i);
       const delta = lastTime - bestTime;
       const status: SectorSplit["status"] =
         lastTime <= fieldBestSector[i]
@@ -812,7 +1020,7 @@ export function mockStandings(t: number): StandingsPayload {
       };
     });
 
-    const gained = (GRID_POS.get(car.idx) ?? 0) - (pos ?? 0);
+    const gained = (gridPos(field).get(car.idx) ?? 0) - (pos ?? 0);
     const gainedLastLap = (prevPos.get(car.idx) ?? pos ?? 0) - (pos ?? 0);
 
     /* Laps down. The GT4s lap ~12 s slower than the GT3s, so by lap 11 the tail
@@ -836,11 +1044,20 @@ export function mockStandings(t: number): StandingsPayload {
       gained * 4 + (2500 - car.iRating) / 400
     );
 
-    // One car in the pits and one off-track at any time, rotating slowly, so
-    // the state column is never dead in a demo or a screenshot.
+    // One car in the pits, one off-track and one shown the meatball at any
+    // time, rotating slowly, so the state chips are never dead in a demo or a
+    // screenshot. The stress field's cars with a fixed state keep it instead.
     const rotation = Math.floor(t / 25);
-    const onPitRoad = car.idx === (rotation * 5) % MOCK_FIELD_SIZE;
-    const isOffTrack = car.idx === (rotation * 7 + 3) % MOCK_FIELD_SIZE;
+    const size = field.length;
+    const inWorld = car.state !== "disconnected";
+    const onPitRoad = inWorld && car.idx === (rotation * 5) % size;
+    const isOffTrack = inWorld && !onPitRoad && car.idx === (rotation * 7 + 3) % size;
+    const needsRepair =
+      car.state === "repair" ||
+      (options.field !== "stress" && car.idx === (rotation * 3 + 7) % size);
+    const onFinalLap =
+      whiteAt != null &&
+      (car === leader || Math.floor(prog) > Math.floor(progress(car, whiteAt)));
 
     return {
       carIdx: car.idx,
@@ -851,12 +1068,17 @@ export function mockStandings(t: number): StandingsPayload {
       lapDistPct: round(pct, 4),
       lastLapTime: round(last, 3),
       bestLapTime: round(best, 3),
-      gapToLeader: round(Math.max(0, gap), 3),
-      interval: interval(car, ordered),
+      // A lapped car's gap is a lap *count* and its interval is no number at
+      // all — exactly what the bridge sends. The mock used to send seconds
+      // under the laps flag, which printed a car a lap down as `+262L`.
+      gapToLeader: lapsBehind >= 1 ? lapsBehind : round(Math.max(0, gap), 3),
+      interval: lapsBehind >= 1 ? null : interval(car, ordered),
       gapIsLaps: lapsBehind >= 1,
       lapsDown: Math.max(0, lapsBehind),
-      gapToClassLeader: round(Math.max(0, classGap), 3),
-      classInterval: interval(car, inClassOrder.get(car.klass.id) ?? []),
+      gapToClassLeader:
+        classLapsBehind >= 1 ? classLapsBehind : round(Math.max(0, classGap), 3),
+      classInterval:
+        classLapsBehind >= 1 ? null : interval(car, inClassOrder.get(car.klass.id) ?? []),
       classGapIsLaps: classLapsBehind >= 1,
       intervalToPlayer,
       estCatchTime: null,
@@ -871,10 +1093,16 @@ export function mockStandings(t: number): StandingsPayload {
         3
       ),
       onPitRoad,
-      trackSurfaceLabel: onPitRoad ? "AproachingPits" : "OnTrack",
+      trackSurfaceLabel: !inWorld
+        ? "NotInWorld"
+        : onPitRoad
+          ? "AproachingPits"
+          : isOffTrack
+            ? "OffTrack"
+            : "OnTrack",
       isOffTrack,
       isInPitStall: false,
-      isInWorld: true,
+      isInWorld: inWorld,
       isRetired: false,
       isPlayer: car.idx === MOCK_PLAYER_IDX,
       isOverallLeader: pos === 1,
@@ -882,22 +1110,28 @@ export function mockStandings(t: number): StandingsPayload {
       isLapped: false,
       // Alternate the compound across the field so the tyre cell's colour
       // coding is visible at all in a mock session.
-      tireCompound: car.idx % 3 === 0 ? 0 : car.idx % 3 === 1 ? 1 : 2,
+      tireCompound: car.tyre ?? (car.idx % 3 === 0 ? 0 : car.idx % 3 === 1 ? 1 : 2),
       // Laps on the *set*, not laps in the race — they reset at a stop, and a
       // set age that only ever climbed made the cell read as a lap counter.
       tireLaps: lap % STINT_LAPS,
+      isDisqualified: car.state === "dsq",
+      needsRepair,
+      onFinalLap,
+      hasFinished: false,
+      recentLaps: recentLaps(car, t),
     };
   });
 
-  const classIds = [...new Set(MOCK_FIELD.map((c) => c.klass))];
+  const classIds = classesOf(field);
   const classes: ClassStanding[] = classIds.map((k) => {
     const inClass = ordered.filter((c) => c.klass === k);
     const leader = inClass[0];
-    // The fastest lap belongs to the lowest pace in the class, which is not
-    // generally the car leading it. The standings spend their one filled cell on
-    // this car, so pinning it to the leader made the preview misrepresent the
-    // design (`design.md` § Dense tabular overlays, rule 5).
-    const fastest = inClass.reduce((a, c) => (c.pace < a.pace ? c : a), inClass[0]);
+    // The fastest lap belongs to whoever has actually done it, which is not
+    // generally the car leading the class. The tower fills that car's best-lap
+    // cell, so pinning it to the leader made the preview misrepresent the
+    // design.
+    const bestOf = (c: MockCar) => bestLapOf.get(c.idx) ?? Infinity;
+    const fastest = inClass.reduce((a, c) => (bestOf(c) < bestOf(a) ? c : a), inClass[0]);
     return {
       carClassId: k.id,
       shortName: k.short,
@@ -906,7 +1140,7 @@ export function mockStandings(t: number): StandingsPayload {
       carCount: inClass.length,
       leaderCarIdx: leader?.idx ?? null,
       leaderLap: leader ? Math.floor(progress(leader, t)) : null,
-      fastestLap: fastest ? round(fastest.pace - 0.8, 3) : null,
+      fastestLap: fastest ? round(bestOf(fastest), 3) : null,
       fastestLapCarIdx: fastest?.idx ?? null,
       order: inClass.map((c) => c.idx),
     };
@@ -915,11 +1149,12 @@ export function mockStandings(t: number): StandingsPayload {
   return {
     playerCarIdx: MOCK_PLAYER_IDX,
     sectorCount: 3,
-    overallBestLap: round(Math.min(...MOCK_FIELD.map((c) => c.pace - 0.8)), 3),
+    overallBestLap: round(fieldBestLap, 3),
     // The field's fastest lap, not whoever happens to be leading it.
-    overallBestLapCarIdx: MOCK_FIELD.reduce(
-      (a, c) => (c.pace < a.pace ? c : a),
-      MOCK_FIELD[0]
+    overallBestLapCarIdx: field.reduce(
+      (a, c) =>
+        (bestLapOf.get(c.idx) ?? Infinity) < (bestLapOf.get(a.idx) ?? Infinity) ? c : a,
+      field[0]
     ).idx,
     overallBestSectors: [null, null, null],
     classes,

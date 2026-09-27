@@ -9,9 +9,10 @@
  * bus, so an open standings overlay window updates live.
  */
 
-import { Layers, List } from "lucide-react";
+import { ArrowUpToLine, ChevronsUp, Layers, List } from "lucide-react";
 import {
   useStandingsUiStore,
+  type GapReference,
   type Grouping,
 } from "../../stores/useStandingsUiStore";
 import { ToggleSwitch } from "../ui/controls";
@@ -36,6 +37,31 @@ const GROUPINGS: {
   },
 ];
 
+/**
+ * What the tower's primary gap column measures to. This lives here, not as a
+ * toggle on the class header the design canvas drew it on: nothing on the tower
+ * can be aimed at (`design.md` § Dense tabular overlays, rule 7).
+ */
+const GAP_REFERENCES: {
+  id: GapReference;
+  label: string;
+  description: string;
+  icon: typeof Layers;
+}[] = [
+  {
+    id: "leader",
+    label: "Gap to class leader",
+    description: "Interval to the car ahead beside it.",
+    icon: ArrowUpToLine,
+  },
+  {
+    id: "ahead",
+    label: "Gap to car ahead",
+    description: "Gap to the class leader beside it.",
+    icon: ChevronsUp,
+  },
+];
+
 export function StandingsViewPanel() {
   const grouping = useStandingsUiStore((s) => s.grouping);
   const setGrouping = useStandingsUiStore((s) => s.setGrouping);
@@ -49,6 +75,10 @@ export function StandingsViewPanel() {
   const setShowColumnLabels = useStandingsUiStore(
     (s) => s.setShowColumnLabels
   );
+  const gapReference = useStandingsUiStore((s) => s.gapReference);
+  const setGapReference = useStandingsUiStore((s) => s.setGapReference);
+  const showLegend = useStandingsUiStore((s) => s.showLegend);
+  const setShowLegend = useStandingsUiStore((s) => s.setShowLegend);
 
   return (
     <div className="space-y-2">
@@ -60,6 +90,43 @@ export function StandingsViewPanel() {
               key={id}
               type="button"
               onClick={() => setGrouping(id)}
+              aria-pressed={active}
+              className={[
+                "flex items-center gap-2.5 rounded-card border px-3 py-2 text-left transition-colors",
+                active
+                  ? "border-primary/40 bg-primary/10"
+                  : "border-border/60 bg-transparent hover:border-border",
+              ].join(" ")}
+            >
+              <Icon
+                className={`size-4 shrink-0 ${active ? "text-primary" : "text-muted"}`}
+              />
+              <span className="min-w-0">
+                <span
+                  className={[
+                    "block truncate text-xs font-medium",
+                    active ? "text-text" : "text-faint",
+                  ].join(" ")}
+                >
+                  {label}
+                </span>
+                <span className="block truncate text-[11px] text-faint">
+                  {description}
+                </span>
+              </span>
+            </button>
+          );
+        })}
+      </div>
+
+      <div className="grid grid-cols-2 gap-2">
+        {GAP_REFERENCES.map(({ id, label, description, icon: Icon }) => {
+          const active = gapReference === id;
+          return (
+            <button
+              key={id}
+              type="button"
+              onClick={() => setGapReference(id)}
               aria-pressed={active}
               className={[
                 "flex items-center gap-2.5 rounded-card border px-3 py-2 text-left transition-colors",
@@ -104,11 +171,12 @@ export function StandingsViewPanel() {
       <label className="flex cursor-pointer items-center gap-3 rounded-card border border-border bg-surface px-3 py-2.5 transition-colors hover:border-border-strong">
         <div className="min-w-0 flex-1">
           <span className="block text-xs font-medium text-text">
-            Session strip
+            Race-control bar
           </span>
           <span className="block text-[11px] text-faint">
-            Lap, time left, incidents, temperatures, SoF and the clock, above
-            the field.
+            Lap, time left, incidents, temperatures, SoF and the clock — and
+            the flag: it turns yellow under a yellow and amber under a safety
+            car.
           </span>
         </div>
         <ToggleSwitch
@@ -127,7 +195,7 @@ export function StandingsViewPanel() {
       >
         <div className="min-w-0 flex-1">
           <span className="block text-xs font-medium text-text">
-            Class bands
+            Class headers
           </span>
           <span className="block text-[11px] text-faint">
             {grouping === "class"
@@ -155,6 +223,17 @@ export function StandingsViewPanel() {
           checked={showColumnLabels}
           onChange={setShowColumnLabels}
         />
+      </label>
+
+      <label className="flex cursor-pointer items-center gap-3 rounded-card border border-border bg-surface px-3 py-2.5 transition-colors hover:border-border-strong">
+        <div className="min-w-0 flex-1">
+          <span className="block text-xs font-medium text-text">Legend</span>
+          <span className="block text-[11px] text-faint">
+            A key under the field: what the colours, tyre rings, trend line
+            and state chips mean. Off once you know them.
+          </span>
+        </div>
+        <ToggleSwitch checked={showLegend} onChange={setShowLegend} />
       </label>
     </div>
   );

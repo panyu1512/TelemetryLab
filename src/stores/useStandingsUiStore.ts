@@ -22,6 +22,16 @@ import {
  */
 export type Grouping = "class" | "overall";
 
+/**
+ * What the tower's primary gap column measures to.
+ *
+ * `leader` — the gap to the class leader, with the interval beside it.
+ * `ahead`  — the interval to the car in front, with the gap to the leader
+ *            beside it. The two columns swap rather than one of them showing
+ *            the same number twice.
+ */
+export type GapReference = "leader" | "ahead";
+
 /** Column id → visible. Absent ids default to visible. */
 export type ColumnVisibilityMap = Partial<Record<StandingsColumnId, boolean>>;
 
@@ -54,11 +64,21 @@ export interface StandingsUiState {
    * once, then switchable off, beats permanent.
    */
   showColumnLabels: boolean;
+  /** What the primary gap column measures to. Set in the Manager, not on the tower. */
+  gapReference: GapReference;
+  /**
+   * A key under the field: what the colours, tyre rings, sparkline and state
+   * chips mean. Off by default for the same reason the column labels are — it
+   * teaches the table once and is then a strip of pixels the driver reads past.
+   */
+  showLegend: boolean;
   setGrouping: (g: Grouping) => void;
   setFollowPlayer: (v: boolean) => void;
   setShowSessionStrip: (v: boolean) => void;
   setShowClassBands: (v: boolean) => void;
   setShowColumnLabels: (v: boolean) => void;
+  setGapReference: (v: GapReference) => void;
+  setShowLegend: (v: boolean) => void;
   /** Whether a column is currently visible (configurable ones default to true). */
   isColumnVisible: (id: StandingsColumnId) => boolean;
   toggleColumn: (id: StandingsColumnId) => void;
@@ -75,6 +95,8 @@ export interface Persisted {
   showSessionStrip: boolean;
   showClassBands: boolean;
   showColumnLabels: boolean;
+  gapReference: GapReference;
+  showLegend: boolean;
 }
 
 const DEFAULTS: Persisted = {
@@ -84,6 +106,8 @@ const DEFAULTS: Persisted = {
   showSessionStrip: true,
   showClassBands: true,
   showColumnLabels: false,
+  gapReference: "leader",
+  showLegend: false,
 };
 
 function load(): Persisted {
@@ -91,7 +115,12 @@ function load(): Persisted {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULTS;
     const parsed = JSON.parse(raw) as Partial<Persisted>;
-    return { ...DEFAULTS, ...parsed, columns: parsed.columns ?? {} };
+    return {
+      ...DEFAULTS,
+      ...parsed,
+      columns: parsed.columns ?? {},
+      gapReference: parsed.gapReference === "ahead" ? "ahead" : "leader",
+    };
   } catch {
     return DEFAULTS;
   }
@@ -117,6 +146,8 @@ export const useStandingsUiStore = create<StandingsUiState>((set, get) => {
       showSessionStrip,
       showClassBands,
       showColumnLabels,
+      gapReference,
+      showLegend,
     } = get();
     const snapshot: Persisted = {
       grouping,
@@ -125,6 +156,8 @@ export const useStandingsUiStore = create<StandingsUiState>((set, get) => {
       showSessionStrip,
       showClassBands,
       showColumnLabels,
+      gapReference,
+      showLegend,
     };
     persist(snapshot);
     if (!applyingRemote) broadcast("standings-ui:changed", snapshot);
@@ -149,6 +182,14 @@ export const useStandingsUiStore = create<StandingsUiState>((set, get) => {
     },
     setShowColumnLabels: (showColumnLabels) => {
       set({ showColumnLabels });
+      save();
+    },
+    setGapReference: (gapReference) => {
+      set({ gapReference });
+      save();
+    },
+    setShowLegend: (showLegend) => {
+      set({ showLegend });
       save();
     },
     isColumnVisible: (id) => get().columns[id] !== false,
@@ -180,6 +221,8 @@ subscribe("standings-ui:changed", (remote) => {
       showClassBands: remote.showClassBands ?? DEFAULTS.showClassBands,
       showColumnLabels:
         remote.showColumnLabels ?? DEFAULTS.showColumnLabels,
+      gapReference: remote.gapReference ?? DEFAULTS.gapReference,
+      showLegend: remote.showLegend ?? DEFAULTS.showLegend,
     });
   } finally {
     applyingRemote = false;

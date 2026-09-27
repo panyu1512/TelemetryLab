@@ -18,7 +18,11 @@
 
 import { create } from "zustand";
 import { getTheme, applyTheme } from "../themes";
-import type { MockSessionType } from "../lib/mockData";
+import type {
+  MockFieldKind,
+  MockRaceControl,
+  MockSessionType,
+} from "../lib/mockData";
 import { isSingleView } from "../lib/overlayWindows";
 import { broadcast, subscribe } from "../lib/windowBus";
 
@@ -75,6 +79,20 @@ export interface GlobalSettings {
    * Relative without a running sim. Ignored entirely when mock data is off.
    */
   mockSessionType: MockSessionType;
+  /**
+   * Which field the mock feed runs: the twelve-car, two-class race the demo
+   * has always been, or the thirty-car, three-class stress field — long names,
+   * three-digit numbers, lapped cars and every driver state at once — that
+   * shows whether the timing tower still holds together at scale.
+   */
+  mockField: MockFieldKind;
+  /**
+   * The flag the mock race runs under. The tower's race-control bar changes
+   * colour and wording under a yellow or a safety car, and the final-lap state
+   * only exists once the white is out — none of which a green mock race ever
+   * shows.
+   */
+  mockRaceControl: MockRaceControl;
 }
 
 // ── defaults ─────────────────────────────────────────────────────────────────
@@ -105,6 +123,8 @@ function makeDefaultGlobalSettings(): GlobalSettings {
     logLevel: "info",
     mockDataEnabled: false,
     mockSessionType: "Race",
+    mockField: "standard",
+    mockRaceControl: "green",
   };
 }
 

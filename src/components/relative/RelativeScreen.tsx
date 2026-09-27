@@ -75,7 +75,8 @@ import { CLASS_EDGE_WIDTH, LAP_UNDERLINE } from "../standings/constants";
 import { CountryFlag } from "../ui/CountryFlag";
 import { SessionStrip } from "../timing/SessionStrip";
 import { scaleBox, tableScale, unscaled } from "../../lib/tableScale";
-import { CLASS_RAMP, classColorFor, classTint } from "../../lib/classColors";
+import { CLASS_RAMP, classTint, resolveClassColor } from "../../lib/classColors";
+import { useClassColorOverrides } from "../../stores/useClassColorsStore";
 
 // ─── Layout constants ────────────────────────────────────────────────────────
 
@@ -534,12 +535,17 @@ export function RelativeScreen() {
   const scale = tableScale(width, relNaturalWidth(isOn));
   const innerWidth = unscaled(width, scale);
 
-  // Identity colour from this app's ramp, keyed by the class's position in the
-  // field's order — not iRacing's `carClassColor`, which is free to land on the
-  // red this screen spends on lapped traffic (see `lib/classColors`).
+  // Identity colour: the driver's own pick for the class if they made one in
+  // the Manager, else this app's ramp keyed by the class's position in the
+  // field — never iRacing's `carClassColor`, which is free to land on the red
+  // this screen spends on lapped traffic (see `lib/classColors`).
+  const overrides = useClassColorOverrides();
   const classColorMap = useMemo(
-    () => new Map(classes.map((c, i) => [c.carClassId, classColorFor(i)])),
-    [classes]
+    () =>
+      new Map(
+        classes.map((c, i) => [c.carClassId, resolveClassColor(i, c.shortName, overrides)]),
+      ),
+    [classes, overrides]
   );
 
   // Derive the relative view:

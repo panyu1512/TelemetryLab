@@ -79,3 +79,15 @@ describe("scaleBox", () => {
     expect(scaleBox(0.75)).toMatchObject({ "--table-scale": 0.75 });
   });
 });
+
+describe("tableScale — a surface's own floor", () => {
+  it("lets a wider table go further down to keep the same absolute floor", () => {
+    expect(tableScale(400, 1400)).toBe(MIN_TABLE_SCALE);
+    expect(tableScale(400, 1400, 0.25)).toBeCloseTo(400 / 1400, 6);
+    expect(tableScale(100, 1400, 0.25)).toBe(0.25);
+  });
+
+  it("still never draws above full size", () => {
+    expect(tableScale(3000, 1400, 0.25)).toBe(1);
+  });
+});

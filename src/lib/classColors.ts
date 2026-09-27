@@ -34,9 +34,16 @@
  * the largest hue steps between neighbours — every adjacent pair is more than
  * 110° apart, which is what keeps two groups from blurring into each other at
  * the edge of vision.
+ *
+ * The ramp is now the default rather than the rule: a driver can pick their own
+ * colour per class in the Overlay Manager ({@link resolveClassColor}). Since
+ * the timing tower carries its own palette, a pick is checked against *that*
+ * palette's status colours ({@link classColorClash}) and warned about rather
+ * than refused.
  */
 
-import { tint } from "./contrast";
+import { hueDistance, tint, toOklch } from "./contrast";
+import { TOWER } from "./towerPalette";
 
 /**
  * Five classes' worth of identity colour, in the order groups are drawn.
@@ -57,22 +64,6 @@ export const CLASS_RAMP: readonly string[] = [
 
 /** Alpha of the full-row class tint, used on the Relative. */
 const TINT_ALPHA = 0.14;
-
-/**
- * Strength of the class-colour fill behind a **Standings** row.
- *
- * Fainter than the Relative's full-row wash rather than stronger. The fill
- * stops at the end of the first column now, so it sits directly behind the
- * row's leading number — and a ground under a number it has to keep legible
- * can afford far less than one spread across empty width. It is a bed for the
- * position to sit on, not a bar.
- *
- * Lifted from 0.12 to 0.16 with the band going solid: the stripe is what ties a
- * row back to the block of colour above it, and against a masthead at full
- * strength the old value read as a smudge rather than as the same colour said
- * quietly.
- */
-const FILL_ALPHA = 0.16;
 
 /**
  * The identity colour for the class at `index` in the field's class order.
@@ -107,72 +98,81 @@ export function classColorFor(index: number): string {
  * the shape of the block rather than from its border — while staying quiet
  * enough that the values keep their contrast.
  *
- * The Relative keeps the full wash rather than taking Standings' partial fill,
- * and the difference is not an oversight. A Relative is a handful of rows with
- * no grouping and no repetition: its rows are sorted by where cars physically
- * are, so two neighbours in the same class rarely sit together and there is no
- * block of colour for a partial fill to build. Standings is the opposite —
- * runs of same-class rows stacked into groups, which is what gives a leading
- * fill a column of its own to draw.
+ * Only the Relative washes its rows. The timing tower groups its rows into a
+ * card per class, and the card — headed by a chip of the class's colour, with
+ * every position block in the same colour — already says which class a row is
+ * in; a tint on top would be the same statement twice.
  *
  * A row only ever wears **one** ground. Where a status ground applies — the
  * player's row, a lapped car's — the tint gives way to it entirely, which is
  * what keeps identity and status from being read as the same statement. That
- * rule is enforced at the call sites, in the two row components.
+ * rule is enforced at the call site, in the Relative's row.
  */
 export function classTint(color: string): string {
   return tint(color, TINT_ALPHA);
 }
 
+// ── the user's picks ─────────────────────────────────────────────────────────
+
 /**
- * The ground a **Standings** row sits on: the class's colour running in from
- * the left edge, stopping at `extent`, the rest left as bare paper.
+ * The colour a class is drawn in: the driver's own pick for that class, made
+ * in the Overlay Manager, or the ramp's colour for its position when there is
+ * none.
  *
- * A hard stop, not a fade. The edge is the point — it gives the colour a shape,
- * and a shape is what the eye picks up from a group of rows without being asked
- * to look. A gradient petering out would read as a smudge behind the values
- * instead, which is the thing a table this dense can least afford.
- *
- * `extent` is a CSS length, not a percentage, and it comes from the column
- * model — `firstColumnStop` in the standings constants. That is what lets the
- * fill land *on* the first column's boundary at any table scale and any column
- * set, instead of near it: a share of the row width would drift across the
- * columns every time one was switched on or off.
- *
- * Same one-ground rule as {@link classTint}: a player or lapped row takes its
- * status ground instead, and its leading edge carries class alone.
+ * Keyed by the class's short name ("GT3", "LMP2") rather than its id or its
+ * position, because that is what the driver picked a colour *for*: a GT3 they
+ * made orange should still be orange next week in a field where it sorts
+ * second rather than first.
  */
-export function classRowFill(color: string, extent: string): string {
-  const c = tint(color, FILL_ALPHA);
-  return `linear-gradient(to right, ${c} 0, ${c} ${extent}, transparent ${extent})`;
+export function resolveClassColor(
+  index: number,
+  shortName: string,
+  overrides: Readonly<Record<string, string>>,
+): string {
+  const pick = shortName ? overrides[shortName] : undefined;
+  return pick && pick.trim() ? pick : classColorFor(index);
 }
 
 /**
- * The ground under a class band: the class's colour, **solid**, across the
- * whole row.
- *
- * It used to be a 22 % tint of the same hue, on the argument that identity
- * colour whispers where status colour speaks. What that produced in a
- * four-class field was four bands of roughly equal darkness whose hue you had
- * to look *for*, in a list meant to be parsed without looking — the tint put
- * the class's colour behind the band rather than making it the band.
- *
- * Solid inverts that: a group's masthead is a block of the class's colour, and
- * the rows under it keep the clipped stripe they always had. Masthead solid,
- * rows striped, is the hierarchy — and a block is the one shape the eye finds
- * in peripheral vision without being sent.
- *
- * The cost is real and belongs here rather than in a commit message: filled
- * identity is the loudest device on a surface whose rules ration fill to a
- * single cell (`design.md` § Dense tabular overlays, rule 5). The band gets
- * away with it because it is a *heading* — it carries no timing value a fill
- * could be mistaken for, and there is exactly one per group. Nothing else on
- * this surface may take a solid identity fill.
- *
- * Ink on top is {@link readableInk}'s problem, not this function's: a class
- * colour can land anywhere on the wheel, so the band measures its fill rather
- * than assuming the palette's dark ink will do.
+ * Hues the timing tower already spends on a meaning. A class drawn in one of
+ * these puts an identity and a status in the same colour — the collision this
+ * module was written to prevent — so the picker warns rather than forbids:
+ * the driver may know their field better than the ramp does.
  */
-export function classBandFill(color: string): string {
-  return color;
+const RESERVED: readonly { color: string; meaning: string }[] = [
+  { color: TOWER.meRing, meaning: "your car and places gained" },
+  { color: TOWER.down, meaning: "places lost and slow sectors" },
+  { color: TOWER.personalBest, meaning: "a personal best" },
+  { color: TOWER.classBest, meaning: "the fastest lap in class" },
+  { color: TOWER.yellowBar, meaning: "a yellow flag" },
+  { color: TOWER.soft, meaning: "a red flag" },
+];
+
+/** Closer than this in hue is close enough to be read as the same colour. */
+export const CLASH_HUE_DEG = 20;
+/** Below this chroma a colour reads as grey, which no status uses. */
+const MIN_CHROMA = 0.06;
+
+export interface ClassColorClash {
+  /** The status colour it would be confused with. */
+  color: string;
+  /** What that colour means on the tower, for the warning. */
+  meaning: string;
+}
+
+/**
+ * Whether `color` sits close enough in hue to a status colour to be mistaken
+ * for it, and which one. Null for a safe pick, a grey, or anything unparseable.
+ */
+export function classColorClash(color: string): ClassColorClash | null {
+  const pick = toOklch(color);
+  if (!pick || pick.c < MIN_CHROMA) return null;
+  let best: { d: number; entry: (typeof RESERVED)[number] } | null = null;
+  for (const entry of RESERVED) {
+    const ref = toOklch(entry.color);
+    if (!ref || ref.c < MIN_CHROMA) continue;
+    const d = hueDistance(pick.h, ref.h);
+    if (d < CLASH_HUE_DEG && (!best || d < best.d)) best = { d, entry };
+  }
+  return best ? { color: best.entry.color, meaning: best.entry.meaning } : null;
 }

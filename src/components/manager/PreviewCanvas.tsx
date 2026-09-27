@@ -42,6 +42,7 @@ import {
   type WidgetSize,
 } from "../../dashboards/registry";
 import { useOverlayConfigStore } from "../../stores/useOverlayConfigStore";
+import { defaultWindowSize } from "../../lib/overlayWindows";
 import { useActiveOverlaysStore } from "../../stores/useActiveOverlaysStore";
 import { useWidgetSelectionStore } from "../../stores/useWidgetSelectionStore";
 import { useTelemetryStore } from "../../stores/useTelemetryStore";
@@ -358,8 +359,12 @@ function neededSize(el: HTMLElement, current: Size): Size {
  * scrolling. Returns the size and a `grow` callback the stage feeds measurements
  * into.
  */
-function useOverlaySize(): [Size, (needed: Size) => void] {
-  const [size, setSize] = useState<Size>(BASE);
+function useOverlaySize(overlayId?: string): [Size, (needed: Size) => void] {
+  const [size, setSize] = useState<Size>(() => {
+    if (!overlayId) return BASE;
+    const d = defaultWindowSize("overlay", overlayId);
+    return { w: d.width, h: d.height };
+  });
   const grow = useCallback((needed: Size) => {
     setSize((prev) =>
       needed.w > prev.w + 0.5 || needed.h > prev.h + 0.5
@@ -381,7 +386,7 @@ function SingleView({
 }) {
   const viewportRef = useRef<HTMLDivElement>(null);
   const [viewport, setViewport] = useState({ w: 0, h: 0 });
-  const [size, grow] = useOverlaySize();
+  const [size, grow] = useOverlaySize(overlayId);
 
   useLayoutEffect(() => {
     const el = viewportRef.current;
@@ -611,7 +616,7 @@ function Thumbnail({
 
   // Fit the whole overlay into the thumbnail (both dimensions) so a wide or
   // tall overlay is shrunk to fit rather than clipped.
-  const [size, grow] = useOverlaySize();
+  const [size, grow] = useOverlaySize(overlayId);
   const scale = Math.min(THUMB_W / size.w, THUMB_H / size.h);
 
   // A div (not a <button>): overlays render their own <button>s (Standings /

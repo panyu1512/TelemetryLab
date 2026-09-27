@@ -164,6 +164,26 @@ export function forgetWindow(kind: WindowKind, id: string): void {
 
 // ── spawning windows ──────────────────────────────────────────────────────────
 
+/**
+ * The size a window opens at the first time, before it has saved bounds of its
+ * own.
+ *
+ * Two overlays are not the generic 640×420 card. The broadcast tower is a
+ * narrow column meant for the left edge of a stream, so it opens as one. The
+ * standings tower is drawn in the design canvas's proportions — about 1460 px
+ * wide at full size — and in a 640 px window it scales to under half, so it
+ * opens wide enough to show the demo's whole field at three-quarters.
+ */
+export function defaultWindowSize(
+  kind: WindowKind,
+  id: string,
+): { width: number; height: number } {
+  if (kind === "widget") return { width: 320, height: 220 };
+  if (id === "tower") return { width: 320, height: 540 };
+  if (id === "standings") return { width: 1100, height: 560 };
+  return { width: 640, height: 420 };
+}
+
 async function openWindow(
   kind: WindowKind,
   param: string,
@@ -186,13 +206,14 @@ async function openWindow(
       // Reopen exactly where it was last time, if we have saved bounds — so
       // there's no default-position flash before the window restores itself.
       const saved = getWindowBounds(winLabel);
+      const fallback = defaultWindowSize(kind, id);
       const win = new WebviewWindow(winLabel, {
         url: relativeUrl(param, id),
         title: `${label} — iRacing Telemetry`,
-        width: saved?.width ?? (kind === "widget" ? 320 : 640),
-        height: saved?.height ?? (kind === "widget" ? 220 : 420),
+        width: saved?.width ?? fallback.width,
+        height: saved?.height ?? fallback.height,
         ...(saved ? { x: saved.x, y: saved.y } : {}),
-        minWidth: kind === "widget" ? 160 : 320,
+        minWidth: kind === "widget" ? 160 : id === "tower" ? 160 : 320,
         minHeight: kind === "widget" ? 120 : 200,
         decorations: false,
         transparent: true,

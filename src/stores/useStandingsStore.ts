@@ -1,5 +1,7 @@
 import { create } from "zustand";
+import { classBattles, overallBattles, sameSet } from "../lib/battles";
 import { orderByBestLap } from "../lib/lapTimeOrder";
+import { classBestSectors, sameClassBests } from "../lib/sectorBests";
 import type {
   ClassStanding,
   SectorSplit,
@@ -49,6 +51,20 @@ export interface StandingsState {
   byIdx: Record<number, StandingsEntry>;
   classes: ClassStanding[];
   meta: StandingsMeta;
+  /**
+   * Per class id, the quickest time anyone in the class holds for each sector
+   * — what the tower grades a sector against (see `lib/sectorBests`). Keeps its
+   * identity until a class best actually moves.
+   */
+  classBestSectors: Record<number, (number | null)[]>;
+  /**
+   * Cars within a second of the car ahead in class, as a class-grouped table
+   * reads the field, and as a flat overall one does. Resolved over the whole
+   * field because half of the answer is whether the car *ahead* is racing,
+   * which a row cannot see. Identity-stable like everything else here.
+   */
+  classBattles: ReadonlySet<number>;
+  overallBattles: ReadonlySet<number>;
   seq: number;
   setStandings: (payload: StandingsPayload, seq: number) => void;
   clear: () => void;
@@ -63,6 +79,13 @@ const EMPTY_META: StandingsMeta = {
 };
 
 /** Cheap signature of a car's sector splits, for identity preservation. */
+function lapsEqual(a: number[] | undefined, b: number[] | undefined): boolean {
+  if (a === b) return true;
+  if (!a || !b || a.length !== b.length) return false;
+  for (let i = 0; i < a.length; i++) if (a[i] !== b[i]) return false;
+  return true;
+}
+
 function sectorsEqual(a: SectorSplit[], b: SectorSplit[]): boolean {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i++) {
@@ -109,6 +132,13 @@ function rowEqual(a: StandingsEntry, b: StandingsEntry): boolean {
     a.isOverallLeader === b.isOverallLeader &&
     a.isClassLeader === b.isClassLeader &&
     a.isLapped === b.isLapped &&
+    a.tireCompound === b.tireCompound &&
+    a.tireLaps === b.tireLaps &&
+    a.isDisqualified === b.isDisqualified &&
+    a.needsRepair === b.needsRepair &&
+    a.onFinalLap === b.onFinalLap &&
+    a.hasFinished === b.hasFinished &&
+    lapsEqual(a.recentLaps, b.recentLaps) &&
     sectorsEqual(a.sectors, b.sectors)
   );
 }
@@ -150,12 +180,17 @@ function metaEqual(a: StandingsMeta, b: StandingsMeta): boolean {
   );
 }
 
+const NO_CARS: ReadonlySet<number> = new Set();
+
 export const useStandingsStore = create<StandingsState>((set) => ({
   order: [],
   bestLapOrder: [],
   byIdx: {},
   classes: [],
   meta: EMPTY_META,
+  classBestSectors: {},
+  classBattles: NO_CARS,
+  overallBattles: NO_CARS,
   seq: -1,
   setStandings: (payload, seq) =>
     set((prev) => {
@@ -183,6 +218,13 @@ export const useStandingsStore = create<StandingsState>((set) => ({
         (idx) => nextByIdx[idx]?.bestLapTime,
       );
 
+      const classBests = classBestSectors(payload.entries, payload.sectorCount);
+      const inClassFight = classBattles(
+        payload.classes.map((c) => c.order),
+        nextByIdx,
+      );
+      const inOverallFight = overallBattles(order, nextByIdx);
+
       return {
         order: sameOrder(prev.order, order) ? prev.order : order,
         bestLapOrder: sameOrder(prev.bestLapOrder, bestLapOrder)
@@ -193,6 +235,15 @@ export const useStandingsStore = create<StandingsState>((set) => ({
           ? prev.classes
           : payload.classes,
         meta: metaEqual(prev.meta, meta) ? prev.meta : meta,
+        classBestSectors: sameClassBests(prev.classBestSectors, classBests)
+          ? prev.classBestSectors
+          : classBests,
+        classBattles: sameSet(prev.classBattles, inClassFight)
+          ? prev.classBattles
+          : inClassFight,
+        overallBattles: sameSet(prev.overallBattles, inOverallFight)
+          ? prev.overallBattles
+          : inOverallFight,
         seq,
       };
     }),
@@ -203,6 +254,9 @@ export const useStandingsStore = create<StandingsState>((set) => ({
       byIdx: {},
       classes: [],
       meta: EMPTY_META,
+      classBestSectors: {},
+      classBattles: NO_CARS,
+      overallBattles: NO_CARS,
       seq: -1,
     }),
 }));
@@ -230,4 +284,20 @@ export function useStandingsOrder(): number[] {
 /** The field ranked by best lap — the reading order of a lap-time session. */
 export function useStandingsBestLapOrder(): number[] {
   return useStandingsStore((s) => s.bestLapOrder);
+}
+
+/** This class's best time per sector (stable until a class best moves). */
+export function useClassBestSectors(classId: number): (number | null)[] | undefined {
+  return useStandingsStore((s) => s.classBestSectors[classId]);
+}
+
+/**
+ * Whether this car is within a second of the car ahead in its class, read the
+ * way the current grouping reads the field. A boolean selector, so a row only
+ * re-renders when its own answer flips.
+ */
+export function useInBattle(carIdx: number, classRelative: boolean): boolean {
+  return useStandingsStore((s) =>
+    (classRelative ? s.classBattles : s.overallBattles).has(carIdx),
+  );
 }

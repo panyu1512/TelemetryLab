@@ -31,6 +31,7 @@ import { PreviewCanvas } from "./PreviewCanvas";
 import { StandingsColumnsPanel } from "./StandingsColumnsPanel";
 import { StandingsViewPanel } from "./StandingsViewPanel";
 import { RelativeOptionsPanel } from "./RelativeOptionsPanel";
+import { ClassColorsPanel } from "./ClassColorsPanel";
 import { GlobalSettingsPanel } from "./GlobalSettingsPanel";
 import { DebugPanel } from "./DebugPanel";
 import { Button, IconButton, ToggleSwitch } from "../ui/controls";
@@ -261,6 +262,17 @@ function OverlayConfigSections({ overlayId }: { overlayId: string }) {
           description="What each row of the relative shows."
         >
           <RelativeOptionsPanel />
+        </ConfigSection>
+      )}
+
+      {(overlayId === "standings" ||
+        overlayId === "relative" ||
+        overlayId === "tower") && (
+        <ConfigSection
+          title="Class colours"
+          description="The colour each class is drawn in — on the standings, the relative and the broadcast tower alike."
+        >
+          <ClassColorsPanel />
         </ConfigSection>
       )}
 

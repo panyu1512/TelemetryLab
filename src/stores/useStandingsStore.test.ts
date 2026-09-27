@@ -67,3 +67,55 @@ describe("useStandingsStore — bestLapOrder", () => {
     expect(useStandingsStore.getState().bestLapOrder).toEqual([]);
   });
 });
+
+describe("useStandingsStore — what the tower grades against", () => {
+  beforeEach(() => useStandingsStore.getState().clear());
+
+  it("holds each class's best time per sector", () => {
+    const payload = mockStandings(400);
+    useStandingsStore.getState().setStandings(payload, 1);
+    const { classBestSectors } = useStandingsStore.getState();
+    for (const c of payload.classes) {
+      const bests = classBestSectors[c.carClassId];
+      expect(bests).toHaveLength(payload.sectorCount);
+      const members = payload.entries.filter((e) => e.carClassId === c.carClassId);
+      expect(bests[0]).toBe(Math.min(...members.map((e) => e.sectors[0].bestTime!)));
+    }
+  });
+
+  it("keeps the same objects while nothing moves, so rows do not re-render", () => {
+    const payload = mockStandings(400);
+    useStandingsStore.getState().setStandings(payload, 1);
+    const first = useStandingsStore.getState();
+    useStandingsStore.getState().setStandings(payload, 2);
+    const next = useStandingsStore.getState();
+    expect(next.classBestSectors).toBe(first.classBestSectors);
+    expect(next.classBattles).toBe(first.classBattles);
+    expect(next.overallBattles).toBe(first.overallBattles);
+  });
+
+  it("finds the fights in the field", () => {
+    const payload = mockStandings(400);
+    const [leader, second] = payload.classes[0].order;
+    const close = {
+      ...payload,
+      entries: payload.entries.map((e) =>
+        e.carIdx === second
+          ? { ...e, classInterval: 0.4, classGapIsLaps: false, onPitRoad: false, isInWorld: true }
+          : e.carIdx === leader
+            ? { ...e, onPitRoad: false, isInWorld: true }
+            : e,
+      ),
+    };
+    useStandingsStore.getState().setStandings(close, 1);
+    expect(useStandingsStore.getState().classBattles.has(second)).toBe(true);
+  });
+
+  it("clears them with the rest of the field", () => {
+    useStandingsStore.getState().setStandings(mockStandings(400), 1);
+    useStandingsStore.getState().clear();
+    const s = useStandingsStore.getState();
+    expect(s.classBestSectors).toEqual({});
+    expect(s.classBattles.size).toBe(0);
+  });
+});

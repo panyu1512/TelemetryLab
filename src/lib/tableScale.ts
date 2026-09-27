@@ -45,10 +45,19 @@ export const MIN_TABLE_SCALE = 0.5;
  * ResizeObserver reports) draws at full size — the same "show everything and
  * let it clip" default the session strip takes, and it lasts one frame.
  */
-export function tableScale(available: number, natural: number): number {
+export function tableScale(
+  available: number,
+  natural: number,
+  /**
+   * The floor for this surface. A table whose natural width is larger has to
+   * be allowed further down to keep the same absolute floor — the timing tower
+   * passes its own (`TOWER_MIN_SCALE`).
+   */
+  min: number = MIN_TABLE_SCALE,
+): number {
   if (!Number.isFinite(available) || available <= 0) return 1;
   if (!Number.isFinite(natural) || natural <= 0) return 1;
-  return Math.min(1, Math.max(MIN_TABLE_SCALE, available / natural));
+  return Math.min(1, Math.max(min, available / natural));
 }
 
 /**

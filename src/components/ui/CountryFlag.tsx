@@ -10,6 +10,7 @@ export function CountryFlag({
   code,
   name,
   showCode = false,
+  size = 11,
 }: {
   /** ISO alpha-3 code from the driver flair, e.g. "ESP". May be "". */
   code: string;
@@ -17,6 +18,8 @@ export function CountryFlag({
   name?: string;
   /** Render the alpha-3 code text next to the flag. */
   showCode?: boolean;
+  /** Flag height in px (the sprite is 4:3). The timing tower draws it larger. */
+  size?: number;
 }) {
   if (!code) return null;
   const a2 = alpha2(code);
@@ -29,7 +32,7 @@ export function CountryFlag({
       {a2 && (
         <span
           className={`fi fi-${a2} rounded-[2px]`}
-          style={{ fontSize: 11, lineHeight: 1 }}
+          style={{ fontSize: size, lineHeight: 1 }}
           aria-label={title}
         />
       )}

@@ -188,6 +188,19 @@ export interface SessionInfo {
   carEstLapTime: number | null;
   /** Sector boundaries as lap-distance fractions (from SplitTimeInfo). */
   sectorStarts: number[];
+  /**
+   * The series' tyres by index (DriverInfo:DriverTires): what each
+   * `tireCompound` number means here. Empty or absent on an older build or
+   * bridge — the tyre cell then prints the bare index.
+   */
+  tireCompounds?: TireCompoundInfo[];
+}
+
+/** One tyre the series runs: the index CarIdxTireCompound reports, and its name. */
+export interface TireCompoundInfo {
+  index: number;
+  /** As iRacing spells it: "Hard", "Soft", "Wet", "Qualifying", "All-Purpose"… */
+  type: string;
 }
 
 // ---------------------------------------------------------------------------
@@ -302,6 +315,20 @@ export interface StandingsEntry {
   tireCompound: number | null;
   /** Laps on the current tyre set (derived: counts from last pit-stall exit). */
   tireLaps: number;
+
+  // Driver-directed flags and the end of the race. Optional because a bridge
+  // older than the timing-tower redesign does not send them; absent reads as
+  // false / empty everywhere.
+  /** Shown the DQ (CarIdxSessionFlags). */
+  isDisqualified?: boolean;
+  /** Shown the meatball — must pit for repairs (CarIdxSessionFlags). */
+  needsRepair?: boolean;
+  /** Started its last lap: crossed the line after the leader's white. */
+  onFinalLap?: boolean;
+  /** Took the chequer: crossed the line after the leader finished. */
+  hasFinished?: boolean;
+  /** The car's last completed laps (s), oldest first — at most five. */
+  recentLaps?: number[];
 }
 
 /** Per-class grouping metadata for the multi-class timing screen. */

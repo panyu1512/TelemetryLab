@@ -1,7 +1,11 @@
 import { Info } from "lucide-react";
 import { useOverlayConfigStore } from "../../stores/useOverlayConfigStore";
 import { THEMES } from "../../themes";
-import type { MockSessionType } from "../../lib/mockData";
+import type {
+  MockFieldKind,
+  MockRaceControl,
+  MockSessionType,
+} from "../../lib/mockData";
 import {
   InfoNote,
   SectionLabel,
@@ -78,6 +82,40 @@ export function GlobalSettingsPanel() {
                 store.setGlobalSettings({
                   mockSessionType: v as MockSessionType,
                 })
+              }
+            />
+          </LabeledField>
+
+          <LabeledField
+            label="Mock Field"
+            hint="The twelve-car, two-class race, or a thirty-car, three-class stress field — long names, three-digit numbers, lapped cars, and a car in every state at once — to see the standings hold together at scale."
+          >
+            <SelectInput
+              value={globalSettings.mockField}
+              options={[
+                { value: "standard", label: "Standard — 12 cars, 2 classes" },
+                { value: "stress", label: "Stress test — 30 cars, 3 classes" },
+              ]}
+              onChange={(v) =>
+                store.setGlobalSettings({ mockField: v as MockFieldKind })
+              }
+            />
+          </LabeledField>
+
+          <LabeledField
+            label="Mock Race Control"
+            hint="The flag the mock race runs under. The standings' race-control bar turns yellow under a yellow flag and amber under a safety car, and cars show FINAL LAP once the white is out."
+          >
+            <SelectInput
+              value={globalSettings.mockRaceControl}
+              options={[
+                { value: "green", label: "Green" },
+                { value: "yellow", label: "Yellow flag" },
+                { value: "safety_car", label: "Safety car" },
+                { value: "white", label: "White flag — final lap" },
+              ]}
+              onChange={(v) =>
+                store.setGlobalSettings({ mockRaceControl: v as MockRaceControl })
               }
             />
           </LabeledField>

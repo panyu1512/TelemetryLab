@@ -1,41 +1,50 @@
 import { memo } from "react";
-import { Wrench, AlertTriangle } from "lucide-react";
-import { useStandingsRow } from "../../stores/useStandingsStore";
-import { useDriver } from "../../stores/useSessionStore";
 import {
-  CLASS_EDGE_WIDTH,
-  COL_LABEL_H,
-  firstColumnStop,
-  GROUP_TONE,
-  gridTemplate,
-  LAP_COLOR,
-  LAP_UNDERLINE,
-  ROW_H,
-  type ColumnVisibility,
-} from "./constants";
-import { ColumnLabels } from "./ColumnLabels";
-import { classRowFill } from "../../lib/classColors";
-import { readableInk } from "../../lib/contrast";
+  useClassBestSectors,
+  useInBattle,
+  useStandingsRow,
+} from "../../stores/useStandingsStore";
+import { useDriver } from "../../stores/useSessionStore";
+import type { GapReference } from "../../stores/useStandingsUiStore";
+import type { TireCompoundInfo } from "../../telemetry/types";
+import { gap as fmtGap, interval as fmtInterval } from "../../lib/format";
+import { rowState } from "../../lib/rowState";
+import { TOWER } from "../../lib/towerPalette";
+import { compoundLook } from "../../lib/tyreCompound";
 import { CountryFlag } from "../ui/CountryFlag";
 import {
+  BestLapCell,
   BrandIcon,
-  GapCell,
-  IntervalCell,
+  GapValue,
   IRatingCell,
-  LapCell,
+  LastLapCell,
   LicenseBadge,
+  PosBlock,
   PosChange,
   SectorCell,
-  TireCell,
+  StateChip,
+  TrendCell,
+  TyreCell,
 } from "./cells";
+import {
+  COL_GAP,
+  gridTemplate,
+  ROW_H,
+  ROW_PAD_X,
+  type ColumnVisibility,
+} from "./constants";
 
 interface StandingsRowProps {
   carIdx: number;
-  top: number;
+  /** Offset inside its class card, below the card's top edge. */
+  y: number;
   sectorCount: number;
   classColor: string;
+  /** Odd rows of a group sit a step darker than even ones. */
   zebra: boolean;
-  /** Grouped by class ⇒ show gap/interval relative to the class, not overall. */
+  /** Draws the hairline that counts the field in threes, above this row. */
+  divider: boolean;
+  /** Grouped by class ⇒ gaps are class-relative, not overall. */
   classRelative: boolean;
   /**
    * Rank derived by the layout, or null to print the car's own iRacing
@@ -43,271 +52,232 @@ interface StandingsRowProps {
    * ordering and so has to supply the number that goes with it.
    */
   rank: number | null;
-  /** Which columns to render (must match the labels). */
   isVisible: ColumnVisibility;
-  /**
-   * First row of its class group *and* column labels are switched on: prints
-   * them in its top slice, so the table needs no header band (`design.md`
-   * § Dense tabular overlays, rule 3). Off by default — see the rule.
-   */
-  labelled: boolean;
-  /** Class-group tone index into {@link GROUP_TONE} (rule 2's tone shift). */
-  tone: number;
-  /**
-   * Whether this car holds the fastest lap in its class, or in the whole field.
-   * The *only* filled cell on this surface (rule 5) — everything else that needs
-   * colour gets coloured text.
-   */
+  /** This car holds the fastest lap in its class — and whether in the field. */
   fastest: "class" | "overall" | null;
+  gapReference: GapReference;
+  /** The session's tyre table, for naming `tireCompound`. */
+  tyres: readonly TireCompoundInfo[] | undefined;
 }
 
+/** Position block height — the canvas's 30 in a 44 row. */
+const POS_H = 30;
+
 /**
- * One field row. Subscribes to *only* its own timing entry (fast, 10 Hz) and its
- * own roster entry (slow, rare), so a tick that moves three cars re-renders
- * three rows — not the field. Absolutely positioned by `translateY(top)`; the
- * `.row-glide` class supplies the transition, so a change of `top` (a position
- * swap) animates the glide on the token scale and switches off entirely under
- * reduced motion.
+ * One field row of the timing tower. Subscribes to *only* its own timing entry
+ * (fast, 10 Hz) and its own roster entry (slow, rare), so a tick that moves
+ * three cars re-renders three rows — not the field. Positioned by
+ * `translateY(y)` inside its class card; `.row-glide` supplies the transition,
+ * so a position swap slides rather than jumps, and switches off under reduced
+ * motion.
+ *
+ * The reading order the row is built for is **position → name → gap**: a block
+ * of the class's colour, a bold condensed name, then the gap a size up from
+ * every other number. Everything after that is a step quieter, and the
+ * quietest columns — car number, iRating, laps on the set — are the ones read
+ * only when looked for.
  */
 function StandingsRowInner({
   carIdx,
-  top,
+  y,
   sectorCount,
   classColor,
   zebra,
+  divider,
   classRelative,
   rank,
   isVisible,
-  labelled,
-  tone,
   fastest,
+  gapReference,
+  tyres,
 }: StandingsRowProps) {
   const row = useStandingsRow(carIdx);
   const driver = useDriver(carIdx);
-
-  const dimmed = row ? row.isRetired || !row.isInWorld : false;
-  const inPit = row?.onPitRoad || row?.isInPitStall;
+  const classBests = useClassBestSectors(row?.carClassId ?? -1);
+  const battle = useInBattle(carIdx, classRelative);
+  const state = rowState(row);
 
   // Class-grouped view races within the class; flat view is overall.
-  const gapValue = classRelative ? row?.gapToClassLeader : row?.gapToLeader;
-  const gapIsLaps = classRelative
-    ? row?.classGapIsLaps
-    : row?.gapIsLaps;
-  const intervalValue = classRelative ? row?.classInterval : row?.interval;
+  const leads = classRelative ? row?.isClassLeader : row?.isOverallLeader;
+  const gapText = leads
+    ? "Leader"
+    : fmtGap(
+        classRelative ? row?.gapToClassLeader : row?.gapToLeader,
+        (classRelative ? row?.classGapIsLaps : row?.gapIsLaps) ?? false,
+      );
+  const intervalText = leads
+    ? "—"
+    : fmtInterval(classRelative ? row?.classInterval : row?.interval);
+  // "Car ahead" swaps the two columns rather than printing the interval twice:
+  // the primary, larger column measures to whatever the Manager points it at.
+  const ahead = gapReference === "ahead";
 
-  // Class-group tone shift, with the zebra phase riding on it (rule 2). The
-  // player's row overrides both: "this is you" is `primary` as the row's ground
-  // (§ Two colour systems, rule 3).
-  const [toneBase, toneZebra] = GROUP_TONE[tone % GROUP_TONE.length];
+  const position =
+    rank ??
+    (classRelative
+      ? row?.classPosition ?? row?.position
+      : row?.position ?? row?.classPosition) ??
+    "—";
 
-  // A row wears exactly one ground. Class tint is identity; the player's
-  // `primary` ground is status; letting both paint would be the collision this
-  // whole change is about, one layer down. Status wins — you can always find
-  // your class from the leading edge, but "which of these is me" has to be
-  // unambiguous.
-  const wearsStatusGround = row?.isPlayer === true;
+  const isMe = row?.isPlayer === true;
+  const nameInk = state.dimAll ? TOWER.dim : TOWER.text;
 
   return (
     <div
-      className="row-glide absolute inset-x-0 rounded-sm will-change-transform"
+      className="row-glide absolute inset-x-0 grid items-center will-change-transform"
       style={{
         height: ROW_H,
-        transform: `translateY(${top}px)`,
-        // Painted on the wrapper rather than the row itself, so the zebra tone
-        // (a translucent white utility class) still layers over it instead of
-        // being overwritten by an inline background.
-        background: wearsStatusGround
-          ? undefined
-          : classRowFill(classColor, firstColumnStop(sectorCount, isVisible)),
+        transform: `translateY(${y}px)`,
+        gridTemplateColumns: gridTemplate(sectorCount, isVisible),
+        columnGap: COL_GAP,
+        padding: `0 ${ROW_PAD_X}px`,
+        boxSizing: "border-box",
+        background: isMe ? TOWER.meBg : zebra ? TOWER.rowB : TOWER.rowA,
+        borderTop: `1px solid ${divider ? TOWER.divider : "transparent"}`,
+        boxShadow: isMe ? `inset 0 0 0 1px ${TOWER.meRing}` : undefined,
+        color: TOWER.text2,
+        fontSize: 15,
       }}
     >
-      <div
-        className={[
-          "relative grid h-full items-center gap-x-1 rounded-sm px-1 text-xs",
-          row?.isPlayer
-            ? "bg-primary/10 ring-1 ring-inset ring-primary/35"
-            : zebra
-              ? toneZebra
-              : toneBase,
-          dimmed ? "opacity-40" : "",
-        ]
-          .filter(Boolean)
-          .join(" ")}
-        style={{
-          gridTemplateColumns: gridTemplate(sectorCount, isVisible),
-          // 3 px, up from 2: on near-black paper a 2 px hairline of an arbitrary
-          // hue was the first thing to disappear in peripheral vision, which is
-          // where this surface is read. It is still the row's only carrier of
-          // class colour (§ Two colour systems, rule 2), and the one measurement
-          // that holds its drawn size as the table scales — see CLASS_EDGE_WIDTH.
-          borderLeftWidth: CLASS_EDGE_WIDTH,
-          borderLeftStyle: "solid",
-          borderLeftColor: row?.isClassLeader ? classColor : `${classColor}66`,
-          // Clear the in-row column labels rather than centring under them.
-          paddingTop: labelled ? COL_LABEL_H : undefined,
-        }}
-      >
-        {labelled && (
-          <ColumnLabels sectorCount={sectorCount} isVisible={isVisible} />
-        )}
+      <PosBlock value={position} color={classColor} dsq={state.dsq} height={POS_H} />
 
-        {/* position change */}
-        {isVisible("change") && (
-          <div className="flex justify-center">
-            <PosChange value={row?.positionsGainedTotal ?? 0} />
-          </div>
-        )}
+      {isVisible("change") && (
+        <PosChange value={row?.positionsGainedTotal ?? 0} dim={state.dimAll} />
+      )}
 
-        {/* position — the layout's own rank in a lap-time session, otherwise
-            iRacing's: class position when grouped by class, overall when flat.
-            A flat overall table numbered by class position reads as scrambled.
-
-            It sits in a block of the class's colour, which is the row's answer
-            to the solid band that opens its group: the masthead is a block, and
-            the first thing in every row under it is the same block one column
-            wide. Rank and class are the two facts you take off a row without
-            reading it, and this is the one cell where they can be the same
-            glance. Ink is measured, not assumed — see `readableInk`. */}
-        <div
-          className="tnum rounded-ctl py-0.5 text-center text-[14px] font-bold leading-none tabular-nums"
-          style={{ background: classColor, color: readableInk(classColor) }}
+      {isVisible("num") && (
+        <span
+          className="truncate text-right text-[14px]"
+          style={{ color: state.dimAll ? TOWER.dim : TOWER.text3 }}
+          title={`#${driver?.carNumber ?? ""}`}
         >
-          {rank ??
-            (classRelative
-              ? row?.classPosition ?? row?.position
-              : row?.position ?? row?.classPosition) ??
-            "—"}
-        </div>
+          {driver?.carNumber ?? "—"}
+        </span>
+      )}
 
-        {/* car number — no pill: fill is rationed to the fastest-lap cell
-            (rule 5), and `muted` is the floor for a car number (§ Deliberately
-            not adopted). */}
-        {isVisible("num") && (
-          <div
-            className="truncate text-center text-[12px] font-bold tabular-nums tnum text-muted"
-            title={`#${driver?.carNumber ?? ""}`}
-          >
-            {driver?.carNumber ?? "—"}
-          </div>
-        )}
-
-        {/* country flag */}
-        {isVisible("country") && (
-          <div className="flex justify-center">
-            <CountryFlag
-              code={driver?.countryCode ?? ""}
-              name={driver?.countryName}
-            />
-          </div>
-        )}
-
-        {/* driver.
-
-            Caps, as a timing graphic sets them. It costs something real: caps
-            are read by outline and lose the ascender/descender silhouette that
-            makes a name recognisable at a glance, and they run ~12 % wider, so
-            the only column allowed to truncate truncates sooner. What they buy
-            is a single optical weight down the one ragged column on the
-            surface, which is what stops the field reading as a list of strings
-            of different heights. */}
-        <div className="flex min-w-0 items-center">
-          <span className="truncate text-[13px] font-bold uppercase tracking-[0.01em] text-text">
-            {driver?.userName ?? `Car ${carIdx}`}
-          </span>
-        </div>
-
-        {/* car brand */}
-        {isVisible("brand") && (
-          <div className="flex justify-center">
-            <BrandIcon make={driver?.carMake ?? ""} />
-          </div>
-        )}
-
-        {/* license + SR */}
-        {isVisible("license") && (
-          <div className="flex justify-center">
-            {driver && (
-              <LicenseBadge
-                group={driver.licenseGroup}
-                safetyRating={driver.safetyRating}
-                color={driver.licenseColor}
-              />
-            )}
-          </div>
-        )}
-
-        {/* iRating + projected change */}
-        {isVisible("irating") && (
-          <IRatingCell
-            iRating={driver?.iRating ?? row?.iRating ?? 0}
-            change={row?.iRatingChangeEst ?? 0}
+      {isVisible("country") && (
+        <div
+          className="flex justify-center"
+          style={{ opacity: state.dimAll ? 0.5 : 1 }}
+        >
+          <CountryFlag
+            code={driver?.countryCode ?? ""}
+            name={driver?.countryName}
+            size={15}
           />
-        )}
-
-        {/* gap to leader / interval (class-relative when grouped by class) */}
-        {isVisible("gap") && (
-          <GapCell value={gapValue ?? null} isLaps={gapIsLaps ?? false} />
-        )}
-        {isVisible("interval") && <IntervalCell value={intervalValue ?? null} />}
-
-        {/* last / best lap */}
-        {isVisible("last") && (
-          <LapCell
-            key={`last-${row?.lastLapTime}`}
-            time={row?.lastLapTime ?? null}
-            color={LAP_COLOR[row?.lastLapStatus ?? "none"]}
-            underline={LAP_UNDERLINE[row?.lastLapStatus ?? "none"]}
-            flash={row?.lastLapStatus === "overall_best"}
-          />
-        )}
-        {/* The one filled cell on this surface: the fastest lap, purple when it
-            leads the field and accent when it only leads the class (rule 5). */}
-        {isVisible("best") && (
-          <LapCell
-            time={row?.bestLapTime ?? null}
-            color="var(--color-muted)"
-            fill={
-              fastest === "overall"
-                ? "var(--color-sector-purple)"
-                : fastest === "class"
-                  ? "var(--color-accent)"
-                  : undefined
-            }
-            fillTitle={
-              fastest === "overall"
-                ? "Fastest lap of the session"
-                : fastest === "class"
-                  ? "Fastest lap in class"
-                  : undefined
-            }
-          />
-        )}
-
-        {/* tyre compound + laps */}
-        {isVisible("tire") && (
-          <TireCell compound={row?.tireCompound ?? null} laps={row?.tireLaps ?? 0} />
-        )}
-
-        {/* sector deltas */}
-        {isVisible("sectors") &&
-          Array.from({ length: sectorCount }, (_, i) => (
-            <SectorCell key={i} sector={row?.sectors[i]} />
-          ))}
-
-        {/* state badge */}
-        <div className="flex items-center justify-center">
-          {inPit ? (
-            <span
-              className="text-warning"
-              title={row?.isInPitStall ? "In pit stall" : "On pit road"}
-            >
-              <Wrench className="size-3.5" />
-            </span>
-          ) : row?.isOffTrack ? (
-            <AlertTriangle className="size-3.5 text-danger" />
-          ) : null}
         </div>
+      )}
+
+      {/* The name, and beside it whatever state the car is in. The name is the
+          one column allowed to truncate, and it gives way before a chip does:
+          "who is in the pits" matters more than the last letters of who. */}
+      <div className="flex min-w-0 items-center gap-2">
+        <span
+          className="tower-cond min-w-0 truncate text-[21px] font-bold uppercase tracking-[0.02em]"
+          style={{
+            color: nameInk,
+            textDecoration: state.dsq ? "line-through" : undefined,
+          }}
+          title={state.dsq ? `${driver?.userName} — disqualified` : driver?.userName}
+        >
+          {driver?.userName ?? `Car ${carIdx}`}
+        </span>
+        {state.chips.map((kind) => (
+          <StateChip key={kind} kind={kind} />
+        ))}
       </div>
+
+      {isVisible("brand") && (
+        <div className="flex justify-center">
+          <BrandIcon
+            make={driver?.carMake ?? ""}
+            height={22}
+            color={state.dimAll ? TOWER.dim : TOWER.text}
+          />
+        </div>
+      )}
+
+      {isVisible("license") && (
+        <div className="flex justify-center" style={{ opacity: state.dimAll ? 0.6 : 1 }}>
+          {driver && (
+            <LicenseBadge
+              group={driver.licenseGroup}
+              safetyRating={driver.safetyRating}
+              color={driver.licenseColor}
+            />
+          )}
+        </div>
+      )}
+
+      {isVisible("irating") && (
+        <IRatingCell
+          iRating={driver?.iRating ?? row?.iRating ?? 0}
+          change={row?.iRatingChangeEst ?? 0}
+          dim={state.dimAll}
+        />
+      )}
+
+      {isVisible("gap") && (
+        <GapValue
+          text={ahead ? intervalText : gapText}
+          primary
+          battle={ahead && battle}
+          dim={state.dimLive}
+          accent={classColor}
+        />
+      )}
+      {isVisible("interval") && (
+        <GapValue
+          text={ahead ? gapText : intervalText}
+          primary={false}
+          battle={!ahead && battle}
+          dim={state.dimLive}
+          accent={classColor}
+        />
+      )}
+
+      {isVisible("last") && (
+        <LastLapCell
+          key={`last-${row?.lastLapTime}`}
+          time={row?.lastLapTime ?? null}
+          status={row?.lastLapStatus ?? "none"}
+          dim={state.dimLive}
+        />
+      )}
+
+      {isVisible("trend") && (
+        <TrendCell
+          laps={row?.recentLaps}
+          best={row?.bestLapTime ?? null}
+          dim={state.dimLive}
+        />
+      )}
+
+      {isVisible("best") && (
+        <BestLapCell
+          time={row?.bestLapTime ?? null}
+          fastest={fastest}
+          dim={state.dimAll}
+        />
+      )}
+
+      {isVisible("tire") && (
+        <TyreCell
+          look={compoundLook(row?.tireCompound ?? null, tyres)}
+          laps={row?.tireLaps ?? 0}
+          dim={state.dimAll}
+        />
+      )}
+
+      {isVisible("sectors") &&
+        Array.from({ length: sectorCount }, (_, i) => (
+          <SectorCell
+            key={i}
+            sector={row?.sectors[i]}
+            classBest={classBests?.[i]}
+            dim={state.dimLive}
+          />
+        ))}
     </div>
   );
 }

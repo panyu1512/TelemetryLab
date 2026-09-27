@@ -8,6 +8,7 @@ import {
   Flag,
   ListOrdered,
   Users,
+  Tv,
   type LucideIcon,
 } from "lucide-react";
 import type { TelemetryData } from "../hooks/useTelemetry";
@@ -20,6 +21,7 @@ import { PositionWidget } from "../components/widgets/PositionWidget";
 import { StandingsScreen } from "../components/standings/StandingsScreen";
 import { RelativeScreen } from "../components/relative/RelativeScreen";
 import { FuelStrategyScreen } from "../components/fuel/FuelStrategyScreen";
+import { BroadcastTowerScreen } from "../components/broadcast/BroadcastTowerScreen";
 
 /** Relative footprint of a widget on the 12-column dashboard grid. */
 export type WidgetSize = "sm" | "md" | "lg" | "xl";
@@ -135,6 +137,16 @@ export const DASHBOARDS: DashboardDef[] = [
     milestone: "v0.5.0",
     widgets: [],
     Screen: RelativeScreen,
+  },
+  {
+    // The timing tower cut down for a stream: position, name, class colour and
+    // gap in a 300 px column, transparent around it for an OBS browser source.
+    id: "tower",
+    label: "Broadcast",
+    icon: Tv,
+    available: true,
+    widgets: [],
+    Screen: BroadcastTowerScreen,
   },
   {
     id: "fuel",

@@ -257,7 +257,21 @@ describe("mockStandings — gaps are measured from the right car", () => {
 
   it("keeps the class gap no larger than the overall gap", () => {
     for (const e of p.entries) {
+      if (e.gapIsLaps || e.classGapIsLaps) {
+        // Different units — but a lap down in class is a lap down overall.
+        if (e.classGapIsLaps) expect(e.gapIsLaps).toBe(true);
+        continue;
+      }
       expect(e.gapToClassLeader!).toBeLessThanOrEqual(e.gapToLeader! + 1e-6);
+    }
+  });
+
+  it("reports a lapped car's gap as a lap count, the way the bridge does", () => {
+    const lapped = p.entries.filter((e) => e.gapIsLaps);
+    expect(lapped.length).toBeGreaterThan(0);
+    for (const e of lapped) {
+      expect(e.gapToLeader).toBe(e.lapsDown);
+      expect(e.interval).toBeNull();
     }
   });
 });
@@ -282,5 +296,127 @@ describe("mockSession — a timed race carries a predicted lap count", () => {
   it("counts down to zero and never below", () => {
     expect(mockSession(3600).sessionLapsRemain).toBe(0);
     expect(mockSession(4000).sessionLapsRemain).toBe(0);
+  });
+});
+
+describe("mock bests — never beaten by the lap beside them", () => {
+  const p = mockStandings(MOCK_START_OFFSET_S + 300);
+
+  it("keeps every best lap at or below its last lap", () => {
+    for (const e of p.entries) {
+      expect(e.bestLapTime!).toBeLessThanOrEqual(e.lastLapTime! + 1e-6);
+    }
+  });
+
+  it("keeps every sector's best at or below its last time", () => {
+    for (const e of p.entries) {
+      for (const s of e.sectors) expect(s.bestTime!).toBeLessThanOrEqual(s.lastTime! + 1e-6);
+    }
+  });
+
+  it("gives each class's fastest lap to the car that actually did it", () => {
+    for (const c of p.classes) {
+      const bests = c.order.map((idx) => p.entries.find((e) => e.carIdx === idx)!.bestLapTime!);
+      expect(c.fastestLap).toBeCloseTo(Math.min(...bests), 3);
+    }
+  });
+});
+
+describe("mock lap history", () => {
+  const p = mockStandings(MOCK_START_OFFSET_S);
+
+  it("carries up to five laps per car, ending on the last lap", () => {
+    for (const e of p.entries) {
+      const laps = e.recentLaps!;
+      expect(laps.length).toBeGreaterThan(0);
+      expect(laps.length).toBeLessThanOrEqual(5);
+      expect(laps[laps.length - 1]).toBeCloseTo(e.lastLapTime!, 3);
+    }
+  });
+});
+
+describe("mock tyres", () => {
+  it("names every compound index the field runs", () => {
+    const s = mockSession(MOCK_START_OFFSET_S);
+    const named = new Set(s.tireCompounds!.map((t) => t.index));
+    for (const e of mockStandings(MOCK_START_OFFSET_S).entries) {
+      expect(named.has(e.tireCompound!)).toBe(true);
+    }
+  });
+});
+
+describe("mock race control", () => {
+  it("runs green unless told otherwise", () => {
+    expect(mockSession(MOCK_START_OFFSET_S).flags).toEqual(["green"]);
+  });
+
+  it("puts the chosen flag on the session", () => {
+    expect(mockSession(MOCK_START_OFFSET_S, "Race", { raceControl: "yellow" }).flags).toEqual([
+      "yellow",
+    ]);
+    expect(
+      mockSession(MOCK_START_OFFSET_S, "Race", { raceControl: "safety_car" }).flags,
+    ).toEqual(["caution"]);
+    expect(mockSession(MOCK_START_OFFSET_S, "Race", { raceControl: "white" }).flags).toEqual([
+      "white",
+    ]);
+  });
+
+  it("puts the leader on its final lap under the white, and nobody otherwise", () => {
+    const white = mockStandings(MOCK_START_OFFSET_S, { raceControl: "white" });
+    expect(white.entries.find((e) => e.isOverallLeader)?.onFinalLap).toBe(true);
+    const green = mockStandings(MOCK_START_OFFSET_S);
+    expect(green.entries.some((e) => e.onFinalLap)).toBe(false);
+  });
+
+  it("lights up each car's final lap as it crosses the line", () => {
+    // Sampled across a lap: more cars are on their final lap as time goes on.
+    const counts = [0, 40, 80, 120].map(
+      (dt) =>
+        mockStandings(MOCK_START_OFFSET_S + dt, { raceControl: "white" }).entries.filter(
+          (e) => e.onFinalLap,
+        ).length,
+    );
+    expect(counts.some((n) => n > 1)).toBe(true);
+  });
+});
+
+describe("the stress field", () => {
+  const opts = { field: "stress" as const };
+  const s = mockSession(MOCK_START_OFFSET_S, "Race", opts);
+  const p = mockStandings(MOCK_START_OFFSET_S, opts);
+
+  it("is thirty cars in three classes, fastest class first", () => {
+    expect(s.drivers).toHaveLength(30);
+    expect(p.entries).toHaveLength(30);
+    expect(s.classes.map((c) => c.shortName)).toEqual(["LMP2", "GT3", "GT4"]);
+    expect(p.classes.map((c) => c.carCount)).toEqual([8, 12, 10]);
+  });
+
+  it("keeps the standard field's player and cars in it", () => {
+    expect(p.playerCarIdx).toBe(MOCK_PLAYER_IDX);
+    expect(s.drivers.slice(0, MOCK_FIELD_SIZE).map((d) => d.userName)).toEqual(
+      MOCK_FIELD.map((c) => c.name),
+    );
+  });
+
+  it("holds every state a row can wear, at once", () => {
+    expect(p.entries.some((e) => e.isDisqualified)).toBe(true);
+    expect(p.entries.some((e) => !e.isInWorld)).toBe(true);
+    expect(p.entries.some((e) => e.needsRepair)).toBe(true);
+    expect(p.entries.some((e) => e.onPitRoad)).toBe(true);
+    expect(p.entries.some((e) => e.tireCompound === 3)).toBe(true); // on wets
+  });
+
+  it("stresses the columns: long names, three-digit numbers, lapped in class", () => {
+    expect(Math.max(...s.drivers.map((d) => d.userName.length))).toBeGreaterThan(22);
+    expect(s.drivers.some((d) => d.carNumber.length === 3)).toBe(true);
+    expect(p.entries.some((e) => e.classGapIsLaps)).toBe(true);
+  });
+
+  it("agrees with the telemetry frame on where the player is", () => {
+    const f = mockPlayerTelemetry(MOCK_START_OFFSET_S, opts);
+    const me = p.entries.find((e) => e.isPlayer)!;
+    expect(f.playerCarPosition).toBe(me.position);
   });
 });

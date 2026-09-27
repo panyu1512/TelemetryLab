@@ -13,6 +13,7 @@ import { pushLog } from "../lib/debugLog";
 import {
   MOCK_START_OFFSET_S,
   MOCK_TIME_SCALE,
+  type MockOptions,
   mockPlayerTelemetry,
   mockSession,
   mockStandings,
@@ -82,26 +83,34 @@ export class MockFeed {
     );
   }
 
+  /**
+   * The field and flag the Manager asked for. Read on every push rather than
+   * captured at start, so switching either repaints the open overlays there
+   * and then, the same way the theme and column toggles already do.
+   */
+  private options(): MockOptions {
+    const g = useOverlayConfigStore.getState().globalSettings;
+    return { field: g.mockField, raceControl: g.mockRaceControl };
+  }
+
   private pushTelemetry(): void {
     useTelemetryStore
       .getState()
-      .setTelemetry(mockPlayerTelemetry(this.elapsed()), this.seq++);
+      .setTelemetry(mockPlayerTelemetry(this.elapsed(), this.options()), this.seq++);
   }
 
   private pushStandings(): void {
     useStandingsStore
       .getState()
-      .setStandings(mockStandings(this.elapsed()), this.seq++);
+      .setStandings(mockStandings(this.elapsed(), this.options()), this.seq++);
   }
 
-  /**
-   * Read on every push rather than captured at start: switching the mock
-   * session in the Manager should change the open overlays there and then, the
-   * same way the theme and column toggles already do.
-   */
+  /** See {@link options} — the session type is read per push for the same reason. */
   private pushSession(): void {
     const sessionType =
       useOverlayConfigStore.getState().globalSettings.mockSessionType;
-    useSessionStore.getState().setSession(mockSession(this.elapsed(), sessionType));
+    useSessionStore
+      .getState()
+      .setSession(mockSession(this.elapsed(), sessionType, this.options()));
   }
 }

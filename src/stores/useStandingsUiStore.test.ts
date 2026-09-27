@@ -85,3 +85,36 @@ describe("standings column configuration", () => {
     expect(bus.broadcasts).toHaveLength(0);
   });
 });
+
+describe("tower view options", () => {
+  it("measures the gap to the class leader by default, with no legend", () => {
+    useStandingsUiStore.setState({ gapReference: "leader", showLegend: false });
+    expect(store().gapReference).toBe("leader");
+    expect(store().showLegend).toBe(false);
+  });
+
+  it("switches the gap reference and the legend, and tells other windows", () => {
+    bus.broadcasts.length = 0;
+    store().setGapReference("ahead");
+    store().setShowLegend(true);
+    expect(store().gapReference).toBe("ahead");
+    expect(store().showLegend).toBe(true);
+    const last = bus.broadcasts[bus.broadcasts.length - 1]?.payload as { gapReference: string; showLegend: boolean };
+    expect(last.gapReference).toBe("ahead");
+    expect(last.showLegend).toBe(true);
+  });
+
+  it("persists them", () => {
+    store().setGapReference("ahead");
+    const saved = JSON.parse(localStorage.getItem("telemetrylab.standings.ui.v1")!);
+    expect(saved.gapReference).toBe("ahead");
+  });
+
+  it("takes them from another window, falling back when a sender is older", () => {
+    bus.handlers["standings-ui:changed"]?.({ grouping: "class", columns: {}, gapReference: "ahead" });
+    expect(store().gapReference).toBe("ahead");
+    bus.handlers["standings-ui:changed"]?.({ grouping: "class", columns: {} });
+    expect(store().gapReference).toBe("leader");
+    expect(store().showLegend).toBe(false);
+  });
+});

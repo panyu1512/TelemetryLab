@@ -53,7 +53,8 @@ export function StandingsColumnsPanel() {
 
       <div className="flex items-center justify-between">
         <p className="text-[11px] text-faint">
-          Position, driver and status are always shown.
+          Position and driver are always shown. A car's state sits beside its
+          name.
         </p>
         {hiddenCount > 0 && (
           <button

@@ -5,6 +5,15 @@ import { OverlayWindow } from "./components/OverlayWindow";
 import { SingleWidgetWindow } from "./components/SingleWidgetWindow";
 import { getOverlayRoute, getWidgetRoute } from "./lib/overlayWindows";
 import "@fontsource-variable/inter";
+// The timing tower's faces (`design.md` § The timing tower). Bundled rather
+// than fetched: the overlays run offline, over the game.
+import "@fontsource/barlow/400.css";
+import "@fontsource/barlow/500.css";
+import "@fontsource/barlow/600.css";
+import "@fontsource/barlow/700.css";
+import "@fontsource/barlow-condensed/500.css";
+import "@fontsource/barlow-condensed/600.css";
+import "@fontsource/barlow-condensed/700.css";
 import "flag-icons/css/flag-icons.min.css";
 import "./styles.css";
 

@@ -2,6 +2,7 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 import {
   currentWindowLabel,
+  defaultWindowSize,
   forgetWindow,
   getRememberedWindows,
   parseOverlayId,
@@ -118,5 +119,22 @@ describe("open-window persistence", () => {
   it("survives corrupt storage", () => {
     localStorage.setItem("telemetrylab.open-windows.v1", "{not json");
     expect(getRememberedWindows()).toEqual([]);
+  });
+});
+
+describe("defaultWindowSize", () => {
+  it("opens the broadcast tower as a narrow column", () => {
+    const tower = defaultWindowSize("overlay", "tower");
+    expect(tower.width).toBeLessThan(tower.height);
+    expect(tower.width).toBeLessThanOrEqual(340);
+  });
+
+  it("opens the standings wide enough to read the tower", () => {
+    expect(defaultWindowSize("overlay", "standings").width).toBeGreaterThanOrEqual(1000);
+  });
+
+  it("keeps the generic sizes for everything else", () => {
+    expect(defaultWindowSize("overlay", "relative")).toEqual({ width: 640, height: 420 });
+    expect(defaultWindowSize("widget", "fuel")).toEqual({ width: 320, height: 220 });
   });
 });

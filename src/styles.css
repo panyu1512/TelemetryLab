@@ -344,6 +344,29 @@ a {
 }
 
 /*
+ * The timing tower — the Standings screen — paints on its own paper and in its
+ * own faces, both from the 2026-09-27 design canvas: Barlow for every number
+ * and label, Barlow Condensed for positions, names and badges. Its colours are
+ * not theme tokens; they live in `lib/towerPalette.ts` and are applied inline,
+ * so the palette the canvas was contrast-checked in is the palette that ships
+ * (`design.md` § The timing tower).
+ */
+.tower-surface,
+.tower-type {
+  color: #e8eaed;
+  font-family: "Barlow", system-ui, sans-serif;
+  font-variant-numeric: tabular-nums;
+}
+/* The standings tower paints its paper edge to edge; the broadcast tower only
+   paints itself, so a stream sees the game around it (`.tower-type` alone). */
+.tower-surface {
+  background: #07090b;
+}
+.tower-cond {
+  font-family: "Barlow Condensed", "Barlow", system-ui, sans-serif;
+}
+
+/*
  * The session strip's baseline: a hairline under the readout, so the strip
  * reads as the table's masthead rather than as a first row. This is *not* the
  * row separator rule 1 bans — it separates the strip from the field, which is
@@ -493,6 +516,17 @@ html.overlay-mode .overlay-card,
 html.overlay-mode .timing-surface,
 .overlay-preview .timing-surface {
   background: var(--color-timing-bg) !important;
+}
+
+/*
+ * The tower keeps its paper over the game for the same reason, and drops the
+ * legibility shadow the overlay card adds: on opaque paper a shadow under
+ * 11 px type only blurs it.
+ */
+html.overlay-mode .tower-surface,
+.overlay-preview .tower-surface {
+  background: #07090b !important;
+  text-shadow: none;
 }
 
 /*

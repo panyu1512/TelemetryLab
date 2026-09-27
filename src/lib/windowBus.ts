@@ -17,6 +17,7 @@
  * no polling and no feedback loops.
  */
 
+import type { ClassColorsSnapshot } from "../stores/useClassColorsStore";
 import type { OverlayConfigSnapshot } from "../stores/useOverlayConfigStore";
 import type { RelativeUiSnapshot } from "../stores/useRelativeUiStore";
 import type { StandingsUiSnapshot } from "../stores/useStandingsUiStore";
@@ -43,6 +44,7 @@ export interface BusPayloadMap {
   "windows:changed": null;
   "standings-ui:changed": StandingsUiSnapshot;
   "relative-ui:changed": RelativeUiSnapshot;
+  "class-colors:changed": ClassColorsSnapshot;
 }
 
 /** Topics carried over the bus. Kept as a closed union for safety. */

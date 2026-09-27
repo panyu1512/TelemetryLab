@@ -106,6 +106,19 @@ export function degrees(value: number | null | undefined): string {
   return `${Math.round(value)}°`;
 }
 
+/**
+ * A driver's name the way a timing graphic credits a lap: first initial and
+ * surname — `Pia Costa` → `P. Costa`, `Jean-Baptiste Lavallée` → `J. Lavallée`.
+ * A single word is returned as it is; the surname is the last word, so
+ * `Gustavo Henrique da Silva` becomes `G. Silva`.
+ */
+export function initialAndSurname(name: string | null | undefined): string {
+  const words = (name ?? "").trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return "";
+  if (words.length === 1) return words[0];
+  return `${words[0][0].toUpperCase()}. ${words[words.length - 1]}`;
+}
+
 /** Signed integer with a sign, e.g. `+14` / `-3` / `0` (for iR / positions). */
 export function signed(value: number | null | undefined): string {
   if (value == null || Number.isNaN(value)) return "—";

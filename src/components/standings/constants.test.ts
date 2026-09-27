@@ -1,7 +1,13 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  CARD_BORDER,
+  COL_GAP,
+  gridTemplate,
+  ROW_PAD_X,
   scopeColumnsToSession,
+  STANDINGS_COLUMNS,
+  SURFACE_PAD,
   tableMinWidth,
   visibleColumns,
   type ColumnVisibility,
@@ -52,7 +58,9 @@ describe("tableMinWidth", () => {
   it("is the width the chosen columns want, gaps and padding included", () => {
     const cols = visibleColumns(3, allOn);
     const sum = cols.reduce((n, c) => n + c.col.px, 0);
-    expect(tableMinWidth(3, allOn)).toBe(sum + (cols.length - 1) * 4 + 16);
+    expect(tableMinWidth(3, allOn)).toBe(
+      sum + (cols.length - 1) * COL_GAP + 2 * ROW_PAD_X + 2 * CARD_BORDER + 2 * SURFACE_PAD,
+    );
   });
 
   it("grows with the sector count", () => {
@@ -73,5 +81,35 @@ describe("tableMinWidth", () => {
     const race = tableMinWidth(3, scopeColumnsToSession(allOn, false));
     const timesheet = tableMinWidth(3, scopeColumnsToSession(allOn, true));
     expect(timesheet).toBeLessThan(race);
+  });
+});
+
+describe("the tower's column model", () => {
+  it("gives every time column the same width", () => {
+    const times = STANDINGS_COLUMNS.filter((c) =>
+      ["gap", "interval", "last", "best", "sectors"].includes(c.id),
+    );
+    expect(new Set(times.map((c) => c.px)).size).toBe(1);
+  });
+
+  it("right-aligns every numeric column, so decimals line up", () => {
+    for (const id of ["change", "num", "irating", "gap", "interval", "last", "best", "tire", "sectors"]) {
+      expect(STANDINGS_COLUMNS.find((c) => c.id === id)?.align).toBe("right");
+    }
+  });
+
+  it("puts position first and change right after it", () => {
+    expect(STANDINGS_COLUMNS[0].id).toBe("pos");
+    expect(STANDINGS_COLUMNS[1].id).toBe("change");
+  });
+
+  it("has no state column — a car's state sits beside its name", () => {
+    expect(STANDINGS_COLUMNS.some((c) => (c.id as string) === "state")).toBe(false);
+  });
+
+  it("lets only the driver column flex", () => {
+    const template = gridTemplate(3, allOn);
+    expect(template.match(/fr\)/g)).toHaveLength(1);
+    expect(template).toContain("minmax(0, 1fr)");
   });
 });

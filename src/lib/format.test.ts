@@ -5,6 +5,7 @@ import {
   delta,
   duration,
   gap,
+  initialAndSurname,
   kilo,
   gearLabel,
   interval,
@@ -203,5 +204,22 @@ describe("degrees", () => {
   it("renders an em dash for null/NaN", () => {
     expect(degrees(null)).toBe(DASH);
     expect(degrees(NaN)).toBe(DASH);
+  });
+});
+
+describe("initialAndSurname", () => {
+  it("credits a lap the way a timing graphic does", () => {
+    expect(initialAndSurname("Pia Costa")).toBe("P. Costa");
+    expect(initialAndSurname("jean-baptiste Lavallée")).toBe("J. Lavallée");
+  });
+
+  it("takes the last word as the surname", () => {
+    expect(initialAndSurname("Gustavo Henrique da Silva")).toBe("G. Silva");
+  });
+
+  it("leaves a single name alone and copes with nothing", () => {
+    expect(initialAndSurname("Kike")).toBe("Kike");
+    expect(initialAndSurname("   ")).toBe("");
+    expect(initialAndSurname(null)).toBe("");
   });
 });

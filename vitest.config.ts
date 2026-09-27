@@ -24,6 +24,16 @@ export default defineConfig({
         "src/lib/tyreFreshness.ts",
         "src/lib/fuelStrategy.ts",
         "src/telemetry/protocol.ts",
+        // The timing tower's logic (2026-09-27 redesign).
+        "src/lib/battles.ts",
+        "src/lib/contrast.ts",
+        "src/lib/lapTrend.ts",
+        "src/lib/rowState.ts",
+        "src/lib/sectorBests.ts",
+        "src/lib/towerBar.ts",
+        "src/lib/towerPalette.ts",
+        "src/lib/tyreCompound.ts",
+        "src/components/standings/layout.ts",
       ],
       thresholds: {
         statements: 90,
