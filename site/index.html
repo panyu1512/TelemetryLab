@@ -27,7 +27,7 @@
     />
     <meta property="og:image" content="https://telemetrylab.app/assets/standings.png" />
     <meta property="og:image:width" content="2360" />
-    <meta property="og:image:height" content="1024" />
+    <meta property="og:image:height" content="1174" />
     <meta
       property="og:image:alt"
       content="The TelemetryLab standings overlay showing two class groups, GT3 and GT4, with gaps and lap times."
@@ -255,15 +255,16 @@
                  checkable on this page. -->
             <div class="band band--hero">
               <span class="band__chip">TelemetryLab</span>
-              <span class="band__field"><span class="band__k">OVERLAYS</span><b class="band__v">4</b></span>
+              <span class="band__field"><span class="band__k">OVERLAYS</span><b class="band__v">5</b></span>
               <span class="band__field"><span class="band__k">OS</span><b class="band__v">Windows</b></span>
               <span class="band__field"><span class="band__k">PRICE</span><b class="band__v">free</b></span>
             </div>
             <h1>Read the field without looking.</h1>
             <p class="hero__lede">
               TelemetryLab is a timing and telemetry overlay for iRacing.
-              Multi-class standings, an on-track relative, fuel strategy and a
-              driving cluster — each one its own window, sitting over the game.
+              Multi-class standings, a broadcast cut of them for your stream, an
+              on-track relative, fuel strategy and a driving cluster — each one
+              its own window, sitting over the game.
             </p>
             <div class="hero__actions">
               <!-- Straight at the file. `releases/latest/download/<name>`
@@ -326,15 +327,17 @@
             <img
               src="assets/standings-compact.png"
               width="1240"
-              height="612"
-              alt="The standings overlay in a narrow window, drawn small enough that
-                   every column still fits: a session strip reading lap, time left,
-                   incidents, track and air temperature, strength of field and the
-                   clock, then a GT3 class band with car count, SoF and fastest lap
-                   over six driver rows, and the full GT4 group below it — each row
-                   carrying position change, position, car number, driver, car brand,
-                   licence, iRating, gap, interval, last lap, best lap, tyre and three
-                   sector columns."
+              height="626"
+              alt="The standings timing tower in a narrow window, drawn small enough
+                   that every column still fits: a race-control bar reading lap,
+                   time remaining, incidents, track and air temperature, strength of
+                   field and local time, then a GT3 card headed by its car count, SoF
+                   and best lap with who set it, over six driver rows, and the full
+                   GT4 card below it. Each row carries position change, position in a
+                   block of the class colour, car number, flag, driver, car brand,
+                   licence, iRating, gap, interval, last lap, a five-lap pace line,
+                   best lap, tyre ring with laps on the set, and three sectors — with
+                   off-track and damage chips beside one name and a pit badge beside another."
             />
           </figure>
         </section>
@@ -346,34 +349,42 @@
           <div class="band">
             <span class="band__chip">Standings</span>
             <span class="band__field"><span class="band__k">COLUMNS</span><b class="band__v">15</b></span>
-            <span class="band__field"><span class="band__k">ALWAYS</span><b class="band__v">3</b></span>
-            <span class="band__field"><span class="band__k">ROW</span><b class="band__v">32px</b></span>
+            <span class="band__field"><span class="band__k">ALWAYS</span><b class="band__v">2</b></span>
+            <span class="band__field"><span class="band__k">ROW</span><b class="band__v">44px</b></span>
           </div>
           <div class="row__copy">
             <h2>The whole field, grouped by class.</h2>
             <p class="row__body">
-              Each class opens with its own band — how many cars are in it, its
-              strength of field, and the lap that leads it. Underneath, the
-              running order with everything you would otherwise be squinting for.
+              Each class is a card of its own, headed by how many cars are in
+              it, its strength of field, and the lap that leads it — with who
+              set it. Underneath, the running order, ranked for a glance:
+              position, then name, then gap, and everything else where you
+              look for it.
             </p>
             <ul class="reads">
-              <li>Gap to the class leader, and the interval to the car directly ahead</li>
-              <li>Sector times and deltas, graded against your own best and the field's</li>
-              <li>iRating with a live projected change, licence class and safety rating</li>
-              <li>Tyre compound and laps on the set; pit and off-track state</li>
+              <li>Gap to the class leader or to the car ahead — you choose — with the interval beside it</li>
+              <li>Laps and sectors graded against your own class, not the whole field</li>
+              <li>Pit, off track, damage and final lap as words beside the name; a fight inside a second, marked</li>
+              <li>Tyre compound and laps on the set, and a pace line of the last five laps</li>
+              <li>A broadcast cut — position, name and gap — for the edge of your stream</li>
             </ul>
           </div>
           <figure class="shot">
             <img
               src="assets/standings.png"
               width="2360"
-              height="1024"
+              height="1174"
               loading="lazy"
-              alt="The standings overlay showing two class groups, GT3 and GT4. Each
-                   group has a coloured band with car count, strength of field and
-                   fastest lap, followed by rows carrying position change, position,
-                   car number, driver, car brand, licence, iRating, gap, interval,
-                   last lap, best lap, tyre and three sector columns."
+              alt="The standings timing tower showing two class cards, GT3 and GT4.
+                   Each card is headed by its class chip, car count, strength of
+                   field and its best lap on a violet fill with the driver who set
+                   it. Under it, six rows: position in a block of the class colour,
+                   places gained in blue or lost in orange, car number, flag, name,
+                   car brand, licence, iRating, gap, interval, last lap, a pace line
+                   of the last five laps, best lap, tyre ring and laps on the set,
+                   and three sectors graded violet, green or orange. Three intervals
+                   inside a second sit on a tinted battle chip, and the player's own
+                   row is outlined in blue."
             />
           </figure>
         </section>
@@ -397,7 +408,7 @@
             <img
               src="assets/relative.png"
               width="1120"
-              height="944"
+              height="884"
               loading="lazy"
               alt="The relative overlay: cars ahead and behind the player sorted by
                    on-track time. Rows above the player show positive gaps in white,
@@ -434,8 +445,8 @@
               height="1010"
               loading="lazy"
               alt="The fuel and strategy overlay, headed 'margin 1.0 lap': a 'Pit
-                   stop needed' banner reading 4.3 fuel laps against 11 laps to the
-                   flag, 15.0 litres in tank, 2.85 litres per lap consumption, a
+                   stop needed' banner reading 4.2 fuel laps against 11 laps to the
+                   flag, 14.8 litres in tank, 2.85 litres per lap consumption, a
                    next pit window of laps 18 to 19, a recommended pit on lap 19, a
                    note reading 'short by 7 laps at the current burn', and two
                    candidate plans — a one-stop on lap 19 and a two-stop."
@@ -446,7 +457,7 @@
         <section id="manager" class="row row--flip">
           <div class="band">
             <span class="band__chip">Manager</span>
-            <span class="band__field"><span class="band__k">OVERLAYS</span><b class="band__v">4</b></span>
+            <span class="band__field"><span class="band__k">OVERLAYS</span><b class="band__v">5</b></span>
             <span class="band__field"><span class="band__k">WIDGETS</span><b class="band__v">6</b></span>
             <span class="band__field"><span class="band__k">THEMES</span><b class="band__v">4</b></span>
           </div>
@@ -471,9 +482,9 @@
               height="1800"
               loading="lazy"
               alt="The Overlay Manager: a left rail listing Dashboard, Standings,
-                   Relative and Fuel Calc, a column of widget and appearance
-                   settings in the middle, and a live scaled preview of the
-                   dashboard overlay on the right — its speed gauge reading 251
+                   Relative, Broadcast and Fuel Calc, a column of widget and
+                   appearance settings in the middle, and a live scaled preview of
+                   the dashboard overlay on the right — its speed gauge reading 288
                    km/h in sixth, and a throttle and brake trace below it."
             />
           </figure>
@@ -483,7 +494,7 @@
         <section id="spec" class="spec">
           <div class="band">
             <span class="band__chip">Legend</span>
-            <span class="band__field"><span class="band__k">FIELDS</span><b class="band__v">16</b></span>
+            <span class="band__field"><span class="band__k">FIELDS</span><b class="band__v">18</b></span>
             <span class="band__field"><span class="band__k">TABLES</span><b class="band__v">2</b></span>
           </div>
           <div class="spec__intro">
@@ -511,37 +522,50 @@
                 <tr>
                   <th scope="row">POS</th>
                   <td>Position in class, or overall when the field is ungrouped</td>
-                  <td>—</td>
+                  <td>A block in the class's colour · DSQ when disqualified</td>
+                </tr>
+                <tr>
+                  <th scope="row">+/−</th>
+                  <td>Places gained or lost since the start</td>
+                  <td>
+                    <span class="sw sw--up">▲ blue</span> gained ·
+                    <span class="sw sw--warn">▼ orange</span> lost
+                  </td>
                 </tr>
                 <tr>
                   <th scope="row">GAP</th>
-                  <td>Seconds behind the class leader, or laps down</td>
+                  <td>Seconds behind the class leader — or the car ahead, if you swap them — or laps down</td>
                   <td>—</td>
                 </tr>
                 <tr>
                   <th scope="row">INT</th>
-                  <td>Seconds to the car directly ahead of you in class</td>
-                  <td>—</td>
+                  <td>Seconds to the car directly ahead in class</td>
+                  <td>Tinted in the class's colour inside a second — a fight</td>
                 </tr>
                 <tr>
                   <th scope="row">LAST</th>
-                  <td>Your last completed lap, ruled when it grades</td>
+                  <td>The last completed lap, ruled when it grades</td>
                   <td>
                     <span class="sw sw--pb">green rule</span> personal best ·
-                    <span class="sw sw--best">purple</span> leads the session
+                    <span class="sw sw--best">violet rule</span> fastest on track
                   </td>
+                </tr>
+                <tr>
+                  <th scope="row">TREND</th>
+                  <td>The last five laps, on one scale for every row</td>
+                  <td>—</td>
                 </tr>
                 <tr>
                   <th scope="row">BEST</th>
                   <td>Fastest lap of the session for that car</td>
-                  <td><span class="sw sw--pb">filled</span> when it leads the class</td>
+                  <td><span class="sw sw--best">violet fill</span> when it leads the class</td>
                 </tr>
                 <tr>
                   <th scope="row">iR</th>
                   <td>iRating, with a projected change for this race</td>
                   <td>
-                    <span class="sw sw--pb">▲ gain</span> ·
-                    <span class="sw sw--bad">▼ loss</span> — an estimate
+                    <span class="sw sw--up">▲ gain</span> ·
+                    <span class="sw sw--warn">▼ loss</span> — an estimate
                   </td>
                 </tr>
                 <tr>
@@ -551,17 +575,16 @@
                 </tr>
                 <tr>
                   <th scope="row">TYRE</th>
-                  <td>Compound, and laps on the current set</td>
+                  <td>Compound as a lettered ring — a dashed drop for a wet — and laps on the set</td>
                   <td>One colour per compound</td>
                 </tr>
                 <tr>
                   <th scope="row">S1–S3</th>
-                  <td>Sector time when it is a best, the delta when it is a loss</td>
+                  <td>Sector time when it is a best, the delta when it is a loss — graded within the class</td>
                   <td>
-                    <span class="sw sw--best">purple</span> ·
-                    <span class="sw sw--pb">green</span> ·
-                    <span class="sw sw--warn">amber</span> ·
-                    <span class="sw sw--bad">red</span>
+                    <span class="sw sw--best">violet</span> class best ·
+                    <span class="sw sw--pb">green</span> personal best ·
+                    <span class="sw sw--warn">orange</span> well off
                   </td>
                 </tr>
               </tbody>
@@ -571,7 +594,7 @@
           <div class="spec__scroll spec__scroll--stacked">
             <table class="tnum">
               <caption class="micro spec__cap">
-                Session strip
+                Session strip · race-control bar
               </caption>
               <thead>
                 <tr>
@@ -583,7 +606,10 @@
               <tbody>
                 <tr>
                   <th scope="row">RACE</th>
-                  <td>Session type, filled with the flag currently flying</td>
+                  <td>
+                    Session type, filled with the flag flying — on the standings,
+                    the whole bar turns yellow, or striped amber for a safety car
+                  </td>
                   <td>
                     <span class="sw sw--pb">green</span> ·
                     <span class="sw sw--warn">yellow</span> ·
@@ -675,10 +701,10 @@
               </dd>
             </div>
             <div>
-              <dt>Four windows, one manager</dt>
+              <dt>Five windows, one manager</dt>
               <dd>
-                Standings, relative, fuel and the driving cluster each open as
-                their own always-on-top window. Place, size and theme them once
+                Standings, its broadcast cut, relative, fuel and the driving
+                cluster each open as their own always-on-top window. Place, size and theme them once
                 in the manager; the overlays themselves carry no controls at all.
               </dd>
             </div>

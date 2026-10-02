@@ -75,16 +75,17 @@ const PAST_A_LAP_MS = 40_000;
  * below therefore lands just past a row boundary, with a few px of paper as
  * margin.
  *
- * The boundaries at these widths, from the live app: the standings field runs
- * strip 26 · [band 30 + gap 4 + 6 rows] · CLASS_GAP 10 · [band 30 + gap 4 +
- * 6 rows], with row bottoms at 71 · 107 · 139 … 267 for GT3 and 307 · 343 …
- * 503 for GT4.
+ * The boundaries at these widths, from the live app: the standings field is
+ * the timing tower — race-control bar, then one card per class (header + six
+ * rows), 12 canvas px of paper between them — drawn at whatever fraction of
+ * its ~1 460 px natural width the window allows. At 1180 that is ~0.8 and the
+ * GT4 card closes at y 569; at 620, ~0.42 and it closes at 299. Each frame
+ * below ends the same distance past the last card as the bar starts below the
+ * top edge, so the paper is even on both sides.
  *
- * **Those are full-size numbers, and a narrow shot is not full size.** The
- * timing tables scale themselves to their window now, so below the width its
- * columns want, every one of those boundaries multiplies by the same factor
- * (`lib/tableScale`) — a 620 px standings draws at ~0.61 and its field ends
- * near 300, not 500. Re-measure after any change to `constants.ts` geometry
+ * **Those boundaries move with the scale.** The timing tables scale themselves
+ * to their window, so below the width their columns want, every boundary
+ * multiplies by the same factor (`lib/tableScale`). Re-measure after any change to `constants.ts` geometry
  * *or* to the scale floor, and re-measure by looking at the file rather than
  * by arithmetic: an over-tall frame shows as a band of empty paper that no
  * test will ever catch.
@@ -93,19 +94,15 @@ const SHOTS = [
   // The hero capture. Narrow on purpose — it doubles as the proof that the
   // table *scales* to fit rather than shedding columns or growing a scrollbar:
   // at 620 px every one of the fifteen columns is still there, drawn smaller.
-  // (It used to prove the opposite. Columns stopped dropping when the tables
-  // learned to scale — see `lib/tableScale`.)
-  // 306, down from 381: at this width the table no longer sheds columns, it
-  // draws them all at ~0.61 — so the field itself is ~0.61 as tall, and the old
-  // frame closed on 75 px of empty paper below the last row.
-  { name: "standings-compact", route: "?overlay=standings", w: 620, h: 306 },
-  // 512 = the whole two-class field (ends 503). This capture is the page's
-  // proof that the table groups by class; at 420 it cropped the GT4 group
-  // mid-row, which showed the reader four of six cars and a sliced fifth.
-  { name: "standings", route: "?overlay=standings", w: 1180, h: 512 },
-  // 472 fits five cars ahead, the player and four behind, all whole. At 452
-  // a thirteenth row was sliced by the frame.
-  { name: "relative", route: "?overlay=relative", w: 560, h: 472 },
+  // 313: the tower draws at ~0.42 here, and its GT4 card closes at 299.
+  { name: "standings-compact", route: "?overlay=standings", w: 620, h: 313 },
+  // 587 = the whole two-class field (the GT4 card closes at 569). This capture
+  // is the page's proof that the table groups by class; a frame that slices
+  // the second card shows the reader four of six cars and a sliced fifth.
+  { name: "standings", route: "?overlay=standings", w: 1180, h: 587 },
+  // 442 fits five cars ahead, the player and four behind, all whole (the last
+  // row closes at 428).
+  { name: "relative", route: "?overlay=relative", w: 560, h: 442 },
   { name: "dashboard", route: "?overlay=dashboard", w: 1100, h: 620 },
   { name: "manager", route: "", w: 1400, h: 900, wait: PAST_A_LAP_MS },
   // Tall enough for the pit-strategies card, which stopped being collapsed and

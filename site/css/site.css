@@ -959,6 +959,9 @@ html[data-theme="dark"] .theme-toggle__moon {
 .sw--best {
   color: var(--color-sector-purple);
 }
+.sw--up {
+  color: var(--color-primary);
+}
 .sw--warn {
   color: var(--color-warning);
 }

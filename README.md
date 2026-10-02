@@ -26,7 +26,7 @@
 <br>
 
 <div align="center">
-  <strong>Multi-class standings, an on-track relative, fuel strategy and a driving cluster — each in its own always-on-top window.</strong>
+  <strong>A multi-class timing tower, a broadcast cut of it for your stream, an on-track relative, fuel strategy and a driving cluster — each in its own always-on-top window.</strong>
 </div>
 
 <br> 
@@ -39,7 +39,7 @@
 <br>
 
 <div align="center">
-  <img src="site/assets/standings-compact.png" alt="The TelemetryLab standings overlay: a session strip, then GT3 and GT4 class groups with the full running order under each" width="800">
+  <img src="site/assets/standings-compact.png" alt="The TelemetryLab standings timing tower: a race-control bar, then GT3 and GT4 class cards with the full running order under each" width="800">
 </div>
 
 <br>
