@@ -34,7 +34,9 @@ decoration.
 - **Overlay surfaces: none.** An overlay is a single widget card with a body
   and, where it earns its place, a header rule. It has no macrostructure and
   must never acquire one. **Tabular overlays** — Standings and Relative — are a
-  named exception to the header rule; see § Dense tabular overlays.
+  named exception to the header rule; see § Dense tabular overlays. Standings
+  is drawn as **the timing tower** (§ The timing tower), and the **Broadcast**
+  overlay is that tower cut down for a stream.
 - **Marketing surface: Split Studio.** One page, at [`site/`](site/), selling
   the app. Every claim is paired with the capture that proves it, and the
   pairing alternates down the page. See § The marketing surface.
@@ -49,6 +51,14 @@ in [`src/styles.css`](src/styles.css).
 Four runtime themes (Carbon, Midnight, Graphite, Endurance) vary the temperature
 of the neutrals and the exact accent hues. **They never vary what a colour
 means.**
+
+**One surface opts out of them: the timing tower** — the Standings screen and
+its Broadcast cut-down. It carries one fixed palette of its own
+([`lib/towerPalette.ts`](src/lib/towerPalette.ts)), because it was designed,
+reviewed and contrast-checked as that palette, and letting four themes re-tint
+it would put back exactly the variations it was measured without. The themes
+still govern the Manager, the Relative, Fuel & Strategy and the widgets. See
+§ The timing tower, rule 2.
 
 The neutrals sit a step deeper than a graphite panel would want, and
 `border-strong` a step lighter, because this surface carries **solid** colour
@@ -107,83 +117,55 @@ standings table stops being readable at a glance.
 
    `carClassColor` is still on the wire and still unused for display. Do not
    add it to `tokens.css`, and do not let a theme try to correct it.
-2. **Identity colour is the leading edge, the row's ground, and the two blocks
-   that head a group.** The edge —
-   4 px on a row ([`StandingsRow.tsx`](src/components/standings/StandingsRow.tsx)),
-   the same device one scale up on a class band — is joined by the same colour
-   behind the row, by the band's solid fill, and by the block behind each row's
-   position number.
 
-   The two surfaces carry that ground differently, and the difference is the
-   shape of the tables rather than a loose end. **Standings runs the colour in
-   from the left edge and stops it hard at the end of the first column**, at
-   16 %: its rows come in runs of the same class stacked into groups, so the
-   fills line up into a bar of colour down the leading edge of each group that
-   the eye picks up without being asked to look. **Relative washes the whole
-   row at 14 %**: it is a handful of rows sorted by where cars physically are,
-   so same-class neighbours rarely sit together and there is no run for a
-   partial fill to build.
+   **The ramp is the default, not the last word.** Since the timing tower
+   (2026-09-27) a driver can pick a colour per class in the Overlay Manager,
+   keyed by the class's short name so a GT3 made orange stays orange wherever
+   it sorts next week. A pick is measured against the hues the tower spends on
+   a status (`classColorClash`, within 20° of OKLCH hue) and **warned about,
+   not refused**: a league whose GT3s have been orange for five seasons knows
+   its own field better than the ramp does. The Relative and the Broadcast
+   overlay take the same picks.
+2. **Identity colour marks a class in two places on each surface, and they
+   are different places on the two surfaces.**
 
-   The stop is a **length from the column model**
-   (`firstColumnStop`), not a share of the row width. That is what lets it land
-   *on* the column boundary at any table scale and any column set — the first
-   column is position change when the user has it and position otherwise, and a
-   percentage would drift across the columns every time one was switched on or
-   off. It also means the fill sits directly behind the row's leading number,
-   which is why it is fainter here than the Relative's wash rather than
-   stronger: a ground under a number it has to keep legible can afford less
-   than one spread across empty width.
+   On **the timing tower** (Standings) it is the **class chip** in the header
+   of each class card, and the **position block** that starts every row in it —
+   the same block of colour at heading size and at row size. Rank and class are
+   the two facts taken off a row without reading it, and the block is the one
+   cell where they are a single glance. Rows carry no class edge and no class
+   ground any more: each class sits in a card of its own, so a stripe or a
+   tint behind rows already grouped by class would say the same thing twice.
 
-   Nothing drives the extent per row, and nothing should. Everything on this
-   surface that could — lap progress, gap to the class leader — moves at 10 Hz,
-   and a fill redrawing itself on every row on every tick is motion in the
-   corner of the eye that means nothing.
+   This rewrites the Pit Wall rule of 2026-08-18, under which Standings ran the
+   class colour in as a 4 px edge, a 16 % fill to the end of the first column,
+   and a solid band heading each group. What retired it is the design canvas of
+   2026-09-27 (§ Provenance): with the groups drawn as cards, the band's job —
+   "this block of rows is one class" — is done by the card's edge, and the
+   colour could be spent where the eye lands first instead of spread along an
+   edge it has to find. The band's solid fill is gone with it; the header is
+   quiet paper, and its chip is the class's one heading-size block.
 
-   The earlier rule quarantined identity to the edge alone, on the argument that
-   a second carrier would put an arbitrary hue in competition with the status
-   colours beside it. Two things retired that argument. The hue is no longer
-   arbitrary — rule 1 now guarantees the clearance the quarantine was standing
-   in for. And three pixels asks the eye to find a hairline before it can tell
-   one group from another, on the surface with the least attention to spare;
-   the tint spreads that answer across the whole block, so class registers from
-   shape rather than from a border.
+   On **the Relative**, which has no groups to put in cards, identity is still
+   the **leading edge** (`CLASS_EDGE_WIDTH`, 4 px, held at its drawn size as the
+   table scales) and a **14 % wash** across the row (`classTint`). Its rows are
+   sorted by where cars physically are, so two neighbours of the same class
+   rarely sit together and there is no run of rows for a card to hold.
 
    **A row wears exactly one ground.** Where a status ground applies — the
-   player's `primary`, a lapped car's `danger` — the class tint gives way to it
-   entirely, and the leading edge carries class on its own. This is the rule
-   that keeps the new carrier from re-creating the collision it was introduced
-   to end: identity and status are never layered into the same statement. It is
-   enforced in the two row components, not by convention.
+   player's, a lapped car's on the Relative — the class ground gives way to it
+   entirely. On the tower the only grounds a row can wear are the zebra and the
+   player's, so identity and status never meet in a row's background at all.
 
-   **Identity colour fills exactly two things, and both are headings.** The
-   class band is a solid block of its class's colour, and the first cell of
-   every row under it — the position number — is the same block one column
-   wide. Nothing else on the surface may take a solid identity fill.
-
-   This reverses the previous rule, which quarantined identity to edges, tints
-   and ink. What retired it is what a four-class field actually looked like
-   under it: four bands of roughly equal darkness whose hue you had to look
-   *for*, in a list meant to be parsed without looking. A 22 % tint puts the
-   class's colour *behind* the band rather than making it the band. Solid
-   inverts that — masthead a block, rows striped — and a block is the one shape
-   the eye finds in peripheral vision unprompted.
-
-   The position block is the row's half of the same statement. Rank and class
-   are the two facts taken off a row without reading it, and this is the one
-   cell where they can be a single glance.
-
-   The cost is that identity now spends the loudest device on the surface, which
-   rule 5 of § Dense tabular overlays rations. It is affordable only because
-   both carriers are **headings** — neither holds a timing value a fill could
-   be mistaken for, and there is exactly one band per group and one block per
-   row. Ink on both is measured by `readableInk`, not declared: a class colour
-   can land anywhere on the wheel, so neither white nor `on-accent` can be
-   assumed. See § Dense tabular overlays rule 11, whose premise this restores.
-3. **"This is you" is `primary`, and it is the row's ground, not its ink.**
-   `bg-primary/10` plus an inset `primary/35` ring. This is the "selection"
-   sense of `primary` in the table above, which is why the token row now says
-   so out loud. Tinting the *text* instead would put an identity colour and a
-   status colour in the same glyph.
+   **Ink on identity colour is measured, never declared** — see § Dense tabular
+   overlays rule 11: a class colour is now the driver's to pick, and a navy
+   needs white ink where a lime needs dark.
+3. **"This is you" is blue, and it is the row's ground, not its ink.** On the
+   Relative, `bg-primary/10` plus an inset `primary/35` ring — the "selection"
+   sense of `primary` in the table above, which is why the token row says so
+   out loud. On the tower, the palette's own `meBg` ground and `meRing` blue
+   ring: the same statement in the tower's colours. Tinting the *text* instead
+   would put an identity colour and a status colour in the same glyph.
 
 The obvious alternative — amber for your own car, as several timing overlays do
 it — is banned here for the reason rule 2 of § Theme already gives: our
@@ -206,6 +188,13 @@ other direction.
 - Numerals in any column or ticking value carry `.tnum`.
 - Micro-labels are mono, uppercase, `tracking-[0.12em]`–`[0.14em]`, `text-faint`.
 - **Headings are roman.** No italic display type anywhere.
+- **The timing tower is the one app surface set in other faces**: **Barlow**
+  for every number and label on it, **Barlow Condensed** for positions, names
+  and badges — the design canvas's type, bundled with the app
+  (`@fontsource/barlow*`) because the overlays run offline, over the game.
+  Mono does not appear on the tower; its labels are Barlow caps, tracked
+  `0.1em`. Everything else — the Manager, the Relative, the widgets — stays on
+  Inter and mono. See § The timing tower, rule 3.
 - **Caps are structural, not emphatic.** Three things are set in capitals and
   nothing else is: mono micro-labels, section and page headings, and CTAs
   (§ CTA voice). The driver-name column on both timing surfaces is the one
@@ -331,12 +320,15 @@ the nav and title bar inline the two paths so they can take `currentColor`.
 
 ## What every surface MUST share
 
-- The token names (not the values — those move per theme).
+- The token names (not the values — those move per theme). The timing tower
+  is the one exception: it has its own fixed palette (§ The timing tower).
 - The colour *meanings* in the table above.
-- Inter + mono, with mono reserved for instrument nomenclature.
+- Inter + mono, with mono reserved for instrument nomenclature — except on the
+  timing tower, which is Barlow (§ Typography).
 - The mark, and the four rules under § The mark.
 - The control contract and the 8 states.
-- 2 px radii throughout — controls, cards and panels alike.
+- 2 px radii throughout — controls, cards and panels alike. The timing tower
+  keeps the canvas's own: 8 px on its cards and bar, 4 px on its chips.
 - `.tnum` on every column of numbers.
 
 ## What surfaces MAY differ on
@@ -350,6 +342,8 @@ the nav and title bar inline the two paths so they can take `currentColor`.
 - **Manager chrome** speaks the instrument voice: mono channel labels, the
   `.section-block` legend on the shear, the three-state sidebar rail, and the
   shear on its chips and CTAs (§ The mark rule 5).
+- **The timing tower** (Standings, and the Broadcast overlay) has its own
+  palette, faces and radii, and its own rules — § The timing tower.
 - **Overlay widgets** are legibility-first over footage: `.timing-surface`
   paper (§ Dense tabular overlays rule 9), text-shadow, no scrollbars, no
   frame. They must never gain manager chrome.
@@ -406,39 +400,55 @@ to have at the end of the race" — and so do we:
 ## Dense tabular overlays
 
 Standings and Relative are the densest surfaces in this app and the only ones
-read at a glance while the user is doing something else. The geometry is fixed
-in [`constants.ts`](src/components/standings/constants.ts): `ROW_H` 32 px, and
-— the two the rules below buy back — `COL_LABEL_H` 10 and `CLASS_GAP` 10, plus
-`STRIP_H` 26 when the § Session strip is on. Every rule below is downstream of
-the fact that a header band and a row cost the same height.
+read at a glance while the user is doing something else. Standings is now the
+timing tower, and its geometry is the design canvas's, in canvas pixels, in
+[`constants.ts`](src/components/standings/constants.ts): `ROW_H` 44,
+`CLASS_BAND_H` 48, `LABEL_ROW_H` 28, `CARD_GAP` 12, `BAR_H` 48 — drawn at
+whatever fraction of that the window allows, which at the widths people give a
+standings window comes out close to the old 32 px row. The Relative keeps its
+own: `ROW_H` 34 and the § Session strip's `STRIP_H` 26. Every rule below is
+downstream of the fact that a header and a row cost the same height; where a
+rule reads differently on the tower, it says so, and § The timing tower holds
+the tower's own.
 
-1. **No vertical rules, no row separators.** Separation is alignment and
-   whitespace; zebra tint is the only banding allowed. At 32 px a rule costs
-   more attention than it returns. The one hairline permitted is the session
-   strip's baseline, which separates the readout from the field rather than one
-   row from the next.
-2. **Class separation is a gap plus a tone shift — and, on Standings, a band
-   that earns its height by carrying the class's own numbers.** The gap and the
-   tone shift do the separating; they read pre-attentively and cost a third of
-   a band. What the earlier absolutist version of this rule got wrong is that
-   separation was never the only job. A class's **car count, strength of field
-   and fastest lap** are per-class and per-group: the session strip cannot hold
-   them (it is field-wide) and no row can (it is one car). The band is the only
-   place they exist, and a band that is *carrying data* is not the labelled
-   band this rule was written against.
+1. **No vertical rules. One row separator, on the tower: a hairline after
+   every third row.** Otherwise separation is alignment and whitespace, and
+   zebra is the banding — a step stronger on the tower than it was, because a
+   long field read sideways loses its line without it.
 
-   `CLASS_BAND_H` is 26, not the 34 the old class header cost, because it is a
-   strip's geometry — a chip plus micro-label/value pairs — rather than a row's.
-   It is subject to rule 7 like everything else: no collapse, no solo, nothing
-   to click. It appears only when the field is grouped by class (a flat table
-   has one group and nothing to name), and it can be switched off from the
-   Manager.
-3. **Column labels are off by default, and when on they print in the top slice
-   of the first row**, out of flow, so they cost no height at all. A persistent
-   28 px band was 13 % of a ~208 px six-row Relative spent on labels a returning
-   user stopped reading in their first session; the host row clears the
-   in-flow version with `COL_LABEL_H` of top padding instead of centring under
-   them.
+   The every-third hairline is a *counting* device, not a separator, and that
+   is why it survives a rule that bans separators. It does not say "these rows
+   are different", which is what a rule under every row says and what cost
+   more attention than it returned at 32 px. It says "that was three": the eye
+   takes P1–P3, P4–P6 in threes down a thirty-car field instead of counting
+   rows. The Relative has no separators — six rows either side of the player
+   do not need counting — and its one hairline is still the session strip's
+   baseline.
+2. **On the tower, each class is a card.** A header, an optional label row,
+   the class's rows, and 12 px of paper before the next card. The card's edge
+   and the paper between cards do the separating; the header earns its height
+   by carrying the **class's own numbers** — car count, strength of field,
+   fastest lap and who set it — which are per-class and per-group, so the
+   race-control bar cannot hold them and no row can.
+
+   It used to be a gap plus a tone shift, then a solid band of the class's
+   colour; the history is § The class header's. What the card changed is who
+   does the grouping: an edge that closes round the group rather than a
+   masthead that only opens it, so the group reads as one object in
+   peripheral vision without the class colour having to be the thing that
+   draws it.
+
+   The header is subject to rule 7 like everything else: no collapse, no solo,
+   nothing to click. It appears only when the field is grouped by class (a flat
+   table is one card, and a header over the whole field would name something
+   the reader can already see), and it can be switched off from the Manager.
+3. **Column labels are off by default.** On the Relative, when on, they print
+   in the top slice of the first row, out of flow, so they cost no height at
+   all — a persistent 28 px band was 13 % of a ~208 px six-row Relative spent on
+   labels a returning user stopped reading in their first session. On the
+   tower, when on, they are a row of their own under each class header
+   (`LABEL_ROW_H` 28, on the label-row paper), because that is how the design
+   canvas draws them and a tower is tall enough to afford one.
 
    The default flipped to *off* because "costs no height" was answering the
    wrong objection. The cost of a label a driver has already learned is not
@@ -448,40 +458,51 @@ the fact that a header band and a row cost the same height.
    is what keeps this from being the § Deliberately not adopted case of a
    Relative that is undecodable on a first run.
 4. **Compound cells over extra columns.** A value and its delta are one cell in
-   two voices — mono value in `text`, delta in `accent` or `danger` — not two
-   columns. iRating + its change is the canonical case.
+   two voices — the value quiet, the delta in the colour of its direction — not
+   two columns. iRating + its change is the canonical case. On the tower the
+   two voices sit in two fixed, right-aligned slots with no tint behind them:
+   the tint's job, binding the pair into one token, is done by the alignment,
+   and a quiet column should not also be a chip.
 5. **Fill is rationed by meaning, not by count; tint is not fill.** A *fill*
-   is opaque and takes contrasting ink, and it is the loudest tool on this
-   surface. Standings spends it on exactly three things, and each one is a
-   different kind of statement:
+   is opaque and takes contrasting ink, and it is the loudest tool on these
+   surfaces. The tower spends it on exactly these, and each is a heading or the
+   statement the row most needs to make:
 
-   - **status** — fastest-lap-in-class, the one *computed* fill, obeying
-     `on-accent` (§ Theme, rule 1);
-   - **identity, as a heading** — the class band and the position block, both
-     taking measured ink per rule 11.
+   - **identity, as a heading** — the class chip and the position block, both
+     in measured ink (rule 11);
+   - **the grade that matters most** — the fastest lap in class, wherever it
+     appears (the best-lap cell, a sector, the class header's BEST LAP), in
+     the class-best violet;
+   - **a state that changes how the row is read** — the PIT badge (the row's
+     live timing is greyed behind it) and the DSQ block (the row is no longer a
+     position);
+   - **race control** — the bar's badge, and under a yellow or a caution the
+     bar's whole ground (§ The timing tower, rule 9).
 
-   Nothing else may fill. The test is whether the cell is a heading or the
-   surface's single graded value; a fill on anything that merely reports is
-   ink spent where a colour of text would have done.
+   This is more than the three fills the Pit Wall version allowed, and the
+   difference is deliberate rather than drift: that version rationed fill to
+   one computed status per surface, which left the canvas's PIT badge, its
+   DSQ block and its violet sectors with nowhere to go. The test survives — a
+   fill is a heading or the single most important thing the row says, never
+   a number that merely reports.
 
-   A **tint** is a different device: the same hue as its ink, at ≤ 18 % alpha,
-   behind that ink. It does not compete with a fill for attention; it *binds a
-   compound cell into one token* so the eye takes it as a single thing. The
-   licence badge (`A3.45`), the iRating pair (`3.7k ▲29`) and the
-   position-change chip (`▲8`) are tints — each is two values that are read
-   together or not at all. `tint()` lives in
-   [`lib/contrast.ts`](src/lib/contrast.ts).
+   A **tint** is a different device: the same hue as its ink, at a whisper,
+   behind that ink. It groups a compound cell or marks a chip without
+   competing with a fill. On the tower that is the licence badge, a personal
+   best (green tint, with a hairline ring of its own so it is a different
+   *shape* from the violet fill), the state chips beside a name, and a battle.
 
-   **A tinted chip in a column is sized by the column, not by its contents.**
-   `3.7k ▲29` and `1.9k` hugging their own text are two different widths in the
-   same column, which turns a quiet grouping device into a ragged edge down the
-   table — and puts the values themselves on different verticals, which is the
-   one thing a column of numbers may never do. The chip fills the cell and the
-   delta gets a fixed-width slot.
+   The battle breaks the old test that "one value gets coloured text and
+   nothing else", and it breaks it on purpose. It is not a grade of the value;
+   it is the only statement on the surface about two rows at once — this car
+   is within a second of that one — and a coloured digit is not enough to find
+   it from the corner of the eye. It is kept honest by being rare and by its
+   glyph (§ The timing tower, rule 7).
 
-   The test for whether something may be tinted is rule 4's test: if it would
-   otherwise want to be two columns, it is a compound cell and a tint is
-   allowed. If it is one value, it gets coloured text and nothing else.
+   **A tinted chip in a column is sized by the column, not by its contents**,
+   and every value in a column takes the same padding whether it wears a chip
+   or not — otherwise the chip's padding pushes one value's decimals off the
+   column's vertical, which is the one thing a column of numbers may never do.
 6. **The name column is `minmax(0, 1fr)` and truncates last.** Every other
    column is fixed-width and mono; the name absorbs all slack. A layout that
    clips `Francois Sieg…` while fixed columns hold empty space has its
@@ -515,13 +536,20 @@ the fact that a header band and a row cost the same height.
    making the call knowingly, where a column vanishing was the app making it
    for them, silently.
 
-   **Two things do not scale.** The 3 px class-colour edge divides the factor
-   back out and holds its drawn size, because it went to 3 px precisely to stop
-   disappearing in peripheral vision and a uniform scale takes it back under
-   the 2 px already rejected — see `CLASS_EDGE_WIDTH`. And the § Session strip
-   and class band are handed the width they have to draw *in* rather than the
+   **Two things do not scale.** On the Relative, the class-colour edge divides
+   the factor back out and holds its drawn size, because it went to 3 px, then
+   4, precisely to stop disappearing in peripheral vision — see
+   `CLASS_EDGE_WIDTH`. (The tower has no edge to hold.) And the bars and class
+   headers are handed the width they have to draw *in* rather than the
    window's, so they keep every field at the sizes this rule exists to keep
    them at. What holds its size is what carries presence rather than quantity.
+
+   **The floor is per surface.** The tower's natural width is the canvas's,
+   about 1 460 px with every column on, where the old table's was about 1 030;
+   the same *absolute* backstop is therefore a lower factor for it
+   (`TOWER_MIN_SCALE` 0.35 against the Relative's 0.5). And the standings window
+   now opens at 1100 × 560 rather than the generic 640 × 420, which is what
+   shows the demo field at three-quarters rather than at under half.
 7. **Nothing on an overlay screen can be aimed at** — Standings, Relative and
    Fuel & Strategy. No title bar, no controls, no menus, no per-class
    affordances. These are the surfaces read while the user's hands are busy,
@@ -533,10 +561,18 @@ the fact that a header band and a row cost the same height.
    that is interactive where the overlay is not is a preview that lies.
 
    The rule is about *interaction*, not about chrome, so a **pure readout is
-   allowed above the rows**: the § Session strip below, the per-class band in
-   rule 2, and the fuel screen's `MARGIN 1.0 lap`. None has a button or rewards a
+   allowed above the rows**: the § Session strip below (on the tower, the
+   race-control bar), the class header in rule 2, and the fuel screen's `MARGIN 1.0 lap`. None has a button or rewards a
    click, and the first two are Manager toggles, so they cost the driver
    nothing to ignore.
+
+   **The design canvas proposed two controls on the tower, and only one came
+   across, into the Manager.** Its class header carried a gap switch (to the
+   class leader / to the car ahead) and a collapse arrow. The gap switch is a
+   configuration — it changes what a column measures, for good — so it lives
+   in the Manager, where it swaps the two gap columns rather than printing the
+   interval twice. Collapse is per-session state, not configuration, so it has
+   no home in the Manager either, and it stays out (§ Known follow-ups).
 
    **Fuel & Strategy came under this rule late.** It shipped with a reserve
    stepper, a pit-fuel override and a collapsed "Pit strategies" section, which
@@ -547,17 +583,25 @@ the fact that a header band and a row cost the same height.
    as needed — see § Fuel, in the sim's units), and by the sentence above,
    either one may come back only in the Manager.
 
-8. **Type on these two surfaces runs one step larger and one weight heavier
-   than anywhere else in the app.** 13 px semibold names, 12 px semibold values,
-   14 px bold positions, on `ROW_H` 32 (Standings) / 34 (Relative). Every other
-   surface in this system is read by someone looking *at* it; these are read in
-   peripheral vision at 200 km/h by someone who must not look away for long.
-   The density lost to the extra pixels is bought back by rules 2, 3 and 7,
-   which is what those rules are for.
+8. **Type on these two surfaces runs larger and heavier than anywhere else in
+   the app, and on the tower it is ranked.** Every other surface in this system
+   is read by someone looking *at* it; these are read in peripheral vision at
+   200 km/h by someone who must not look away for long.
 
-9. **They paint on their own near-black paper**, `--color-timing-bg`, not the
-   app's `surface` graphite, and they keep it opaque over live footage instead
-   of dropping to glass. A 32 px row of 12 px type cannot afford to let a
+   The Relative is flat: 13 px semibold names, 12 px semibold values, 14 px
+   bold positions on `ROW_H` 34. The tower is a **hierarchy**, in canvas pixels
+   on `ROW_H` 44 — position 22 px bold condensed in its block, name 21 px bold
+   condensed, then the primary gap at 16 px regular in full ink, the other
+   times at 15 px in secondary ink, and the quiet columns (car number,
+   iRating, laps on the set) at 14 px in tertiary. The eye reads **position →
+   name → gap** before anything else, because that is the order the question
+   "who is where, and how far" is asked in; everything after the gap is read
+   only when looked for. See § The timing tower, rule 3.
+
+9. **They paint on their own near-black paper** — the Relative on
+   `--color-timing-bg`, the tower on its palette's `#07090B` — not the app's
+   `surface` graphite, and they keep it opaque over live footage instead of
+   dropping to glass. A 32 px row of 12 px type cannot afford to let a
    sunlit kerb through. The token carries the active theme's hue so the surface
    stays part of the system, and the zebra banding on top of it is plain white
    alpha (`GROUP_TONE`) so the banding device means the same thing in all four
@@ -573,30 +617,31 @@ the fact that a header band and a row cost the same height.
    half were glass read as two products.
 
 10. **A lap that grades is ruled, not recoloured.** The last-lap cell keeps
-    white digits and takes a 2 px underline in `accent` (personal best) or
-    `sector-purple` (session best). The last lap is the number a driver is
+    its digits' ink and takes a 2 px underline — on the Relative in `accent`
+    (personal best) or `sector-purple` (session best), on the tower in its
+    personal-best green or a light violet for the fastest lap on track. The last lap is the number a driver is
     actually comparing against the car ahead, so it has to stay readable *as a
     time* first; grading it by recolouring the digits trades legibility for the
     grade, and the underline carries the same information in the same glyph box
     at no cost. `sector-purple` still colours the digits themselves, because a
     session-best lap is an event rather than a comparison.
 
-11. **Ink on identity colour is measured, never declared.** The class band and
+11. **Ink on identity colour is measured, never declared.** The class chip and
     the position block are solid class colour (§ Two colour systems rule 2), so
-    both print in ink chosen from their own fill's WCAG luminance by
-    `readableInk` in [`lib/contrast.ts`](src/lib/contrast.ts) — the only place
-    in the app where ink on a fill is computed.
+    both print in whichever of the tower's dark ink and white measures the
+    higher contrast against their own fill — `towerInk` in
+    [`lib/towerPalette.ts`](src/lib/towerPalette.ts). `readableInk` in
+    [`lib/contrast.ts`](src/lib/contrast.ts), the same idea against the theme's
+    `on-accent`, is kept and tested for the surfaces that are still themed.
 
     It has to be. Even inside a palette this app owns, the five-colour ramp
     spans violet at L≈0.24 and lime at L≈0.65: white reads on one and vanishes
     on the other, and `on-accent` does the reverse. A single declared ink is
     wrong for half the ramp whichever one you pick.
 
-    One consequence worth stating, because it looks like an inconsistency and
-    is not: **on a solid band, overall-best stops being purple ink and becomes
-    a purple fill.** `sector-purple` on lime or on violet is unreadable, so the
-    mark moves from the ink to a ground behind it. Same token, same meaning,
-    legible on any class colour the sim can hand us.
+    With class colours now the driver's to pick, the measurement matters more,
+    not less: a pick can land anywhere a colour input reaches. `towerPalette.test`
+    pins that every ramp colour clears 4.5:1 under its measured ink.
 
 12. **A column that would lie in this session is not shown in this session.**
     Almost every number on these two surfaces is a race concept wearing a
@@ -635,51 +680,38 @@ the fact that a header band and a row cost the same height.
     An **unrecognised** session name keeps the race behaviour. Hiding columns
     on a guess is worse than showing a number the driver can judge themselves.
 
-### The class band
+### The class header
 
-One line opening each class group on Standings:
-`[GT3] · CARS 6 · SOF 4.1k · BEST 2:06.652`.
+The line that opens each class card on the tower:
+`[GT3]  6 cars  SOF 4.1k  ……  BEST LAP [2:15.239] P. Costa`.
 
-- **The band is part of its group, not furniture above it — and it is the
-  heading, so it carries the colour outright where the rows only tint it.** It
-  takes the same leading edge as a row, and then the class colour **solid**
-  across its whole width (`classBandFill`) where a row takes it to the end of
-  its first column at 16 % (`classRowFill`). That difference is the hierarchy:
-  masthead solid, rows striped, the group legible as one block.
-
-  It was a 22 % tint of the same hue for exactly one reason — that identity
-  colour whispers where status colour speaks. What that produced in a
-  four-class field was four bands of roughly equal darkness whose hue you had
-  to look *for*. The tint put the class's colour behind the band; solid makes
-  it the band.
-
-  **Everything on the band prints in measured ink** (§ Dense tabular overlays
-  rule 11), including the class name — which was ink in the class's own colour
-  and could not stay that way once the fill became the same colour. The
-  micro-labels take the same ink held back to 72 % rather than `faint`, which
-  is tuned against the app's dark surfaces and lands near invisible on a light
-  fill. The name's `ml-1` still matches the row's `px-1`, so the band's content
-  begins exactly where the field's does.
-- **`BEST` takes a `sector-purple` fill** when that class's fastest lap is also
-  the session's — the same meaning purple carries in every row, moved from the
-  ink to a ground behind it because purple on lime is not a colour anyone can
-  read. See rule 11.
-- **It is a heading, so it is set apart from its group, not flush against it.**
-  `CLASS_BAND_H` 30 plus `BAND_GAP` 4: a band sitting directly on the first row
-  reads as that group's first entry rather than as the thing that opens it. Its
-  leading edge sits on the same vertical as the rows' left borders — same
-  device, same x — so the band and the field share one left margin.
-- **It borrows the session strip's grammar** — chip, then micro-label/value
-  pairs — so a multi-class field reads as one masthead and several
-  sub-mastheads, not two unrelated kinds of furniture. Fields drop
-  right-to-left as the overlay narrows, as everything else on these surfaces
-  does; the chip is the last to go, because a band that has clipped its own
-  name has stopped doing its job.
+- **Quiet paper with the class's colour in one place.** The header is the
+  card's own surface; the class's colour is the chip that names it, the same
+  block every position in the card sits in (§ Two colour systems rule 2). The
+  solid band it replaces put the whole class colour behind the heading, which
+  was right while the band was the only thing grouping the rows; the card's
+  edge does that now, so the colour can be spent where the eye lands first.
+- **`BEST LAP` always sits on the class-best violet**, with the name of the
+  driver who set it — `P. Costa`, first initial and surname, the way a timing
+  graphic credits a lap. It is the same fill the lap wears in its own row, so
+  the eye can go from the header to the row and back.
+- **The car count is words, not a glyph.** `6 cars` replaces the helmet glyph
+  the Pit Wall band used: the canvas spelled it out, and a count read in words
+  needs no legend.
+- **Fields drop right-to-left as the tower narrows** — the holder's name, then
+  the best lap, then SoF, then the count — and the chip is the last thing
+  standing, because a header that has clipped its own name has stopped doing
+  its job.
 
 ### The session strip
 
-One line above the field, on both timing surfaces:
+One line above the field on the Relative:
 `RACE · LAP 6/≈36 · LEFT 50:24 · INC 4x · TRK 38° · SOF 3.3k · AIR 22° · CLK 20:46`.
+
+On the tower the same readout is the **race-control bar** — full words, larger
+values, and a ground that changes under a yellow or a caution (§ The timing
+tower, rule 9). The rules below still hold there, except that the bar's badge
+is no longer the only fill it can carry.
 
 - **Every field is a mono micro-label plus a bold value.** This is the
   § Deliberately not adopted note on icon-only strips, cashed in: a thermometer
@@ -717,15 +749,127 @@ a better reason than the last one:
   identity should stay quiet next to the status colours. At that size an Audi's
   four rings and a Porsche crest resolved to the same smudge in peripheral
   vision, which is the one place this surface is actually read. Now 17 px in
-  near-white. This does not re-open § Two colour systems rule 2 — the mark is
+  near-white on the Relative, 22 canvas px in the tower's text ink on the
+  tower. This does not re-open § Two colour systems rule 2 — the mark is
   drawn in the row's own ink.
 - **The class band** was rejected on the grounds that a gap separates classes
   for a third of the height. True, and irrelevant: separation was never the
-  band's job. See rule 2.
+  band's job. See rule 2 — where it is now the header of a class card.
 
 The rejections that stand are both about *withholding information the reader
 needs*, which is the pattern worth noticing — a rule that only removes chrome
 is a rule that will keep getting revisited.
+
+## The timing tower
+
+The Standings screen, as the design canvas "Timing tower rediseñado" drew it on
+2026-09-27 and the product owner asked for it to ship: the canvas's type, its
+palette and its chips, inside this system's rules for anything read at speed —
+nothing on it can be aimed at (§ Dense tabular overlays rule 7), and a column
+that would lie is not shown (rule 12). The Broadcast overlay is the same tower
+cut down for a stream (rule 12 below).
+
+1. **It is one surface's look, not the app's.** The Manager, the Relative,
+   Fuel & Strategy and the widgets keep Inter, mono and the runtime themes. The
+   Relative is the obvious next surface to move and is recorded as a follow-up
+   rather than half-done here: two timing surfaces in two languages for a
+   release is a smaller cost than a Relative redrawn without a design of its
+   own.
+2. **Its palette is fixed and measured.** Every colour on the tower is in
+   [`lib/towerPalette.ts`](src/lib/towerPalette.ts), and
+   `towerPalette.test.ts` walks every ink against every ground it can land on —
+   both zebra rows, your own row, every tint composited over each of them, the
+   class header, the label row, the paper, both stripes of the safety-car bar —
+   and fails below WCAG AA: 4.5:1 for text, 3:1 for the tyre rings, which sit
+   beside a letter that carries the compound on its own. The palette does not
+   follow the runtime themes (§ Theme), because a palette that is measured once
+   has to stay the palette that was measured.
+
+   Its colours say one thing each, and some say something different from the
+   theme tokens elsewhere: on the tower, **blue** is places gained and your own
+   car, **orange** is places lost and a slow sector, **violet** is the fastest
+   in class, **green** a personal best, **yellow** the things a yellow flag is
+   shown for. Blue/orange for up/down rather than green/red is the canvas's
+   choice and the right one: it is the pair that survives red-green colour
+   blindness, the commonest kind.
+3. **Type is ranked: position → name → gap.** Barlow Condensed 700 for the
+   position (22 px in its block) and the name (21 px, caps), then Barlow for
+   every number — the primary gap at 16 px in full ink, the other times at
+   15 px in secondary ink, the quiet columns at 14 px in tertiary. Everything
+   is right-aligned in tabular figures with a fixed number of decimals per
+   column, so decimals line up without a decimal tab, and **every time column —
+   gap, interval, last, best, each sector — is the same 84 px wide**, so the
+   timing half of the row is one rhythm.
+4. **Ink on identity colour is measured.** The position block and the class
+   chip print in `towerInk`: whichever of the palette's dark ink and white
+   reads better on that fill. A class colour is the driver's to pick now
+   (§ Two colour systems rule 1), and a pick can land anywhere.
+5. **Grades are against the class, and the last lap is ruled.** A sector or a
+   lap that is the fastest *in its class* takes the violet fill; the bridge
+   grades sectors against the whole field, which in a multi-class race would
+   never let a GT4 see violet, so the class bests are derived in the store
+   ([`lib/sectorBests.ts`](src/lib/sectorBests.ts)). A personal best is a
+   green tint with its own hairline ring — a different shape from the fill,
+   not only a different colour. A big loss is bold orange delta, a small one a
+   plain grey delta, always signed. The last lap keeps its ink and takes a
+   2 px rule, as § Dense tabular overlays rule 10 has it.
+6. **Every state is a word and a glyph, never a colour alone.** Beside the
+   name: **PIT** (a filled badge, and the row's live timing — gap, interval,
+   last lap, trend, sectors — greys out behind it), **OFF TRACK**, **DAMAGE**
+   (the meatball), **OUT**, **FINAL LAP**, **FINISHED**. **DSQ** takes over the
+   position block, strikes the name through and greys the row. Greyed ink is
+   still 4.5:1 — quieter, not illegible.
+
+   **OUT, not DISCONNECTED**, and that is a data decision rather than a
+   wording one: the SDK reports a disconnected car and a car being towed the
+   same way, not in the world, and a tow happens in nearly every race. A chip
+   reading DISCONNECTED on a car sitting out a tow would be a visible, frequent
+   lie.
+
+   The final lap and the finish are derived in the bridge, because iRacing
+   never puts the white or the chequer in a car's own `CarIdxSessionFlags`:
+   each car's lap is snapshotted when the flag first appears in
+   `SessionFlags`, and a car's final lap starts when it next crosses the line.
+7. **A battle is a tint and a glyph.** A car within a second of the car ahead
+   *in its class*, both racing, has its interval put on a tint of the class's
+   colour, in bold, behind two closing arrows. It is measured against the
+   interval **as printed**, to the tenth, so the pill never sits around a value
+   that reads `+1.0`; and it is resolved over the whole field in the store,
+   because half the answer is whether the car ahead is racing, which a row
+   cannot see. The glyph is the colour-blind reader's cue; the tint is what
+   finds the fight from the corner of the eye.
+8. **The field is counted in threes.** The zebra runs a step stronger than
+   the old table's, and a hairline sits after every third row (§ Dense tabular
+   overlays rule 1).
+9. **The race-control bar changes what it is under a flag.** On green it is
+   quiet paper with one filled badge naming the session. Under a yellow the
+   whole bar turns yellow and reads YELLOW FLAG beside a flag glyph; under a
+   full-course caution — iRacing's pace car, called by its broadcast name — it
+   turns amber, takes slow diagonal stripes and reads SAFETY CAR · NO
+   OVERTAKING beside a car glyph. Word, glyph and pattern all differ, so the two
+   stay apart for a reader who cannot tell amber from yellow; the ink on both
+   is measured on both stripes. The bar is the one place on the tower meant to
+   be seen without being looked at, and the one ground on it that may change.
+10. **Tyres are named, and pace is a line.** The tyre is a ring in the
+    compound's colour with its letter inside — S, M, H, I — and a wet is a
+    dashed ring round a drop, a different *kind* of tyre drawn as a different
+    shape. The name comes from `DriverInfo:DriverTires`, which iRacing added in
+    the 2025 S3 build; without it the ring is neutral and carries the old index
+    letters, because guessing that index 0 is a hard would be wrong in half the
+    series. The pace sparkline shows the last five laps on **one fixed scale
+    for every row** — the car's own best at the dotted baseline, two seconds
+    slower at the top — because a scale fitted to each row would draw a car
+    varying by a tenth as wildly as one varying by two seconds.
+11. **The legend is a Manager toggle, off by default**, for the reason column
+    labels are: it teaches the table once and is then a strip of pixels read
+    past every lap.
+12. **The Broadcast overlay is the tower cut to what an audience needs**:
+    position in its class block, name, gap, in a 300 px column for the left
+    edge of a 1920 × 1080 stream. It paints only itself, so an OBS browser
+    source composites it over the game with nothing around it. The two states
+    that change what a gap *means* stay — PIT in the gap cell, DSQ in the
+    position block — and nothing else does: sector splits and tyre ages are the
+    driver's, not the viewer's.
 
 ## The marketing surface
 
@@ -899,12 +1043,12 @@ Seven things it is allowed that no app surface is:
      it — and it is the only wayfinding on a page ~5,600 px tall.
 
    - **The section band** (`.band`) opens every section, including the hero, in
-     the § Class band's grammar: a chip naming the subject, then micro-label /
-     value pairs carrying that subject's own numbers — `COLUMNS 15 · ALWAYS 3 ·
-     ROW 32px`. Every value is a fact checkable in this repo or in a capture on
+     the grammar of the old class band (now § The class header): a chip
+     naming the subject, then micro-label / value pairs carrying that
+     subject's own numbers — `COLUMNS 15 · ALWAYS 2 · ROW 44px`. Every value is a fact checkable in this repo or in a capture on
      the page, so the band is inside the honest-copy rule below rather than an
-     exception to it. Its 3 px leading edge is the standings row's left border
-     at a larger scale — one device, three sizes — and it takes
+     exception to it. Its 3 px leading edge is the same device as the Relative
+     row's class edge — one device, two surfaces — and it takes
      `border-strong` rather than a status colour, because on this surface it
      carries structure and there is no identity colour to quarantine
      (§ Two colour systems is a product-surface rule).
@@ -956,7 +1100,37 @@ rules 5 and 11, § The class band — were rewritten rather than patched, becaus
 each had banned in principle the thing the direction turned out to need, and a
 patch would have left the ban standing next to its exception.
 
+**The timing tower, 2026-09-27.** The Standings screen was redrawn from a
+design canvas, "Timing tower rediseñado", that the product owner commissioned
+and asked to ship as drawn. Unlike every pass above, this one *did* take values
+and not only structure: the canvas's type (Barlow, Barlow Condensed), its fixed
+palette, its radii and its geometry came across one for one, and they are the
+canvas's, in canvas pixels — which is why § The timing tower fences them to one
+surface instead of folding them into the tokens. What did not come across is
+anything the canvas drew that this system's rules refuse: its two header
+controls (§ Dense tabular overlays rule 7), and a DISCONNECTED state the data
+cannot honestly support (§ The timing tower rule 6). Every colour that came
+across was measured before it shipped — `towerPalette.test.ts` — rather than
+trusted because the canvas used it. The sections it rewrote — § Two colour
+systems rule 2, § Dense tabular overlays rules 1, 2, 5 and 8, and § The class
+band, now § The class header — were rewritten rather than patched, for the same
+reason as the pass before it.
+
 ## Known follow-ups
+
+- **The Relative is still in the Pit Wall language.** Two timing surfaces in
+  two faces and two palettes is the visible cost of § The timing tower rule 1.
+  Closing it needs a design of the Relative's own — the tower's card grammar
+  does not fit a table sorted by track position — not the tower's tokens
+  copied across.
+- **The tower ignores the runtime themes**, by § The timing tower rule 2. A
+  user on Endurance gets the tower's own neutrals beside an Endurance Manager.
+  The fix, if one is ever wanted, is a second *measured* tower palette per
+  theme, not a theme re-tinting the measured one.
+- **The site has no capture of the Broadcast overlay.** It is the one overlay
+  the page counts but does not show. A shot of it over a game frame — which is
+  the only honest way to show something that paints nothing around itself —
+  needs a background the capture script does not have.
 
 - ~~**A timed race's length is estimated from the player's pace, not the
   leader's.**~~ **Done**, and more cheaply than this entry expected. The plan
@@ -1005,20 +1179,22 @@ patch would have left the ban standing next to its exception.
   § Theme table that reads as *critical*, which a car three seconds back is not.
   It wants a token the palette does not have yet — "behind you" is neither
   positive nor a warning — so it is left alone rather than guessed at.
-- **Rule 3 repeats the labels once per class group.** Correct by the rule — each
-  group is its own small table — but in a two-class field the second label line
-  sits ten rows below the first, which may be one more than it needs to be.
+- **Rule 3 repeats the labels once per class card** on the tower. Correct by
+  the rule — each card is its own small table — but in a two-class field the
+  second label row sits six rows below the first, which may be one more than it
+  needs to be.
 - ~~**Rule 7 cost the standings its class *names*.**~~ **Done** — by the class
   band of rule 2, which names the class and carries its numbers besides. An
   interim fix printed `GT3 · 6` in the leader row's `Driver` label slot; the
   band supersedes it, and the `Driver` label is back.
-- **Per-class collapse and solo-filter are still gone**, and the band's return
-  does not bring them back: rule 7 outranks rule 2, and per-class state is
-  session data rather than configuration, so it has no home in the Manager
-  either. Worth revisiting only if a large multi-class field actually proves
-  unreadable without them.
-- **The class band repeats no session-wide value**, unlike the reference, which
-  reprints lap, clock and track temperature on every band. Those live once, on
-  the session strip. If a user ever runs the band without the strip and misses
-  them, the answer is to let the *strip* pin rather than to duplicate it per
-  class.
+- **Per-class collapse and solo-filter are still gone**, and neither the
+  band's return nor the card that replaced it brings them back — though the
+  design canvas drew a collapse arrow on every class header. Rule 7 outranks
+  rule 2, and per-class state is session data rather than configuration, so
+  it has no home in the Manager either. Worth revisiting only if a large
+  multi-class field actually proves unreadable without them.
+- **The class header repeats no session-wide value**, unlike the reference,
+  which reprints lap, clock and track temperature on every band. Those live
+  once, on the race-control bar. If a user ever runs the headers without the
+  bar and misses them, the answer is to let the *bar* pin rather than to
+  duplicate it per class.
