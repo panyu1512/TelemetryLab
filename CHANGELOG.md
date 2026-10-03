@@ -11,44 +11,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **Standings reads rank, car, driver — then the data.** Position now leads the
-  row, flush against the class edge and directly under the band's class name,
-  so band, edge and position block form one vertical of class colour down each
-  group. Position change follows it, the car's mark sits with its number, and
-  the flag sits with the name. The class edge is full strength on every row
-  (it used to dim below the class leader, which read as a rendering fault), and
-  the faint class fill behind the first column is gone now that the solid
-  position block sits there.
-- **The class band is set at the rows' scale.** Its class name was 11 px under
-  13 px driver names; it is now 13 px and centred over the position column,
-  with 12 px values and 9 px labels to match the session strip, whose labels
-  come up from 8 px too.
-- **The fastest lap lines up with its column.** The filled chip used to push
-  its digits off the vertical every other time in the column sits on.
-- **Tyre compounds print in the row's own ink.** They took status colours, which
-  put an alarm-red `B` on a third of a healthy field.
-- **"This is you" is easier to find** on both timing surfaces: a stronger
-  `primary` ground and ring.
-- **Relative keeps one ring, and it is yours.** Off-lap rows keep their red
-  ground but lose the red outline that turned a race neighbourhood into a stack
-  of alarms. The player's row is set apart by equal space above and below,
-  replacing the lopsided `YOU` / `BEHIND` labels, and class edges are full
-  strength as on Standings.
-- **Fuel & Strategy speaks the timing surfaces' language.** A readout strip
-  replaces the title bar; sections sit on the Standings group tone instead of
-  bordered graphite cards; labels are mono and values bold; bars are
-  square-ended on a visible track; the pit plans are aligned rows instead of
-  pills; and the fuel-save card spans the full width instead of leaving a hole
-  beside it.
-- **Dashboard widgets match.** Tyre corners drop their graphite cards for the
-  same section tone, every widget's micro-labels are mono, and the Position
-  widget centres its read-out instead of pinning it to the floor of the card.
+- **Standings is easier to scan.** Each row now opens with its position, in its
+  class colour and directly under the class band, followed by car number, car
+  brand, flag and driver name. Class edges are solid on every row, the class
+  band's text is the same size as the driver names, and the fastest lap lines
+  up with the other lap times.
+- **Tyre compounds are no longer colour-coded.** They borrowed the status
+  colours, so a `B` compound showed in alarm red.
+- **Your own row is easier to find** on Standings and Relative.
+- **Relative is calmer.** Cars on a different lap keep their red background
+  but lose the red outline, and the `YOU` / `BEHIND` labels are replaced by
+  space either side of your row.
+- **Fuel & Strategy matches the timing screens.** A readout strip replaces the
+  title bar, panels are flat instead of bordered cards, and the pit plans line
+  up as rows.
+- **Dashboard widgets match too.** Consistent labels on every widget, flat tyre
+  corners, and a centred Position widget.
 
 ### Fixed
 
-- **The fuel verdict block rendered as a white outline.** Its tint was built by
-  appending a hex alpha to a CSS variable, which is invalid CSS, so the ground
-  and border were dropped. It now mixes the status colour properly.
+- **The fuel status block showed a white outline** instead of its amber, green
+  or red background.
 
 ## [1.9.0] - 2026-08-18
 
