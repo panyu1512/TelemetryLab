@@ -103,15 +103,19 @@ const SHOTS = [
   // proof that the table groups by class; at 420 it cropped the GT4 group
   // mid-row, which showed the reader four of six cars and a sliced fifth.
   { name: "standings", route: "?overlay=standings", w: 1180, h: 512 },
-  // 472 fits five cars ahead, the player and four behind, all whole. At 452
-  // a thirteenth row was sliced by the frame.
-  { name: "relative", route: "?overlay=relative", w: 560, h: 472 },
+  // 416 fits five cars ahead, the player and four behind, all whole (the last
+  // row ends at 407). Down from 472 when the `YOU` / `BEHIND` labels became
+  // plain space either side of the player's row — the old frame closed on
+  // ~60 px of empty paper.
+  { name: "relative", route: "?overlay=relative", w: 560, h: 416 },
   { name: "dashboard", route: "?overlay=dashboard", w: 1100, h: 620 },
   { name: "manager", route: "", w: 1400, h: 900, wait: PAST_A_LAP_MS },
   // Tall enough for the pit-strategies card, which stopped being collapsed and
-  // now always renders under the fold of the old 340 px frame — and no taller:
-  // 560 left ~60 px of empty paper below the last card.
-  { name: "fuel", route: "?overlay=fuel", w: 620, h: 505, wait: PAST_A_LAP_MS },
+  // now always renders under the fold of the old 340 px frame — and no taller.
+  // 412, down from 505: the panel moved to the timing surfaces' strip and
+  // section grammar and the fuel-save card spans both columns, so the last
+  // card now ends at 403.
+  { name: "fuel", route: "?overlay=fuel", w: 620, h: 412, wait: PAST_A_LAP_MS },
 ];
 
 fs.mkdirSync(OUT, { recursive: true });
