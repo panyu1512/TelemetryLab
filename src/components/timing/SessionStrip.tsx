@@ -153,7 +153,7 @@ export function SessionStrip({ width }: SessionStripProps) {
 
       {FIELDS.map(({ id, label, minWidth }) =>
         width <= 0 || width >= minWidth ? (
-          <Field key={id} label={label} {...values[id]} />
+          <StripField key={id} label={label} {...values[id]} />
         ) : null
       )}
     </div>
@@ -165,20 +165,30 @@ export function SessionStrip({ width }: SessionStripProps) {
  * `faint` — against a bold value in full `text`, so the strip scans as a row of
  * numbers with their units attached rather than as a sentence.
  */
-function Field({
+/**
+ * One micro-label / bold value pair — the strip's whole grammar, exported so
+ * every readout line above a timing surface (the Fuel & Strategy strip, the
+ * class band) speaks it the same way rather than approximating it.
+ */
+export function StripField({
   label,
   text,
   color,
   title,
+  className = "",
 }: {
   label: string;
   text: string;
   color?: string;
   title?: string;
+  className?: string;
 }) {
   return (
-    <span className="flex shrink-0 items-baseline gap-1" title={title}>
-      <span className="font-mono text-[8px] font-semibold uppercase leading-none tracking-[0.14em] text-faint">
+    <span
+      className={`flex shrink-0 items-baseline gap-1 ${className}`}
+      title={title}
+    >
+      <span className="font-mono text-[9px] font-semibold uppercase leading-none tracking-[0.14em] text-faint">
         {label}
       </span>
       <span

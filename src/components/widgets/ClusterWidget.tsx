@@ -95,7 +95,7 @@ export function ClusterWidget({ data }: { data: TelemetryData | null }) {
             {gearLabel(data?.gear)}
           </span>
           <span
-            className="font-medium uppercase tracking-[0.12em] text-faint"
+            className="font-mono font-medium uppercase tracking-[0.12em] text-faint"
             style={{ fontSize: "clamp(0.5rem, 7cqmin, 0.65rem)" }}
           >
             Gear

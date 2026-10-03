@@ -87,11 +87,12 @@ function ClassBandInner({
       {/* The class name, knocked out of the fill rather than printed in the
           class's colour on top of it — which is what it used to do, and which
           stops working the moment the fill *is* that colour. Its `ml-1` matches
-          the row's `px-1`, so the name and the leading column start on one
-          vertical and the band's content begins where the field's does, rather
-          than indented past a block of empty colour. */}
+          the row's `px-1` and its minimum width is the position column's, so a
+          short name like `GT3` sits centred directly over the column of
+          position blocks it heads. It is set at the rows' 13 px: a heading set
+          smaller than the names under it is a heading nobody reads first. */}
       <span
-        className="ml-1 shrink-0 font-mono text-[11px] font-bold uppercase leading-none tracking-[0.08em]"
+        className="ml-1 min-w-[2.1rem] shrink-0 text-center font-mono text-[13px] font-bold uppercase leading-none tracking-[0.04em]"
         style={{ color: ink }}
       >
         {shortName || "—"}
@@ -105,7 +106,7 @@ function ClassBandInner({
           an outline, and at 72 % its strokes fall under a pixel and grey out
           into a smudge. */}
       <BandField
-        label={<RacingHelmet size="12px" label="Cars" />}
+        label={<RacingHelmet size="13px" label="Cars" />}
         value={carCount > 0 ? String(carCount) : "—"}
         ink={ink}
         labelInk={ink}
@@ -177,7 +178,7 @@ function BandField({
   return (
     <span className="flex shrink-0 items-baseline gap-1" title={title}>
       <span
-        className="font-mono text-[8px] font-semibold uppercase leading-none tracking-[0.14em]"
+        className="font-mono text-[9px] font-semibold uppercase leading-none tracking-[0.14em]"
         style={{
           color: labelInk,
           ...(isGlyph ? { paddingRight: "0.14em" } : null),
@@ -186,7 +187,7 @@ function BandField({
         {label}
       </span>
       <span
-        className="tnum font-mono text-[11px] font-bold leading-none"
+        className="tnum font-mono text-[12px] font-bold leading-none"
         style={
           fill
             ? {

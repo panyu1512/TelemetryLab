@@ -222,17 +222,17 @@ function ColumnLabels({
 // ─── Separator ───────────────────────────────────────────────────────────────
 
 /**
- * Marks the you/behind boundary with whitespace and a micro-label — no rule.
- * Rule 1 bans row separators outright: at this density a hairline costs more
- * attention than it returns, and the primary-tinted player row plus the sign of
- * the gap already carry the boundary.
+ * Space either side of the player's row — no rule and no label.
+ *
+ * It used to print `YOU` above the player and `BEHIND` above the cars behind,
+ * with nothing above the cars ahead: two labels for three groups, one of them
+ * naming a row already ringed in `primary`. The sign and colour of the gap say
+ * ahead or behind on every row, and the ring says which one is you, so all the
+ * boundary needs is to be a boundary. Equal space above and below keeps the
+ * player's row the visual centre of the table, which is what a relative is.
  */
-function Separator({ label }: { label: string }) {
-  return (
-    <div className="px-2 pt-1.5 pb-0.5 font-mono text-[9px] font-bold uppercase leading-none tracking-[0.18em] text-faint">
-      {label}
-    </div>
-  );
+function Separator() {
+  return <div aria-hidden className="h-1.5 shrink-0" />;
 }
 
 // ─── Row ─────────────────────────────────────────────────────────────────────
@@ -314,13 +314,19 @@ function RowInner({
     <div
       className={[
         "relative grid items-center gap-x-1 px-2 text-xs",
-        isPlayer ? "rounded-sm bg-primary/10 ring-1 ring-inset ring-primary/35" : "",
+        "rounded-sm",
+        isPlayer ? "bg-primary/15 ring-1 ring-inset ring-primary/60" : "",
         // Off-lap traffic is called out as the row's *ground*, the same
         // mechanism that says "this is you" — ground carries identity/status,
         // ink stays free for values (§ Two colour systems, rule 3). Red as ink
         // would have collided with the behind-gap and the closing-rate icon,
         // which already mean something else in this very row.
-        offLap ? "rounded-sm bg-danger/10 ring-1 ring-inset ring-danger/35" : "",
+        //
+        // Ground only, no ring. The ring is what singles out *your* row; in a
+        // race most of the neighbourhood can be off your lap, and a red outline
+        // on each of those rows boxed the table into a stack of alarms with the
+        // one ring that matters lost among them.
+        offLap ? "bg-danger/12" : "",
         dimmed ? "opacity-35" : "",
       ]
         .filter(Boolean)
@@ -335,14 +341,15 @@ function RowInner({
         background:
           isPlayer || offLap ? undefined : classTint(classColor),
         height: ROW_H,
-        // The 2 px left border is this surface's single carrier of car-class
-        // colour (§ Two colour systems, rule 2).
-        // 3 px, up from 2: on near-black paper a 2 px hairline of an arbitrary
-        // hue was the first thing to go in peripheral vision — so it holds its
-        // drawn size as the table scales down (see CLASS_EDGE_WIDTH).
+        // The class edge, at full strength on every row exactly as on Standings
+        // — the same device has to read the same way on both surfaces. At 40 %
+        // it vanished against the danger ground of an off-lap row, which is
+        // precisely the row whose class you most need (a faster class coming
+        // through). It holds its drawn size as the table scales down (see
+        // CLASS_EDGE_WIDTH).
         borderLeftWidth: CLASS_EDGE_WIDTH,
         borderLeftStyle: "solid",
-        borderLeftColor: isPlayer ? classColor : `${classColor}66`,
+        borderLeftColor: classColor,
         // Clear the in-row column labels rather than centring under them.
         paddingTop: labelled ? REL_LABEL_H : undefined,
       }}
@@ -635,7 +642,7 @@ export function RelativeScreen() {
               />
             ))}
 
-            <Separator label="you" />
+            <Separator />
 
             {/* Player row */}
             {player && (
@@ -650,7 +657,7 @@ export function RelativeScreen() {
               />
             )}
 
-            <Separator label="behind" />
+            <Separator />
 
             {/* Cars behind — closest at top, furthest at bottom */}
             {behind.map((entry) => (

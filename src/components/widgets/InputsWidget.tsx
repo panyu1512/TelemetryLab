@@ -104,7 +104,7 @@ function VBar({
         />
       </div>
       <span
-        className="font-medium uppercase tracking-[0.12em] text-faint"
+        className="font-mono font-medium uppercase tracking-[0.12em] text-faint"
         style={{ fontSize: "clamp(0.45rem, 5cqmin, 0.6rem)" }}
       >
         {label}
@@ -154,7 +154,7 @@ function SteeringColumn({ deg }: { deg: number | null | undefined }) {
         <SteeringWheel deg={deg} size="clamp(2.5rem, 62cqmin, 8rem)" />
       </div>
       <span
-        className="font-medium uppercase tracking-[0.12em] text-faint"
+        className="font-mono font-medium uppercase tracking-[0.12em] text-faint"
         style={{ fontSize: "clamp(0.45rem, 5cqmin, 0.6rem)" }}
       >
         Steer

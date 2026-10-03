@@ -4,7 +4,6 @@ import {
   CLASS_RAMP,
   classBandFill,
   classColorFor,
-  classRowFill,
   classTint,
 } from "./classColors";
 import { THEMES } from "../themes";
@@ -154,56 +153,6 @@ describe("classTint", () => {
   });
 });
 
-describe("classRowFill", () => {
-  const STOP = "calc(3px + 0.25rem + 2.1rem)";
-
-  it("runs in from the left edge and stops at the extent it is given", () => {
-    const f = classRowFill(CLASS_RAMP[0], STOP);
-    expect(f).toMatch(/^linear-gradient\(to right,/);
-    expect(f).toContain(CLASS_RAMP[0]);
-    expect(f).toContain(STOP);
-  });
-
-  it("stops hard — the same extent twice, no fade", () => {
-    // The edge is the point: it gives the colour a shape. A gradient petering
-    // out would read as a smudge behind the values.
-    const f = classRowFill(CLASS_RAMP[0], STOP);
-    expect(f.split(STOP)).toHaveLength(3); // once to end the colour, once to start transparent
-    expect(f).toContain(`transparent ${STOP}`);
-  });
-
-  it("leaves the rest of the row as bare paper", () => {
-    // Fully transparent past the stop, not a darker tint — the row's own zebra
-    // ground is what shows through there.
-    expect(classRowFill(CLASS_RAMP[2], STOP)).toMatch(/transparent .+\)$/);
-  });
-
-  it("stays a tint, where the band it answers to is solid", () => {
-    // The row's stripe and the group's band are the same colour said at two
-    // volumes: the band is the class colour outright, the stripe a whisper of
-    // it behind the leading number. If the stripe ever went solid too there
-    // would be no hierarchy left between a heading and the rows under it.
-    const f = classRowFill(CLASS_RAMP[0], STOP);
-    expect(f).toContain("color-mix");
-    expect(f).toContain("transparent");
-    expect(classBandFill(CLASS_RAMP[0])).not.toContain("color-mix");
-  });
-
-  it("takes a length, not a share of the row", () => {
-    // A percentage stop would drift across the columns every time one was
-    // switched on or off; a length lands on the column boundary at any table
-    // scale. Checked with the colour's own alpha stripped out, since that is a
-    // percentage too and not a stop position.
-    const stops = classRowFill(CLASS_RAMP[0], STOP).replace(/color-mix\([^)]*\)/g, "C");
-    expect(stops).not.toMatch(/\d+%/);
-    expect(stops).toContain(STOP);
-  });
-
-  it("works on the darkened colours a sixth class would get", () => {
-    expect(classRowFill(classColorFor(5), STOP)).toContain("linear-gradient");
-  });
-});
-
 describe("classBandFill", () => {
   it("covers the whole band, not a stripe of it", () => {
     // A band is the heading; its rows are what it heads. A clipped fill made it
@@ -213,11 +162,10 @@ describe("classBandFill", () => {
     expect(f).toContain(CLASS_RAMP[0]);
   });
 
-  it("is the class colour outright — the rows it opens only tint it", () => {
-    // Masthead solid, rows striped. A block is the shape the eye finds in
-    // peripheral vision without being sent looking for a hue.
+  it("is the class colour outright — a Relative row only tints it", () => {
+    // A block is the shape the eye finds in peripheral vision without being
+    // sent looking for a hue.
     expect(classBandFill(CLASS_RAMP[0])).toBe(CLASS_RAMP[0]);
-    expect(classRowFill(CLASS_RAMP[0], "1rem")).toContain("color-mix");
     expect(classTint(CLASS_RAMP[0])).toContain("14%");
   });
 

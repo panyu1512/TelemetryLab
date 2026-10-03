@@ -86,12 +86,12 @@ export const GROUP_TONE: readonly (readonly [base: string, zebra: string])[] = [
 
 /** Every column in the timing table, in render order. */
 export type StandingsColumnId =
-  | "change"
   | "pos"
+  | "change"
   | "num"
+  | "brand"
   | "country"
   | "driver"
-  | "brand"
   | "license"
   | "irating"
   | "gap"
@@ -129,18 +129,26 @@ interface ColumnDef {
  * The canonical, ordered column model. The sticky header, every row and the
  * config toggles all derive from this list, so they stay in lockstep. `pos`,
  * `driver` and `state` are always shown; the rest are user-configurable.
+ *
+ * The order reads as three blocks. **Rank** first — the class-coloured position
+ * block sits flush against the class edge, directly under the band's class name,
+ * so band, edge and block form one vertical of identity colour down the group.
+ * Then **the car** (number, make) and **the driver** (flag, name), so the
+ * nationality sits against the name it belongs to. The name absorbs the slack,
+ * which puts the one unavoidable run of empty width *between* who-it-is and the
+ * timing data rather than stranding the car's mark out in the middle of it.
  */
 export const STANDINGS_COLUMNS: readonly ColumnDef[] = [
-  { id: "change", label: "Δ", name: "Position change", width: "1.8rem", px: 29, align: "center" },
   { id: "pos", label: "Pos", name: "Position", width: "2.1rem", px: 34, align: "center", always: true },
+  { id: "change", label: "Δ", name: "Position change", width: "1.8rem", px: 29, align: "center" },
   { id: "num", label: "#", name: "Car number", width: "2.5rem", px: 40, align: "center" },
+  { id: "brand", label: "Car", name: "Car brand", width: "2.75rem", px: 44, align: "center" },
   { id: "country", label: "Nat", name: "Country flag", width: "1.7rem", px: 27, align: "center" },
   // `minmax(0, 1fr)`, not `minmax(8rem, 1fr)`: the name absorbs all slack and is
   // the only column allowed to truncate. An 8rem floor made the grid overflow
   // its container instead, which is how fixed columns ended up holding empty
   // space while `Francois Sieg…` clipped (rule 6).
   { id: "driver", label: "Driver", name: "Driver", width: "minmax(0, 1fr)", px: 136, align: "left", always: true },
-  { id: "brand", label: "Car", name: "Car brand", width: "2.75rem", px: 44, align: "center" },
   { id: "license", label: "Lic", name: "License / SR", width: "3.4rem", px: 54, align: "center" },
   { id: "irating", label: "iR", name: "iRating", width: "4.6rem", px: 74, align: "right" },
   { id: "gap", label: "Gap", name: "Gap to leader", width: "3.6rem", px: 58, align: "right" },
@@ -179,30 +187,6 @@ export function visibleColumns(
     }
   }
   return out;
-}
-
-/**
- * Where the first column ends, measured from the row's outer edge — the extent
- * of the class-colour fill behind a Standings row.
- *
- * Built from the same column model the grid is, so the fill lands on the column
- * boundary rather than near it. Three parts, in the order the row lays them
- * out: the class edge itself, the row's `px-1`, then the first visible column's
- * own width. The edge term carries the table scale for the reason
- * {@link CLASS_EDGE_WIDTH} does — it is the one length on this surface that
- * does not shrink, so the fill has to add back what the border kept.
- *
- * Which column is first depends on what is switched on: position change when
- * the user has it, position otherwise. Both are narrow, which is the point —
- * the fill is meant to sit under the row's leading number and stop.
- */
-export function firstColumnStop(
-  sectorCount: number,
-  isVisible: ColumnVisibility
-): string {
-  const first = visibleColumns(sectorCount, isVisible)[0];
-  if (!first) return "0px";
-  return `calc(${CLASS_EDGE_WIDTH} + 0.25rem + ${first.col.width})`;
 }
 
 /** Build the CSS grid-template-columns string for the visible columns. */

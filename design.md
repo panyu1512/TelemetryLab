@@ -107,37 +107,36 @@ standings table stops being readable at a glance.
 
    `carClassColor` is still on the wire and still unused for display. Do not
    add it to `tokens.css`, and do not let a theme try to correct it.
-2. **Identity colour is the leading edge, the row's ground, and the two blocks
-   that head a group.** The edge —
+2. **Identity colour is the leading edge, the two blocks that head a group,
+   and — on Relative only — the row's ground.** The edge —
    4 px on a row ([`StandingsRow.tsx`](src/components/standings/StandingsRow.tsx)),
-   the same device one scale up on a class band — is joined by the same colour
-   behind the row, by the band's solid fill, and by the block behind each row's
-   position number.
+   the same device one scale up on a class band — is joined by the band's solid
+   fill and by the block behind each row's position number.
 
-   The two surfaces carry that ground differently, and the difference is the
-   shape of the tables rather than a loose end. **Standings runs the colour in
-   from the left edge and stops it hard at the end of the first column**, at
-   16 %: its rows come in runs of the same class stacked into groups, so the
-   fills line up into a bar of colour down the leading edge of each group that
-   the eye picks up without being asked to look. **Relative washes the whole
+   **The edge is full strength on every row, on both surfaces.** It used to
+   drop to 40 % below the class leader (and, on Relative, below the player).
+   Under a solid band that read as a rendering fault rather than as a rank —
+   one row lit, the rest broken — and on a Relative it vanished into the
+   danger ground of exactly the row whose class mattered most. Solid, the edges
+   join into one spine running down from the band. Rank is the position
+   block's job, not the edge's.
+
+   The two surfaces carry the row's ground differently, and the difference is
+   the shape of the tables rather than a loose end. **Relative washes the whole
    row at 14 %**: it is a handful of rows sorted by where cars physically are,
-   so same-class neighbours rarely sit together and there is no run for a
-   partial fill to build.
+   with no band and no block, so the wash is the only thing that lets class
+   register from shape rather than from a border. **Standings takes no class
+   ground at all.** It used to run a 16 % fill in from the edge to the end of
+   the first column; once the position block moved into that first column
+   (see § Dense tabular overlays, rule 13) the fill sat almost entirely under a
+   solid block of its own colour, and what showed round the block's edges was a
+   muddy halo rather than a statement. Band, edge and block already make the
+   group one block of colour down its leading edge.
 
-   The stop is a **length from the column model**
-   (`firstColumnStop`), not a share of the row width. That is what lets it land
-   *on* the column boundary at any table scale and any column set — the first
-   column is position change when the user has it and position otherwise, and a
-   percentage would drift across the columns every time one was switched on or
-   off. It also means the fill sits directly behind the row's leading number,
-   which is why it is fainter here than the Relative's wash rather than
-   stronger: a ground under a number it has to keep legible can afford less
-   than one spread across empty width.
-
-   Nothing drives the extent per row, and nothing should. Everything on this
-   surface that could — lap progress, gap to the class leader — moves at 10 Hz,
-   and a fill redrawing itself on every row on every tick is motion in the
-   corner of the eye that means nothing.
+   Nothing drives an identity carrier's extent per row, and nothing should.
+   Everything on these surfaces that could — lap progress, gap to the class
+   leader — moves at 10 Hz, and a fill redrawing itself on every row on every
+   tick is motion in the corner of the eye that means nothing.
 
    The earlier rule quarantined identity to the edge alone, on the argument that
    a second carrier would put an arbitrary hue in competition with the status
@@ -165,7 +164,8 @@ standings table stops being readable at a glance.
    under it: four bands of roughly equal darkness whose hue you had to look
    *for*, in a list meant to be parsed without looking. A 22 % tint puts the
    class's colour *behind* the band rather than making it the band. Solid
-   inverts that — masthead a block, rows striped — and a block is the one shape
+   inverts that — masthead a block, each row opening on the same block — and a
+   block is the one shape
    the eye finds in peripheral vision unprompted.
 
    The position block is the row's half of the same statement. Rank and class
@@ -180,7 +180,12 @@ standings table stops being readable at a glance.
    can land anywhere on the wheel, so neither white nor `on-accent` can be
    assumed. See § Dense tabular overlays rule 11, whose premise this restores.
 3. **"This is you" is `primary`, and it is the row's ground, not its ink.**
-   `bg-primary/10` plus an inset `primary/35` ring. This is the "selection"
+   `bg-primary/15` plus an inset `primary/60` ring, on both surfaces — up from
+   `/10` and `/35`, at which the player's row was hard to find in a zebra-banded
+   field, which is the one thing it exists to prevent. **It is the only ringed
+   row on either surface**: a Relative's off-lap rows take the danger ground
+   without a ring (§ Dense tabular overlays, rule 14), so the ring stays an
+   answer to "which one is me" and nothing else. This is the "selection"
    sense of `primary` in the table above, which is why the token row now says
    so out loud. Tinting the *text* instead would put an identity colour and a
    status colour in the same glyph.
@@ -635,17 +640,59 @@ the fact that a header band and a row cost the same height.
     An **unrecognised** session name keeps the race behaviour. Hiding columns
     on a guess is worse than showing a number the driver can judge themselves.
 
+13. **Standings reads rank, car, driver — then the data.** The column order is
+    `pos · Δ · # · make · flag · NAME` and then the timing columns. Position
+    leads because its block is the row's half of the class band's statement
+    (§ Two colour systems, rule 2): flush against the class edge, directly
+    under the band's class name, the band, the edges and the blocks make one
+    vertical of identity colour down each group. Position change used to sit
+    in front of it, which put a green/red status chip between the band and
+    the block that answers it. The car's mark sits with its number and the
+    flag with the name it belongs to, so the name column's slack (rule 6)
+    falls *between* who-it-is and the timing data, instead of stranding the
+    manufacturer mark alone in the middle of empty width.
+
+14. **One ring per surface, and it is yours.** A Relative's off-lap rows take
+    the `danger` ground with no ring. With a ring each, a race neighbourhood
+    that is mostly off your lap became a stack of red boxes with the one ring
+    that matters lost among them. The player's row is set apart from the
+    cars around it by equal space above and below rather than by `YOU` and
+    `BEHIND` micro-labels: two labels for three groups, one of them naming a
+    row the ring already names, while the gap's sign and colour say ahead or
+    behind on every row.
+
+15. **A cell's colour has to mean what the colour table says it means.** The
+    tyre cell's compound letter and lap count print in the row's own ink. They
+    used to take `accent`, `warning`, `danger` and `sector-purple` per
+    compound, which put an alarm-red `B` on a third of a healthy field and
+    spent overall-best purple on a tyre. Nothing about a compound is good,
+    cautionary, critical or a session best. It is also a plain letter, not a
+    letter in a ring: at the table's smaller scales an 8 px letter in a 15 px
+    circle reads as a clock face.
+
+    The same rule covers alignment. **Every lap cell carries the fastest-lap
+    chip's padding, filled or not**, so the filled time sits on the same
+    vertical as every other time in its column. Padding only the filled chip
+    pushed the one number the others are compared against out of line with
+    them.
+
 ### The class band
 
 One line opening each class group on Standings:
 `[GT3] · CARS 6 · SOF 4.1k · BEST 2:06.652`.
 
 - **The band is part of its group, not furniture above it — and it is the
-  heading, so it carries the colour outright where the rows only tint it.** It
-  takes the same leading edge as a row, and then the class colour **solid**
-  across its whole width (`classBandFill`) where a row takes it to the end of
-  its first column at 16 % (`classRowFill`). That difference is the hierarchy:
-  masthead solid, rows striped, the group legible as one block.
+  heading, so it carries the colour outright.** It takes the same leading edge
+  as a row, and then the class colour **solid** across its whole width
+  (`classBandFill`), where a row carries it only in its edge and its position
+  block. That difference is the hierarchy: masthead solid, each row opening on
+  the same block one column wide, the group legible as one block.
+- **It is set at the rows' scale, not below it.** The class name is 13 px
+  bold — the driver names' size — with a minimum width equal to the position
+  column's, so `GT3` sits centred over the column of blocks it heads. Values
+  are 12 px and micro-labels 9 px, as on the § Session strip. The band used to
+  set its name at 11 px and its labels at 8 px: a heading smaller than the
+  names under it, read last.
 
   It was a 22 % tint of the same hue for exactly one reason — that identity
   colour whispers where status colour speaks. What that produced in a
@@ -695,6 +742,35 @@ One line above the field, on both timing surfaces:
   an answer.
 - **Fields drop right-to-left as the overlay narrows**, in priority order, the
   same way `fitColumns` narrows the table. The last field standing is the lap.
+
+### Fuel & Strategy in the timing language
+
+Fuel & Strategy shares the timing paper (rule 9) and the no-aim rule (rule 7);
+it now shares their grammar too, because a driver glancing from the standings to
+the fuel panel should not have to re-learn where the numbers are.
+
+- **A strip, not a title bar.** `FUEL · <track> · MARGIN 1.0 lap`, at the
+  session strip's height on its hairline, built from the strip's own
+  `StripField`. The icon-and-heading title it replaces was the last piece of
+  window chrome on an overlay screen. The `FUEL` tag is unfilled: the panel's
+  one status fill is the verdict block directly beneath it.
+- **Sections are the class-group tone, not cards.** Plain `white/[0.035]` on the
+  paper with a mono micro-label legend — the same alpha `GROUP_TONE` gives a
+  Standings group — instead of bordered `surface-2` graphite, which read as a
+  second product pasted onto the first. The dashboard's Tyres corners take the
+  same ground for the same reason.
+- **Values are bold, micro-labels are mono.** Its labels were sans caps, the one
+  timing surface that set them that way.
+- **Bars are square-ended on a visible track**, like every dashboard bar. A
+  rounded pill on a track the colour of its card read as a lozenge floating in
+  space rather than as a level in a tank.
+- **The verdict's tint is `color-mix`ed from its status token.** It was built
+  by appending a hex alpha to `var(--color-warning)`, which is invalid CSS: the
+  ground and border were dropped and the block rendered as a white outline.
+- **Plans are rows, not pills.** The plan name sits in a fixed-width mono slot so
+  stops line up down the list; the recommended plan wears the player row's
+  `primary` ground and ring — the same "selection" statement — rather than a
+  border style of its own.
 
 ### Deliberately not adopted
 

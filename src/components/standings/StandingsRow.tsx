@@ -5,7 +5,6 @@ import { useDriver } from "../../stores/useSessionStore";
 import {
   CLASS_EDGE_WIDTH,
   COL_LABEL_H,
-  firstColumnStop,
   GROUP_TONE,
   gridTemplate,
   LAP_COLOR,
@@ -14,7 +13,6 @@ import {
   type ColumnVisibility,
 } from "./constants";
 import { ColumnLabels } from "./ColumnLabels";
-import { classRowFill } from "../../lib/classColors";
 import { readableInk } from "../../lib/contrast";
 import { CountryFlag } from "../ui/CountryFlag";
 import {
@@ -100,32 +98,19 @@ function StandingsRowInner({
   // (§ Two colour systems, rule 3).
   const [toneBase, toneZebra] = GROUP_TONE[tone % GROUP_TONE.length];
 
-  // A row wears exactly one ground. Class tint is identity; the player's
-  // `primary` ground is status; letting both paint would be the collision this
-  // whole change is about, one layer down. Status wins — you can always find
-  // your class from the leading edge, but "which of these is me" has to be
-  // unambiguous.
-  const wearsStatusGround = row?.isPlayer === true;
-
   return (
     <div
       className="row-glide absolute inset-x-0 rounded-sm will-change-transform"
       style={{
         height: ROW_H,
         transform: `translateY(${top}px)`,
-        // Painted on the wrapper rather than the row itself, so the zebra tone
-        // (a translucent white utility class) still layers over it instead of
-        // being overwritten by an inline background.
-        background: wearsStatusGround
-          ? undefined
-          : classRowFill(classColor, firstColumnStop(sectorCount, isVisible)),
       }}
     >
       <div
         className={[
           "relative grid h-full items-center gap-x-1 rounded-sm px-1 text-xs",
           row?.isPlayer
-            ? "bg-primary/10 ring-1 ring-inset ring-primary/35"
+            ? "bg-primary/15 ring-1 ring-inset ring-primary/60"
             : zebra
               ? toneZebra
               : toneBase,
@@ -135,27 +120,23 @@ function StandingsRowInner({
           .join(" ")}
         style={{
           gridTemplateColumns: gridTemplate(sectorCount, isVisible),
-          // 3 px, up from 2: on near-black paper a 2 px hairline of an arbitrary
-          // hue was the first thing to disappear in peripheral vision, which is
-          // where this surface is read. It is still the row's only carrier of
-          // class colour (§ Two colour systems, rule 2), and the one measurement
-          // that holds its drawn size as the table scales — see CLASS_EDGE_WIDTH.
+          // The row's leading edge, in the class's colour at full strength on
+          // every row. It used to drop to 40 % below the class leader, which
+          // under a solid band read as a rendering fault rather than a rank —
+          // the leader's row looked lit and the rest looked broken. Solid, the
+          // edges join into one spine running down from the band, and the
+          // position block beside it is what carries rank.
+          //
+          // It holds its drawn size as the table scales — see CLASS_EDGE_WIDTH.
           borderLeftWidth: CLASS_EDGE_WIDTH,
           borderLeftStyle: "solid",
-          borderLeftColor: row?.isClassLeader ? classColor : `${classColor}66`,
+          borderLeftColor: classColor,
           // Clear the in-row column labels rather than centring under them.
           paddingTop: labelled ? COL_LABEL_H : undefined,
         }}
       >
         {labelled && (
           <ColumnLabels sectorCount={sectorCount} isVisible={isVisible} />
-        )}
-
-        {/* position change */}
-        {isVisible("change") && (
-          <div className="flex justify-center">
-            <PosChange value={row?.positionsGainedTotal ?? 0} />
-          </div>
         )}
 
         {/* position — the layout's own rank in a lap-time session, otherwise
@@ -179,6 +160,13 @@ function StandingsRowInner({
             "—"}
         </div>
 
+        {/* position change */}
+        {isVisible("change") && (
+          <div className="flex justify-center">
+            <PosChange value={row?.positionsGainedTotal ?? 0} />
+          </div>
+        )}
+
         {/* car number — no pill: fill is rationed to the fastest-lap cell
             (rule 5), and `muted` is the floor for a car number (§ Deliberately
             not adopted). */}
@@ -188,6 +176,13 @@ function StandingsRowInner({
             title={`#${driver?.carNumber ?? ""}`}
           >
             {driver?.carNumber ?? "—"}
+          </div>
+        )}
+
+        {/* car brand */}
+        {isVisible("brand") && (
+          <div className="flex justify-center">
+            <BrandIcon make={driver?.carMake ?? ""} />
           </div>
         )}
 
@@ -215,13 +210,6 @@ function StandingsRowInner({
             {driver?.userName ?? `Car ${carIdx}`}
           </span>
         </div>
-
-        {/* car brand */}
-        {isVisible("brand") && (
-          <div className="flex justify-center">
-            <BrandIcon make={driver?.carMake ?? ""} />
-          </div>
-        )}
 
         {/* license + SR */}
         {isVisible("license") && (
