@@ -59,22 +59,6 @@ export const CLASS_RAMP: readonly string[] = [
 const TINT_ALPHA = 0.14;
 
 /**
- * Strength of the class-colour fill behind a **Standings** row.
- *
- * Fainter than the Relative's full-row wash rather than stronger. The fill
- * stops at the end of the first column now, so it sits directly behind the
- * row's leading number — and a ground under a number it has to keep legible
- * can afford far less than one spread across empty width. It is a bed for the
- * position to sit on, not a bar.
- *
- * Lifted from 0.12 to 0.16 with the band going solid: the stripe is what ties a
- * row back to the block of colour above it, and against a masthead at full
- * strength the old value read as a smudge rather than as the same colour said
- * quietly.
- */
-const FILL_ALPHA = 0.16;
-
-/**
  * The identity colour for the class at `index` in the field's class order.
  *
  * Indexed by position rather than keyed by `carClassId` on purpose. The classes
@@ -107,13 +91,12 @@ export function classColorFor(index: number): string {
  * the shape of the block rather than from its border — while staying quiet
  * enough that the values keep their contrast.
  *
- * The Relative keeps the full wash rather than taking Standings' partial fill,
- * and the difference is not an oversight. A Relative is a handful of rows with
- * no grouping and no repetition: its rows are sorted by where cars physically
- * are, so two neighbours in the same class rarely sit together and there is no
- * block of colour for a partial fill to build. Standings is the opposite —
- * runs of same-class rows stacked into groups, which is what gives a leading
- * fill a column of its own to draw.
+ * Standings takes no row ground at all, and the difference is not an
+ * oversight. Its rows come in same-class runs under a solid band, and every row
+ * opens with a solid position block of the class's colour — the group is
+ * already legible as one block. A Relative is a handful of rows sorted by where
+ * cars physically are, with no band and no block, so the wash is the only thing
+ * that lets class register from shape rather than from a border.
  *
  * A row only ever wears **one** ground. Where a status ground applies — the
  * player's row, a lapped car's — the tint gives way to it entirely, which is
@@ -122,29 +105,6 @@ export function classColorFor(index: number): string {
  */
 export function classTint(color: string): string {
   return tint(color, TINT_ALPHA);
-}
-
-/**
- * The ground a **Standings** row sits on: the class's colour running in from
- * the left edge, stopping at `extent`, the rest left as bare paper.
- *
- * A hard stop, not a fade. The edge is the point — it gives the colour a shape,
- * and a shape is what the eye picks up from a group of rows without being asked
- * to look. A gradient petering out would read as a smudge behind the values
- * instead, which is the thing a table this dense can least afford.
- *
- * `extent` is a CSS length, not a percentage, and it comes from the column
- * model — `firstColumnStop` in the standings constants. That is what lets the
- * fill land *on* the first column's boundary at any table scale and any column
- * set, instead of near it: a share of the row width would drift across the
- * columns every time one was switched on or off.
- *
- * Same one-ground rule as {@link classTint}: a player or lapped row takes its
- * status ground instead, and its leading edge carries class alone.
- */
-export function classRowFill(color: string, extent: string): string {
-  const c = tint(color, FILL_ALPHA);
-  return `linear-gradient(to right, ${c} 0, ${c} ${extent}, transparent ${extent})`;
 }
 
 /**

@@ -426,10 +426,16 @@ export function LapCell({
   fill?: string;
   fillTitle?: string;
 }) {
+  // Every lap cell carries the chip's padding, filled or not. A filled chip
+  // with padding beside bare digits without it puts the fastest lap on a
+  // different vertical from every other time in its column — the one thing a
+  // column of numbers may never do (rule 5) — and the fastest lap is precisely
+  // the number the eye is comparing the others against.
+  const base = `justify-self-end rounded-ctl px-1.5 py-0.5 text-right text-[12px] tabular-nums tnum ${flash ? "sec-flash" : ""}`;
   if (fill) {
     return (
       <span
-        className={`justify-self-end rounded-ctl px-1.5 py-0.5 text-right text-[12px] font-bold tabular-nums tnum ${flash ? "sec-flash" : ""}`}
+        className={`${base} font-bold`}
         style={{ background: fill, color: "var(--color-on-accent)" }}
         title={fillTitle}
       >
@@ -439,7 +445,7 @@ export function LapCell({
   }
   return (
     <span
-      className={`text-right text-[12px] font-semibold tabular-nums tnum ${flash ? "sec-flash" : ""}`}
+      className={`${base} font-semibold`}
       style={{
         color: color ?? "var(--color-text)",
         ...(underline
@@ -467,7 +473,10 @@ export function SectorCell({ sector }: { sector: SectorSplit | undefined }) {
   }
   const color = SECTOR_COLOR[sector.status] ?? "var(--color-muted)";
   // Purple/green sectors read as the achievement (show the time); yellow/red
-  // read as the loss (show the signed delta vs personal best).
+  // read as the loss (show the signed delta vs personal best). The bridge folds
+  // the latest split into the best before grading, so a best sector's delta is
+  // always 0.0 — a delta-only column would print zeros exactly where it has
+  // the most to say.
   const isBest =
     sector.status === "overall_best" || sector.status === "personal_best";
   const showDelta = !isBest && sector.delta != null;
@@ -475,7 +484,7 @@ export function SectorCell({ sector }: { sector: SectorSplit | undefined }) {
   return (
     <span
       key={`${sector.status}-${sector.lastTime}`}
-      className="sec-cell text-center text-[11px] font-semibold tabular-nums tnum"
+      className="sec-cell text-center text-[12px] font-semibold tabular-nums tnum"
       style={{ color }}
       title={`S${sector.index + 1}: ${sectorTime(sector.lastTime)}${
         sector.bestTime != null ? ` (best ${sectorTime(sector.bestTime)})` : ""
@@ -499,33 +508,19 @@ export function SectorCell({ sector }: { sector: SectorSplit | undefined }) {
  * compound naming varies by series.
  */
 const COMPOUND_LABEL: Record<number, string> = { 0: "P", 1: "A", 2: "B", 3: "C" };
-const COMPOUND_COLOR: Record<number, string> = {
-  0: "var(--color-accent)",
-  1: "var(--color-warning)",
-  2: "var(--color-danger)",
-  3: "var(--color-sector-purple)",
-};
 
-/** Tire viewed from the side: thick sidewall ring + rim ring + cross spokes. */
-function TireCompoundIcon({ compound }: { compound: number }) {
-  const color = COMPOUND_COLOR[compound] ?? "var(--color-muted)";
-  return (
-    <svg
-      viewBox="0 0 14 14"
-      style={{ height: 14, width: 14, display: "block", flexShrink: 0 }}
-      fill="none"
-    >
-      {/* Outer tire ring (sidewall / tread) */}
-      <circle cx="7" cy="7" r="6" stroke={color} strokeWidth="2.5" strokeOpacity="0.7" />
-      {/* Rim */}
-      <circle cx="7" cy="7" r="2.8" stroke={color} strokeWidth="1.2" />
-      {/* Cross spokes */}
-      <line x1="7" y1="4.2" x2="7" y2="9.8" stroke={color} strokeWidth="0.9" strokeOpacity="0.45" />
-      <line x1="4.2" y1="7" x2="9.8" y2="7" stroke={color} strokeWidth="0.9" strokeOpacity="0.45" />
-    </svg>
-  );
-}
-
+/**
+ * Compound letter, then laps on the set — in the row's own ink.
+ *
+ * Compounds used to take status colours (primary green, alternate amber, `B`
+ * red, `C` purple), which put an alarm-red letter on a third of a healthy field
+ * and spent `sector-purple` on something that is not an overall best. None of
+ * those meanings is true of a tyre, and on a surface where colour is rationed
+ * by meaning (`design.md` § Theme) a colour that means nothing is the most
+ * expensive thing in the row. The letter is the compound; the count is the
+ * information. No ring around the letter either: at the table's smaller scales
+ * an 8 px letter inside a 15 px circle resolves to a clock face.
+ */
 export function TireCell({
   compound,
   laps,
@@ -537,18 +532,18 @@ export function TireCell({
     return <span className="text-center text-[10px] text-faint/40">·</span>;
   }
   const label = COMPOUND_LABEL[compound] ?? String(compound);
-  const color = COMPOUND_COLOR[compound] ?? "var(--color-muted)";
   return (
-    <div className="flex items-center justify-center gap-0.5">
-      <TireCompoundIcon compound={compound} />
+    <div className="flex items-baseline justify-center gap-1">
       <span
-        className="text-[10px] font-bold leading-none"
-        style={{ color }}
+        className="w-[0.7rem] text-center text-[12px] font-bold leading-none text-text"
         title={`Compound ${label}`}
       >
         {label}
       </span>
-      <span className="text-[10px] font-semibold tabular-nums tnum" style={{ color: "var(--color-muted)" }} title={`${laps} laps on tyres`}>
+      <span
+        className="w-[1.1rem] text-left text-[11px] font-semibold leading-none tabular-nums tnum text-muted"
+        title={`${laps} laps on tyres`}
+      >
         {laps}
       </span>
     </div>

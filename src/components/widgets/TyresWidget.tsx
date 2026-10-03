@@ -48,7 +48,10 @@ function Corner({
   const color = heatColor(temp);
   return (
     <div
-      className="flex flex-col justify-center overflow-hidden rounded-ctl bg-surface-2 px-2.5 py-1.5"
+      // The timing surfaces' section tone (white alpha on the widget's paper),
+      // not graphite `surface-2`: a graphite tile on timing paper read as a
+      // card from another product, and it is the only widget that had one.
+      className="flex flex-col justify-center overflow-hidden rounded-ctl bg-white/[0.035] px-2.5 py-1.5"
       style={{
         borderLeft: `3px solid ${color}`,
         // Fade the whole corner rather than recolouring the number: the heat
@@ -60,7 +63,7 @@ function Corner({
     >
       <div className="flex items-baseline justify-between gap-1">
         <span
-          className="font-medium uppercase tracking-[0.12em] text-faint"
+          className="font-mono font-medium uppercase tracking-[0.12em] text-faint"
           style={{ fontSize: "clamp(0.5rem, 5cqmin, 0.65rem)" }}
         >
           {name}
@@ -72,7 +75,7 @@ function Corner({
           {num(temp, TEMP_DECIMALS)}°
         </span>
       </div>
-      <div className="mt-1 h-1 shrink-0 overflow-hidden bg-bg">
+      <div className="mt-1 h-1 shrink-0 overflow-hidden bg-white/[0.08]">
         <div
           className="h-full transition-all duration-200"
           style={{ width: `${tempFrac(temp) * 100}%`, background: color }}
@@ -99,7 +102,7 @@ function HeldNote({ heldMs }: { heldMs: number }) {
       }
     >
       <span
-        className="truncate font-medium uppercase tracking-[0.12em]"
+        className="truncate font-mono font-medium uppercase tracking-[0.12em]"
         style={{ fontSize: "clamp(0.45rem, 4cqmin, 0.6rem)" }}
       >
         since last stop

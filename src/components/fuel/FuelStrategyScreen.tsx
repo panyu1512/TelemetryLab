@@ -17,12 +17,13 @@
  * needs to move, rule 7 says its home is the Overlay Manager, not this screen.
  */
 
-import { Fuel, Gauge, Flag, Wrench, TriangleAlert, Check, Radio, Leaf } from "lucide-react";
+import { Gauge, Wrench, TriangleAlert, Check, Radio, Leaf } from "lucide-react";
 import { useTelemetry } from "../../hooks/useTelemetry";
 import { useSessionStore } from "../../stores/useSessionStore";
 import { useFuelStrategy } from "../../hooks/useFuelStrategy";
 import type { FuelStatus, FuelStrategy, StintPlan } from "../../lib/fuelStrategy";
 import { num } from "../../lib/format";
+import { STRIP_H, StripField } from "../timing/SessionStrip";
 
 // ── status metadata ──────────────────────────────────────────────────────────
 
@@ -66,6 +67,16 @@ const PIT_FUEL: number | null = null;
 
 // ── main screen ──────────────────────────────────────────────────────────────
 
+/**
+ * Fuel & Strategy is drawn in the timing surfaces' language, not a dashboard's
+ * of its own. It shares their paper already (`design.md` § Dense tabular
+ * overlays, rule 9); it now shares the rest — a readout strip in place of a
+ * title bar, mono micro-labels over bold values, sections set apart by the
+ * same faint white tone Standings uses for its class groups rather than by
+ * bordered graphite cards, and square-ended bars like the dashboard widgets'.
+ * A driver glancing from the standings to this panel should not have to
+ * re-learn where the numbers are.
+ */
 export function FuelStrategyScreen() {
   const { data, iracingActive } = useTelemetry();
   const session = useSessionStore((s) => s.session);
@@ -79,7 +90,7 @@ export function FuelStrategyScreen() {
 
   return (
     <div className="overlay-card timing-surface flex h-full flex-col overflow-hidden rounded-card border border-border/60">
-      <Header
+      <Strip
         track={session?.track.name ?? null}
         config={session?.track.config ?? null}
       />
@@ -90,12 +101,12 @@ export function FuelStrategyScreen() {
         // `@container` lets the layout switch to two columns based on the
         // overlay's *own* width (not the viewport), so the core read-outs fit a
         // small always-on-top window without scrolling while you drive.
-        <div className="@container flex flex-1 flex-col gap-2 overflow-auto p-2">
+        <div className="@container flex flex-1 flex-col gap-1.5 overflow-auto p-1.5">
           {(outOfFuel || strategy.status === "empty") && <OutOfFuelAlert />}
 
           <PredictionRow strategy={strategy} sampleCount={sampleCount} />
 
-          <div className="grid grid-cols-1 gap-2 @[460px]:grid-cols-2">
+          <div className="grid grid-cols-1 gap-1.5 @[460px]:grid-cols-2">
             <FuelBar strategy={strategy} />
             <StrategyCard strategy={strategy} />
             <FuelSaveCard strategy={strategy} />
@@ -108,16 +119,30 @@ export function FuelStrategyScreen() {
   );
 }
 
-// ── header ───────────────────────────────────────────────────────────────────
+// ── strip ────────────────────────────────────────────────────────────────────
 
-function Header({ track, config }: { track: string | null; config: string | null }) {
+/**
+ * The readout line above the panel, in the § Session strip's geometry and
+ * grammar: a tag, then micro-label / value pairs, on the strip's hairline.
+ * It replaces a title bar — an icon, "Fuel & Strategy" in a heading face and
+ * the track in grey — which was the one piece of window chrome left on an
+ * overlay screen, and which spent its height naming a panel the driver chose
+ * to open.
+ *
+ * The tag is unfilled. The strip's single fill belongs to state that changes
+ * what the driver does next, and on this panel that is the status block
+ * directly beneath, not the strip.
+ */
+function Strip({ track, config }: { track: string | null; config: string | null }) {
   return (
-    <div className="flex flex-wrap items-center gap-x-4 gap-y-1 border-b border-border px-3 py-1.5">
-      <span className="flex items-center gap-1.5 text-sm font-semibold tracking-tight text-text">
-        <Fuel className="size-4 text-muted" />
-        Fuel &amp; Strategy
+    <div
+      className="timing-strip flex shrink-0 items-center gap-x-3 overflow-hidden px-2"
+      style={{ height: STRIP_H }}
+    >
+      <span className="shrink-0 px-1.5 font-mono text-[11px] font-bold uppercase leading-none tracking-[0.1em] text-muted">
+        Fuel
       </span>
-      <span className="text-xs text-faint">
+      <span className="min-w-0 truncate text-[12px] font-semibold leading-none text-muted">
         {track ?? "—"}
         {config ? ` · ${config}` : ""}
       </span>
@@ -127,12 +152,12 @@ function Header({ track, config }: { track: string | null; config: string | null
           margin is taken off the tank, and a number you cannot account for is
           a number you end up not trusting. Labelled as AutoFuel labels it, so
           it reads against the sim's own black box rather than beside it. */}
-      <span className="ml-auto flex items-baseline gap-1.5 text-[10px] font-medium uppercase tracking-[0.12em] text-faint">
-        Margin
-        <span className="tnum text-xs font-semibold normal-case tracking-normal text-muted">
-          {MARGIN_LAPS.toFixed(1)} lap{MARGIN_LAPS === 1 ? "" : "s"}
-        </span>
-      </span>
+      <StripField
+        className="ml-auto"
+        label="Margin"
+        text={`${MARGIN_LAPS.toFixed(1)} lap${MARGIN_LAPS === 1 ? "" : "s"}`}
+        title="Fuel held back at the flag (iRacing AutoFuel: Margin (Laps))"
+      />
     </div>
   );
 }
@@ -150,7 +175,7 @@ function FuelBar({ strategy }: { strategy: FuelStrategy }) {
   const fill = low ? "var(--color-danger)" : "var(--color-accent)";
 
   return (
-    <section className="rounded-card border border-border bg-surface-2 p-2.5">
+    <Section title="Level & burn">
       <div className="mb-2 flex items-end justify-between">
         <Metric
           label="In tank"
@@ -159,45 +184,58 @@ function FuelBar({ strategy }: { strategy: FuelStrategy }) {
           color={low ? "var(--color-danger)" : undefined}
         />
         <Metric
-          label="Consumption"
+          label="Per lap"
           value={strategy.perLap == null ? "—" : strategy.perLap.toFixed(2)}
-          unit="L/lap"
+          unit="L"
           align="end"
         />
       </div>
 
       {/* Tank bar, with the margin marked where it falls on the tank. Its
           position moves with the burn now that the margin is priced in laps —
-          a thirstier car sets it further up the bar. */}
-      <div className="relative h-2.5 w-full overflow-hidden rounded-full bg-surface">
+          a thirstier car sets it further up the bar. Square-ended on a visible
+          track, like every bar on the dashboard: a rounded pill on a track the
+          same tone as its card read as a lozenge floating in space rather than
+          as a level in a tank. */}
+      <div className="relative h-2 w-full overflow-hidden" style={{ background: TRACK }}>
         <div
-          className="h-full rounded-full transition-[width] duration-150"
+          className="h-full transition-[width] duration-150"
           style={{ width: `${Math.max(0, Math.min(1, pct)) * 100}%`, background: fill }}
         />
         {reserveFrac > 0 && (
           <div
-            className="absolute inset-y-0 w-px bg-danger/70"
+            className="absolute inset-y-0 w-0.5 bg-danger"
             style={{ left: `${reserveFrac * 100}%` }}
             title={`Margin: ${MARGIN_LAPS.toFixed(1)} lap = ${num(strategy.reserve, 1)} L`}
           />
         )}
       </div>
-      <div className="mt-1 flex justify-between text-[10px] text-muted">
-        <span className="tnum">
+      <div className="mt-1.5 flex items-baseline justify-between">
+        <span className="tnum font-mono text-[11px] font-bold text-muted">
           {strategy.fuelPct == null ? "—" : Math.round(strategy.fuelPct * 100)}%
         </span>
-        <span className="tnum">
-          {strategy.tankCapacity == null
-            ? "capacity —"
-            : `tank ${num(strategy.tankCapacity, 0)} L`}
-        </span>
+        <StripField
+          label="Cap"
+          text={strategy.tankCapacity == null ? "—" : `${num(strategy.tankCapacity, 0)} L`}
+          color="var(--color-muted)"
+          title="Tank capacity"
+        />
       </div>
-    </section>
+    </Section>
   );
 }
 
 // ── prediction row ───────────────────────────────────────────────────────────
 
+/**
+ * The verdict, on a ground of its status colour.
+ *
+ * The ground and the icon tile are `color-mix`ed from the status token. They
+ * used to be built by appending a hex alpha to it — `${color}44` — which is
+ * invalid CSS when the colour is `var(--color-warning)`, so both declarations
+ * were dropped and the block fell back to a white `currentColor` outline on
+ * bare paper: the loudest box on the panel, in no colour at all.
+ */
 function PredictionRow({
   strategy,
   sampleCount,
@@ -214,17 +252,20 @@ function PredictionRow({
 
   return (
     <section
-      className="flex items-center gap-2.5 rounded-card border px-2.5 py-2"
-      style={{ borderColor: `${meta.color}44`, background: `${meta.color}12` }}
+      className="flex items-center gap-2.5 rounded-card px-2.5 py-2"
+      style={{ background: mix(meta.color, 12) }}
     >
       <div
         className="grid size-8 shrink-0 place-items-center rounded-ctl"
-        style={{ background: `${meta.color}22`, color: meta.color }}
+        style={{ background: mix(meta.color, 22), color: meta.color }}
       >
         <meta.Icon className="size-4" />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="text-sm font-semibold leading-tight" style={{ color: meta.color }}>
+        <div
+          className="truncate text-[15px] font-bold leading-tight"
+          style={{ color: meta.color }}
+        >
           {meta.label}
         </div>
         <div className="truncate text-[11px] text-muted">
@@ -233,7 +274,7 @@ function PredictionRow({
             : `${sampleCount} lap${sampleCount === 1 ? "" : "s"} sampled`}
         </div>
       </div>
-      <div className="flex shrink-0 gap-3">
+      <div className="flex shrink-0 gap-4">
         <Metric label="Fuel laps" value={lapsLeftFuel} align="end" />
         <Metric label="To flag" value={lapsToFinish} unit="laps" align="end" />
       </div>
@@ -253,47 +294,39 @@ function StrategyCard({ strategy }: { strategy: FuelStrategy }) {
       : null;
 
   return (
-    <section className="rounded-card border border-border bg-surface-2 p-2.5">
-      <SectionTitle icon={Flag}>Current stint</SectionTitle>
-
-      <div className="mb-1 flex items-baseline justify-between">
-        <span className="text-sm text-text">
+    <Section title="Current stint">
+      <div className="mb-1.5 flex items-baseline justify-between">
+        <span className="text-[13px] text-text">
           {stintUsed == null || stintTotal == null ? (
             "—"
           ) : (
             <>
-              Lap <span className="tnum font-semibold">{stintUsed}</span> of ~
-              <span className="tnum font-semibold">{Math.round(stintTotal)}</span>
+              Lap <span className="tnum font-bold">{stintUsed}</span> of ~
+              <span className="tnum font-bold">{Math.round(stintTotal)}</span>
             </>
           )}
         </span>
-        <span className="tnum text-xs text-muted">
+        <span className="tnum font-mono text-[11px] font-bold text-muted">
           {stintProgress == null ? "" : `${Math.round(stintProgress * 100)}%`}
         </span>
       </div>
-      <div className="h-1.5 w-full overflow-hidden rounded-full bg-surface">
+      <div className="h-1.5 w-full overflow-hidden" style={{ background: TRACK }}>
         <div
-          className="h-full rounded-full bg-accent transition-[width] duration-200"
+          className="h-full bg-accent transition-[width] duration-200"
           style={{ width: `${(stintProgress ?? 0) * 100}%` }}
         />
       </div>
 
-      <div className="mt-3 grid grid-cols-2 gap-3">
-        <KeyValue label="Next pit window">
-          {pitWindow == null ? (
-            "—"
-          ) : pitWindow[0] === pitWindow[1] ? (
-            <span className="tnum">Lap {pitWindow[1]}</span>
-          ) : (
-            <span className="tnum">
-              Lap {pitWindow[0]}–{pitWindow[1]}
-            </span>
-          )}
+      <div className="mt-2.5 grid grid-cols-2 gap-3">
+        <KeyValue label="Pit window">
+          {pitWindow == null
+            ? "—"
+            : pitWindow[0] === pitWindow[1]
+              ? `Lap ${pitWindow[1]}`
+              : `Lap ${pitWindow[0]}–${pitWindow[1]}`}
         </KeyValue>
-        <KeyValue label="Recommended pit">
-          <span className="tnum">
-            {recommendedPitLap == null ? "—" : `Lap ${recommendedPitLap}`}
-          </span>
+        <KeyValue label="Recommended">
+          {recommendedPitLap == null ? "—" : `Lap ${recommendedPitLap}`}
         </KeyValue>
       </div>
 
@@ -302,19 +335,19 @@ function StrategyCard({ strategy }: { strategy: FuelStrategy }) {
           {surplusLaps >= 0 ? (
             <>
               Margin:{" "}
-              <span className="tnum text-accent">+{surplusLaps}</span> lap
+              <span className="tnum font-bold text-accent">+{surplusLaps}</span> lap
               {surplusLaps === 1 ? "" : "s"} of fuel over the finish.
             </>
           ) : (
             <>
               Short by{" "}
-              <span className="tnum text-danger">{Math.abs(surplusLaps)}</span> lap
+              <span className="tnum font-bold text-danger">{Math.abs(surplusLaps)}</span> lap
               {surplusLaps === -1 ? "" : "s"} at the current burn.
             </>
           )}
         </div>
       )}
-    </section>
+    </Section>
   );
 }
 
@@ -337,8 +370,10 @@ function FuelSaveCard({ strategy }: { strategy: FuelStrategy }) {
   const mustPit = !finishing && status === "pit";
 
   return (
-    <section className="rounded-card border border-border bg-surface-2 p-2.5">
-      <SectionTitle icon={Leaf}>Fuel save</SectionTitle>
+    // Full width in the two-column layout. It is the grid's third item, so in
+    // two columns it used to sit alone under the tank with an empty cell of
+    // paper beside it — the one hole in an otherwise packed panel.
+    <Section title="Fuel save" className="@[460px]:col-span-2">
       {mustPit ? (
         <p className="text-xs text-muted">
           Too far short to save — the stop below is required. Saving buys laps
@@ -352,25 +387,25 @@ function FuelSaveCard({ strategy }: { strategy: FuelStrategy }) {
       ) : (
         <div className="flex items-center justify-between gap-3">
           <div>
-            <div className="text-base font-semibold text-warning">
+            <div className="tnum text-[15px] font-bold text-warning">
               Save {Math.round((saveNeededPct ?? 0) * 100)}%
             </div>
             <p className="mt-0.5 text-[11px] text-muted">
               Lift &amp; coast to reach the flag without an extra stop.
             </p>
           </div>
-          <div className="text-right">
-            <div className="tnum text-sm text-text">
-              {targetPerLap == null ? "—" : targetPerLap.toFixed(2)}{" "}
-              <span className="text-[11px] text-muted">L/lap</span>
-            </div>
-            <div className="tnum text-[11px] text-muted">
-              now {perLap.toFixed(2)} L/lap
-            </div>
+          <div className="flex shrink-0 gap-4">
+            <Metric
+              label="Target"
+              value={targetPerLap == null ? "—" : targetPerLap.toFixed(2)}
+              unit="L"
+              align="end"
+            />
+            <Metric label="Now" value={perLap.toFixed(2)} unit="L" align="end" />
           </div>
         </div>
       )}
-    </section>
+    </Section>
   );
 }
 
@@ -388,49 +423,57 @@ function PlansCard({ strategy }: { strategy: FuelStrategy }) {
   if (plans.length === 0) return null;
 
   return (
-    <section className="rounded-card border border-border bg-surface-2 px-3 py-2.5">
-      <SectionTitle icon={Wrench}>Pit strategies</SectionTitle>
-      <div className="flex flex-col gap-2">
+    <Section title="Pit strategies">
+      <div className="flex flex-col gap-1">
         {plans.map((plan, i) => (
           <PlanRow key={plan.stops} plan={plan} primary={i === 0} />
         ))}
       </div>
-    </section>
+    </Section>
   );
 }
 
+/**
+ * One plan as one row: the plan's name in a fixed-width mono slot, then each
+ * stop as a lap and the litres it adds. Stops line up down the list because
+ * the name slot is a column, not a pill sized to its text.
+ *
+ * The recommended plan wears `primary` as its ground and ring — the same
+ * "selection" statement the player's row makes on Standings — rather than a
+ * second border style of its own.
+ */
 function PlanRow({ plan, primary }: { plan: StintPlan; primary: boolean }) {
   return (
     <div
       className={[
-        "flex items-center gap-3 rounded-ctl border px-3 py-2",
-        primary
-          ? "border-primary/30 bg-primary/5"
-          : "border-border bg-surface",
+        "flex min-h-8 items-center gap-3 rounded-ctl px-2.5 py-1.5",
+        primary ? "bg-primary/15 ring-1 ring-inset ring-primary/60" : "bg-white/[0.035]",
       ].join(" ")}
     >
       <span
         className={[
-          "rounded-full px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide",
-          primary ? "bg-primary/15 text-primary" : "bg-surface-2 text-muted",
+          "w-[3.6rem] shrink-0 font-mono text-[11px] font-bold uppercase leading-none tracking-[0.08em]",
+          primary ? "text-primary" : "text-muted",
         ].join(" ")}
       >
         {plan.label}
       </span>
-      <span className="min-w-0 flex-1 truncate text-xs text-text">
+      <span className="flex min-w-0 flex-1 flex-wrap items-baseline gap-x-3 gap-y-0.5">
         {plan.stops === 0 ? (
-          "Run to the flag — no stop required."
+          <span className="text-xs text-text">Run to the flag — no stop required.</span>
         ) : (
-          <>
-            Pit{" "}
-            {plan.pitLaps
-              .map((l, i) => `Lap ${l} (+${plan.addFuel[i]}L)`)
-              .join(" · ")}
-          </>
+          plan.pitLaps.map((lap, i) => (
+            <span key={i} className="flex shrink-0 items-baseline gap-1.5">
+              <StripField label="Lap" text={String(lap)} />
+              <span className="tnum font-mono text-[11px] font-bold text-muted">
+                +{plan.addFuel[i].toFixed(1)} L
+              </span>
+            </span>
+          ))
         )}
       </span>
       {primary && (
-        <span className="shrink-0 text-[9px] font-semibold uppercase tracking-wide text-primary">
+        <span className="shrink-0 font-mono text-[9px] font-semibold uppercase leading-none tracking-[0.14em] text-primary">
           Best
         </span>
       )}
@@ -442,10 +485,10 @@ function PlanRow({ plan, primary }: { plan: StintPlan; primary: boolean }) {
 
 function OutOfFuelAlert() {
   return (
-    <div className="flex items-center gap-2 rounded-card border border-danger/40 bg-danger/10 px-3 py-2 text-sm text-danger">
+    <div className="flex items-center gap-2 rounded-card bg-danger/15 px-2.5 py-2 text-sm text-danger">
       <TriangleAlert className="size-4 shrink-0" />
       <span>
-        <span className="font-semibold">Out of fuel.</span> Pit immediately — the
+        <span className="font-bold">Out of fuel.</span> Pit immediately — the
         calculator will re-learn your burn after refuelling.
       </span>
     </div>
@@ -472,6 +515,39 @@ function EmptyState({ iracingActive }: { iracingActive: boolean }) {
 
 // ── little shared bits ───────────────────────────────────────────────────────
 
+/** A bar's empty track: visible on the section tone, unlike `surface`. */
+const TRACK = "rgb(255 255 255 / 0.08)";
+
+/** A status token at `pct` strength over transparent — valid for `var()`s. */
+function mix(color: string, pct: number): string {
+  return `color-mix(in oklab, ${color} ${pct}%, transparent)`;
+}
+
+/**
+ * A section of the panel: the Standings class-group tone (`GROUP_TONE`'s base,
+ * plain white alpha) with a mono micro-label legend. No border and no graphite
+ * — a bordered `surface-2` card on timing paper read as a second product
+ * pasted onto the first.
+ */
+function Section({
+  title,
+  className = "",
+  children,
+}: {
+  title: string;
+  className?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <section className={`rounded-card bg-white/[0.035] p-2.5 ${className}`}>
+      <h3 className="mb-2 font-mono text-[9px] font-semibold uppercase leading-none tracking-[0.14em] text-faint">
+        {title}
+      </h3>
+      {children}
+    </section>
+  );
+}
+
 function Metric({
   label,
   value,
@@ -486,34 +562,20 @@ function Metric({
   color?: string;
 }) {
   return (
-    <div className={`flex flex-col ${align === "end" ? "items-end" : "items-start"}`}>
+    <div className={`flex flex-col gap-1 ${align === "end" ? "items-end" : "items-start"}`}>
       <div className="flex items-baseline gap-1">
-        <span className="tnum text-base font-semibold leading-none" style={{ color: color ?? "var(--color-text)" }}>
+        <span
+          className="tnum text-[18px] font-bold leading-none"
+          style={{ color: color ?? "var(--color-text)" }}
+        >
           {value}
         </span>
         {unit && <span className="text-[11px] text-muted">{unit}</span>}
       </div>
-      <span className="mt-0.5 text-[10px] font-medium uppercase tracking-[0.12em] text-faint">
+      <span className="font-mono text-[9px] font-semibold uppercase leading-none tracking-[0.14em] text-faint">
         {label}
       </span>
     </div>
-  );
-}
-
-/* `noMargin` went with the disclosure button that was the only caller needing
-   it — every section title now sits above its content. */
-function SectionTitle({
-  icon: Icon,
-  children,
-}: {
-  icon: typeof Flag;
-  children: React.ReactNode;
-}) {
-  return (
-    <span className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold uppercase tracking-[0.14em] text-faint">
-      <Icon className="size-3.5" />
-      {children}
-    </span>
   );
 }
 
@@ -525,10 +587,11 @@ function KeyValue({
   children: React.ReactNode;
 }) {
   return (
-    <div>
-      <div className="text-[10px] font-medium uppercase tracking-[0.12em] text-faint">{label}</div>
-      <div className="mt-0.5 text-sm font-medium text-text">{children}</div>
+    <div className="flex flex-col gap-1">
+      <div className="font-mono text-[9px] font-semibold uppercase leading-none tracking-[0.14em] text-faint">
+        {label}
+      </div>
+      <div className="tnum text-[13px] font-bold text-text">{children}</div>
     </div>
   );
 }
-
