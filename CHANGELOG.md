@@ -7,6 +7,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.11.0] - 2026-10-04
+
+### Added
+
+- **Practice results from before you joined.** Join a practice (or
+  qualifying) session part-way through and the Standings now show every car's
+  best lap from the start of the session, ranked properly, instead of a blank
+  timesheet that only fills in as cars set new laps. Cars back in the garage
+  stay on the board, dimmed.
+- **Class badges on Relative.** In a multi-class session each row opens with a
+  badge showing the car's class in the same colour Standings uses for it, so a
+  faster class arriving in your mirrors is obvious at a glance.
+
+### Changed
+
+- **Driver names are no longer in capitals.** Standings and Relative show
+  names in title case (`JOHN SMITH` → `John Smith`), and hyphens, apostrophes,
+  multiple surnames and names already typed with deliberate capitals
+  (`McDonald`, `van Berg`) are handled.
+- **Standings shows the whole grid, with no scroll bar.** Rows and text scale
+  down to fit every car in the window, however big the field. The
+  **Follow my row** setting is gone, since there is nothing left to scroll.
+- **Relative highlights only your row.** Lapped cars (a lap or more behind you)
+  are now written in blue instead of sitting on a red background, other rows
+  lose their class-coloured background, and everyone else is in the normal text
+  colour.
+
+### Fixed
+
+- **A lap set after joining a session could show as the session's fastest**
+  when someone had already gone faster before you arrived.
+
 ## [1.10.0] - 2026-10-03
 
 ### Changed
@@ -357,7 +389,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.10.0...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.11.0...HEAD
+[1.11.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.8.0...v1.9.0
 [1.8.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.7.0...v1.8.0
