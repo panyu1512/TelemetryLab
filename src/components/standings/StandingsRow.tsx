@@ -14,6 +14,7 @@ import {
 } from "./constants";
 import { ColumnLabels } from "./ColumnLabels";
 import { readableInk } from "../../lib/contrast";
+import { formatDriverName } from "../../lib/driverName";
 import { CountryFlag } from "../ui/CountryFlag";
 import {
   BrandIcon,
@@ -198,16 +199,15 @@ function StandingsRowInner({
 
         {/* driver.
 
-            Caps, as a timing graphic sets them. It costs something real: caps
-            are read by outline and lose the ascender/descender silhouette that
-            makes a name recognisable at a glance, and they run ~12 % wider, so
-            the only column allowed to truncate truncates sooner. What they buy
-            is a single optical weight down the one ragged column on the
-            surface, which is what stops the field reading as a list of strings
-            of different heights. */}
+            Title case, through the same `formatDriverName` the Relative uses.
+            Caps used to set these, for one optical weight down the ragged
+            column — and cost the ascender/descender silhouette a name is
+            actually recognised by, plus ~12 % width in the one column allowed
+            to truncate. Normalising the member's own casing gives the column
+            its single voice without either cost. */}
         <div className="flex min-w-0 items-center">
-          <span className="truncate text-[13px] font-bold uppercase tracking-[0.01em] text-text">
-            {driver?.userName ?? `Car ${carIdx}`}
+          <span className="truncate text-[13px] font-bold tracking-[0.01em] text-text">
+            {formatDriverName(driver?.userName) || `Car ${carIdx}`}
           </span>
         </div>
 

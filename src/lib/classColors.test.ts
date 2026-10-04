@@ -4,9 +4,10 @@ import {
   CLASS_RAMP,
   classBandFill,
   classColorFor,
-  classTint,
 } from "./classColors";
 import { THEMES } from "../themes";
+import { readFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 
 /* -------------------------------------------------------------------------- */
 /*  Hue maths — enough to assert the ramp's whole reason for existing          */
@@ -77,6 +78,24 @@ describe("CLASS_RAMP", () => {
     }
   });
 
+  it("clears the lapped-traffic blue", () => {
+    // `--color-lapped` is a fixed token in styles.css rather than a theme
+    // colour, so it is read from there: a Relative row prints lapped traffic in
+    // that blue right beside the class badge, and the two must not be mistaken
+    // for each other.
+    const css = readFileSync(
+      fileURLToPath(new URL("../styles.css", import.meta.url)),
+      "utf8",
+    );
+    const m = css.match(/--color-lapped:\s*(oklch\([^)]*\))/);
+    expect(m).not.toBeNull();
+    const lapped = themeHue(m![1]);
+    expect(Number.isFinite(lapped)).toBe(true);
+    for (const color of CLASS_RAMP) {
+      expect(hueGap(hueOf(color).h, lapped)).toBeGreaterThan(MIN_CLEARANCE);
+    }
+  });
+
   it("clears every theme's status hues", () => {
     const reserved = reservedHues();
     expect(reserved.length).toBeGreaterThan(8);
@@ -141,18 +160,6 @@ describe("classColorFor", () => {
   });
 });
 
-describe("classTint", () => {
-  it("washes the whole row, kept to a whisper behind the values", () => {
-    const t = classTint(CLASS_RAMP[0]);
-    expect(t).toContain(CLASS_RAMP[0]);
-    expect(t).toMatch(/color-mix\(in oklab, .+ 14%, transparent\)/);
-  });
-
-  it("works on the darkened colours a sixth class would get", () => {
-    expect(classTint(classColorFor(5))).toContain("color-mix");
-  });
-});
-
 describe("classBandFill", () => {
   it("covers the whole band, not a stripe of it", () => {
     // A band is the heading; its rows are what it heads. A clipped fill made it
@@ -162,11 +169,10 @@ describe("classBandFill", () => {
     expect(f).toContain(CLASS_RAMP[0]);
   });
 
-  it("is the class colour outright — a Relative row only tints it", () => {
+  it("is the class colour outright", () => {
     // A block is the shape the eye finds in peripheral vision without being
     // sent looking for a hue.
     expect(classBandFill(CLASS_RAMP[0])).toBe(CLASS_RAMP[0]);
-    expect(classTint(CLASS_RAMP[0])).toContain("14%");
   });
 
   it("works on the darkened colours a sixth class would get", () => {

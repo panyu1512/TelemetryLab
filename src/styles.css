@@ -69,6 +69,15 @@
   --color-primary-dim: oklch(58.5% 0.1568 255);
   --color-sector-purple: oklch(69.4% 0.1763 301); /* overall best */
 
+  /* Lapped traffic: ink on a Relative row whose car is a lap or more behind
+     the player. Blue because that is the sim's own convention — the blue flag,
+     and the blue names in iRacing's relative box — so it is learned before the
+     overlay is ever opened. Deliberately NOT themed and NOT an alias of
+     `primary`: Endurance's primary is copper, and "lapped" must not change
+     colour with the theme. It is ink only; "this is you" stays `primary` as
+     the row's ground, and a lapped car is never your own row. */
+  --color-lapped: oklch(72% 0.15 245);
+
   /* The text color to use on top of ANY filled status color. Every accent in
      this system is light and every paper is dark, so white-on-accent lands at
      2.2–2.9:1 — far under 4.5:1. Dark ink on the fill reads at 6.5–8.7:1. */

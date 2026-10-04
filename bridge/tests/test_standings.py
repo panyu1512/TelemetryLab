@@ -223,3 +223,106 @@ class TestStandingsEngine:
         session = _session(drivers=[make_driver(0, is_pace_car=True)])
         snap = StandingsEngine().compute(session, _drivers_by_idx(session), {}, 0)
         assert snap.entries == []
+
+
+class TestResultsBeforeJoining:
+    """Laps run before this client connected, from ``ResultsPositions``."""
+
+    def _practice(self, results):
+        drivers = [make_driver(0), make_driver(1), make_driver(2)]
+        raw = make_session_raw(
+            drivers=drivers,
+            sessions=[{"SessionType": "Practice", "ResultsPositions": results}],
+        )
+        raw["session_state"] = 4
+        session = parse_session_info(raw)
+        return session, _drivers_by_idx(session)
+
+    def test_fills_best_and_last_lap_the_live_arrays_never_saw(self):
+        session, dbi = self._practice(
+            [
+                {
+                    "CarIdx": 1,
+                    "Position": 1,
+                    "ClassPosition": 0,
+                    "FastestTime": 88.5,
+                    "LastTime": 89.9,
+                },
+                {
+                    "CarIdx": 2,
+                    "Position": 2,
+                    "ClassPosition": 1,
+                    "FastestTime": 89.0,
+                    "LastTime": -1,
+                },
+            ]
+        )
+        timings = {
+            # The player, live.
+            0: _timing(0, position=None, last=92.0, best=91.0),
+            # In the garage since before we joined: nothing live at all.
+            1: _timing(1, position=None, last=None, best=None, surface=-1),
+            2: _timing(2, position=None, last=None, best=None, surface=-1),
+        }
+        snap = StandingsEngine().compute(session, dbi, timings, 0)
+        by = {e.car_idx: e for e in snap.entries}
+        assert by[1].best_lap_time == 88.5
+        assert by[1].last_lap_time == 89.9
+        assert by[2].best_lap_time == 89.0
+        assert by[2].last_lap_time is None
+        # Official position fills a missing live one, and orders the rows.
+        assert by[1].position == 1
+        assert by[1].class_position == 1
+        assert [e.car_idx for e in snap.entries][:2] == [1, 2]
+        # The player's own live laps are untouched (no result row for car 0).
+        assert by[0].best_lap_time == 91.0
+
+    def test_best_lap_is_the_faster_of_live_and_official(self):
+        session, dbi = self._practice([{"CarIdx": 0, "FastestTime": 90.5, "LastTime": 95.0}])
+        live_faster = {0: _timing(0, position=1, last=90.0, best=90.0)}
+        snap = StandingsEngine().compute(session, dbi, live_faster, 0)
+        assert snap.entries[0].best_lap_time == 90.0
+        # Live last lap wins over the official one: it is the newer.
+        assert snap.entries[0].last_lap_time == 90.0
+
+        official_faster = {0: _timing(0, position=1, last=92.0, best=91.0)}
+        snap = StandingsEngine().compute(session, dbi, official_faster, 0)
+        assert snap.entries[0].best_lap_time == 90.5
+
+    def test_class_fastest_lap_counts_pre_join_laps(self):
+        session, dbi = self._practice([{"CarIdx": 2, "FastestTime": 87.0}])
+        timings = {
+            0: _timing(0, position=1, best=91.0),
+            1: _timing(1, position=2, best=90.0),
+            2: _timing(2, position=None, last=None, best=None, surface=-1),
+        }
+        snap = StandingsEngine().compute(session, dbi, timings, 0)
+        assert snap.classes[0].fastest_lap == 87.0
+        assert snap.classes[0].fastest_lap_car_idx == 2
+
+    def test_official_best_seeds_the_session_best(self):
+        # Someone ran 87.0 before we joined; a live 89.0 is a personal best,
+        # not a session best.
+        session, dbi = self._practice([{"CarIdx": 2, "FastestTime": 87.0}])
+        timings = {
+            0: _timing(0, position=1, last=89.0, best=89.0),
+            2: _timing(2, position=None, last=None, best=None, surface=-1),
+        }
+        snap = StandingsEngine().compute(session, dbi, timings, 0)
+        assert snap.overall_best_lap == 87.0
+        assert snap.overall_best_lap_car_idx == 2
+        player = next(e for e in snap.entries if e.car_idx == 0)
+        assert player.last_lap_status == "personal_best"
+
+    def test_results_for_a_car_not_in_the_roster_are_ignored(self):
+        session, dbi = self._practice([{"CarIdx": 40, "FastestTime": 80.0}])
+        snap = StandingsEngine().compute(session, dbi, {0: _timing(0, position=1)}, 0)
+        assert [e.car_idx for e in snap.entries] == [0]
+        assert snap.overall_best_lap != 80.0
+
+    def test_no_results_changes_nothing(self):
+        session, dbi = self._practice(None)
+        timings = {0: _timing(0, position=1, last=92.0, best=91.0)}
+        snap = StandingsEngine().compute(session, dbi, timings, 0)
+        assert snap.entries[0].best_lap_time == 91.0
+        assert snap.entries[0].last_lap_time == 92.0

@@ -6,6 +6,7 @@ import {
   MOCK_FIELD_SIZE,
   MOCK_SESSION_TYPES,
   MOCK_PLAYER_IDX,
+  MOCK_PRE_JOIN_IDX,
   MOCK_START_OFFSET_S,
   mockPlayerTelemetry,
   mockSession,
@@ -282,5 +283,32 @@ describe("mockSession — a timed race carries a predicted lap count", () => {
   it("counts down to zero and never below", () => {
     expect(mockSession(3600).sessionLapsRemain).toBe(0);
     expect(mockSession(4000).sessionLapsRemain).toBe(0);
+  });
+});
+
+describe("mockStandings — a practice joined part-way through", () => {
+  const practice = mockStandings(MOCK_START_OFFSET_S, "Practice");
+  const race = mockStandings(MOCK_START_OFFSET_S, "Race");
+
+  it("parks the pre-join cars in the garage with their times on the board", () => {
+    for (const idx of MOCK_PRE_JOIN_IDX) {
+      const e = practice.entries.find((x) => x.carIdx === idx)!;
+      expect(e.isInWorld).toBe(false);
+      expect(e.onPitRoad).toBe(false);
+      expect(e.isOffTrack).toBe(false);
+      expect(e.bestLapTime).toBeGreaterThan(0);
+    }
+  });
+
+  it("keeps the player and everyone else on track", () => {
+    const onTrack = practice.entries.filter(
+      (e) => !MOCK_PRE_JOIN_IDX.includes(e.carIdx)
+    );
+    expect(onTrack.every((e) => e.isInWorld)).toBe(true);
+    expect(MOCK_PRE_JOIN_IDX).not.toContain(MOCK_PLAYER_IDX);
+  });
+
+  it("leaves a race field untouched", () => {
+    expect(race.entries.every((e) => e.isInWorld)).toBe(true);
   });
 });

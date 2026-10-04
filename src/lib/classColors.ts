@@ -14,8 +14,9 @@
  *
  * | reserved      | hue     | why it is out of bounds                        |
  * |---------------|---------|------------------------------------------------|
- * | `danger`      | 24–28   | lapped traffic, off-track — the driver's ask    |
- * | `primary`     | 253–257 | "this is you", the other row ground             |
+ * | `danger`      | 24–28   | off-track, a faster class closing               |
+ * | `lapped`      | 245     | lapped traffic on the Relative (fixed, unthemed)|
+ * | `primary`     | 253–257 | "this is you", the only row ground              |
  * | `primary`     | 45      | same, in the Endurance theme, which is orange   |
  * | `warning`     | 81–82   | pit road, incident count                        |
  * | `accent`      | 154–157 | personal best, fastest lap in class             |
@@ -26,7 +27,7 @@
  * no room between `primary` at 255 and `sectorPurple` at 300 for a fifth hue,
  * and this is the cheapest collision on the board — `sectorPurple` appears as
  * *ink on one lap time*, transient and rare, where identity colour appears as a
- * row's leading edge and its ground. Different carrier, different place, and
+ * row's leading edge and its heading blocks. Different carrier, different place, and
  * never in the same cell.
  *
  * The order is not arbitrary either. Consecutive entries are the colours of
@@ -35,8 +36,6 @@
  * 110° apart, which is what keeps two groups from blurring into each other at
  * the edge of vision.
  */
-
-import { tint } from "./contrast";
 
 /**
  * Five classes' worth of identity colour, in the order groups are drawn.
@@ -54,9 +53,6 @@ export const CLASS_RAMP: readonly string[] = [
   "#8e6feb", // violet   — 292°
   "#2ab5a6", // teal     — 184°
 ];
-
-/** Alpha of the full-row class tint, used on the Relative. */
-const TINT_ALPHA = 0.14;
 
 /**
  * The identity colour for the class at `index` in the field's class order.
@@ -79,32 +75,6 @@ export function classColorFor(index: number): string {
   if (cycle <= 0) return base;
   const keep = Math.max(35, 100 - cycle * 30);
   return `color-mix(in oklab, ${base} ${keep}%, black)`;
-}
-
-/**
- * The ground a **Relative** row of this class sits on: the same colour as its
- * leading edge, across the whole row, at a whisper.
- *
- * The edge alone was the whole of identity on these surfaces, and at three
- * pixels it asks the eye to find a hairline before it can tell one group from
- * another. A tint spreads that answer across the row, so class registers from
- * the shape of the block rather than from its border — while staying quiet
- * enough that the values keep their contrast.
- *
- * Standings takes no row ground at all, and the difference is not an
- * oversight. Its rows come in same-class runs under a solid band, and every row
- * opens with a solid position block of the class's colour — the group is
- * already legible as one block. A Relative is a handful of rows sorted by where
- * cars physically are, with no band and no block, so the wash is the only thing
- * that lets class register from shape rather than from a border.
- *
- * A row only ever wears **one** ground. Where a status ground applies — the
- * player's row, a lapped car's — the tint gives way to it entirely, which is
- * what keeps identity and status from being read as the same statement. That
- * rule is enforced at the call sites, in the two row components.
- */
-export function classTint(color: string): string {
-  return tint(color, TINT_ALPHA);
 }
 
 /**

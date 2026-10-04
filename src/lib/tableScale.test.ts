@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  fitScale,
   MIN_TABLE_SCALE,
   scaleBox,
   tableScale,
@@ -77,5 +78,41 @@ describe("scaleBox", () => {
 
   it("publishes the scale so held sizes can divide it back out", () => {
     expect(scaleBox(0.75)).toMatchObject({ "--table-scale": 0.75 });
+  });
+});
+
+describe("fitScale", () => {
+  it("draws at full size when the whole field fits", () => {
+    expect(fitScale(1200, 900, 800, 500)).toBe(1);
+  });
+
+  it("never grows a table to fill a big window", () => {
+    expect(fitScale(4000, 900, 4000, 500)).toBe(1);
+  });
+
+  it("shrinks to the height when the field is taller than the window", () => {
+    // 60 cars × 32 px against a 480 px window: a quarter size, all of them.
+    expect(fitScale(1200, 900, 480, 1920)).toBeCloseTo(0.25);
+  });
+
+  it("shrinks to the width when that is the tighter of the two", () => {
+    expect(fitScale(450, 900, 800, 500)).toBeCloseTo(0.5);
+  });
+
+  it("takes the tighter constraint when both are short", () => {
+    expect(fitScale(720, 900, 250, 500)).toBeCloseTo(0.5);
+    expect(fitScale(450, 900, 400, 500)).toBeCloseTo(0.5);
+  });
+
+  it("has no floor — the whole field is the promise", () => {
+    expect(fitScale(1200, 900, 100, 2000)).toBeCloseTo(0.05);
+    expect(fitScale(1200, 900, 100, 2000)).toBeLessThan(MIN_TABLE_SCALE);
+  });
+
+  it("ignores a dimension that has not been measured yet", () => {
+    expect(fitScale(0, 900, 480, 1920)).toBeCloseTo(0.25);
+    expect(fitScale(450, 900, 0, 1920)).toBeCloseTo(0.5);
+    expect(fitScale(Number.NaN, 900, Number.NaN, 1920)).toBe(1);
+    expect(fitScale(450, 0, 480, -1)).toBe(1);
   });
 });

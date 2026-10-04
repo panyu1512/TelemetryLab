@@ -706,7 +706,26 @@ function playerPosition(t: number): { overall: number; inClass: number } {
   return { overall, inClass };
 }
 
-export function mockStandings(t: number): StandingsPayload {
+/**
+ * Cars that, in a mock **practice**, ran before the player joined and are now
+ * back in the garage: off the track, but with their times still on the board.
+ *
+ * This is the case the bridge fills from the session's official results
+ * (`ResultsPositions`) rather than from the live timing arrays, which only know
+ * what happened after the player connected. The mock emits the already-merged
+ * result — times present, `isInWorld` false — which is exactly what the
+ * standings channel carries for those cars, so the timesheet can be seen ranked
+ * with them in it. Chosen so both classes have one, and none is pinned near the
+ * player for the Relative's sake.
+ */
+export const MOCK_PRE_JOIN_IDX: readonly number[] = [7, 8, 11];
+
+export function mockStandings(
+  t: number,
+  sessionType: MockSessionType = "Race",
+): StandingsPayload {
+  const inGarage = (idx: number) =>
+    sessionType === "Practice" && MOCK_PRE_JOIN_IDX.includes(idx);
   const ordered = runningOrder(t);
   /* The order one lap ago, so the position-change arrow has something to show.
      It was hard-coded to 0, which meant the column existed in every screenshot
@@ -839,8 +858,9 @@ export function mockStandings(t: number): StandingsPayload {
     // One car in the pits and one off-track at any time, rotating slowly, so
     // the state column is never dead in a demo or a screenshot.
     const rotation = Math.floor(t / 25);
-    const onPitRoad = car.idx === (rotation * 5) % MOCK_FIELD_SIZE;
-    const isOffTrack = car.idx === (rotation * 7 + 3) % MOCK_FIELD_SIZE;
+    const garaged = inGarage(car.idx);
+    const onPitRoad = !garaged && car.idx === (rotation * 5) % MOCK_FIELD_SIZE;
+    const isOffTrack = !garaged && car.idx === (rotation * 7 + 3) % MOCK_FIELD_SIZE;
 
     return {
       carIdx: car.idx,
@@ -871,10 +891,14 @@ export function mockStandings(t: number): StandingsPayload {
         3
       ),
       onPitRoad,
-      trackSurfaceLabel: onPitRoad ? "AproachingPits" : "OnTrack",
+      trackSurfaceLabel: garaged
+        ? "not_in_world"
+        : onPitRoad
+          ? "AproachingPits"
+          : "OnTrack",
       isOffTrack,
       isInPitStall: false,
-      isInWorld: true,
+      isInWorld: !garaged,
       isRetired: false,
       isPlayer: car.idx === MOCK_PLAYER_IDX,
       isOverallLeader: pos === 1,

@@ -28,8 +28,6 @@ export type ColumnVisibilityMap = Partial<Record<StandingsColumnId, boolean>>;
 export interface StandingsUiState {
   /** class → one group per class, gap-separated; overall → one flat table. */
   grouping: Grouping;
-  /** Follow the player: keep their row scrolled into view. */
-  followPlayer: boolean;
   /** Which configurable columns are shown (missing = shown). */
   columns: ColumnVisibilityMap;
   /**
@@ -55,7 +53,6 @@ export interface StandingsUiState {
    */
   showColumnLabels: boolean;
   setGrouping: (g: Grouping) => void;
-  setFollowPlayer: (v: boolean) => void;
   setShowSessionStrip: (v: boolean) => void;
   setShowClassBands: (v: boolean) => void;
   setShowColumnLabels: (v: boolean) => void;
@@ -70,7 +67,6 @@ const STORAGE_KEY = "telemetrylab.standings.ui.v1";
 
 export interface Persisted {
   grouping: Grouping;
-  followPlayer: boolean;
   columns: ColumnVisibilityMap;
   showSessionStrip: boolean;
   showClassBands: boolean;
@@ -79,7 +75,6 @@ export interface Persisted {
 
 const DEFAULTS: Persisted = {
   grouping: "class",
-  followPlayer: true,
   columns: {},
   showSessionStrip: true,
   showClassBands: true,
@@ -90,7 +85,11 @@ function load(): Persisted {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (!raw) return DEFAULTS;
-    const parsed = JSON.parse(raw) as Partial<Persisted>;
+    // `followPlayer` is dropped from older saves: the screen stopped scrolling
+    // when it learned to fit the whole field, so there is nothing to follow.
+    const { followPlayer: _retired, ...parsed } = JSON.parse(raw) as Partial<
+      Persisted & { followPlayer: boolean }
+    >;
     return { ...DEFAULTS, ...parsed, columns: parsed.columns ?? {} };
   } catch {
     return DEFAULTS;
@@ -112,7 +111,6 @@ export const useStandingsUiStore = create<StandingsUiState>((set, get) => {
   const save = () => {
     const {
       grouping,
-      followPlayer,
       columns,
       showSessionStrip,
       showClassBands,
@@ -120,7 +118,6 @@ export const useStandingsUiStore = create<StandingsUiState>((set, get) => {
     } = get();
     const snapshot: Persisted = {
       grouping,
-      followPlayer,
       columns,
       showSessionStrip,
       showClassBands,
@@ -133,10 +130,6 @@ export const useStandingsUiStore = create<StandingsUiState>((set, get) => {
     ...load(),
     setGrouping: (grouping) => {
       set({ grouping });
-      save();
-    },
-    setFollowPlayer: (followPlayer) => {
-      set({ followPlayer });
       save();
     },
     setShowSessionStrip: (showSessionStrip) => {
@@ -173,7 +166,6 @@ subscribe("standings-ui:changed", (remote) => {
   try {
     useStandingsUiStore.setState({
       grouping: remote.grouping,
-      followPlayer: remote.followPlayer,
       columns: remote.columns ?? {},
       showSessionStrip:
         remote.showSessionStrip ?? DEFAULTS.showSessionStrip,

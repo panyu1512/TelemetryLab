@@ -39,8 +39,6 @@ const GROUPINGS: {
 export function StandingsViewPanel() {
   const grouping = useStandingsUiStore((s) => s.grouping);
   const setGrouping = useStandingsUiStore((s) => s.setGrouping);
-  const followPlayer = useStandingsUiStore((s) => s.followPlayer);
-  const setFollowPlayer = useStandingsUiStore((s) => s.setFollowPlayer);
   const showSessionStrip = useStandingsUiStore((s) => s.showSessionStrip);
   const setShowSessionStrip = useStandingsUiStore((s) => s.setShowSessionStrip);
   const showClassBands = useStandingsUiStore((s) => s.showClassBands);
@@ -88,18 +86,6 @@ export function StandingsViewPanel() {
           );
         })}
       </div>
-
-      <label className="flex cursor-pointer items-center gap-3 rounded-card border border-border bg-surface px-3 py-2.5 transition-colors hover:border-border-strong">
-        <div className="min-w-0 flex-1">
-          <span className="block text-xs font-medium text-text">
-            Follow my row
-          </span>
-          <span className="block text-[11px] text-faint">
-            Keep your car scrolled into view as positions change.
-          </span>
-        </div>
-        <ToggleSwitch checked={followPlayer} onChange={setFollowPlayer} />
-      </label>
 
       <label className="flex cursor-pointer items-center gap-3 rounded-card border border-border bg-surface px-3 py-2.5 transition-colors hover:border-border-strong">
         <div className="min-w-0 flex-1">

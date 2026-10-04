@@ -29,6 +29,9 @@ import type { CSSProperties } from "react";
  * sliver from scaling into nothing; it is not a claim that half-size type is
  * comfortable to read at speed. Past this point the surface goes back to
  * scrolling sideways, which at least fails visibly.
+ *
+ * Relative only, now. Standings fits the whole field with {@link fitScale},
+ * which has no floor because it has no scroll bar to fall back to.
  */
 export const MIN_TABLE_SCALE = 0.5;
 
@@ -49,6 +52,48 @@ export function tableScale(available: number, natural: number): number {
   if (!Number.isFinite(available) || available <= 0) return 1;
   if (!Number.isFinite(natural) || natural <= 0) return 1;
   return Math.min(1, Math.max(MIN_TABLE_SCALE, available / natural));
+}
+
+/**
+ * The factor that fits the table into its window **in both directions**, with
+ * no floor: the Standings' answer to "show me the whole grid, no scroll bar".
+ *
+ * Standings used to scale to its width and scroll for its height, which left
+ * the bottom of a big field — exactly the cars a driver mid-pack never sees —
+ * behind a scroll bar on a screen that has no controls to drive it. It now
+ * draws every car, always: the factor is the tighter of width and height, so
+ * a tall field in a short window shrinks rows and type together until the last
+ * row lands on the window's bottom edge.
+ *
+ * There is deliberately no {@link MIN_TABLE_SCALE} here. That floor exists so a
+ * width-only fit can fall back to scrolling sideways; a surface that promises
+ * the whole field has nothing to fall back to, and clipping the tail silently
+ * is the failure this function exists to remove. A 60-car field in a short
+ * window will be small — the driver sizing the window is the one choosing that
+ * (`design.md` § Dense tabular overlays, rule 6).
+ *
+ * Never above 1, for the reason {@link tableScale} gives. An unmeasured or
+ * nonsensical dimension (0 before the ResizeObserver reports) does not
+ * constrain, so first paint is full size for one frame, as it is there.
+ */
+export function fitScale(
+  availableWidth: number,
+  naturalWidth: number,
+  availableHeight: number,
+  naturalHeight: number,
+): number {
+  const ratio = (available: number, natural: number) =>
+    Number.isFinite(available) &&
+    available > 0 &&
+    Number.isFinite(natural) &&
+    natural > 0
+      ? available / natural
+      : 1;
+  return Math.min(
+    1,
+    ratio(availableWidth, naturalWidth),
+    ratio(availableHeight, naturalHeight),
+  );
 }
 
 /**

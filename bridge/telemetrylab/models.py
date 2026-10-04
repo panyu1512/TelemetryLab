@@ -152,6 +152,30 @@ class ClassEntry:
 
 
 @dataclass(slots=True)
+class SessionResult:
+    """One car's line in the current session's official results.
+
+    From ``SessionInfo.Sessions[n].ResultsPositions`` in the session YAML: the
+    sim's own record of the session so far, **including laps run before this
+    client connected**. The live ``CarIdx*`` timing arrays only know what has
+    happened since we joined, so on joining a practice that has been running
+    for an hour every other car's best lap reads as "none" until it sets a new
+    one. These rows are what fill that gap (see ``StandingsEngine``).
+
+    Bridge-internal: deliberately not on the wire. The frontend sees the merged
+    result through the ordinary ``bestLapTime`` / ``lastLapTime`` fields, so the
+    two sources can never disagree on screen.
+    """
+
+    car_idx: int
+    position: int | None  # 1-based; None until iRacing ranks the car
+    class_position: int | None  # 1-based (iRacing publishes it 0-based)
+    fastest_time: float | None  # seconds; None when no timed lap
+    last_time: float | None  # seconds; None when no timed lap
+    laps_complete: int
+
+
+@dataclass(slots=True)
 class SessionInfo:
     """A snapshot of the whole session: what/where/when + the roster."""
 
@@ -181,6 +205,9 @@ class SessionInfo:
     # Sector boundaries as lap-distance fractions (from SplitTimeInfo). Static per
     # track/config; the standings engine times sectors against these.
     sector_starts: list[float] = field(default_factory=list)
+    # The current session's official results so far (ResultsPositions). Not
+    # serialized: consumed by the standings engine, see :class:`SessionResult`.
+    results: list[SessionResult] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {

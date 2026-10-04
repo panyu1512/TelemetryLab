@@ -17,6 +17,7 @@ export default defineConfig({
       include: [
         "src/lib/format.ts",
         "src/lib/classColors.ts",
+        "src/lib/driverName.ts",
         "src/lib/lapTimeOrder.ts",
         "src/lib/scales.ts",
         "src/lib/sessionKind.ts",

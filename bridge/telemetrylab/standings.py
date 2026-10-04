@@ -25,10 +25,22 @@ Everything a row shows is one of:
 
 The projected iRating is an **estimate**, labelled as such on the wire, and the
 sector splits are derived from lap-distance crossings (see :mod:`sectors`).
+
+Results from before we joined
+-----------------------------
+The ``CarIdx*`` lap-time arrays only cover laps completed while this client is
+connected. Join a practice an hour in and every other car's best lap is blank,
+so a timesheet ranked by best lap shows the field in no order at all. The
+session YAML's ``ResultsPositions`` (parsed into ``SessionInfo.results``) is the
+sim's own record of the *whole* session, so each car's best lap is the faster of
+the two sources and a missing last lap falls back to the official one. The
+official fastest lap also seeds the session-best reference, so a lap set after
+joining is not graded purple when someone had already gone faster.
 """
 
 from __future__ import annotations
 
+import dataclasses
 import math
 
 from .models import (
@@ -37,6 +49,7 @@ from .models import (
     ClassStanding,
     DriverEntry,
     SessionInfo,
+    SessionResult,
     StandingsEntry,
     StandingsSnapshot,
 )
@@ -63,6 +76,34 @@ def _sort_key(timing: CarTiming) -> tuple[float, float]:
     pos = timing.position if timing.position is not None else _INF
     progress = -((timing.lap or 0) + (timing.lap_dist_pct or 0.0))
     return (pos, progress)
+
+
+def _with_results(timing: CarTiming, result: SessionResult | None) -> CarTiming:
+    """``timing`` with any lap the live arrays missed filled from the results.
+
+    Best lap is the faster of the two — the live value can be the newer one (a
+    lap just completed, results not yet rewritten) and the official one can be
+    the only one (set before we joined). Last lap and position only fall back:
+    when the live array has one it is by definition the most recent.
+    """
+    if result is None:
+        return timing
+    best = timing.best_lap_time
+    if result.fastest_time is not None and (best is None or result.fastest_time < best):
+        best = result.fastest_time
+    merged = {
+        "best_lap_time": best,
+        "last_lap_time": timing.last_lap_time
+        if timing.last_lap_time is not None
+        else result.last_time,
+        "position": timing.position if timing.position is not None else result.position,
+        "class_position": timing.class_position
+        if timing.class_position is not None
+        else result.class_position,
+    }
+    if all(getattr(timing, k) == v for k, v in merged.items()):
+        return timing
+    return dataclasses.replace(timing, **merged)
 
 
 def _projected_irating_changes(
@@ -173,9 +214,13 @@ class StandingsEngine:
         self._sync_session(session)
         racing = session.session_state in (4, 5)  # racing | checkered
 
-        # Only race cars with a roster entry; skip pace/spectator slots.
+        # Only race cars with a roster entry; skip pace/spectator slots. Each
+        # car's lap times are completed from the official results first, so
+        # everything below — bests, grading, class fastest laps — sees laps run
+        # before this client joined (see the module docstring).
+        results_by_idx = {r.car_idx: r for r in session.results}
         rows: list[CarTiming] = [
-            t
+            _with_results(t, results_by_idx.get(idx))
             for idx, t in timings.items()
             if (d := drivers_by_idx.get(idx)) is not None
             and not d.is_pace_car
@@ -201,6 +246,17 @@ class StandingsEngine:
             tire_laps_by_idx[t.car_idx] = max(
                 0, (t.lap or 0) - self._tire_stint_start_lap.get(t.car_idx, 0)
             )
+
+        # Session-best lap: the fastest seen live, or the official one if
+        # someone had already gone faster before we joined.
+        best_lap, best_lap_car = self._sectors.overall_best_lap, self._sectors.overall_best_lap_car
+        for r in session.results:
+            if (
+                r.fastest_time is not None
+                and r.car_idx in retired_by_idx  # a car we are showing
+                and (best_lap is None or r.fastest_time < best_lap)
+            ):
+                best_lap, best_lap_car = r.fastest_time, r.car_idx
 
         ir_changes = _projected_irating_changes(
             [(t.car_idx, drivers_by_idx[t.car_idx].i_rating, t.position or 0) for t in rows]
@@ -268,7 +324,7 @@ class StandingsEngine:
                     positions_gained_last_lap=self._last_lap_gained.get(t.car_idx, 0),
                     i_rating=driver.i_rating,
                     irating_change_est=ir_changes.get(t.car_idx, 0),
-                    last_lap_status=self._lap_status(t),
+                    last_lap_status=self._lap_status(t, best_lap),
                     sectors=[s.to_dict() for s in self._sectors.splits_for(t.car_idx)],
                     theoretical_best=self._sectors.theoretical_best_for(t.car_idx),
                     on_pit_road=t.on_pit_road,
@@ -295,8 +351,8 @@ class StandingsEngine:
             classes=classes,
             player_car_idx=session.driver_car_idx,
             sector_count=n_sec,
-            overall_best_lap=self._sectors.overall_best_lap,
-            overall_best_lap_car_idx=self._sectors.overall_best_lap_car,
+            overall_best_lap=best_lap,
+            overall_best_lap_car_idx=best_lap_car,
             overall_best_sectors=[self._sectors.overall_best.get(i) for i in range(n_sec)],
         )
 
@@ -307,11 +363,10 @@ class StandingsEngine:
             return 0
         return start - position
 
-    def _lap_status(self, t: CarTiming) -> str:
+    def _lap_status(self, t: CarTiming, best_lap: float | None) -> str:
         last = t.last_lap_time
         if last is None or last <= 0:
             return "none"
-        best_lap = self._sectors.overall_best_lap
         if best_lap is not None and last <= best_lap + 1e-4:
             return "overall_best"
         if t.best_lap_time is not None and last <= t.best_lap_time + 1e-4:
