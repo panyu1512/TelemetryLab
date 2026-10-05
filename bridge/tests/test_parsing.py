@@ -216,9 +216,7 @@ class TestParseTireCompounds:
     def test_serialized_on_the_session(self):
         raw = make_session_raw()
         raw["driver_info"]["DriverTires"] = [{"TireIndex": 1, "TireCompoundType": "Wet"}]
-        assert parse_session_info(raw).to_dict()["tireCompounds"] == [
-            {"index": 1, "type": "Wet"}
-        ]
+        assert parse_session_info(raw).to_dict()["tireCompounds"] == [{"index": 1, "type": "Wet"}]
 
 
 class TestParseSessionInfo:
