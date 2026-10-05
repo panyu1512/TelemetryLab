@@ -132,6 +132,21 @@ class WeatherInfo:
 
 
 @dataclass(slots=True)
+class TireCompound:
+    """One entry of the player car's ``DriverInfo.DriverTires`` list.
+
+    ``index`` is the value ``CarIdxTireCompound`` reports for a car on this
+    compound; ``type`` is iRacing's name for it (e.g. ``"Hard"``, ``"Wet"``).
+    """
+
+    index: int
+    type: str
+
+    def to_dict(self) -> dict[str, Any]:
+        return {"index": self.index, "type": self.type}
+
+
+@dataclass(slots=True)
 class ClassEntry:
     """Per-class summary within a (possibly multi-class) session."""
 
@@ -205,6 +220,9 @@ class SessionInfo:
     # Sector boundaries as lap-distance fractions (from SplitTimeInfo). Static per
     # track/config; the standings engine times sectors against these.
     sector_starts: list[float] = field(default_factory=list)
+    # The player car's compounds (DriverInfo.DriverTires): which CarIdxTireCompound
+    # index is a slick and which is a wet. Empty for cars without wet tyres.
+    tire_compounds: list[TireCompound] = field(default_factory=list)
     # The current session's official results so far (ResultsPositions). Not
     # serialized: consumed by the standings engine, see :class:`SessionResult`.
     results: list[SessionResult] = field(default_factory=list)
@@ -234,6 +252,7 @@ class SessionInfo:
             "carRedlineRpm": self.car_redline_rpm,
             "carEstLapTime": self.car_est_lap_time,
             "sectorStarts": self.sector_starts,
+            "tireCompounds": [t.to_dict() for t in self.tire_compounds],
         }
 
 

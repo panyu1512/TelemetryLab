@@ -252,6 +252,11 @@ class MockField:
                 "PaceCarIdx": -1,
                 "DriverCarRedLine": 7800,
                 "DriverCarEstLapTime": self.player.pace,
+                # Real GT3 cars report this pair; index 1 is the rain tyre.
+                "DriverTires": [
+                    {"TireIndex": 0, "TireCompoundType": "Hard"},
+                    {"TireIndex": 1, "TireCompoundType": "Wet"},
+                ],
                 "Drivers": [c.driver_dict() for c in self.cars],
             },
             "sessions": [

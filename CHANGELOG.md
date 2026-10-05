@@ -7,6 +7,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Slick or wet at a glance.** The tyre column in Standings now shows a small
+  tyre icon instead of a compound letter: a plain hub for slicks, a water drop
+  for wets, so you can see who has switched tyres as the rain comes and goes.
+  Hover it for the compound's name. A compound the sim doesn't name falls back
+  to the old letter.
+
 ## [1.12.0] - 2026-10-05
 
 ### Changed
