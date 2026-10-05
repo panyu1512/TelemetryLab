@@ -11,8 +11,8 @@ import { CLASS_EDGE_WIDTH } from "./constants";
  * The band that opens a class group.
  *
  * An earlier reading of `design.md` § Dense tabular overlays, rule 2 banned
- * this outright: a gap plus a tone shift separates classes for a third of the
- * height. That is still true, and the gap and tone shift are still here — but
+ * this outright: a gap separates classes for a third of the height. That is
+ * still true, and the gap is still here — but
  * separation was never the band's only job. A class's **own** numbers (how many
  * cars are in it, its strength of field, its fastest lap) are per-class and
  * per-group, so the session strip cannot hold them and no row can either. The

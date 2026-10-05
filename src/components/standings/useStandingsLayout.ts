@@ -21,13 +21,12 @@ import { BAND_GAP, CLASS_BAND_H, CLASS_GAP, ROW_H } from "./constants";
  * so it recomputes when cars change places — not every 10 Hz tick.
  *
  * Row presentation that follows from *position in the field* rather than from
- * telemetry — which row carries the column labels, which zebra phase a row is
- * on, which tone its class group sits at — is resolved here too, for the same
- * reason: it changes on reorder, not on tick.
+ * telemetry — which row carries the column labels, and its rank in a lap-time
+ * session — is resolved here too, for the same reason: it changes on reorder,
+ * not on tick.
  *
  * Class groups open with a band item when bands are on (`design.md` § Dense
- * tabular overlays, rule 2), and are separated by {@link CLASS_GAP} plus a tone
- * shift either way.
+ * tabular overlays, rule 2), and are separated by {@link CLASS_GAP} either way.
  */
 
 /** One field row. */
@@ -42,10 +41,6 @@ export interface LayoutRow {
    * (`design.md` § Dense tabular overlays, rule 3).
    */
   leader: boolean;
-  /** Alternating class-group tone index into `GROUP_TONE` (rule 2). */
-  tone: number;
-  /** Zebra phase within the group — derived here so reorders stay stable. */
-  zebra: boolean;
   /**
    * The rank to print in the position column, or null to use the car's own
    * `position` from iRacing.
@@ -107,10 +102,8 @@ export function useStandingsLayout(): StandingsLayout {
           top,
           carIdx,
           classId: classOf.get(carIdx) ?? -1,
-          // One group ⇒ the overall leader carries the labels, one tone throughout.
+          // One group ⇒ the overall leader carries the labels.
           leader: i === 0,
-          tone: 0,
-          zebra: i % 2 === 1,
           rank: byLapTime ? i + 1 : null,
         });
         top += ROW_H;
@@ -153,8 +146,6 @@ export function useStandingsLayout(): StandingsLayout {
           carIdx,
           classId: c.carClassId,
           leader: i === 0,
-          tone: groupIndex % 2,
-          zebra: i % 2 === 1,
           rank: byLapTime ? i + 1 : null,
         });
         top += ROW_H;

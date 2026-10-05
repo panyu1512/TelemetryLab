@@ -524,8 +524,8 @@ function mix(color: string, pct: number): string {
 }
 
 /**
- * A section of the panel: the Standings class-group tone (`GROUP_TONE`'s base,
- * plain white alpha) with a mono micro-label legend. No border and no graphite
+ * A section of the panel: a plain white-alpha ground on the timing paper with a
+ * mono micro-label legend. No border and no graphite
  * — a bordered `surface-2` card on timing paper read as a second product
  * pasted onto the first.
  */

@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.12.0] - 2026-10-05
+
+### Changed
+
+- **Standings has the same clean background as Relative.** The alternating
+  row stripes and the lighter shading behind every other class are gone, so
+  rows sit straight on the dark panel and your own highlighted row is the only
+  one with a background.
+
 ## [1.11.0] - 2026-10-04
 
 ### Added
@@ -389,7 +398,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.11.0...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.12.0...HEAD
+[1.12.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.10.0...v1.11.0
 [1.10.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.9.0...v1.10.0
 [1.9.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.8.0...v1.9.0

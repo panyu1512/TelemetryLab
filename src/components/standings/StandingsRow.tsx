@@ -5,7 +5,6 @@ import { useDriver } from "../../stores/useSessionStore";
 import {
   CLASS_EDGE_WIDTH,
   COL_LABEL_H,
-  GROUP_TONE,
   gridTemplate,
   LAP_COLOR,
   LAP_UNDERLINE,
@@ -33,7 +32,6 @@ interface StandingsRowProps {
   top: number;
   sectorCount: number;
   classColor: string;
-  zebra: boolean;
   /** Grouped by class ⇒ show gap/interval relative to the class, not overall. */
   classRelative: boolean;
   /**
@@ -50,8 +48,6 @@ interface StandingsRowProps {
    * § Dense tabular overlays, rule 3). Off by default — see the rule.
    */
   labelled: boolean;
-  /** Class-group tone index into {@link GROUP_TONE} (rule 2's tone shift). */
-  tone: number;
   /**
    * Whether this car holds the fastest lap in its class, or in the whole field.
    * The *only* filled cell on this surface (rule 5) — everything else that needs
@@ -73,12 +69,10 @@ function StandingsRowInner({
   top,
   sectorCount,
   classColor,
-  zebra,
   classRelative,
   rank,
   isVisible,
   labelled,
-  tone,
   fastest,
 }: StandingsRowProps) {
   const row = useStandingsRow(carIdx);
@@ -94,11 +88,6 @@ function StandingsRowInner({
     : row?.gapIsLaps;
   const intervalValue = classRelative ? row?.classInterval : row?.interval;
 
-  // Class-group tone shift, with the zebra phase riding on it (rule 2). The
-  // player's row overrides both: "this is you" is `primary` as the row's ground
-  // (§ Two colour systems, rule 3).
-  const [toneBase, toneZebra] = GROUP_TONE[tone % GROUP_TONE.length];
-
   return (
     <div
       className="row-glide absolute inset-x-0 rounded-sm will-change-transform"
@@ -110,11 +99,12 @@ function StandingsRowInner({
       <div
         className={[
           "relative grid h-full items-center gap-x-1 rounded-sm px-1 text-xs",
-          row?.isPlayer
-            ? "bg-primary/15 ring-1 ring-inset ring-primary/60"
-            : zebra
-              ? toneZebra
-              : toneBase,
+          // The only ground on the surface, exactly as on Relative: "this is
+          // you" is `primary` as the row's ground (§ Two colour systems, rule
+          // 3). Every other row sits straight on the timing paper — the zebra
+          // and class-group tones it used to carry made Standings read as a
+          // different, busier surface from Relative beside it.
+          row?.isPlayer ? "bg-primary/15 ring-1 ring-inset ring-primary/60" : "",
           dimmed ? "opacity-40" : "",
         ]
           .filter(Boolean)

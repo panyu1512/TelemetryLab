@@ -146,8 +146,9 @@ standings table stops being readable at a glance.
    leader — moves at 10 Hz, and a fill redrawing itself on every row on every
    tick is motion in the corner of the eye that means nothing.
 
-   **The only coloured row ground on either surface is the player's** (the
-   zebra and group tones are white alphas that carry no meaning). Status rides in
+   **The only row ground on either surface is the player's.** Standings used to
+   band its rows with zebra and class-group tones in white alpha; they are gone,
+   so Standings and Relative sit on the same bare paper. Status rides in
    ink (lapped traffic's blue, the gap's red) or in a single cell (the
    fastest-lap fill), never across a row, so the one ground that is left
    answers "which one is me" and nothing else.
@@ -182,7 +183,7 @@ standings table stops being readable at a glance.
    `bg-primary/15` plus an inset `primary/60` ring, on both surfaces — up from
    `/10` and `/35`, at which the player's row was hard to find in a zebra-banded
    field, which is the one thing it exists to prevent. **It is the only ringed
-   row, and on Relative the only row with a ground at all**: lapped traffic is
+   row, and on both surfaces the only row with a ground at all**: lapped traffic is
    blue *ink* (§ Dense tabular overlays, rule 14), so the ground and ring stay
    an answer to "which one is me" and nothing else. This is the "selection"
    sense of `primary` in the table above, which is why the token row now says
@@ -419,14 +420,13 @@ in [`constants.ts`](src/components/standings/constants.ts): `ROW_H` 32 px, and
 the fact that a header band and a row cost the same height.
 
 1. **No vertical rules, no row separators.** Separation is alignment and
-   whitespace; zebra tint is the only banding allowed. At 32 px a rule costs
+   whitespace; rows carry no banding at all. At 32 px a rule costs
    more attention than it returns. The one hairline permitted is the session
    strip's baseline, which separates the readout from the field rather than one
    row from the next.
-2. **Class separation is a gap plus a tone shift — and, on Standings, a band
-   that earns its height by carrying the class's own numbers.** The gap and the
-   tone shift do the separating; they read pre-attentively and cost a third of
-   a band. What the earlier absolutist version of this rule got wrong is that
+2. **Class separation is a gap — and, on Standings, a band that earns its
+   height by carrying the class's own numbers.** The gap does the separating;
+   it reads pre-attentively and costs a third of a band. What the earlier absolutist version of this rule got wrong is that
    separation was never the only job. A class's **car count, strength of field
    and fastest lap** are per-class and per-group: the session strip cannot hold
    them (it is field-wide) and no row can (it is one car). The band is the only
@@ -574,9 +574,9 @@ the fact that a header band and a row cost the same height.
    app's `surface` graphite, and they keep it opaque over live footage instead
    of dropping to glass. A 32 px row of 12 px type cannot afford to let a
    sunlit kerb through. The token carries the active theme's hue so the surface
-   stays part of the system, and the zebra banding on top of it is plain white
-   alpha (`GROUP_TONE`) so the banding device means the same thing in all four
-   themes.
+   stays part of the system. Rows sit straight on it — the zebra and
+   class-group tones Standings used to lay over it are gone, so it reads the
+   same as Relative in all four themes.
 
    **This paper is no longer only theirs.** It was, on the argument that a
    gauge can afford a kerb showing through where a table cannot — but that
@@ -777,8 +777,7 @@ the fuel panel should not have to re-learn where the numbers are.
   window chrome on an overlay screen. The `FUEL` tag is unfilled: the panel's
   one status fill is the verdict block directly beneath it.
 - **Sections are the class-group tone, not cards.** Plain `white/[0.035]` on the
-  paper with a mono micro-label legend — the same alpha `GROUP_TONE` gives a
-  Standings group — instead of bordered `surface-2` graphite, which read as a
+  paper with a mono micro-label legend instead of bordered `surface-2` graphite, which read as a
   second product pasted onto the first. The dashboard's Tyres corners take the
   same ground for the same reason.
 - **Values are bold, micro-labels are mono.** Its labels were sans caps, the one
