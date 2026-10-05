@@ -88,6 +88,18 @@ const PAST_A_LAP_MS = 40_000;
  * *or* to the scale floor, and re-measure by looking at the file rather than
  * by arithmetic: an over-tall frame shows as a band of empty paper that no
  * test will ever catch.
+ *
+ * Standings no longer scrolls: it scales to the tighter of width *and* height
+ * (`lib/tableScale.fitScale`), so its frame can never crop the field — the
+ * table shrinks to fit instead. Height still decides how *large* it draws,
+ * and an over-tall frame still leaves empty paper under the last row.
+ *
+ * The relative shot is meant to show a multi-class race with lapped traffic:
+ * GT3 rows on the player's lap in white, GT4 rows a lap down in blue with a
+ * `-1L` tag, and the player's row as the only highlighted one. The mock pins
+ * a lapped GT4 near the player for exactly this (`src/lib/mockData.ts`), but
+ * which other cars are in the window drifts with the wall clock — re-read the
+ * relative's alt text in `index.html` after a re-shoot.
  */
 const SHOTS = [
   // The hero capture. Narrow on purpose — it doubles as the proof that the

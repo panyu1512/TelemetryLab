@@ -25,25 +25,26 @@
  *
  * Lapped traffic is called out explicitly **in a race**. `intervalToPlayer` is
  * wrapped to ±half a lap, so a car a lap down sitting alongside the player is
- * indistinguishable from a rival by gap alone. Any neighbour not on the
- * player's lap therefore takes a danger-tinted row ground with a signed
- * `+1L` / `-1L` tag — the ground says "not your lap", the sign says which way
- * (see {@link lapRelation}; the entry's own `isLapped`/`lapsDown` are
- * leader-relative and cannot answer this).
+ * indistinguishable from a rival by gap alone. A neighbour a lap or more
+ * *behind* the player therefore prints in `--color-lapped` blue — the sim's own
+ * blue-flag convention — with a signed `-1L` tag; a car a lap or more *ahead*
+ * keeps the default ink and carries a `+1L` tag (see {@link lapRelation}; the
+ * entry's own `isLapped`/`lapsDown` are leader-relative and cannot answer this).
  *
  * Outside a race the call-out is switched off entirely (see
  * `lib/sessionKind`). Being a lap down only costs you something when there is a
  * position attached to it; in practice or qualifying the field joins at
  * different times and runs its own programmes, so lap numbers differ across the
- * grid by design. Left on, every row would carry a tag over a danger ground —
- * a table shouting at every row is a table saying nothing — and it would bury
+ * grid by design. Left on, half the table would turn blue and carry a tag — a
+ * table shouting at every row is a table saying nothing — and it would bury
  * the one number that still matters there: the gap to the car about to arrive
  * in your mirrors mid-lap.
  *
- * The call-out is the row's ground rather than its ink for the same reason the
- * player's own row is: ink in this table carries values, and red ink already
- * means "behind" on the gap and "faster car, different class" on the closing
- * icon. A tinted ground adds a third meaning without overloading either.
+ * **Exactly one row has a ground, and it is yours.** Lapped traffic used to take
+ * a danger-tinted ground and every other row a wash of its class colour; with
+ * three kinds of ground in six rows the player's own was one block among many.
+ * Lapped is now ink, class is a badge at the start of the row (plus the leading
+ * edge), and the only filled row on the surface is the one you are driving.
  *
  * Closing-rate hints flag cars that are approaching the player faster than a
  * threshold. A ⚡ icon in the closing column indicates the car is gaining
@@ -64,7 +65,6 @@ import type { DriverEntry, StandingsEntry } from "../../telemetry/types";
 import { lapTime } from "../../lib/format";
 import type { LapPositioned } from "../../lib/relativeLaps";
 import {
-  isOffLap,
   LapRelation,
   lapDelta,
   lapRelation,
@@ -75,7 +75,9 @@ import { CLASS_EDGE_WIDTH, LAP_UNDERLINE } from "../standings/constants";
 import { CountryFlag } from "../ui/CountryFlag";
 import { SessionStrip } from "../timing/SessionStrip";
 import { scaleBox, tableScale, unscaled } from "../../lib/tableScale";
-import { CLASS_RAMP, classColorFor, classTint } from "../../lib/classColors";
+import { CLASS_RAMP, classColorFor } from "../../lib/classColors";
+import { readableInk } from "../../lib/contrast";
+import { formatDriverName } from "../../lib/driverName";
 
 // ─── Layout constants ────────────────────────────────────────────────────────
 
@@ -89,17 +91,21 @@ const ROW_H = 34;
 
 /** Every column the relative table can show, in render order. */
 type RelColumnId =
+  | "class"
   | "pos"
   | "num"
   | "country"
   | "driver"
   | "brand"
-  | "class"
   | "gap"
   | "last"
   | "hint";
 
 const REL_COLUMNS: { id: RelColumnId; width: string; px: number }[] = [
+  // The class badge opens the row, against the class edge it repeats: in a
+  // multi-class field "which class is this" is the first question asked of a
+  // car arriving in the mirrors, so it is the first thing the eye lands on.
+  { id: "class", width: "3rem", px: 48 },
   { id: "pos", width: "2.3rem", px: 37 },
   { id: "num", width: "2.5rem", px: 40 },
   { id: "country", width: "1.7rem", px: 27 },
@@ -109,7 +115,6 @@ const REL_COLUMNS: { id: RelColumnId; width: string; px: number }[] = [
   // from — and therefore what the scale is measured against.
   { id: "driver", width: "minmax(0, 1fr)", px: 112 },
   { id: "brand", width: "2.75rem", px: 44 },
-  { id: "class", width: "3.2rem", px: 51 },
   { id: "gap", width: "4.8rem", px: 77 },
   { id: "last", width: "5rem", px: 80 },
   { id: "hint", width: "1.8rem", px: 29 },
@@ -118,7 +123,12 @@ const REL_COLUMNS: { id: RelColumnId; width: string; px: number }[] = [
 type RelVisibility = (id: RelColumnId) => boolean;
 
 /**
- * The visible column set: the user's brand/country choices, and nothing else.
+ * The visible column set: the user's brand/country choices, plus the class
+ * badge whenever the field has more than one class.
+ *
+ * The badge is about the *field*, not the window: in a single-class session
+ * every row would carry the same label in the same colour, which is a column
+ * saying nothing. The leading edge still carries the class either way.
  *
  * There used to be a width-driven drop order here too — last lap, then car
  * number, flag, brand, class badge, shed one by one as the overlay narrowed.
@@ -127,10 +137,17 @@ type RelVisibility = (id: RelColumnId) => boolean;
  */
 function relVisibleColumns(
   showBrand: boolean,
-  showCountry: boolean
+  showCountry: boolean,
+  multiClass: boolean
 ): RelVisibility {
   return (id) =>
-    id === "brand" ? showBrand : id === "country" ? showCountry : true;
+    id === "brand"
+      ? showBrand
+      : id === "country"
+        ? showCountry
+        : id === "class"
+          ? multiClass
+          : true;
 }
 
 /** The width this column set wants: widths + 4 px gaps + the row's px-2. */
@@ -168,12 +185,12 @@ function fmtGap(v: number | null): string {
 // ─── Column header ───────────────────────────────────────────────────────────
 
 const REL_HEADER_LABEL: Record<RelColumnId, string> = {
+  class: "CL",
   pos: "P",
   num: "#",
   country: "",
   driver: "Driver",
   brand: "",
-  class: "CL",
   gap: "Gap",
   last: "Last",
   hint: "",
@@ -251,8 +268,8 @@ interface RowProps {
    * False outside a race. Lapped traffic is a race idea: it means someone is
    * losing a position they hold, or about to take one. In a practice session
    * drivers join whenever they like and run their own programmes, so lap
-   * numbers differ across the field by design — every row would carry a tag and
-   * a danger ground, which is the whole table shouting and therefore the whole
+   * numbers differ across the field by design — half the rows would turn blue
+   * and carry a tag, which is the whole table shouting and therefore the whole
    * table silent.
    */
   showLapRelation: boolean;
@@ -298,55 +315,50 @@ function RowInner({
   const relation = comparable
     ? lapRelation(entry, playerLap)
     : LapRelation.SameLap;
-  const offLap = isOffLap(relation);
   const tag = comparable ? lapTag(lapDelta(entry, playerLap)) : null;
+
+  // A lap or more behind the player: traffic you are lapping. The only row
+  // state on this surface carried by ink rather than ground — see `ink` below.
+  const lapped = relation === LapRelation.Lapping;
 
   const isDiffClass = !isPlayer && entry.carClassId !== playerClassId;
   const dimmed = !isPlayer && (entry.isRetired || !entry.isInWorld);
 
-  // "This is you" is the row's ground (`bg-primary/10` + ring), never its ink —
+  // The row's ink. Lapped traffic prints every value in `--color-lapped` blue —
+  // the sim's own blue-flag convention, so it is read rather than learned — and
+  // every other row keeps the surface's default ink. Ink, not ground: the one
+  // ground on this surface is the player's, and a lapped car is never you.
+  const ink = lapped ? "var(--color-lapped)" : undefined;
+
+  // "This is you" is the row's ground (`bg-primary/15` + ring), never its ink —
   // tinting the value too would put an identity colour and a status colour in the
   // same glyph (§ Two colour systems, rule 3). So the player's own gap, which is
-  // always 0.0s, reads as plain text.
-  const gapColor = isBehind ? "var(--color-danger)" : "var(--color-text)";
+  // always 0.0s, reads as plain text. Lapped blue outranks the behind-red: a
+  // lapped car is behind you by definition, and the blue is the louder fact.
+  const gapColor =
+    ink ?? (isBehind ? "var(--color-danger)" : "var(--color-text)");
 
   return (
     <div
       className={[
         "relative grid items-center gap-x-1 px-2 text-xs",
         "rounded-sm",
+        // The only ground on the surface (§ Dense tabular overlays, rule 14).
+        // Off-lap rows used to take a danger tint and every other row a wash
+        // of its class colour, which left the player's row one block of
+        // colour among six; class now rides in the badge and the edge, and
+        // lapped traffic in the ink.
         isPlayer ? "bg-primary/15 ring-1 ring-inset ring-primary/60" : "",
-        // Off-lap traffic is called out as the row's *ground*, the same
-        // mechanism that says "this is you" — ground carries identity/status,
-        // ink stays free for values (§ Two colour systems, rule 3). Red as ink
-        // would have collided with the behind-gap and the closing-rate icon,
-        // which already mean something else in this very row.
-        //
-        // Ground only, no ring. The ring is what singles out *your* row; in a
-        // race most of the neighbourhood can be off your lap, and a red outline
-        // on each of those rows boxed the table into a stack of alarms with the
-        // one ring that matters lost among them.
-        offLap ? "bg-danger/12" : "",
         dimmed ? "opacity-35" : "",
       ]
         .filter(Boolean)
         .join(" ")}
       style={{
         gridTemplateColumns: template,
-        // One ground per row. The class tint says which class; `primary` says
-        // this is you; `danger` says this car is not on your lap. Painting
-        // identity underneath a status ground is exactly the confusion this
-        // ramp was introduced to end, so status takes the row outright and the
-        // leading edge is left to carry class on its own.
-        background:
-          isPlayer || offLap ? undefined : classTint(classColor),
         height: ROW_H,
         // The class edge, at full strength on every row exactly as on Standings
-        // — the same device has to read the same way on both surfaces. At 40 %
-        // it vanished against the danger ground of an off-lap row, which is
-        // precisely the row whose class you most need (a faster class coming
-        // through). It holds its drawn size as the table scales down (see
-        // CLASS_EDGE_WIDTH).
+        // — the same device has to read the same way on both surfaces. It holds
+        // its drawn size as the table scales down (see CLASS_EDGE_WIDTH).
         borderLeftWidth: CLASS_EDGE_WIDTH,
         borderLeftStyle: "solid",
         borderLeftColor: classColor,
@@ -356,14 +368,37 @@ function RowInner({
     >
       {labelled && <ColumnLabels isOn={isOn} template={template} />}
 
+      {/* class badge — the class's short name on a solid block of its colour,
+          directly against the edge it repeats. It is the Relative's version of
+          Standings' position block: a heading-sized identity fill, one per
+          row, ink measured by `readableInk` (§ Dense tabular overlays, rule
+          11). Only drawn in a multi-class field. */}
+      {isOn("class") && (
+        <div className="flex justify-center">
+          <span
+            className="min-w-0 max-w-full truncate rounded-ctl px-1 py-0.5 text-center font-mono text-[10px] font-bold uppercase leading-none tracking-[0.04em]"
+            style={{ background: classColor, color: readableInk(classColor) }}
+            title={driver?.carClassShortName || undefined}
+          >
+            {driver?.carClassShortName || "?"}
+          </span>
+        </div>
+      )}
+
       {/* overall position */}
-      <div className="text-center text-[14px] font-bold tabular-nums tnum text-muted">
+      <div
+        className="text-center text-[14px] font-bold tabular-nums tnum text-muted"
+        style={{ color: ink }}
+      >
         {entry.position ?? "—"}
       </div>
 
       {/* car number — no pill (rule 5), `muted` floor (§ Deliberately not adopted) */}
       {isOn("num") && (
-        <div className="truncate text-center text-[12px] font-bold tabular-nums tnum text-muted">
+        <div
+          className="truncate text-center text-[12px] font-bold tabular-nums tnum text-muted"
+          style={{ color: ink }}
+        >
           {driver?.carNumber ?? "—"}
         </div>
       )}
@@ -378,24 +413,22 @@ function RowInner({
         </div>
       )}
 
-      {/* driver name — plain `text` even for the player; the row's ground says
-          "you" (§ Two colour systems, rule 3). Caps, matching Standings: the two
-          surfaces are read the same way and must not set the same fact two ways.
-
-          What does *not* cross over from Standings is the class-coloured block
-          behind the position. There the block is the row's tie back to a solid
-          class band, and position is the sort key; here the whole row already
-          wears the class as a wash and the number is *overall* position, which
-          is not what put the row where it is. A block would spend the loudest
-          device on the surface saying something the ground has already said. */}
+      {/* driver name — `text` for everyone but lapped traffic, the player
+          included; the row's ground says "you" (§ Two colour systems, rule 3).
+          Title case through the same `formatDriverName` Standings uses: the
+          two surfaces are read the same way and must not set the same fact
+          two ways. */}
       <div className="flex min-w-0 items-center gap-1">
-        <span className="truncate text-[13px] font-bold uppercase tracking-[0.01em] text-text">
-          {driver?.userName ?? `Car ${entry.carIdx}`}
+        <span
+          className="truncate text-[13px] font-bold tracking-[0.01em] text-text"
+          style={{ color: ink }}
+        >
+          {formatDriverName(driver?.userName) || `Car ${entry.carIdx}`}
         </span>
         {tag && (
           <span
-            className="shrink-0 font-mono text-[9px] font-bold leading-none tracking-[0.06em]"
-            style={{ color: "var(--color-danger)" }}
+            className="shrink-0 font-mono text-[9px] font-bold leading-none tracking-[0.06em] text-muted"
+            style={{ color: ink }}
             title={
               relation === LapRelation.LappedBy
                 ? "A lap or more ahead — faster car coming through"
@@ -414,18 +447,6 @@ function RowInner({
         </div>
       )}
 
-      {/* class badge — a label, not a second carrier of the class colour. The
-          left border already carries identity; tinting, filling or outlining a
-          badge with the same arbitrary hue puts it back in competition with the
-          status colours in the same row (§ Two colour systems, rule 2). */}
-      {isOn("class") && (
-        <div className="flex justify-center">
-          <span className="font-mono text-[10px] font-bold uppercase leading-tight tracking-[0.06em] text-muted">
-            {driver?.carClassShortName ?? "?"}
-          </span>
-        </div>
-      )}
-
       {/* signed relative gap */}
       <div
         className="text-right text-[13px] font-bold tabular-nums tnum"
@@ -440,16 +461,17 @@ function RowInner({
       {isOn("last") && (
         <div
           className="text-right text-[12px] font-semibold tabular-nums tnum text-muted"
-          style={
-            LAP_UNDERLINE[entry.lastLapStatus]
+          style={{
+            color: ink,
+            ...(LAP_UNDERLINE[entry.lastLapStatus]
               ? {
                   textDecoration: "underline",
                   textDecorationColor: LAP_UNDERLINE[entry.lastLapStatus],
                   textDecorationThickness: 2,
                   textUnderlineOffset: 3,
                 }
-              : undefined
-          }
+              : undefined),
+          }}
         >
           {lapTime(entry.lastLapTime)}
         </div>
@@ -530,9 +552,10 @@ export function RelativeScreen() {
     return () => ro.disconnect();
   }, []);
 
+  const multiClass = classes.length > 1;
   const isOn = useMemo(
-    () => relVisibleColumns(showBrand, showCountry),
-    [showBrand, showCountry]
+    () => relVisibleColumns(showBrand, showCountry, multiClass),
+    [showBrand, showCountry, multiClass]
   );
   const template = useMemo(() => relGridTemplate(isOn), [isOn]);
 
@@ -542,8 +565,9 @@ export function RelativeScreen() {
   const innerWidth = unscaled(width, scale);
 
   // Identity colour from this app's ramp, keyed by the class's position in the
-  // field's order — not iRacing's `carClassColor`, which is free to land on the
-  // red this screen spends on lapped traffic (see `lib/classColors`).
+  // field's order — the same colour Standings gives the class, and not
+  // iRacing's `carClassColor`, which is free to land on the blue this screen
+  // spends on lapped traffic or on the player's row (see `lib/classColors`).
   const classColorMap = useMemo(
     () => new Map(classes.map((c, i) => [c.carClassId, classColorFor(i)])),
     [classes]

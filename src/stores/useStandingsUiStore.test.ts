@@ -76,7 +76,6 @@ describe("standings column configuration", () => {
       grouping: "overall",
       collapsed: {},
       classFilter: null,
-      followPlayer: false,
       columns: { irating: false },
     });
     expect(store().grouping).toBe("overall");

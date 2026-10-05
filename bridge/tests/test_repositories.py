@@ -35,6 +35,21 @@ class TestSessionRepository:
         assert repo.update(raw) is True
         assert repo.update(raw) is False  # nothing changed
 
+    def test_results_refresh_without_a_wire_change(self):
+        # ResultsPositions is not on the wire, so a new lap in the results does
+        # not republish the session — but the engine must still see it.
+        bus = EventBus()
+        repo = SessionRepository(bus)
+        raw = make_session_raw(sessions=[{"SessionType": "Practice", "ResultsPositions": None}])
+        assert repo.update(raw) is True
+        assert repo.current.results == []
+
+        raw["sessions"] = [
+            {"SessionType": "Practice", "ResultsPositions": [{"CarIdx": 0, "FastestTime": 90.0}]}
+        ]
+        assert repo.update(raw) is False
+        assert [r.fastest_time for r in repo.current.results] == [90.0]
+
     def test_driver_join_emitted(self):
         bus = EventBus()
         rec = _Recorder(bus)

@@ -89,9 +89,11 @@ export class MockFeed {
   }
 
   private pushStandings(): void {
+    const sessionType =
+      useOverlayConfigStore.getState().globalSettings.mockSessionType;
     useStandingsStore
       .getState()
-      .setStandings(mockStandings(this.elapsed()), this.seq++);
+      .setStandings(mockStandings(this.elapsed(), sessionType), this.seq++);
   }
 
   /**

@@ -9,20 +9,27 @@ import { useStandingsUiStore } from "../../stores/useStandingsUiStore";
 import { useRanksByLapTime } from "../../stores/useSessionStore";
 import {
   CLASS_BAND_H,
-  ROW_H,
   scopeColumnsToSession,
   tableMinWidth,
   type ColumnVisibility,
 } from "./constants";
-import { scaleBox, tableScale, unscaled } from "../../lib/tableScale";
+import { fitScale, scaleBox, unscaled } from "../../lib/tableScale";
 import { CLASS_RAMP, classColorFor } from "../../lib/classColors";
 import { StandingsRow } from "./StandingsRow";
 import { useStandingsLayout } from "./useStandingsLayout";
-import { SessionStrip } from "../timing/SessionStrip";
+import { SessionStrip, STRIP_H } from "../timing/SessionStrip";
 import { ClassBand } from "./ClassBand";
 
-/** Extra pixels rendered above/below the viewport so fast scrolls stay filled. */
-const OVERSCAN = 320;
+/** Paper above the first band/row, inside the scaled box. */
+const FIELD_TOP = 6;
+/** Paper below the last row, inside the scaled box. */
+const FIELD_BOTTOM = 8;
+/**
+ * Window pixels held back from the fit. `zoom` lays the box out at fractional
+ * sizes and the browser rounds each row on its own, so a fit computed to the
+ * exact pixel can overshoot by one and clip the last row's bottom edge.
+ */
+const FIT_SLACK = 2;
 
 /**
  * The v0.4 standings / timing screen.
@@ -40,10 +47,19 @@ const OVERSCAN = 320;
  * clickable; the gap and tone shift that separate the groups (rule 2) are still
  * doing their job underneath it.
  *
- * Rendering budget: the body only mounts the rows on screen (windowed by scroll
- * offset), each row subscribes to just its own entry, and reorders animate
- * purely via CSS transforms. That keeps 100+ cars at 60 Hz telemetry comfortably
- * inside a 60 fps frame.
+ * **The whole field, always, and no scroll bar.** The surface is scaled to the
+ * tighter of its width and its height (`lib/tableScale.fitScale`), so every
+ * car in the session is on screen at once and rows and type shrink together as
+ * the field grows or the window shortens. It used to fit the width and scroll
+ * for the rest, with a "follow my row" option to keep the player in view — on
+ * a screen with no controls, that meant the back of a big field was simply
+ * never seen.
+ *
+ * Rendering budget: every row is mounted (there is nothing off screen to
+ * window away any more), but each row subscribes to just its own entry, and
+ * reorders animate purely via CSS transforms. A tick that moves three cars
+ * re-renders three rows, which keeps a 60-car field at 10 Hz well inside a
+ * 60 fps frame.
  *
  * **Outside a race the screen is a timesheet, not a running order** (see
  * `lib/sessionKind`). Practice and qualifying rank by best lap, so the rows are
@@ -59,7 +75,6 @@ export function StandingsScreen() {
   const classes = useStandingsClasses();
   const meta = useStandingsMeta();
   const grouping = useStandingsUiStore((s) => s.grouping);
-  const followPlayer = useStandingsUiStore((s) => s.followPlayer);
   const columns = useStandingsUiStore((s) => s.columns);
   const byLapTime = useRanksByLapTime();
   const showSessionStrip = useStandingsUiStore((s) => s.showSessionStrip);
@@ -67,51 +82,48 @@ export function StandingsScreen() {
   const { items, totalHeight } = useStandingsLayout();
   const classRelative = grouping === "class";
 
-  const scrollRef = useRef<HTMLDivElement>(null);
-  const [scrollTop, setScrollTop] = useState(0);
-  const [viewH, setViewH] = useState(600);
+  // The box the whole surface has to fit in, strip included.
+  const rootRef = useRef<HTMLDivElement>(null);
   const [viewW, setViewW] = useState(0);
+  const [viewH, setViewH] = useState(0);
 
-  // Track scroll + viewport size for windowing (rAF-coalesced).
   useEffect(() => {
-    const el = scrollRef.current;
+    const el = rootRef.current;
     if (!el) return;
-    let raf = 0;
-    const onScroll = () => {
-      cancelAnimationFrame(raf);
-      raf = requestAnimationFrame(() => setScrollTop(el.scrollTop));
-    };
     const ro = new ResizeObserver(([e]) => {
-      setViewH(e.contentRect.height);
       setViewW(e.contentRect.width);
+      setViewH(e.contentRect.height);
     });
-    el.addEventListener("scroll", onScroll, { passive: true });
     ro.observe(el);
-    setViewH(el.clientHeight);
     setViewW(el.clientWidth);
-    return () => {
-      el.removeEventListener("scroll", onScroll);
-      ro.disconnect();
-      cancelAnimationFrame(raf);
-    };
+    setViewH(el.clientHeight);
+    return () => ro.disconnect();
   }, []);
 
   // Derived from the column map, whose identity changes when the columns do —
   // that is what re-renders the memoized labels and rows.
   //
   // Which columns this session and this user call for. Not a function of the
-  // window any more: the width decides how large the table is drawn, never what
-  // is in it.
+  // window any more: the window decides how large the table is drawn, never
+  // what is in it.
   const isVisible = useMemo<ColumnVisibility>(() => {
     const chosen: ColumnVisibility = (id) => columns[id] !== false;
     return scopeColumnsToSession(chosen, byLapTime);
   }, [columns, byLapTime]);
 
-  // The width the table wants, and the factor that fits it into the width it
-  // has. Everything below — rows, type, gaps, the strip — is drawn inside that
-  // scale, so the layout tuned at full size is the same layout at half.
+  // The size the surface wants — every column at full width, every row at full
+  // height, strip on top — and the one factor that fits it into the window it
+  // has. Everything below is drawn inside that scale, so the layout tuned at
+  // full size is the same layout at a quarter.
   const naturalWidth = tableMinWidth(meta.sectorCount, isVisible);
-  const scale = tableScale(viewW, naturalWidth);
+  const naturalHeight =
+    (showSessionStrip ? STRIP_H : 0) + FIELD_TOP + totalHeight + FIELD_BOTTOM;
+  const scale = fitScale(
+    viewW,
+    naturalWidth,
+    viewH > FIT_SLACK ? viewH - FIT_SLACK : viewH,
+    naturalHeight
+  );
   /** Lengths inside the scaled box, for anything that reasons about width. */
   const innerWidth = unscaled(viewW, scale);
 
@@ -148,47 +160,13 @@ export function StandingsScreen() {
     return map;
   }, [classes]);
 
-  // Window the row list to what's near the viewport.
-  //
-  // The scroll container is outside the scaled box, so its `scrollTop` and
-  // height are in window pixels while every item's `top` is in the table's own.
-  // Dividing the viewport by the scale puts both in the same units — without
-  // it, a scaled-down table stops mounting rows before the bottom of the
-  // window, because it is looking for them at the wrong offsets.
-  const visible = useMemo(() => {
-    const min = unscaled(scrollTop - OVERSCAN, scale);
-    const max = unscaled(scrollTop + viewH + OVERSCAN, scale);
-    return items.filter((it) => {
-      const h = it.kind === "band" ? CLASS_BAND_H : ROW_H;
-      return it.top + h >= min && it.top <= max;
-    });
-  }, [items, scrollTop, viewH, scale]);
-
-  // Follow the player: keep their row roughly centered when it moves, but only
-  // when it has drifted far enough that a nudge is warranted (avoids fighting).
-  const playerTop = useMemo(() => {
-    if (meta.playerCarIdx < 0) return null;
-    const it = items.find(
-      (i) => i.kind === "row" && i.carIdx === meta.playerCarIdx
-    );
-    return it ? it.top : null;
-  }, [items, meta.playerCarIdx]);
-
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el || !followPlayer || playerTop == null) return;
-    // `scrollTop` is in window pixels; the player's row offset is in the
-    // table's, so it is scaled on the way out.
-    const desired = Math.max(0, (playerTop + ROW_H / 2) * scale - viewH / 2);
-    if (Math.abs(el.scrollTop - desired) > viewH * 0.3) {
-      el.scrollTo({ top: desired, behavior: "smooth" });
-    }
-  }, [playerTop, followPlayer, viewH, scale]);
-
   const isEmpty = items.length === 0;
 
   return (
-    <div className="overlay-card timing-surface flex h-full flex-col overflow-hidden rounded-card border border-border/60">
+    <div
+      ref={rootRef}
+      className="overlay-card timing-surface flex h-full flex-col overflow-hidden rounded-card border border-border/60"
+    >
       {/*
         The strip scales with the field — it is part of the same surface, and a
         full-size readout over a half-size table reads as two overlays stacked.
@@ -200,16 +178,22 @@ export function StandingsScreen() {
           <SessionStrip width={innerWidth} />
         </div>
       )}
-      <div ref={scrollRef} className="relative flex-1 overflow-auto">
+      {/* `overflow-hidden`, not `auto`: the fit above guarantees the field is
+          inside the window, and a scroll bar on a screen nobody can aim at is
+          a control that cannot be used. */}
+      <div className="relative min-h-0 flex-1 overflow-hidden">
         {isEmpty ? (
           <EmptyState iracingActive={iracingActive} />
         ) : (
           <div style={{ ...scaleBox(scale), minWidth: naturalWidth }}>
             <div
               className="relative"
-              style={{ height: totalHeight + 8, marginTop: 6 }}
+              style={{
+                height: totalHeight + FIELD_BOTTOM,
+                marginTop: FIELD_TOP,
+              }}
             >
-              {visible.map((it) => {
+              {items.map((it) => {
                 if (it.kind === "band") {
                   const standing = classById.get(it.classId);
                   if (!standing) return null;

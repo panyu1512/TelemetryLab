@@ -355,6 +355,9 @@
               Each class opens with its own band — how many cars are in it, its
               strength of field, and the lap that leads it. Underneath, the
               running order with everything you would otherwise be squinting for.
+              Every car is on screen at once: no scroll bar, the table scales to
+              fit the window. Join a practice late and the times set before you
+              arrived are already on the board.
             </p>
             <ul class="reads">
               <li>Gap to the class leader, and the interval to the car directly ahead</li>
@@ -389,8 +392,10 @@
             <p class="row__body">
               The relative sorts by time on track, not by position — so it shows
               the cars you are about to meet, whatever lap they are on. Gaps are
-              signed and live. A closing indicator fires when a faster car is
-              catching you, and turns red when that car is from another class.
+              signed and live. Cars you are lapping turn blue, every car from
+              another class carries its class badge, and the only highlighted row
+              is yours. A closing indicator fires when a faster car is catching
+              you, and turns red when that car is from another class.
             </p>
           </div>
           <figure class="shot">
@@ -399,11 +404,13 @@
               width="1120"
               height="832"
               loading="lazy"
-              alt="The relative overlay: cars ahead and behind the player sorted by
-                   on-track time. Rows above the player show positive gaps in white,
-                   rows below show negative gaps in red, and the player's own row is
-                   outlined and set apart by a gap above and below. Cars on a
-                   different lap carry a red ground and a lap tag."
+              alt="The relative overlay in a two-class race: cars ahead and behind
+                   the player sorted by on-track time, each row opening with a GT3 or
+                   GT4 class badge in its class colour. GT3 cars on the player's lap
+                   are written in white; GT4 cars a lap down on the player, both ahead
+                   and behind, are written in blue with a minus-one-lap tag. The
+                   player's own row is the only highlighted one, outlined and set
+                   apart by a gap above and below."
             />
           </figure>
         </section>

@@ -41,6 +41,11 @@ class SessionRepository:
         session = parse_session_info(raw)
         wire = session.to_dict()
         if wire == self._last_wire:
+            # Nothing the frontend sees has changed, but the bridge-internal
+            # parts of the session can have — the official results list moves
+            # on every completed lap and is deliberately not on the wire. Keep
+            # the parsed session current so the standings engine reads them.
+            self._current = session
             return False
 
         prev_ids = {d.car_idx: d for d in self._current.drivers} if self._current else {}

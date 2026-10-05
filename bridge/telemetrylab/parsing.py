@@ -22,6 +22,7 @@ from .models import (
     ClassEntry,
     DriverEntry,
     SessionInfo,
+    SessionResult,
     TrackInfo,
     WeatherInfo,
 )
@@ -265,6 +266,51 @@ def _build_classes(drivers: list[DriverEntry]) -> list[ClassEntry]:
 
 
 # ---------------------------------------------------------------------------
+# ResultsPositions → official results so far
+# ---------------------------------------------------------------------------
+def _lap_seconds(value: Any) -> float | None:
+    """A results lap time: seconds, or ``None`` for iRacing's -1 / 0 "no lap"."""
+    n = _num(value)
+    return n if n is not None and n > 0 else None
+
+
+def parse_results(session: dict[str, Any]) -> list[SessionResult]:
+    """The session's official results so far, from ``ResultsPositions``.
+
+    iRacing writes this list for every session type and keeps it current as
+    laps complete, and it covers the whole session — not just what has happened
+    since this client connected, which is all the live ``CarIdx*`` arrays know.
+    It is ``None`` (or absent) until the first lap is timed, so a missing list
+    is an empty one rather than an error.
+
+    ``ClassPosition`` is 0-based in the YAML while ``Position`` is 1-based;
+    both are normalised to 1-based here so nothing downstream has to remember.
+    """
+    out: list[SessionResult] = []
+    for r in session.get("ResultsPositions") or []:
+        if not isinstance(r, dict):
+            continue
+        car_idx = _int(r.get("CarIdx"), -1)
+        if car_idx < 0:
+            continue
+        position = _int(r.get("Position"), 0)
+        class_position = _num(r.get("ClassPosition"))
+        out.append(
+            SessionResult(
+                car_idx=car_idx,
+                position=position if position > 0 else None,
+                class_position=int(class_position) + 1
+                if class_position is not None and class_position >= 0
+                else None,
+                fastest_time=_lap_seconds(r.get("FastestTime")),
+                last_time=_lap_seconds(r.get("LastTime")),
+                laps_complete=max(0, _int(r.get("LapsComplete"), 0)),
+            )
+        )
+    return out
+
+
+# ---------------------------------------------------------------------------
 # Weekend + session → SessionInfo
 # ---------------------------------------------------------------------------
 
@@ -394,4 +440,5 @@ def parse_session_info(raw: dict[str, Any]) -> SessionInfo:
         if raw.get("car_est_lap_time") is not None
         else _num(driver_info.get("DriverCarEstLapTime")),
         sector_starts=sector_starts,
+        results=parse_results(current),
     )

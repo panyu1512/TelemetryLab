@@ -14,6 +14,7 @@ from telemetrylab.parsing import (
     _license_group,
     _num,
     parse_drivers,
+    parse_results,
     parse_session_info,
     strength_of_field,
 )
@@ -302,3 +303,76 @@ class TestParseSessionInfo:
         raw["driver_info"].pop("DriverCarIdx")
         raw["player_car_idx"] = 4
         assert parse_session_info(raw).driver_car_idx == 4
+
+
+class TestParseResults:
+    def test_missing_or_null_is_empty(self):
+        assert parse_results({}) == []
+        assert parse_results({"ResultsPositions": None}) == []
+
+    def test_reads_a_row(self):
+        (r,) = parse_results(
+            {
+                "ResultsPositions": [
+                    {
+                        "Position": 3,
+                        "ClassPosition": 1,
+                        "CarIdx": 7,
+                        "FastestTime": 91.234,
+                        "LastTime": 92.5,
+                        "LapsComplete": 12,
+                    }
+                ]
+            }
+        )
+        assert r.car_idx == 7
+        assert r.position == 3
+        # 0-based in the YAML, 1-based here.
+        assert r.class_position == 2
+        assert r.fastest_time == pytest.approx(91.234)
+        assert r.last_time == pytest.approx(92.5)
+        assert r.laps_complete == 12
+
+    def test_no_lap_sentinels_are_none(self):
+        (r,) = parse_results(
+            {
+                "ResultsPositions": [
+                    {
+                        "Position": 0,
+                        "ClassPosition": -1,
+                        "CarIdx": 4,
+                        "FastestTime": -1,
+                        "LastTime": 0,
+                        "LapsComplete": -1,
+                    }
+                ]
+            }
+        )
+        assert r.position is None
+        assert r.class_position is None
+        assert r.fastest_time is None
+        assert r.last_time is None
+        assert r.laps_complete == 0
+
+    def test_skips_rows_without_a_car(self):
+        rows = parse_results({"ResultsPositions": [{"Position": 1}, "junk", {"CarIdx": 2}]})
+        assert [r.car_idx for r in rows] == [2]
+
+    def test_session_info_reads_the_current_sessions_results(self):
+        raw = make_session_raw(
+            sessions=[
+                {
+                    "SessionType": "Practice",
+                    "ResultsPositions": [{"CarIdx": 0, "Position": 1, "FastestTime": 90.0}],
+                },
+                {"SessionType": "Race", "ResultsPositions": None},
+            ],
+            session_num=0,
+        )
+        info = parse_session_info(raw)
+        assert [r.car_idx for r in info.results] == [0]
+        # Bridge-internal: never on the wire.
+        assert "results" not in info.to_dict()
+
+        raw["session_num"] = 1
+        assert parse_session_info(raw).results == []
