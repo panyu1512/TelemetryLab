@@ -44,8 +44,8 @@ const FIT_SLACK = 2;
  * That also means no column-header band — the labels print inside each class
  * leader's row (`design.md` § Dense tabular overlays, rule 3). Class groups do
  * open with a band, which carries that class's own numbers and nothing
- * clickable; the gap and tone shift that separate the groups (rule 2) are still
- * doing their job underneath it.
+ * clickable; the gap that separates the groups (rule 2) is still doing its job
+ * underneath it.
  *
  * **The whole field, always, and no scroll bar.** The surface is scaled to the
  * tighter of its width and its height (`lib/tableScale.fitScale`), so every
@@ -226,12 +226,10 @@ export function StandingsScreen() {
                     top={it.top}
                     sectorCount={meta.sectorCount}
                     classColor={classColorById.get(it.classId) ?? CLASS_RAMP[0]}
-                    zebra={it.zebra}
                     classRelative={classRelative}
                     rank={it.rank}
                     isVisible={isVisible}
                     labelled={showColumnLabels && it.leader}
-                    tone={it.tone}
                     fastest={fastestByCar.get(it.carIdx) ?? null}
                   />
                 );

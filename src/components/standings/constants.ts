@@ -12,8 +12,8 @@
  * Row height. 32 rather than 30: this surface's type went up a step and to
  * semibold/bold across the board (it is read in peripheral vision at speed, and
  * the previous 11–12 px regular weight was tuned for a screen you look *at*).
- * Two more pixels is what keeps 13 px names and 12 px values from touching the
- * zebra band above and below them.
+ * Two more pixels is what keeps 13 px names and 12 px values off the rows above
+ * and below them.
  */
 export const ROW_H = 32;
 
@@ -38,8 +38,8 @@ export const CLASS_GAP = 10;
 /**
  * Height of the per-class band that opens each group.
  *
- * A band was banned outright by an earlier reading of rule 2 — a gap plus a
- * tone shift costs a third as much and separates just as well. What that
+ * A band was banned outright by an earlier reading of rule 2 — a gap costs a
+ * third as much and separates just as well. What that
  * reading missed is that separation was never the only job: in a multi-class
  * field the band is also the only place the class's *own* numbers (its car
  * count, its strength of field, its fastest lap) can live at all, and those
@@ -58,31 +58,6 @@ export const CLASS_BAND_H = 30;
  * what separates "this heads the group" from "this is the group's first entry".
  */
 export const BAND_GAP = 4;
-
-/**
- * Per-class-group background tones, as `[base, zebra]` utility pairs, indexed by
- * the group's position in the field.
- *
- * This is the "tone shift" half of rule 2: consecutive class groups sit at
- * slightly different lightness, so a class boundary reads as a change of ground
- * rather than needing a label. Zebra tint is the only banding the rules allow,
- * so the shift rides on it instead of introducing a new device.
- *
- * Plain white alphas rather than `surface-2` tints: the table now paints on
- * near-black paper (`--color-timing-bg`), where a graphite tint reads as a
- * *colour* change and white simply reads as one step lighter. It also keeps the
- * banding identical across all four themes, which is what a banding device
- * carrying no meaning should do.
- *
- * Every value went up a step when the paper did. These are alphas, so the
- * banding's *contrast* against a lighter ground falls unless the alpha rises —
- * the tone shift has to stay the same perceived distance whatever the paper is
- * mixed to, or the class boundary it draws goes with it.
- */
-export const GROUP_TONE: readonly (readonly [base: string, zebra: string])[] = [
-  ["", "bg-white/[0.05]"],
-  ["bg-white/[0.035]", "bg-white/[0.085]"],
-];
 
 /** Every column in the timing table, in render order. */
 export type StandingsColumnId =

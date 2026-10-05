@@ -7,6 +7,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Standings has the same clean background as Relative.** The alternating
+  row stripes and the lighter shading behind every other class are gone, so
+  rows sit straight on the dark panel and your own highlighted row is the only
+  one with a background.
+
 ## [1.11.0] - 2026-10-04
 
 ### Added
