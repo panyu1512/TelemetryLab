@@ -23,6 +23,7 @@ from .models import (
     DriverEntry,
     SessionInfo,
     SessionResult,
+    TireCompound,
     TrackInfo,
     WeatherInfo,
 )
@@ -240,6 +241,24 @@ def parse_drivers(driver_info: dict[str, Any], category: str) -> list[DriverEntr
     return drivers
 
 
+def parse_tire_compounds(driver_info: dict[str, Any]) -> list[TireCompound]:
+    """The player car's compounds from ``DriverInfo.DriverTires``.
+
+    iRacing lists them as ``{TireIndex, TireCompoundType}`` pairs, where the
+    index is the value ``CarIdxTireCompound`` reports. Only the player's car is
+    described; cars without wet tyres (and older sims) omit the list entirely.
+    """
+    compounds: list[TireCompound] = []
+    for t in driver_info.get("DriverTires", []) or []:
+        index = _int(t.get("TireIndex"), -1)
+        if index < 0:
+            continue
+        compounds.append(
+            TireCompound(index=index, type=str(t.get("TireCompoundType", "") or "").strip())
+        )
+    return compounds
+
+
 def _build_classes(drivers: list[DriverEntry]) -> list[ClassEntry]:
     """Group the roster by car class and compute a per-class SOF."""
     buckets: dict[int, list[DriverEntry]] = {}
@@ -440,5 +459,6 @@ def parse_session_info(raw: dict[str, Any]) -> SessionInfo:
         if raw.get("car_est_lap_time") is not None
         else _num(driver_info.get("DriverCarEstLapTime")),
         sector_starts=sector_starts,
+        tire_compounds=parse_tire_compounds(driver_info),
         results=parse_results(current),
     )

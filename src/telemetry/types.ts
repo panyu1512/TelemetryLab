@@ -151,6 +151,14 @@ export interface WeatherInfo {
   trackWetness: string | null;
 }
 
+/** One compound the player's car can run (`DriverInfo.DriverTires`). */
+export interface TireCompoundInfo {
+  /** The value `CarIdxTireCompound` reports for a car on this compound. */
+  index: number;
+  /** iRacing's name for it, e.g. "Hard" or "Wet". */
+  type: string;
+}
+
 export interface ClassEntry {
   carClassId: number;
   shortName: string;
@@ -188,6 +196,11 @@ export interface SessionInfo {
   carEstLapTime: number | null;
   /** Sector boundaries as lap-distance fractions (from SplitTimeInfo). */
   sectorStarts: number[];
+  /**
+   * The player car's compounds — which `tireCompound` index is a slick and
+   * which a wet. Empty when the car has no wet tyres (or an older bridge).
+   */
+  tireCompounds: TireCompoundInfo[];
 }
 
 // ---------------------------------------------------------------------------

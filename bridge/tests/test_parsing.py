@@ -16,6 +16,7 @@ from telemetrylab.parsing import (
     parse_drivers,
     parse_results,
     parse_session_info,
+    parse_tire_compounds,
     strength_of_field,
 )
 
@@ -191,6 +192,31 @@ class TestParseDrivers:
     def test_team_driver_detected(self):
         d = parse_drivers({"Drivers": [make_driver(0, team_id=99)]}, "road")[0]
         assert d.is_team_driver is True
+
+
+class TestParseTireCompounds:
+    def test_absent_list_is_empty(self):
+        assert parse_tire_compounds({}) == []
+
+    def test_reads_index_and_type(self):
+        compounds = parse_tire_compounds(
+            {
+                "DriverTires": [
+                    {"TireIndex": 0, "TireCompoundType": "Hard"},
+                    {"TireIndex": 1, "TireCompoundType": "Wet"},
+                ]
+            }
+        )
+        assert [(t.index, t.type) for t in compounds] == [(0, "Hard"), (1, "Wet")]
+
+    def test_skips_entries_without_an_index(self):
+        compounds = parse_tire_compounds({"DriverTires": [{"TireCompoundType": "Wet"}]})
+        assert compounds == []
+
+    def test_serialized_on_the_session(self):
+        raw = make_session_raw()
+        raw["driver_info"]["DriverTires"] = [{"TireIndex": 1, "TireCompoundType": "Wet"}]
+        assert parse_session_info(raw).to_dict()["tireCompounds"] == [{"index": 1, "type": "Wet"}]
 
 
 class TestParseSessionInfo:

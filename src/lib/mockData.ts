@@ -645,6 +645,10 @@ export function mockSession(
     carRedlineRpm: 7800,
     carEstLapTime: MOCK_FIELD[MOCK_PLAYER_IDX].pace,
     sectorStarts: [0, 0.34, 0.71],
+    tireCompounds: [
+      { index: 0, type: "Hard" },
+      { index: 1, type: "Wet" },
+    ],
   };
 }
 
@@ -904,9 +908,8 @@ export function mockStandings(
       isOverallLeader: pos === 1,
       isClassLeader: classPos.get(car.idx) === 1,
       isLapped: false,
-      // Alternate the compound across the field so the tyre cell's colour
-      // coding is visible at all in a mock session.
-      tireCompound: car.idx % 3 === 0 ? 0 : car.idx % 3 === 1 ? 1 : 2,
+      // Put a few cars on wets so both tyre glyphs show in a mock session.
+      tireCompound: car.idx % 4 === 1 ? 1 : 0,
       // Laps on the *set*, not laps in the race — they reset at a stop, and a
       // set age that only ever climbed made the cell read as a lap counter.
       tireLaps: lap % STINT_LAPS,

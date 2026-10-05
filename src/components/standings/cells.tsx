@@ -9,6 +9,9 @@ import {
 } from "../../lib/format";
 import { LAP_COLOR, SECTOR_COLOR } from "./constants";
 import { tint } from "../../lib/contrast";
+import { tyreKind, tyreName } from "../../lib/tyreCompound";
+import { useSessionStore } from "../../stores/useSessionStore";
+import { TyreCompoundIcon } from "../ui/TyreCompoundIcon";
 
 /* -------------------------------------------------------------------------- */
 /*  Position-change arrow (▲2 / ▼1) — gain since the green flag                */
@@ -505,21 +508,25 @@ export function SectorCell({ sector }: { sector: SectorSplit | undefined }) {
  * iRacing uses 0 for the primary compound and 1 for the alternate in most
  * series; higher values appear in series with three or more compounds.
  * We label them P/A/B/… rather than hard-coding "soft/medium/hard" because
- * compound naming varies by series.
+ * compound naming varies by series. The letter is now only the fallback, for
+ * a compound the player car's `DriverTires` list does not cover.
  */
 const COMPOUND_LABEL: Record<number, string> = { 0: "P", 1: "A", 2: "B", 3: "C" };
 
 /**
- * Compound letter, then laps on the set — in the row's own ink.
+ * Tyre glyph (slick or wet), then laps on the set — in the row's own ink.
  *
  * Compounds used to take status colours (primary green, alternate amber, `B`
  * red, `C` purple), which put an alarm-red letter on a third of a healthy field
  * and spent `sector-purple` on something that is not an overall best. None of
  * those meanings is true of a tyre, and on a surface where colour is rationed
  * by meaning (`design.md` § Theme) a colour that means nothing is the most
- * expensive thing in the row. The letter is the compound; the count is the
- * information. No ring around the letter either: at the table's smaller scales
- * an 8 px letter inside a 15 px circle resolves to a clock face.
+ * expensive thing in the row. So the glyph differs by shape, not colour: what
+ * a driver scanning the field in changing weather wants is who has gone to
+ * wets, and that is a slick-or-wet question, not a letter to decode.
+ *
+ * The kind is selected as a string from the session store, not as the
+ * compound list, so a 1 Hz session tick does not re-render every row.
  */
 export function TireCell({
   compound,
@@ -528,17 +535,22 @@ export function TireCell({
   compound: number | null;
   laps: number;
 }) {
+  const kind = useSessionStore((s) => tyreKind(compound, s.session?.tireCompounds));
+  const name = useSessionStore((s) => tyreName(compound, s.session?.tireCompounds));
   if (compound == null) {
     return <span className="text-center text-[10px] text-faint/40">·</span>;
   }
   const label = COMPOUND_LABEL[compound] ?? String(compound);
+  const title = kind
+    ? `${kind === "wet" ? "Wet" : "Slick"}${name && name.toLowerCase() !== kind ? ` (${name})` : ""}`
+    : `Compound ${label}`;
   return (
-    <div className="flex items-baseline justify-center gap-1">
+    <div className="flex items-center justify-center gap-1">
       <span
-        className="w-[0.7rem] text-center text-[12px] font-bold leading-none text-text"
-        title={`Compound ${label}`}
+        className="flex w-[0.85rem] justify-center text-center text-[12px] font-bold leading-none text-text"
+        title={title}
       >
-        {label}
+        {kind ? <TyreCompoundIcon kind={kind} size="0.85rem" label={title} /> : label}
       </span>
       <span
         className="w-[1.1rem] text-left text-[11px] font-semibold leading-none tabular-nums tnum text-muted"
