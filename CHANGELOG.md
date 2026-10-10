@@ -7,6 +7,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **See who just passed whom.** When a car changes place on Standings, its
+  position turns into a green up-arrow or a red down-arrow for three seconds,
+  so a pass you glanced away from is still on screen when you look back.
+- **Tyres on the Relative.** Each car around you now shows its tyre: a white
+  **D** in a circle for dries, a blue **W** for wets, and how many laps are on
+  the set. Turn it on or off under Overlay Manager → Relative → Options →
+  "Tyre compound" (on by default).
+
+### Changed
+
+- **A new look for Standings and Relative.** Every row is now its own dark
+  strip with the class colour down its left edge, and the class header and
+  session line are strips of the same kind (the class header is no longer a
+  solid block of colour). Positions and car numbers are plain white. Licence
+  and iRating sit together in one two-part pill (`A3.45 | 8895 ⌃14`), with the
+  safety rating to two decimals. The class leader's row shows **GAP** and
+  **INT** where it has no gap or interval.
+- **iRating and strength of field in full.** `8895` instead of `8.9k`, on the
+  rows, the class headers and the session line.
+- **Tyres moved off Standings.** The tyre column now lives on the Relative
+  (see above), which leaves Standings one column narrower.
+
 ## [1.14.0] - 2026-10-10
 
 ### Changed

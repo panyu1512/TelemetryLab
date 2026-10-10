@@ -5,16 +5,16 @@ import {
   gap as fmtGap,
   interval as fmtInterval,
   lapTime,
+  rating,
   sectorTime,
 } from "../../lib/format";
 import { LAP_COLOR, SECTOR_COLOR } from "./constants";
-import { tint } from "../../lib/contrast";
 import { tyreKind, tyreName } from "../../lib/tyreCompound";
 import { useSessionStore } from "../../stores/useSessionStore";
 import { TyreCompoundIcon } from "../ui/TyreCompoundIcon";
 
 /* -------------------------------------------------------------------------- */
-/*  Position-change arrow (▲2 / ▼1) — gain since the green flag                */
+/*  Position-change arrow (⌃2 / ⌄1) — gain since the green flag                */
 /* -------------------------------------------------------------------------- */
 
 export function PosChange({ value }: { value: number }) {
@@ -24,89 +24,141 @@ export function PosChange({ value }: { value: number }) {
   const up = value > 0;
   const Icon = up ? ChevronUp : ChevronDown;
   const color = up ? "var(--color-accent)" : "var(--color-danger)";
-  // A *tint*, not a fill: same hue behind ink of that hue, which groups the
-  // arrow with its count without spending the surface's one fill (rule 5).
+  // Coloured ink and nothing behind it. It sat on a tint of its own hue while
+  // the rows were bare paper; on a row strip that tint is a second ground
+  // inside the first, and the chevron already groups the arrow with its count.
   return (
     <span
-      className="flex items-center justify-center gap-px rounded-ctl px-0.5 py-0.5 text-[11px] font-bold leading-none tnum"
-      style={{ color, background: tint(color, 0.14) }}
+      className="flex items-center justify-center gap-px text-[12px] font-bold leading-none tnum"
+      style={{ color }}
       title={`${up ? "Gained" : "Lost"} ${Math.abs(value)} since start`}
     >
-      <Icon className="size-3" strokeWidth={3.5} />
+      <Icon className="size-3.5" strokeWidth={3} />
       {Math.abs(value)}
     </span>
   );
 }
 
 /* -------------------------------------------------------------------------- */
-/*  iRating + projected live change (8895 ▲14)                                */
+/*  Licence + iRating — one pill in two segments (A3.45 | 8895 ⌃14)            */
 /* -------------------------------------------------------------------------- */
 
-export function IRatingCell({
-  iRating,
-  change,
-}: {
-  iRating: number;
-  change: number;
-}) {
-  const up = change > 0;
-  const delta = up ? "var(--color-accent)" : "var(--color-danger)";
-  return (
-    // Rating and its projected change are one compound cell in two voices
-    // (rule 4). The tint binds them into a chip; the value keeps `text` and only
-    // the delta takes status colour, so the number itself never has to be read
-    // as a status.
-    //
-    // The chip fills its column rather than hugging its contents, and the delta
-    // sits in a fixed-width slot. A chip sized to `3.7k ▲29` and one sized to
-    // `1.9k` are different widths in the same column, which turns a quiet
-    // grouping device into a ragged edge running down the table — and it puts
-    // the ratings themselves on different verticals, which is the one thing a
-    // column of numbers must never do.
-    <div
-      className="tnum flex w-full items-baseline justify-end gap-1 rounded-ctl px-1 py-0.5"
-      style={{ background: "rgb(255 255 255 / 0.05)" }}
-    >
-      <span className="text-[12px] font-semibold text-text">
-        {iRating > 0 ? (iRating / 1000).toFixed(1) + "k" : "—"}
-      </span>
-      <span
-        className="w-[1.9rem] shrink-0 text-right text-[10px] font-bold leading-none"
-        style={{ color: change !== 0 ? delta : "transparent" }}
-        title={change !== 0 ? "Projected iRating change (estimate)" : undefined}
-      >
-        {change !== 0 ? `${up ? "▲" : "▼"}${Math.abs(change)}` : "·"}
-      </span>
-    </div>
-  );
+/** Height of both segments of the licence / iRating pill. */
+const PILL_H = 20;
+/** The pill's corner, matching the row strip it sits on (`rounded-sm`). */
+const PILL_R = "4px";
+/** The grid's `gap-x-1`, which the licence segment reaches across to join. */
+const COLUMN_GAP = "4px";
+
+/**
+ * Corner radii for one segment of a pill that may or may not have a partner:
+ * the side that meets the other segment is square, the outer side is rounded.
+ */
+function segmentRadius(side: "left" | "right", joined: boolean): string {
+  if (!joined) return PILL_R;
+  return side === "left"
+    ? `${PILL_R} 0 0 ${PILL_R}`
+    : `0 ${PILL_R} ${PILL_R} 0`;
 }
 
-/* -------------------------------------------------------------------------- */
-/*  License + safety rating badge (A 3.45)                                     */
-/* -------------------------------------------------------------------------- */
+/**
+ * The licence segment's ground: the licence's own colour taken well toward
+ * black.
+ *
+ * iRacing's licence colours run from a dark blue (A) to a near-white yellow
+ * (C), so no one ink reads on all of them at full strength. 42 % of the colour
+ * in OKLab scales the lightness of any of them to under half — the lightest,
+ * C's yellow, lands near L 0.4, where white measures better than 8:1 — so the
+ * segment can always print white, keep the colour a driver knows the class
+ * of licence by, and sit on the row as a tone rather than a beacon.
+ */
+function licenceGround(color: string): string {
+  return `color-mix(in oklab, ${color} 42%, black)`;
+}
 
 export function LicenseBadge({
   group,
   safetyRating,
   color,
+  joined = false,
 }: {
   group: string;
   safetyRating: number;
   color: string;
+  /**
+   * The iRating segment is shown in the next column: square this segment's
+   * right side and reach across the column gap to meet it, so the two read as
+   * one pill.
+   */
+  joined?: boolean;
 }) {
-  // A tinted chip, not a fill: the fastest-lap cell still holds this surface's
-  // only fill (`design.md` § Dense tabular overlays, rule 5). The tint groups
-  // the class letter and the safety rating into one token — they are read
-  // together or not at all — at a fraction of a fill's weight.
   return (
     <span
-      className="tnum inline-flex items-center rounded-ctl px-1 py-0.5 text-[11px] font-bold leading-none"
-      style={{ color, background: tint(color, 0.16) }}
+      className="tnum flex items-center justify-center text-[11px] font-bold leading-none"
+      style={{
+        height: PILL_H,
+        width: joined ? `calc(100% + ${COLUMN_GAP})` : "100%",
+        alignSelf: "center",
+        justifySelf: "start",
+        color: "#fff",
+        background: licenceGround(color),
+        borderRadius: segmentRadius("left", joined),
+      }}
       title={`${group} ${safetyRating.toFixed(2)}`}
     >
       {group}
-      {safetyRating.toFixed(1)}
+      {safetyRating.toFixed(2)}
     </span>
+  );
+}
+
+export function IRatingCell({
+  iRating,
+  change,
+  joined = false,
+}: {
+  iRating: number;
+  change: number;
+  /** The licence segment is shown in the previous column (see LicenseBadge). */
+  joined?: boolean;
+}) {
+  const up = change > 0;
+  const Icon = up ? ChevronUp : ChevronDown;
+  return (
+    // Rating and its projected change are one compound cell in two voices
+    // (rule 4), on the pill's neutral segment: the rating in full `text`, only
+    // the change in status colour, so the rating itself is never read as a
+    // status.
+    //
+    // The segment fills its column rather than hugging its contents, and the
+    // change sits in a fixed-width slot, so every rating in the column ends on
+    // the same vertical — the one thing a column of numbers must never lose.
+    <div
+      className="tnum flex w-full items-center justify-end gap-1 px-1.5"
+      style={{
+        height: PILL_H,
+        background: "rgb(255 255 255 / 0.1)",
+        borderRadius: segmentRadius("right", joined),
+      }}
+    >
+      <span className="text-[12px] font-bold leading-none text-text">
+        {rating(iRating)}
+      </span>
+      <span
+        className="flex w-[1.95rem] shrink-0 items-center justify-end text-[11px] font-bold leading-none"
+        style={{
+          color: up ? "var(--color-accent)" : "var(--color-danger)",
+        }}
+        title={change !== 0 ? "Projected iRating change (estimate)" : undefined}
+      >
+        {change !== 0 && (
+          <>
+            <Icon className="size-3" strokeWidth={3} />
+            {Math.abs(change)}
+          </>
+        )}
+      </span>
+    </div>
   );
 }
 
@@ -377,24 +429,41 @@ export function BrandIcon({
 /*  Gap / interval / lap cells                                                */
 /* -------------------------------------------------------------------------- */
 
+/*
+ * The leader has no gap and no interval — there is nobody ahead to measure to —
+ * so its row prints the columns' names there instead of two em dashes. A
+ * dash in that spot says "missing"; `GAP` and `INT` say what the column under
+ * it is, on the one row where the number cannot exist anyway.
+ */
+
 export function GapCell({
   value,
   isLaps,
+  leader = false,
 }: {
   value: number | null;
   isLaps: boolean;
+  /** First row of its group: print the column's name instead of a value. */
+  leader?: boolean;
 }) {
   return (
-    <span className="text-right text-[12px] font-semibold tabular-nums text-text tnum">
-      {fmtGap(value, isLaps)}
+    <span className="text-right text-[12px] font-bold tabular-nums text-text tnum">
+      {leader ? "GAP" : fmtGap(value, isLaps)}
     </span>
   );
 }
 
-export function IntervalCell({ value }: { value: number | null }) {
+export function IntervalCell({
+  value,
+  leader = false,
+}: {
+  value: number | null;
+  /** First row of its group: print the column's name instead of a value. */
+  leader?: boolean;
+}) {
   return (
-    <span className="text-right text-[12px] font-semibold tabular-nums text-text tnum">
-      {fmtInterval(value)}
+    <span className="text-right text-[12px] font-bold tabular-nums text-text tnum">
+      {leader ? "INT" : fmtInterval(value)}
     </span>
   );
 }
@@ -499,7 +568,7 @@ export function SectorCell({ sector }: { sector: SectorSplit | undefined }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Tyre compound + age cell                                                  */
+/*  Tyre compound + age cell (Relative)                                       */
 /* -------------------------------------------------------------------------- */
 
 /**
@@ -508,22 +577,24 @@ export function SectorCell({ sector }: { sector: SectorSplit | undefined }) {
  * iRacing uses 0 for the primary compound and 1 for the alternate in most
  * series; higher values appear in series with three or more compounds.
  * We label them P/A/B/… rather than hard-coding "soft/medium/hard" because
- * compound naming varies by series. The letter is now only the fallback, for
- * a compound the player car's `DriverTires` list does not cover.
+ * compound naming varies by series. The letter is only the fallback, for a
+ * compound the player car's `DriverTires` list does not cover.
  */
 const COMPOUND_LABEL: Record<number, string> = { 0: "P", 1: "A", 2: "B", 3: "C" };
 
 /**
- * Tyre glyph (slick or wet), then laps on the set — in the row's own ink.
+ * Compound badge (`D` dry / `W` wet), then laps on the set.
  *
- * Compounds used to take status colours (primary green, alternate amber, `B`
- * red, `C` purple), which put an alarm-red letter on a third of a healthy field
- * and spent `sector-purple` on something that is not an overall best. None of
- * those meanings is true of a tyre, and on a surface where colour is rationed
- * by meaning (`design.md` § Theme) a colour that means nothing is the most
- * expensive thing in the row. So the glyph differs by shape, not colour: what
- * a driver scanning the field in changing weather wants is who has gone to
- * wets, and that is a slick-or-wet question, not a letter to decode.
+ * It lives on the Relative now, not Standings: what a driver wants from a tyre
+ * readout is whether the cars *around them* have gone to wets, and how old the
+ * rubber is on the car they are about to race — a question about neighbours,
+ * which is the Relative's whole subject. Standings carried it for the full
+ * field, at a cost of a column on the widest surface in the app.
+ *
+ * The badge's colour is the one exception to "the row's own ink": blue for a
+ * wet is the meaning, so it is fixed (see {@link TyreCompoundIcon}). The lap
+ * count is plain data and takes the row's ink — `--color-lapped` on lapped
+ * traffic — like every other value on the row.
  *
  * The kind is selected as a string from the session store, not as the
  * compound list, so a 1 Hz session tick does not re-render every row.
@@ -531,9 +602,12 @@ const COMPOUND_LABEL: Record<number, string> = { 0: "P", 1: "A", 2: "B", 3: "C" 
 export function TireCell({
   compound,
   laps,
+  ink,
 }: {
   compound: number | null;
   laps: number;
+  /** The row's ink, for the lap count. Defaults to `muted`. */
+  ink?: string;
 }) {
   const kind = useSessionStore((s) => tyreKind(compound, s.session?.tireCompounds));
   const name = useSessionStore((s) => tyreName(compound, s.session?.tireCompounds));
@@ -542,18 +616,19 @@ export function TireCell({
   }
   const label = COMPOUND_LABEL[compound] ?? String(compound);
   const title = kind
-    ? `${kind === "wet" ? "Wet" : "Slick"}${name && name.toLowerCase() !== kind ? ` (${name})` : ""}`
+    ? `${kind === "wet" ? "Wet" : "Dry"}${name && name.toLowerCase() !== kind ? ` (${name})` : ""}`
     : `Compound ${label}`;
   return (
     <div className="flex items-center justify-center gap-1">
       <span
-        className="flex w-[0.85rem] justify-center text-center text-[12px] font-bold leading-none text-text"
+        className="flex w-[1.05rem] justify-center text-center text-[12px] font-bold leading-none text-text"
         title={title}
       >
-        {kind ? <TyreCompoundIcon kind={kind} size="0.85rem" label={title} /> : label}
+        {kind ? <TyreCompoundIcon kind={kind} size="1.05rem" label={title} /> : label}
       </span>
       <span
         className="w-[1.1rem] text-left text-[11px] font-semibold leading-none tabular-nums tnum text-muted"
+        style={{ color: ink }}
         title={`${laps} laps on tyres`}
       >
         {laps}

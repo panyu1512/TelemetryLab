@@ -76,33 +76,3 @@ export function classColorFor(index: number): string {
   const keep = Math.max(35, 100 - cycle * 30);
   return `color-mix(in oklab, ${base} ${keep}%, black)`;
 }
-
-/**
- * The ground under a class band: the class's colour, **solid**, across the
- * whole row.
- *
- * It used to be a 22 % tint of the same hue, on the argument that identity
- * colour whispers where status colour speaks. What that produced in a
- * four-class field was four bands of roughly equal darkness whose hue you had
- * to look *for*, in a list meant to be parsed without looking — the tint put
- * the class's colour behind the band rather than making it the band.
- *
- * Solid inverts that: a group's masthead is a block of the class's colour, and
- * the rows under it keep the clipped stripe they always had. Masthead solid,
- * rows striped, is the hierarchy — and a block is the one shape the eye finds
- * in peripheral vision without being sent.
- *
- * The cost is real and belongs here rather than in a commit message: filled
- * identity is the loudest device on a surface whose rules ration fill to a
- * single cell (`design.md` § Dense tabular overlays, rule 5). The band gets
- * away with it because it is a *heading* — it carries no timing value a fill
- * could be mistaken for, and there is exactly one per group. Nothing else on
- * this surface may take a solid identity fill.
- *
- * Ink on top is {@link readableInk}'s problem, not this function's: a class
- * colour can land anywhere on the wheel, so the band measures its fill rather
- * than assuming the palette's dark ink will do.
- */
-export function classBandFill(color: string): string {
-  return color;
-}

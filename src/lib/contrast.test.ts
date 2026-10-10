@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { readableInk, relativeLuminance, tint } from "./contrast";
+import { readableInk, relativeLuminance } from "./contrast";
 
 const DARK = "var(--color-on-accent)";
 const WHITE = "oklch(100% 0 0)";
@@ -39,19 +39,5 @@ describe("readableInk", () => {
 
   it("assumes dark — the safe default on this app's paper — when unparseable", () => {
     expect(readableInk("not-a-colour")).toBe(WHITE);
-  });
-});
-
-describe("tint", () => {
-  it("mixes the colour into transparency at the given alpha", () => {
-    expect(tint("#ff0000", 0.16)).toBe(
-      "color-mix(in oklab, #ff0000 16%, transparent)"
-    );
-  });
-
-  it("passes CSS variables through untouched, so tokens still theme", () => {
-    expect(tint("var(--color-accent)", 0.14)).toBe(
-      "color-mix(in oklab, var(--color-accent) 14%, transparent)"
-    );
   });
 });

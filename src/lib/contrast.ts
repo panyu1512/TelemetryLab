@@ -56,18 +56,3 @@ export function readableInk(fill: string): string {
   if (lum == null) return "oklch(100% 0 0)";
   return lum >= 0.4 ? "var(--color-on-accent)" : "oklch(100% 0 0)";
 }
-
-/**
- * A **tint**: the same hue as `color`, at `alpha`, as a ground for coloured ink.
- *
- * Deliberately a different device from a *fill* (`design.md` § Dense tabular
- * overlays, rule 5). A fill is opaque and takes contrasting ink, and the rules
- * ration it to one meaning per surface because it is the loudest tool there. A
- * tint is a whisper of the same colour behind ink of that colour — it groups a
- * compound cell without competing with a fill for attention, which is what lets
- * the licence badge and the tyre cell read as chips without spending the
- * surface's one fill.
- */
-export function tint(color: string, alpha = 0.16): string {
-  return `color-mix(in oklab, ${color} ${Math.round(alpha * 100)}%, transparent)`;
-}

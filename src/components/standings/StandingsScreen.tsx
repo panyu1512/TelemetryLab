@@ -250,6 +250,7 @@ export function StandingsScreen() {
                     classRelative={classRelative}
                     rank={it.rank}
                     isVisible={isVisible}
+                    leader={it.leader}
                     labelled={showColumnLabels && it.leader}
                     fastest={fastestByCar.get(it.carIdx) ?? null}
                   />

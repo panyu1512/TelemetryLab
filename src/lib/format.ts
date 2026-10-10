@@ -90,14 +90,16 @@ export function duration(seconds: number | null | undefined): string {
 }
 
 /**
- * Ratings and other four-figure counts in a two-character-mantissa form:
- * `3337` → `3.3k`, `842` → `842`. Keeps SOF and iRating the same width as the
- * other strip fields instead of being the one value that resizes the row.
+ * An iRating or strength of field, in full: `3337`, `842`.
+ *
+ * These used to print as `3.3k`, to hold them to the width of the other strip
+ * fields. The width was never the problem — a four-figure rating *is* four
+ * characters, the same as `3.3k` — and the abbreviation threw away the digits
+ * a driver actually compares: `3.3k` is every rating from 3250 to 3349.
  */
-export function kilo(value: number | null | undefined): string {
+export function rating(value: number | null | undefined): string {
   if (value == null || Number.isNaN(value) || value <= 0) return "—";
-  if (value < 1000) return String(Math.round(value));
-  return `${(value / 1000).toFixed(1)}k`;
+  return String(Math.round(value));
 }
 
 /** Temperature with a degree sign, e.g. `38°`. */

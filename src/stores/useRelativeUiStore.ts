@@ -17,6 +17,12 @@ export interface RelativeUiState {
   showBrand: boolean;
   /** Show each driver's country flag. */
   showCountry: boolean;
+  /**
+   * Show each car's tyre compound (`D` dry / `W` wet) and laps on the set.
+   * Moved here from Standings: whether the cars around you have gone to wets
+   * is a question about neighbours, which is what this screen is for.
+   */
+  showTyre: boolean;
   /** Cars shown per side (ahead/behind). */
   windowSize: number;
   /**
@@ -32,6 +38,7 @@ export interface RelativeUiState {
   showColumnLabels: boolean;
   setShowBrand: (v: boolean) => void;
   setShowCountry: (v: boolean) => void;
+  setShowTyre: (v: boolean) => void;
   setWindowSize: (n: number) => void;
   setShowSessionStrip: (v: boolean) => void;
   setShowColumnLabels: (v: boolean) => void;
@@ -42,6 +49,7 @@ const STORAGE_KEY = "telemetrylab.relative.ui.v1";
 export interface Persisted {
   showBrand: boolean;
   showCountry: boolean;
+  showTyre: boolean;
   windowSize: number;
   showSessionStrip: boolean;
   showColumnLabels: boolean;
@@ -50,6 +58,7 @@ export interface Persisted {
 const DEFAULTS: Persisted = {
   showBrand: true,
   showCountry: true,
+  showTyre: true,
   windowSize: 5,
   showSessionStrip: true,
   showColumnLabels: false,
@@ -90,6 +99,7 @@ export const useRelativeUiStore = create<RelativeUiState>((set, get) => {
     const {
       showBrand,
       showCountry,
+      showTyre,
       windowSize,
       showSessionStrip,
       showColumnLabels,
@@ -97,6 +107,7 @@ export const useRelativeUiStore = create<RelativeUiState>((set, get) => {
     const snapshot: Persisted = {
       showBrand,
       showCountry,
+      showTyre,
       windowSize,
       showSessionStrip,
       showColumnLabels,
@@ -112,6 +123,10 @@ export const useRelativeUiStore = create<RelativeUiState>((set, get) => {
     },
     setShowCountry: (showCountry) => {
       set({ showCountry });
+      save();
+    },
+    setShowTyre: (showTyre) => {
+      set({ showTyre });
       save();
     },
     setWindowSize: (n) => {
@@ -138,6 +153,7 @@ subscribe("relative-ui:changed", (remote) => {
     useRelativeUiStore.setState({
       showBrand: remote.showBrand ?? DEFAULTS.showBrand,
       showCountry: remote.showCountry ?? DEFAULTS.showCountry,
+      showTyre: remote.showTyre ?? DEFAULTS.showTyre,
       windowSize: clampWindow(remote.windowSize ?? DEFAULTS.windowSize),
       showSessionStrip:
         remote.showSessionStrip ?? DEFAULTS.showSessionStrip,

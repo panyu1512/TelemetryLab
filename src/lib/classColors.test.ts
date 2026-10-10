@@ -1,10 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import {
-  CLASS_RAMP,
-  classBandFill,
-  classColorFor,
-} from "./classColors";
+import { CLASS_RAMP, classColorFor } from "./classColors";
 import { THEMES } from "../themes";
 import { readFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
@@ -157,25 +153,5 @@ describe("classColorFor", () => {
     for (const i of [0, 4, 5, 9, 12, 40]) {
       expect(classColorFor(i)).toBeTruthy();
     }
-  });
-});
-
-describe("classBandFill", () => {
-  it("covers the whole band, not a stripe of it", () => {
-    // A band is the heading; its rows are what it heads. A clipped fill made it
-    // read as one of them.
-    const f = classBandFill(CLASS_RAMP[0]);
-    expect(f).not.toContain("linear-gradient");
-    expect(f).toContain(CLASS_RAMP[0]);
-  });
-
-  it("is the class colour outright", () => {
-    // A block is the shape the eye finds in peripheral vision without being
-    // sent looking for a hue.
-    expect(classBandFill(CLASS_RAMP[0])).toBe(CLASS_RAMP[0]);
-  });
-
-  it("works on the darkened colours a sixth class would get", () => {
-    expect(classBandFill(classColorFor(5))).toContain("color-mix");
   });
 });

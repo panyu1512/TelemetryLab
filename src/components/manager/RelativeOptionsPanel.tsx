@@ -1,5 +1,6 @@
 /**
- * Options for the relative overlay — car brand icons and driver country flags.
+ * Options for the relative overlay — car brand icons, driver country flags,
+ * tyre compounds, the session strip, column labels and the window size.
  * Writes to {@link useRelativeUiStore}, which persists and broadcasts over the
  * window bus, so an open relative overlay window updates live.
  */
@@ -17,6 +18,8 @@ export function RelativeOptionsPanel() {
   const windowSize = useRelativeUiStore((s) => s.windowSize);
   const setShowBrand = useRelativeUiStore((s) => s.setShowBrand);
   const setShowCountry = useRelativeUiStore((s) => s.setShowCountry);
+  const showTyre = useRelativeUiStore((s) => s.showTyre);
+  const setShowTyre = useRelativeUiStore((s) => s.setShowTyre);
   const setWindowSize = useRelativeUiStore((s) => s.setWindowSize);
   const showSessionStrip = useRelativeUiStore((s) => s.showSessionStrip);
   const setShowSessionStrip = useRelativeUiStore((s) => s.setShowSessionStrip);
@@ -36,6 +39,12 @@ export function RelativeOptionsPanel() {
         description="Show each driver's country flag."
         checked={showCountry}
         onChange={setShowCountry}
+      />
+      <OptionRow
+        label="Tyre compound"
+        description="Dry (D) or wet (W) tyres, and laps on the set."
+        checked={showTyre}
+        onChange={setShowTyre}
       />
       <OptionRow
         label="Session strip"

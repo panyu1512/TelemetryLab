@@ -18,6 +18,29 @@
 export const ROW_H = 32;
 
 /**
+ * Paper left showing between one row's strip and the next.
+ *
+ * Every row sits on its own `--color-timing-row` ground, inset this far from
+ * the bottom of its {@link ROW_H} slot, so the field reads as a stack of
+ * separate strips with the class edge opening each one. The slot keeps its
+ * height — the layout still steps by `ROW_H` — so the gap costs the strip
+ * three pixels of its own height rather than the table any of its rows.
+ */
+export const ROW_GAP = 3;
+
+/**
+ * The player's row: the one strip on `primary` rather than the neutral
+ * `timing-row` ground, on Standings and Relative alike (§ Two colour systems,
+ * rule 3). With every row now on a ground of its own, it is the *hue* of the
+ * ground that says "this is you", so it runs a step stronger than the 15 %
+ * wash it was when it was the only ground on the paper; the inset ring keeps
+ * it legible in the Graphite theme, whose `primary` is close to neutral.
+ *
+ * A literal class string, so Tailwind's scanner generates it.
+ */
+export const PLAYER_ROW_GROUND = "bg-primary/25 ring-1 ring-inset ring-primary/50";
+
+/**
  * Height of the column-label line printed *inside* the class leader's row.
  *
  * There is deliberately no persistent column-header band: on a six-row Relative
@@ -80,7 +103,6 @@ export type StandingsColumnId =
   | "interval"
   | "last"
   | "best"
-  | "tire"
   | "sectors"
   | "state";
 
@@ -132,12 +154,13 @@ export const STANDINGS_COLUMNS: readonly ColumnDef[] = [
   // space while `Francois Sieg…` clipped (rule 6).
   { id: "driver", label: "Driver", name: "Driver", width: "minmax(0, 1fr)", px: 136, align: "left", always: true },
   { id: "license", label: "Lic", name: "License / SR", width: "3.4rem", px: 54, align: "center" },
-  { id: "irating", label: "iR", name: "iRating", width: "4.6rem", px: 74, align: "right" },
+  // Wide enough for a five-digit rating and its change, now that the rating
+  // prints in full (`8895 ▲14`) rather than as `8.9k`.
+  { id: "irating", label: "iR", name: "iRating", width: "5.2rem", px: 83, align: "right" },
   { id: "gap", label: "Gap", name: "Gap to leader", width: "3.6rem", px: 58, align: "right" },
   { id: "interval", label: "Int", name: "Interval", width: "3.6rem", px: 58, align: "right" },
   { id: "last", label: "Last", name: "Last lap", width: "4.9rem", px: 78, align: "right" },
   { id: "best", label: "Best", name: "Best lap", width: "4.9rem", px: 78, align: "right" },
-  { id: "tire", label: "Tyre", name: "Tyre compound", width: "3.4rem", px: 54, align: "center" },
   { id: "sectors", label: "S", name: "Sector deltas", width: "3rem", px: 48, align: "center" },
   { id: "state", label: "", name: "Pit / off-track", width: "2.2rem", px: 35, align: "center", always: true },
 ];

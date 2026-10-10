@@ -19,6 +19,7 @@ export default defineConfig({
         "src/lib/classColors.ts",
         "src/lib/driverName.ts",
         "src/lib/lapTimeOrder.ts",
+        "src/lib/positionFlash.ts",
         "src/lib/scales.ts",
         "src/lib/sessionKind.ts",
         "src/lib/tableScale.ts",
