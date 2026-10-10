@@ -1,35 +1,32 @@
 import type { TyreKind } from "../../lib/tyreCompound";
 
 /**
- * A tyre seen side-on: a slick, or a wet with a water drop in the hub.
+ * The compound badge: a ring with the compound's letter in it — `D` in white
+ * for a dry, `W` in `--color-tyre-wet` blue for a wet.
  *
- * Both glyphs share one silhouette, the sidewall ring, so the column reads as a
- * single thing ("the tyre") and only the hub changes. The difference is
- * carried by shape alone, in the row's own ink: blue is spoken for on this
- * surface (the player, lapped traffic), and a wet tyre is not a warning.
+ * This is the convention a driver already reads off every TV graphic and the
+ * sim's own black box: a coloured ring, one letter, blue for rain. It replaced
+ * a side-on tyre glyph whose slick and wet differed only by the shape in the
+ * hub, which at row size meant telling a dot from a drop. Here the difference
+ * is carried twice — by the letter *and* by the colour — so a field going to
+ * wets reads as a column turning blue before a single letter is read.
  *
- * Tread grooves were the obvious first idea and were rejected after rendering
- * them: notches around a ring at 11 px read as a gear, the settings icon. A
- * drop says "wet" without asking the reader to count cuts.
+ * Ring and letter share one colour, set here rather than inherited from the
+ * row: the badge means the same thing on every row, lapped traffic included.
  */
 
-/** Sidewall: an outer circle with the rim cut out (even-odd). */
-const RING =
-  "M0.5,8a7.5,7.5 0 1,0 15,0a7.5,7.5 0 1,0 -15,0Z" +
-  "M3.2,8a4.8,4.8 0 1,0 9.6,0a4.8,4.8 0 1,0 -9.6,0Z";
+const COLOR: Record<TyreKind, string> = {
+  dry: "var(--color-text)",
+  wet: "var(--color-tyre-wet)",
+};
 
-/** Plain hub for a slick. */
-const HUB = "M6,8a2,2 0 1,0 4,0a2,2 0 1,0 -4,0Z";
-
-/** Water drop inside the rim for a wet, centred on the hub. */
-const DROP =
-  "M8,4.1C8,4.1 5.3,7.2 5.3,8.95A2.7,2.7 0 0 0 10.7,8.95C10.7,7.2 8,4.1 8,4.1Z";
+const LETTER: Record<TyreKind, string> = { dry: "D", wet: "W" };
 
 export interface TyreCompoundIconProps {
   kind: TyreKind;
   /** CSS length for the (square) box. */
   size: string;
-  /** Accessible name; defaults to "Slick tyre" / "Wet tyre". */
+  /** Accessible name; defaults to "Dry tyre" / "Wet tyre". */
   label?: string;
 }
 
@@ -38,14 +35,38 @@ export function TyreCompoundIcon({ kind, size, label }: TyreCompoundIconProps) {
     <svg
       viewBox="0 0 16 16"
       role="img"
-      aria-label={label ?? (kind === "wet" ? "Wet tyre" : "Slick tyre")}
-      style={{ width: size, height: size, flexShrink: 0, display: "block" }}
+      aria-label={label ?? (kind === "wet" ? "Wet tyre" : "Dry tyre")}
+      style={{
+        width: size,
+        height: size,
+        flexShrink: 0,
+        display: "block",
+        color: COLOR[kind],
+      }}
     >
-      <path
-        d={RING + (kind === "wet" ? DROP : HUB)}
-        fill="currentColor"
-        fillRule="evenodd"
+      {/* A heavy ring and a heavy letter that nearly fills it: a thin ring
+          round a small letter is what read as a clock face at the table's
+          smaller scales, so the letter is set as large as the ring allows. */}
+      <circle
+        cx="8"
+        cy="8"
+        r="6.9"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="1.8"
       />
+      <text
+        x="8"
+        y="8.4"
+        textAnchor="middle"
+        dominantBaseline="central"
+        fill="currentColor"
+        fontFamily="var(--font-timing)"
+        fontSize="8.6"
+        fontWeight="700"
+      >
+        {LETTER[kind]}
+      </text>
     </svg>
   );
 }

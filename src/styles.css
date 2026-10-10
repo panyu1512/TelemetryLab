@@ -78,6 +78,19 @@
      the row's ground, and a lapped car is never your own row. */
   --color-lapped: oklch(72% 0.15 245);
 
+  /* A wet-weather tyre: the ring and `W` of the Relative's compound badge.
+     Blue because that is the colour a wet tyre has worn on every TV graphic
+     and tyre wall a driver has ever seen. Like `lapped`, NOT themed — a wet
+     tyre must not turn copper in Endurance — and deeper and more saturated
+     than `lapped`, so a blue badge on a lapped row still reads as a badge. */
+  --color-tyre-wet: oklch(64% 0.19 256);
+
+  /* The ground every timing row sits on: a lift off `timing-bg`, so each row
+     reads as its own strip with paper showing between them. A white alpha
+     rather than a mixed colour, so it lifts whatever paper is under it — every
+     theme's, and the translucent black the paper becomes over live footage. */
+  --color-timing-row: rgb(255 255 255 / 0.07);
+
   /* The text color to use on top of ANY filled status color. Every accent in
      this system is light and every paper is dark, so white-on-accent lands at
      2.2–2.9:1 — far under 4.5:1. Dark ink on the fill reads at 6.5–8.7:1. */
@@ -95,6 +108,14 @@
     "Segoe UI", system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
     "Liberation Mono", monospace;
+
+  /* The timing tables' face — Standings and Relative, nothing else. Saira:
+     squared, technical forms that read as motorsport, true tabular figures
+     (so a column of lap times never jitters), and an x-height close to
+     Inter's, so the sizes these tables were tuned at still hold. Bundled
+     (`@fontsource-variable/saira`), never fetched: the app runs offline. */
+  --font-timing: "Saira Variable", "Inter Variable", Inter, system-ui,
+    sans-serif;
 
   /* Radius scale — near-square throughout. A pit-wall graphic is cut, not
      moulded: the corner is where that reads first, and 2 px is enough to stop

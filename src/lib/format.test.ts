@@ -5,12 +5,12 @@ import {
   delta,
   duration,
   gap,
-  kilo,
   gearLabel,
   interval,
   lapTime,
   num,
   pct,
+  rating,
   sectorTime,
   signed,
 } from "./format";
@@ -176,21 +176,21 @@ describe("duration", () => {
   });
 });
 
-describe("kilo", () => {
-  it("abbreviates four figures and up", () => {
-    expect(kilo(3337)).toBe("3.3k");
-    expect(kilo(1000)).toBe("1.0k");
+describe("rating", () => {
+  it("prints the rating in full", () => {
+    expect(rating(3337)).toBe("3337");
+    expect(rating(842)).toBe("842");
+    expect(rating(10234)).toBe("10234");
   });
 
-  it("leaves three figures alone", () => {
-    expect(kilo(842)).toBe("842");
-    expect(kilo(999.4)).toBe("999");
+  it("rounds a projected (fractional) value", () => {
+    expect(rating(2954.6)).toBe("2955");
   });
 
   it("renders an em dash for null/NaN/non-positive", () => {
-    expect(kilo(null)).toBe(DASH);
-    expect(kilo(NaN)).toBe(DASH);
-    expect(kilo(0)).toBe(DASH);
+    expect(rating(null)).toBe(DASH);
+    expect(rating(NaN)).toBe(DASH);
+    expect(rating(0)).toBe(DASH);
   });
 });
 

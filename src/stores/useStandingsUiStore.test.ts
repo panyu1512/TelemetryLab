@@ -58,7 +58,7 @@ describe("standings column configuration", () => {
   });
 
   it("broadcasts changes so an open standings window updates live", () => {
-    store().toggleColumn("tire");
+    store().toggleColumn("sectors");
     expect(bus.broadcasts.some((b) => b.topic === "standings-ui:changed")).toBe(
       true
     );

@@ -8,8 +8,8 @@
  * clickable. It is read at a glance while the user is driving, so every pixel
  * goes to the field — including the optional session strip above it, which is a
  * readout the driver cannot interact with (`design.md` § Dense tabular overlays,
- * rule 7). The window size (3–10 per side), the brand/country column options and
- * the strip itself are all set from the Overlay Manager and persisted in
+ * rule 7). The window size (3–10 per side), the brand/country/tyre column
+ * options and the strip itself are all set from the Overlay Manager and persisted in
  * {@link useRelativeUiStore}, which broadcasts them so an open overlay updates
  * live.
  *
@@ -70,8 +70,13 @@ import {
   lapRelation,
   lapTag,
 } from "../../lib/relativeLaps";
-import { BrandIcon } from "../standings/cells";
-import { CLASS_EDGE_WIDTH, LAP_UNDERLINE } from "../standings/constants";
+import { BrandIcon, TireCell } from "../standings/cells";
+import {
+  CLASS_EDGE_WIDTH,
+  LAP_UNDERLINE,
+  PLAYER_ROW_GROUND,
+  ROW_GAP,
+} from "../standings/constants";
 import { CountryFlag } from "../ui/CountryFlag";
 import { SessionStrip } from "../timing/SessionStrip";
 import { scaleBox, tableScale, unscaled } from "../../lib/tableScale";
@@ -97,6 +102,7 @@ type RelColumnId =
   | "country"
   | "driver"
   | "brand"
+  | "tyre"
   | "gap"
   | "last"
   | "hint";
@@ -115,6 +121,11 @@ const REL_COLUMNS: { id: RelColumnId; width: string; px: number }[] = [
   // from — and therefore what the scale is measured against.
   { id: "driver", width: "minmax(0, 1fr)", px: 112 },
   { id: "brand", width: "2.75rem", px: 44 },
+  // Compound badge + laps on the set, beside the car it belongs to and ahead
+  // of the gap: "who is this, what are they on" before "how far away".
+  // Wide enough for a three-digit lap count beside the badge (an enduro
+  // stint).
+  { id: "tyre", width: "3.1rem", px: 50 },
   { id: "gap", width: "4.8rem", px: 77 },
   { id: "last", width: "5rem", px: 80 },
   { id: "hint", width: "1.8rem", px: 29 },
@@ -123,7 +134,7 @@ const REL_COLUMNS: { id: RelColumnId; width: string; px: number }[] = [
 type RelVisibility = (id: RelColumnId) => boolean;
 
 /**
- * The visible column set: the user's brand/country choices, plus the class
+ * The visible column set: the user's brand/country/tyre choices, plus the class
  * badge whenever the field has more than one class.
  *
  * The badge is about the *field*, not the window: in a single-class session
@@ -138,6 +149,7 @@ type RelVisibility = (id: RelColumnId) => boolean;
 function relVisibleColumns(
   showBrand: boolean,
   showCountry: boolean,
+  showTyre: boolean,
   multiClass: boolean
 ): RelVisibility {
   return (id) =>
@@ -145,9 +157,11 @@ function relVisibleColumns(
       ? showBrand
       : id === "country"
         ? showCountry
-        : id === "class"
-          ? multiClass
-          : true;
+        : id === "tyre"
+          ? showTyre
+          : id === "class"
+            ? multiClass
+            : true;
 }
 
 /** The width this column set wants: widths + 4 px gaps + the row's px-2. */
@@ -191,6 +205,7 @@ const REL_HEADER_LABEL: Record<RelColumnId, string> = {
   country: "",
   driver: "Driver",
   brand: "",
+  tyre: "Tyre",
   gap: "Gap",
   last: "Last",
   hint: "",
@@ -224,7 +239,7 @@ function ColumnLabels({
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute inset-x-0 top-0 grid items-start gap-x-1 px-2 font-mono text-[9px] font-semibold uppercase leading-none tracking-[0.14em] text-faint"
+      className="pointer-events-none absolute inset-x-0 top-0 grid items-start gap-x-1 px-2 text-[9px] font-semibold uppercase leading-none tracking-[0.1em] text-faint"
       style={{ gridTemplateColumns: template, height: REL_LABEL_H }}
     >
       {REL_COLUMNS.filter((c) => isOn(c.id)).map((c) => (
@@ -343,19 +358,23 @@ function RowInner({
       className={[
         "relative grid items-center gap-x-1 px-2 text-xs",
         "rounded-sm",
-        // The only ground on the surface (§ Dense tabular overlays, rule 14).
-        // Off-lap rows used to take a danger tint and every other row a wash
-        // of its class colour, which left the player's row one block of
-        // colour among six; class now rides in the badge and the edge, and
-        // lapped traffic in the ink.
-        isPlayer ? "bg-primary/15 ring-1 ring-inset ring-primary/60" : "",
+        // Every row is its own strip on the neutral row ground, exactly as on
+        // Standings; the player's is the one strip in `primary`
+        // (§ Dense tabular overlays, rule 14). Off-lap rows used to take a
+        // danger tint and every other row a wash of its class colour, which
+        // left the player's row one block of colour among six; class now
+        // rides in the badge and the edge, and lapped traffic in the ink.
+        isPlayer ? PLAYER_ROW_GROUND : "bg-timing-row",
         dimmed ? "opacity-35" : "",
       ]
         .filter(Boolean)
         .join(" ")}
       style={{
         gridTemplateColumns: template,
-        height: ROW_H,
+        // A labelled row is a label slice taller, so its content keeps a full
+        // row's height under the labels — a 24 px brand mark in the 24 px left
+        // over sat flush on the strip's bottom edge.
+        height: ROW_H + (labelled ? REL_LABEL_H : 0),
         // The class edge, at full strength on every row exactly as on Standings
         // — the same device has to read the same way on both surfaces. It holds
         // its drawn size as the table scales down (see CLASS_EDGE_WIDTH).
@@ -369,14 +388,15 @@ function RowInner({
       {labelled && <ColumnLabels isOn={isOn} template={template} />}
 
       {/* class badge — the class's short name on a solid block of its colour,
-          directly against the edge it repeats. It is the Relative's version of
-          Standings' position block: a heading-sized identity fill, one per
-          row, ink measured by `readableInk` (§ Dense tabular overlays, rule
-          11). Only drawn in a multi-class field. */}
+          directly against the edge it repeats: a heading-sized identity fill,
+          one per row, ink measured by `readableInk` (§ Dense tabular
+          overlays, rule 11). Standings needs no such badge — its rows sit
+          under a band that names the class — but a Relative mixes classes
+          row by row. Only drawn in a multi-class field. */}
       {isOn("class") && (
         <div className="flex justify-center">
           <span
-            className="min-w-0 max-w-full truncate rounded-ctl px-1 py-0.5 text-center font-mono text-[10px] font-bold uppercase leading-none tracking-[0.04em]"
+            className="min-w-0 max-w-full truncate rounded-ctl px-1 py-0.5 text-center text-[11px] font-bold uppercase leading-none tracking-[0.04em]"
             style={{ background: classColor, color: readableInk(classColor) }}
             title={driver?.carClassShortName || undefined}
           >
@@ -385,18 +405,18 @@ function RowInner({
         </div>
       )}
 
-      {/* overall position */}
+      {/* overall position — full `text`, as on Standings */}
       <div
-        className="text-center text-[14px] font-bold tabular-nums tnum text-muted"
+        className="text-center text-[14px] font-bold tabular-nums tnum text-text"
         style={{ color: ink }}
       >
         {entry.position ?? "—"}
       </div>
 
-      {/* car number — no pill (rule 5), `muted` floor (§ Deliberately not adopted) */}
+      {/* car number — no pill (rule 5), in full `text` as on Standings */}
       {isOn("num") && (
         <div
-          className="truncate text-center text-[12px] font-bold tabular-nums tnum text-muted"
+          className="truncate text-center text-[12px] font-bold tabular-nums tnum text-text"
           style={{ color: ink }}
         >
           {driver?.carNumber ?? "—"}
@@ -427,7 +447,7 @@ function RowInner({
         </span>
         {tag && (
           <span
-            className="shrink-0 font-mono text-[9px] font-bold leading-none tracking-[0.06em] text-muted"
+            className="shrink-0 text-[10px] font-bold leading-none tracking-[0.04em] text-muted"
             style={{ color: ink }}
             title={
               relation === LapRelation.LappedBy
@@ -445,6 +465,15 @@ function RowInner({
         <div className="flex justify-center">
           <BrandIcon make={driver?.carMake ?? ""} />
         </div>
+      )}
+
+      {/* tyre compound + laps on the set */}
+      {isOn("tyre") && (
+        <TireCell
+          compound={entry.tireCompound}
+          laps={entry.tireLaps}
+          ink={ink}
+        />
       )}
 
       {/* signed relative gap */}
@@ -536,6 +565,7 @@ export function RelativeScreen() {
   const windowSize = useRelativeUiStore((s) => s.windowSize);
   const showBrand = useRelativeUiStore((s) => s.showBrand);
   const showCountry = useRelativeUiStore((s) => s.showCountry);
+  const showTyre = useRelativeUiStore((s) => s.showTyre);
   const showSessionStrip = useRelativeUiStore((s) => s.showSessionStrip);
   const showColumnLabels = useRelativeUiStore((s) => s.showColumnLabels);
   const byLapTime = useRanksByLapTime();
@@ -554,8 +584,8 @@ export function RelativeScreen() {
 
   const multiClass = classes.length > 1;
   const isOn = useMemo(
-    () => relVisibleColumns(showBrand, showCountry, multiClass),
-    [showBrand, showCountry, multiClass]
+    () => relVisibleColumns(showBrand, showCountry, showTyre, multiClass),
+    [showBrand, showCountry, showTyre, multiClass]
   );
   const template = useMemo(() => relGridTemplate(isOn), [isOn]);
 
@@ -640,10 +670,12 @@ export function RelativeScreen() {
   return (
     <div
       ref={bodyRef}
-      className="overlay-card timing-surface @container flex h-full flex-col overflow-hidden rounded-card border border-border/60"
+      className="overlay-card timing-surface font-timing @container flex h-full flex-col overflow-hidden rounded-card border border-border/60"
     >
+      {/* Inset by the field's own `p-1`, so the strip and the row strips
+          under it share one left and right edge. */}
       {showSessionStrip && !isEmpty && (
-        <div style={scaleBox(scale)}>
+        <div className="px-1 pt-1" style={scaleBox(scale)}>
           <SessionStrip width={innerWidth} />
         </div>
       )}
@@ -653,7 +685,10 @@ export function RelativeScreen() {
         <div className="flex flex-1 flex-col overflow-auto">
           {/* No column-header band ever: when labels are on at all they ride in
               the first row's top slice, out of flow (rule 3). */}
-          <div className="flex flex-col gap-0.5 p-1" style={scaleBox(scale)}>
+          <div
+            className="flex flex-col p-1"
+            style={{ ...scaleBox(scale), gap: ROW_GAP }}
+          >
             {/* Cars ahead — furthest at top, closest just above player */}
             {ahead.map((entry, i) => (
               <Row

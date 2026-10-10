@@ -87,7 +87,6 @@ export function StandingsScreen() {
   const columns = useStandingsUiStore((s) => s.columns);
   const byLapTime = useRanksByLapTime();
   const showSessionStrip = useStandingsUiStore((s) => s.showSessionStrip);
-  const showColumnLabels = useStandingsUiStore((s) => s.showColumnLabels);
   const { items, totalHeight } = useStandingsLayout();
   const classRelative = grouping === "class";
 
@@ -174,7 +173,7 @@ export function StandingsScreen() {
   return (
     <div
       ref={rootRef}
-      className="overlay-card timing-surface flex h-full flex-col overflow-hidden rounded-card border border-border/60"
+      className="overlay-card timing-surface font-timing flex h-full flex-col overflow-hidden rounded-card border border-border/60"
     >
       {/*
         The strip scales with the field — it is part of the same surface, and a
@@ -250,7 +249,8 @@ export function StandingsScreen() {
                     classRelative={classRelative}
                     rank={it.rank}
                     isVisible={isVisible}
-                    labelled={showColumnLabels && it.leader}
+                    leader={it.leader}
+                    labelled={it.labelled}
                     fastest={fastestByCar.get(it.carIdx) ?? null}
                   />
                 );

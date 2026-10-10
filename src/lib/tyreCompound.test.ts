@@ -14,11 +14,11 @@ describe("tyreKind", () => {
   });
 
   it("classifies a listed compound by its name", () => {
-    expect(tyreKind(0, GT3)).toBe("slick");
+    expect(tyreKind(0, GT3)).toBe("dry");
     expect(tyreKind(1, GT3)).toBe("wet");
   });
 
-  it("treats intermediates and rain tyres as treaded", () => {
+  it("treats intermediates and rain tyres as wet", () => {
     const list = [
       { index: 2, type: "Intermediate" },
       { index: 3, type: "Rain" },
@@ -27,9 +27,9 @@ describe("tyreKind", () => {
     expect(tyreKind(3, list)).toBe("wet");
   });
 
-  it("calls every compound a slick when the car has no wet tyre listed", () => {
-    expect(tyreKind(0, [])).toBe("slick");
-    expect(tyreKind(1, undefined)).toBe("slick");
+  it("calls every compound a dry when the car has no wet tyre listed", () => {
+    expect(tyreKind(0, [])).toBe("dry");
+    expect(tyreKind(1, undefined)).toBe("dry");
   });
 
   it("is null for an index outside a non-empty list", () => {

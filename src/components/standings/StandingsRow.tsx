@@ -1,5 +1,5 @@
 import { memo } from "react";
-import { Wrench, AlertTriangle } from "lucide-react";
+import { ArrowDown, ArrowUp, Wrench, AlertTriangle } from "lucide-react";
 import { useStandingsRow } from "../../stores/useStandingsStore";
 import { useDriver } from "../../stores/useSessionStore";
 import {
@@ -8,12 +8,15 @@ import {
   gridTemplate,
   LAP_COLOR,
   LAP_UNDERLINE,
-  ROW_H,
+  PLAYER_ROW_GROUND,
+  ROW_GAP,
+  rowSlotHeight,
+  STANDINGS_BRAND_H,
   type ColumnVisibility,
 } from "./constants";
 import { ColumnLabels } from "./ColumnLabels";
-import { readableInk } from "../../lib/contrast";
 import { formatDriverName } from "../../lib/driverName";
+import { usePositionFlash } from "../../hooks/usePositionFlash";
 import { CountryFlag } from "../ui/CountryFlag";
 import {
   BrandIcon,
@@ -24,7 +27,6 @@ import {
   LicenseBadge,
   PosChange,
   SectorCell,
-  TireCell,
 } from "./cells";
 
 interface StandingsRowProps {
@@ -42,6 +44,11 @@ interface StandingsRowProps {
   rank: number | null;
   /** Which columns to render (must match the labels). */
   isVisible: ColumnVisibility;
+  /**
+   * First row of its class group (or of the table, when flat). Its gap and
+   * interval cells print the columns' names, since the leader has neither.
+   */
+  leader: boolean;
   /**
    * First row of its class group *and* column labels are switched on: prints
    * them in its top slice, so the table needs no header band (`design.md`
@@ -72,6 +79,7 @@ function StandingsRowInner({
   classRelative,
   rank,
   isVisible,
+  leader,
   labelled,
   fastest,
 }: StandingsRowProps) {
@@ -88,41 +96,58 @@ function StandingsRowInner({
     : row?.gapIsLaps;
   const intervalValue = classRelative ? row?.classInterval : row?.interval;
 
+  // The number the position column prints — the layout's own rank in a
+  // lap-time session, otherwise iRacing's: class position when grouped by
+  // class, overall when flat. A flat overall table numbered by class position
+  // reads as scrambled.
+  const position =
+    rank ??
+    (classRelative
+      ? row?.classPosition ?? row?.position
+      : row?.position ?? row?.classPosition);
+  const moved = usePositionFlash(
+    position,
+    rank != null ? "rank" : classRelative ? "class" : "overall"
+  );
+
   return (
     <div
       className="row-glide absolute inset-x-0 rounded-sm will-change-transform"
       style={{
-        height: ROW_H,
+        height: rowSlotHeight(labelled),
         transform: `translateY(${top}px)`,
       }}
     >
       <div
         className={[
-          "relative grid h-full items-center gap-x-1 rounded-sm px-1 text-xs",
-          // The only ground on the surface, exactly as on Relative: "this is
-          // you" is `primary` as the row's ground (§ Two colour systems, rule
-          // 3). Every other row sits straight on the timing paper — the zebra
-          // and class-group tones it used to carry made Standings read as a
-          // different, busier surface from Relative beside it.
-          row?.isPlayer ? "bg-primary/15 ring-1 ring-inset ring-primary/60" : "",
+          "relative grid items-center gap-x-1 rounded-sm px-1 text-xs",
+          // Every row is its own strip: the neutral row ground, with paper
+          // showing through the `ROW_GAP` under it, exactly as on Relative.
+          // "This is you" is the one strip on `primary` (§ Two colour systems,
+          // rule 3). The zebra and class-group tones this replaced made
+          // alternate rows different for no reason the reader could name; a
+          // strip per row separates them without ranking any of them.
+          row?.isPlayer ? PLAYER_ROW_GROUND : "bg-timing-row",
           dimmed ? "opacity-40" : "",
         ]
           .filter(Boolean)
           .join(" ")}
         style={{
+          height: rowSlotHeight(labelled) - ROW_GAP,
           gridTemplateColumns: gridTemplate(sectorCount, isVisible),
           // The row's leading edge, in the class's colour at full strength on
           // every row. It used to drop to 40 % below the class leader, which
           // under a solid band read as a rendering fault rather than a rank —
           // the leader's row looked lit and the rest looked broken. Solid, the
-          // edges join into one spine running down from the band, and the
-          // position block beside it is what carries rank.
+          // edges join into one spine running down from the band.
           //
           // It holds its drawn size as the table scales — see CLASS_EDGE_WIDTH.
           borderLeftWidth: CLASS_EDGE_WIDTH,
           borderLeftStyle: "solid",
           borderLeftColor: classColor,
-          // Clear the in-row column labels rather than centring under them.
+          // Clear the in-row column labels rather than centring under them;
+          // the slot is a label slice taller, so the content keeps a full
+          // row's height below them.
           paddingTop: labelled ? COL_LABEL_H : undefined,
         }}
       >
@@ -130,26 +155,35 @@ function StandingsRowInner({
           <ColumnLabels sectorCount={sectorCount} isVisible={isVisible} />
         )}
 
-        {/* position — the layout's own rank in a lap-time session, otherwise
-            iRacing's: class position when grouped by class, overall when flat.
-            A flat overall table numbered by class position reads as scrambled.
+        {/* position — plain bold `text`, straight after the class edge. It
+            sat in a solid block of the class's colour while the band above
+            was one; with the band now a strip like the rows, the edge alone
+            carries the class down the group and the number is just a number.
 
-            It sits in a block of the class's colour, which is the row's answer
-            to the solid band that opens its group: the masthead is a block, and
-            the first thing in every row under it is the same block one column
-            wide. Rank and class are the two facts you take off a row without
-            reading it, and this is the one cell where they can be the same
-            glance. Ink is measured, not assumed — see `readableInk`. */}
-        <div
-          className="tnum rounded-ctl py-0.5 text-center text-[14px] font-bold leading-none tabular-nums"
-          style={{ background: classColor, color: readableInk(classColor) }}
-        >
-          {rank ??
-            (classRelative
-              ? row?.classPosition ?? row?.position
-              : row?.position ?? row?.classPosition) ??
-            "—"}
-        </div>
+            For a few seconds after the car changes place, the block becomes
+            an arrow on a status fill — `accent` up, `danger` down — with
+            `on-accent` ink (§ Theme, rule 1). See `lib/positionFlash`. */}
+        {moved ? (
+          <div
+            className="flex items-center justify-center rounded-ctl py-[3px]"
+            style={{
+              background:
+                moved === "up" ? "var(--color-accent)" : "var(--color-danger)",
+              color: "var(--color-on-accent)",
+            }}
+            title={`${moved === "up" ? "Gained" : "Lost"} a place — now P${position}`}
+          >
+            {moved === "up" ? (
+              <ArrowUp className="size-3.5" strokeWidth={3.5} />
+            ) : (
+              <ArrowDown className="size-3.5" strokeWidth={3.5} />
+            )}
+          </div>
+        ) : (
+          <div className="tnum text-center text-[14px] font-bold leading-none tabular-nums text-text">
+            {position ?? "—"}
+          </div>
+        )}
 
         {/* position change */}
         {isVisible("change") && (
@@ -158,12 +192,11 @@ function StandingsRowInner({
           </div>
         )}
 
-        {/* car number — no pill: fill is rationed to the fastest-lap cell
-            (rule 5), and `muted` is the floor for a car number (§ Deliberately
-            not adopted). */}
+        {/* car number — no pill: fill is rationed (rule 5). Full `text`, at
+            the position's weight: on a row strip `muted` read as disabled. */}
         {isVisible("num") && (
           <div
-            className="truncate text-center text-[12px] font-bold tabular-nums tnum text-muted"
+            className="truncate text-center text-[12px] font-bold tabular-nums tnum text-text"
             title={`#${driver?.carNumber ?? ""}`}
           >
             {driver?.carNumber ?? "—"}
@@ -173,7 +206,10 @@ function StandingsRowInner({
         {/* car brand */}
         {isVisible("brand") && (
           <div className="flex justify-center">
-            <BrandIcon make={driver?.carMake ?? ""} />
+            <BrandIcon
+              make={driver?.carMake ?? ""}
+              height={STANDINGS_BRAND_H}
+            />
           </div>
         )}
 
@@ -201,32 +237,38 @@ function StandingsRowInner({
           </span>
         </div>
 
-        {/* license + SR */}
-        {isVisible("license") && (
-          <div className="flex justify-center">
-            {driver && (
-              <LicenseBadge
-                group={driver.licenseGroup}
-                safetyRating={driver.safetyRating}
-                color={driver.licenseColor}
-              />
-            )}
-          </div>
-        )}
-
-        {/* iRating + projected change */}
+        {/* licence + SR, then iRating + projected change — one pill in two
+            segments when both columns are on, each its own pill otherwise. */}
+        {isVisible("license") &&
+          (driver ? (
+            <LicenseBadge
+              group={driver.licenseGroup}
+              safetyRating={driver.safetyRating}
+              color={driver.licenseColor}
+              joined={isVisible("irating")}
+            />
+          ) : (
+            <div />
+          ))}
         {isVisible("irating") && (
           <IRatingCell
             iRating={driver?.iRating ?? row?.iRating ?? 0}
             change={row?.iRatingChangeEst ?? 0}
+            joined={isVisible("license")}
           />
         )}
 
         {/* gap to leader / interval (class-relative when grouped by class) */}
         {isVisible("gap") && (
-          <GapCell value={gapValue ?? null} isLaps={gapIsLaps ?? false} />
+          <GapCell
+            value={gapValue ?? null}
+            isLaps={gapIsLaps ?? false}
+            leader={leader}
+          />
         )}
-        {isVisible("interval") && <IntervalCell value={intervalValue ?? null} />}
+        {isVisible("interval") && (
+          <IntervalCell value={intervalValue ?? null} leader={leader} />
+        )}
 
         {/* last / best lap */}
         {isVisible("last") && (
@@ -259,11 +301,6 @@ function StandingsRowInner({
                   : undefined
             }
           />
-        )}
-
-        {/* tyre compound + laps */}
-        {isVisible("tire") && (
-          <TireCell compound={row?.tireCompound ?? null} laps={row?.tireLaps ?? 0} />
         )}
 
         {/* sector deltas */}

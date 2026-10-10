@@ -73,6 +73,10 @@
     "Segoe UI", system-ui, sans-serif;
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
     "Liberation Mono", monospace;
+  /* The timing tables' face (Standings, Relative) — see design.md
+     § Typography. */
+  --font-timing: "Saira Variable", "Inter Variable", Inter, system-ui,
+    sans-serif;
 
   /* ── Space ───────────────────────────────────────────────────────────────
      4-point scale. The app consumes this through Tailwind's default spacing
