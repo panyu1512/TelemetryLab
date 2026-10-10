@@ -5,6 +5,7 @@ import { OverlayWindow } from "./components/OverlayWindow";
 import { SingleWidgetWindow } from "./components/SingleWidgetWindow";
 import { getOverlayRoute, getWidgetRoute } from "./lib/overlayWindows";
 import "@fontsource-variable/inter";
+import "@fontsource-variable/saira";
 import "flag-icons/css/flag-icons.min.css";
 import "./styles.css";
 

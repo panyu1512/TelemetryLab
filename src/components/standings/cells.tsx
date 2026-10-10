@@ -371,7 +371,8 @@ BRAND_ICONS.VW = BRAND_ICONS.Volkswagen;
 BRAND_ICONS["Mercedes-AMG"] = BRAND_ICONS.Mercedes;
 
 /**
- * Default brand-mark box: 24 px tall inside a 32 px row, capped at 40 px wide.
+ * Default brand-mark box: 24 px tall, capped at 40 px wide — the Relative's
+ * size, on its 34 px row. Standings passes its own (`STANDINGS_BRAND_H`).
  *
  * Height alone never governed how big a mark *looked*. Every viewBox above is
  * now cropped to the mark's own ink, so the 24 px is ink rather than padding —
@@ -417,7 +418,7 @@ export function BrandIcon({
   // mark — no pill, since fill is rationed to the fastest-lap cell (rule 5).
   return (
     <span
-      className="shrink-0 font-mono text-[12px] font-bold uppercase leading-none tracking-[0.02em] text-white"
+      className="shrink-0 text-[12px] font-bold uppercase leading-none tracking-[0.02em] text-white"
       title={make}
     >
       {make.slice(0, 3)}
@@ -627,7 +628,7 @@ export function TireCell({
         {kind ? <TyreCompoundIcon kind={kind} size="1.05rem" label={title} /> : label}
       </span>
       <span
-        className="w-[1.1rem] text-left text-[11px] font-semibold leading-none tabular-nums tnum text-muted"
+        className="w-[1.45rem] text-left text-[11px] font-semibold leading-none tabular-nums tnum text-muted"
         style={{ color: ink }}
         title={`${laps} laps on tyres`}
       >

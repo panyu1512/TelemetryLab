@@ -109,6 +109,14 @@
   --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
     "Liberation Mono", monospace;
 
+  /* The timing tables' face — Standings and Relative, nothing else. Saira:
+     squared, technical forms that read as motorsport, true tabular figures
+     (so a column of lap times never jitters), and an x-height close to
+     Inter's, so the sizes these tables were tuned at still hold. Bundled
+     (`@fontsource-variable/saira`), never fetched: the app runs offline. */
+  --font-timing: "Saira Variable", "Inter Variable", Inter, system-ui,
+    sans-serif;
+
   /* Radius scale — near-square throughout. A pit-wall graphic is cut, not
      moulded: the corner is where that reads first, and 2 px is enough to stop
      a 1 px border pixel-stepping without softening the shape. */

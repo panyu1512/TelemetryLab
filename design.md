@@ -184,6 +184,22 @@ other direction.
   single-family system — this genre allows it, and a second display face on a
   panel this dense would be noise. 700 is reserved: CTAs, headings, and the
   values on the timing surfaces.
+- **The timing tables: Saira** (`--font-timing`), on Standings and Relative
+  and nothing else — rows, bands, strips, column labels and the tyre badge
+  alike, so each table speaks one face. Inter is a superb interface face and,
+  across a whole overlay, an anonymous one; these two tables are the app's
+  signature and wanted a face that reads as motorsport at a glance. Saira's
+  squared, technical forms do, and it was chosen over the obvious field on
+  three tests: **true tabular figures** (a lap-time column must not jitter —
+  Rajdhani has none, and Exo 2's default figures sit at uneven heights), **an
+  x-height close to Inter's** (Titillium Web reads a size smaller, which would
+  have meant re-tuning every size rule 8 settled), and **a variable weight
+  axis**, so 600 and 700 are both real cuts. Bundled with the app
+  (`@fontsource-variable/saira`), never fetched: the overlays run offline.
+
+  It stops at those two tables. Fuel & Strategy, the dashboard widgets and the
+  Manager stay Inter — the Manager is a surface you configure in, not one you
+  read at speed, and the other overlays have layouts tuned to Inter's metrics.
 - **Mono** (`--font-mono`) is the third voice, and it is *semantic*, not
   stylistic. It marks **instrument nomenclature**: measured values, coordinates,
   counts, protocol versions, log lines, channel labels, status readouts.
@@ -192,11 +208,12 @@ other direction.
   channel, it is mono.
 - Numerals in any column or ticking value carry `.tnum`.
 - Micro-labels are mono, uppercase, `tracking-[0.12em]`–`[0.14em]`, `text-faint`
-  — with one exception: on Standings and Relative, the session strip's and
-  class bands' labels are the rows' own bold sans caps in `muted`
-  (`StripField voice="sans"`, § The session strip). Those labels sit on a
-  lifted strip, where `faint` sinks under the floor it was tuned to clear, and
-  next to rows set in bold sans, where mono read as a different kind of text.
+  — except on Standings and Relative, where they are set in the tables' own
+  face: the column labels in `faint`, and the session strip's and class bands'
+  labels in bold caps `muted` (`StripField voice="sans"`, § The session strip).
+  Those strip labels sit on a lifted strip, where `faint` sinks under the floor
+  it was tuned to clear, and next to bold rows, where mono read as a different
+  kind of text.
 - **Headings are roman.** No italic display type anywhere.
 - **Caps are structural, not emphatic.** Three things are set in capitals and
   nothing else is: micro-labels (mono, or the timing strips' sans), section and
@@ -402,7 +419,9 @@ to have at the end of the race" — and so do we:
 Standings and Relative are the densest surfaces in this app and the only ones
 read at a glance while the user is doing something else. The geometry is fixed
 in [`constants.ts`](src/components/standings/constants.ts): `ROW_H` 32 px, of
-which the row's strip takes all but `ROW_GAP` 3, and — the two the rules below
+which the row's strip takes all but `ROW_GAP` 3 — and a brand mark the strip
+less 4 px either side (`STANDINGS_BRAND_H`, 21; 24 on Relative's 34 px row),
+so no mark ever reads as touching the strip's edge — — the two the rules below
 buy back — `COL_LABEL_H` 10 and `CLASS_GAP` 10, plus `STRIP_H` 26 when the
 § Session strip is on. Every rule below is downstream of
 the fact that a header band and a row cost the same height.
@@ -432,11 +451,18 @@ the fact that a header band and a row cost the same height.
    has one group and nothing to name), and it can be switched off from the
    Manager.
 3. **Column labels are off by default, and when on they print in the top slice
-   of the first row**, out of flow, so they cost no height at all. A persistent
-   28 px band was 13 % of a ~208 px six-row Relative spent on labels a returning
-   user stopped reading in their first session; the host row clears the
-   in-flow version with `COL_LABEL_H` of top padding instead of centring under
-   them.
+   of the first row** of each group, out of flow, rather than in a header band.
+   A persistent 28 px band was 13 % of a ~208 px six-row Relative spent on
+   labels a returning user stopped reading in their first session.
+
+   **The labelled row is one label slice taller** (`rowSlotHeight`: `ROW_H` +
+   `COL_LABEL_H` on Standings, `REL_LABEL_H` on Relative), and clears the
+   labels with that much top padding, so its content keeps a full row's height
+   under them. The labels used to cost no height at all — the host row simply
+   padded its own content down — which left that one row 19 px of a 29 px
+   strip: a 24 px brand mark and a 20 px licence pill broke out of the bottom
+   of it. Ten pixels per group, paid only by a driver who turned the labels
+   on, is the cheaper failure.
 
    The default flipped to *off* because "costs no height" was answering the
    wrong objection. The cost of a label a driver has already learned is not
@@ -1107,7 +1133,9 @@ strip as strips of the same kind; licence and iRating as one two-segment pill;
 the position as a plain number, briefly an arrow after a pass; `GAP` and `INT`
 on the leader's row; ratings in full. The boundary is the one above — no
 palette, typeface or token value came from it, and § Deliberately not adopted
-lists what was left behind. This pass retired two of Pit Wall's choices, the
+lists what was left behind. The typeface did not come from it: Saira was
+chosen afterwards, on its own tests (§ Typography). This pass retired two of
+Pit Wall's choices, the
 solid class band and the position block; § Two colour systems rule 2 says
 why, and § Dense tabular overlays rules 1, 5, 11, 13 and 14 and § The class
 band were rewritten with it. The tyre column's move to Relative, and its

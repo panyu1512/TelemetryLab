@@ -8,7 +8,13 @@ import {
 import { useRanksByLapTime } from "../../stores/useSessionStore";
 import { useStandingsUiStore } from "../../stores/useStandingsUiStore";
 import { sliceGroup } from "../../lib/standingsWindow";
-import { BAND_GAP, CLASS_BAND_H, CLASS_GAP, ROW_H, SKIP_H } from "./constants";
+import {
+  BAND_GAP,
+  CLASS_BAND_H,
+  CLASS_GAP,
+  SKIP_H,
+  rowSlotHeight,
+} from "./constants";
 
 /**
  * Flatten the grouped field into an absolutely-positioned item list.
@@ -44,10 +50,16 @@ export interface LayoutRow {
   carIdx: number;
   classId: number;
   /**
-   * First row of its class group, so it carries the column labels
-   * (`design.md` § Dense tabular overlays, rule 3).
+   * First row of its class group: the leader, whose gap and interval cells
+   * print the columns' names.
    */
   leader: boolean;
+  /**
+   * The leader's row with column labels switched on: it carries the labels
+   * (`design.md` § Dense tabular overlays, rule 3) in a slot one label slice
+   * taller than a plain row — see `rowSlotHeight`.
+   */
+  labelled: boolean;
   /**
    * The rank to print in the position column, or null to use the car's own
    * `position` from iRacing.
@@ -91,6 +103,7 @@ export function useStandingsLayout(): StandingsLayout {
   const byLapTime = useRanksByLapTime();
   const grouping = useStandingsUiStore((s) => s.grouping);
   const showClassBands = useStandingsUiStore((s) => s.showClassBands);
+  const showColumnLabels = useStandingsUiStore((s) => s.showColumnLabels);
   const showWholeField = useStandingsUiStore((s) => s.showWholeField);
   const classRows = useStandingsUiStore((s) => s.classRows);
   const otherClassRows = useStandingsUiStore((s) => s.otherClassRows);
@@ -130,6 +143,7 @@ export function useStandingsLayout(): StandingsLayout {
           top += SKIP_H;
         }
         const carIdx = group[pos];
+        const labelled = showColumnLabels && i === 0;
         items.push({
           kind: "row",
           key: `row-${carIdx}`,
@@ -137,9 +151,10 @@ export function useStandingsLayout(): StandingsLayout {
           carIdx,
           classId: classOf(carIdx),
           leader: i === 0,
+          labelled,
           rank: byLapTime ? pos + 1 : null,
         });
-        top += ROW_H;
+        top += rowSlotHeight(labelled);
       });
     };
 
@@ -196,6 +211,7 @@ export function useStandingsLayout(): StandingsLayout {
     byLapTime,
     grouping,
     showClassBands,
+    showColumnLabels,
     showWholeField,
     classRows,
     otherClassRows,

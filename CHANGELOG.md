@@ -17,6 +17,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   the set. Turn it on or off under Overlay Manager → Relative → Options →
   "Tyre compound" (on by default).
 
+### Fixed
+
+- **Car logos spilling out of the first row when column labels are on.** The
+  row that carries the labels is now tall enough for them and a full row
+  underneath, so logos and the licence pill no longer break out of it. Car
+  logos on Standings are also a touch smaller, so none of them touches the
+  edge of its row.
+
 ### Changed
 
 - **A new look for Standings and Relative.** Every row is now its own dark
@@ -26,6 +34,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   and iRating sit together in one two-part pill (`A3.45 | 8895 ⌃14`), with the
   safety rating to two decimals. The class leader's row shows **GAP** and
   **INT** where it has no gap or interval.
+- **A new typeface for Standings and Relative.** Both tables are now set in
+  Saira, a squared, motorsport-style font with fixed-width digits, so lap
+  times and gaps stay lined up as they change. The rest of the app keeps its
+  current font.
 - **iRating and strength of field in full.** `8895` instead of `8.9k`, on the
   rows, the class headers and the session line.
 - **Tyres moved off Standings.** The tyre column now lives on the Relative

@@ -41,6 +41,32 @@ export const ROW_GAP = 3;
 export const PLAYER_ROW_GROUND = "bg-primary/25 ring-1 ring-inset ring-primary/50";
 
 /**
+ * A row's slot: one {@link ROW_H}, plus the label slice when the row carries
+ * the column labels.
+ *
+ * The labels used to cost no height at all — the host row padded its own
+ * content down by {@link COL_LABEL_H} instead — which squeezed that one row's
+ * content into 19 px of a 29 px strip. A 24 px brand mark and a 20 px licence
+ * pill do not fit in 19 px, so on the class leader's row they broke out of the
+ * bottom of the strip. Labels are off by default, so the default layout pays
+ * nothing for this; a driver who turns them on pays 10 px per group.
+ */
+export function rowSlotHeight(labelled: boolean): number {
+  return ROW_H + (labelled ? COL_LABEL_H : 0);
+}
+
+/**
+ * Brand-mark height on a Standings row: the strip less 4 px above and below.
+ *
+ * Every mark is cropped to its own ink (see `BRAND_ICON_H`), so the 24 px
+ * default — set for a 32 px row on bare paper — filled the 29 px strip to
+ * within 2.5 px of both edges, and the round badges (BMW, Volkswagen,
+ * Mercedes) read as touching it. Derived from the geometry rather than set,
+ * so it follows `ROW_H` and `ROW_GAP` if either moves.
+ */
+export const STANDINGS_BRAND_H = ROW_H - ROW_GAP - 8;
+
+/**
  * Height of the column-label line printed *inside* the class leader's row.
  *
  * There is deliberately no persistent column-header band: on a six-row Relative

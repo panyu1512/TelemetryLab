@@ -123,7 +123,9 @@ const REL_COLUMNS: { id: RelColumnId; width: string; px: number }[] = [
   { id: "brand", width: "2.75rem", px: 44 },
   // Compound badge + laps on the set, beside the car it belongs to and ahead
   // of the gap: "who is this, what are they on" before "how far away".
-  { id: "tyre", width: "2.8rem", px: 45 },
+  // Wide enough for a three-digit lap count beside the badge (an enduro
+  // stint).
+  { id: "tyre", width: "3.1rem", px: 50 },
   { id: "gap", width: "4.8rem", px: 77 },
   { id: "last", width: "5rem", px: 80 },
   { id: "hint", width: "1.8rem", px: 29 },
@@ -237,7 +239,7 @@ function ColumnLabels({
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute inset-x-0 top-0 grid items-start gap-x-1 px-2 font-mono text-[9px] font-semibold uppercase leading-none tracking-[0.14em] text-faint"
+      className="pointer-events-none absolute inset-x-0 top-0 grid items-start gap-x-1 px-2 text-[9px] font-semibold uppercase leading-none tracking-[0.1em] text-faint"
       style={{ gridTemplateColumns: template, height: REL_LABEL_H }}
     >
       {REL_COLUMNS.filter((c) => isOn(c.id)).map((c) => (
@@ -369,7 +371,10 @@ function RowInner({
         .join(" ")}
       style={{
         gridTemplateColumns: template,
-        height: ROW_H,
+        // A labelled row is a label slice taller, so its content keeps a full
+        // row's height under the labels — a 24 px brand mark in the 24 px left
+        // over sat flush on the strip's bottom edge.
+        height: ROW_H + (labelled ? REL_LABEL_H : 0),
         // The class edge, at full strength on every row exactly as on Standings
         // — the same device has to read the same way on both surfaces. It holds
         // its drawn size as the table scales down (see CLASS_EDGE_WIDTH).
@@ -391,7 +396,7 @@ function RowInner({
       {isOn("class") && (
         <div className="flex justify-center">
           <span
-            className="min-w-0 max-w-full truncate rounded-ctl px-1 py-0.5 text-center font-mono text-[10px] font-bold uppercase leading-none tracking-[0.04em]"
+            className="min-w-0 max-w-full truncate rounded-ctl px-1 py-0.5 text-center text-[11px] font-bold uppercase leading-none tracking-[0.04em]"
             style={{ background: classColor, color: readableInk(classColor) }}
             title={driver?.carClassShortName || undefined}
           >
@@ -442,7 +447,7 @@ function RowInner({
         </span>
         {tag && (
           <span
-            className="shrink-0 font-mono text-[9px] font-bold leading-none tracking-[0.06em] text-muted"
+            className="shrink-0 text-[10px] font-bold leading-none tracking-[0.04em] text-muted"
             style={{ color: ink }}
             title={
               relation === LapRelation.LappedBy
@@ -665,7 +670,7 @@ export function RelativeScreen() {
   return (
     <div
       ref={bodyRef}
-      className="overlay-card timing-surface @container flex h-full flex-col overflow-hidden rounded-card border border-border/60"
+      className="overlay-card timing-surface font-timing @container flex h-full flex-col overflow-hidden rounded-card border border-border/60"
     >
       {/* Inset by the field's own `p-1`, so the strip and the row strips
           under it share one left and right edge. */}

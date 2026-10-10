@@ -10,7 +10,8 @@ import {
   LAP_UNDERLINE,
   PLAYER_ROW_GROUND,
   ROW_GAP,
-  ROW_H,
+  rowSlotHeight,
+  STANDINGS_BRAND_H,
   type ColumnVisibility,
 } from "./constants";
 import { ColumnLabels } from "./ColumnLabels";
@@ -113,7 +114,7 @@ function StandingsRowInner({
     <div
       className="row-glide absolute inset-x-0 rounded-sm will-change-transform"
       style={{
-        height: ROW_H,
+        height: rowSlotHeight(labelled),
         transform: `translateY(${top}px)`,
       }}
     >
@@ -132,7 +133,7 @@ function StandingsRowInner({
           .filter(Boolean)
           .join(" ")}
         style={{
-          height: ROW_H - ROW_GAP,
+          height: rowSlotHeight(labelled) - ROW_GAP,
           gridTemplateColumns: gridTemplate(sectorCount, isVisible),
           // The row's leading edge, in the class's colour at full strength on
           // every row. It used to drop to 40 % below the class leader, which
@@ -144,7 +145,9 @@ function StandingsRowInner({
           borderLeftWidth: CLASS_EDGE_WIDTH,
           borderLeftStyle: "solid",
           borderLeftColor: classColor,
-          // Clear the in-row column labels rather than centring under them.
+          // Clear the in-row column labels rather than centring under them;
+          // the slot is a label slice taller, so the content keeps a full
+          // row's height below them.
           paddingTop: labelled ? COL_LABEL_H : undefined,
         }}
       >
@@ -203,7 +206,10 @@ function StandingsRowInner({
         {/* car brand */}
         {isVisible("brand") && (
           <div className="flex justify-center">
-            <BrandIcon make={driver?.carMake ?? ""} />
+            <BrandIcon
+              make={driver?.carMake ?? ""}
+              height={STANDINGS_BRAND_H}
+            />
           </div>
         )}
 

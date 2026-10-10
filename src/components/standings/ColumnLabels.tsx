@@ -20,8 +20,9 @@ const ALIGN: Record<string, string> = {
  * column. Because it is out of flow it costs zero height; the host row only
  * pushes its own values down by {@link COL_LABEL_H} to clear it.
  *
- * Mono, uppercase, tracked and `faint` per § Typography — these are micro-labels,
- * the quietest voice in the system.
+ * Uppercase, tracked and `faint` per § Typography — these are micro-labels, the
+ * quietest voice in the system — and in the table's own face rather than mono,
+ * so the table speaks one face (see `--font-timing`).
  */
 export function ColumnLabels({
   sectorCount,
@@ -33,7 +34,7 @@ export function ColumnLabels({
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute inset-x-0 top-0 grid items-start gap-x-1 px-1 font-mono text-[8px] font-semibold uppercase leading-none tracking-[0.14em] text-faint"
+      className="pointer-events-none absolute inset-x-0 top-0 grid items-start gap-x-1 px-1 text-[8px] font-semibold uppercase leading-none tracking-[0.1em] text-faint"
       style={{
         height: COL_LABEL_H,
         gridTemplateColumns: gridTemplate(sectorCount, isVisible),

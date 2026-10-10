@@ -61,7 +61,7 @@ export function TyreCompoundIcon({ kind, size, label }: TyreCompoundIconProps) {
         textAnchor="middle"
         dominantBaseline="central"
         fill="currentColor"
-        fontFamily="var(--font-sans)"
+        fontFamily="var(--font-timing)"
         fontSize="8.6"
         fontWeight="700"
       >
