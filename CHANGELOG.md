@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-10-10
+
 ### Changed
 
 - **Standings shows fewer cars, bigger.** Instead of squeezing the whole grid
@@ -428,7 +430,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.13.0...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.14.0...HEAD
+[1.14.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.10.0...v1.11.0
