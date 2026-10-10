@@ -326,15 +326,16 @@
             <img
               src="assets/standings-compact.png"
               width="1240"
-              height="612"
+              height="544"
               alt="The standings overlay in a narrow window, drawn small enough that
                    every column still fits: a session strip reading lap, time left,
                    incidents, track and air temperature, strength of field and the
-                   clock, then a GT3 class band with car count, SoF and fastest lap
-                   over six driver rows, and the full GT4 group below it — each row
+                   clock, then a GT3 class header with strength of field, car count
+                   and fastest lap over six driver rows, and the top three of the GT4
+                   group below it. Each row is a dark strip edged in its class colour,
                    carrying position, position change, car number, car brand, flag,
-                   driver, licence, iRating, gap, interval, last lap, best lap, tyre
-                   and three sector columns."
+                   driver, a combined licence and iRating pill, gap, interval, last
+                   lap, best lap and three sector columns."
             />
           </figure>
         </section>
@@ -345,38 +346,42 @@
         <section id="standings" class="row row--wide">
           <div class="band">
             <span class="band__chip">Standings</span>
-            <span class="band__field"><span class="band__k">COLUMNS</span><b class="band__v">15</b></span>
+            <span class="band__field"><span class="band__k">COLUMNS</span><b class="band__v">14</b></span>
             <span class="band__field"><span class="band__k">ALWAYS</span><b class="band__v">3</b></span>
             <span class="band__field"><span class="band__k">ROW</span><b class="band__v">32px</b></span>
           </div>
           <div class="row__copy">
-            <h2>The whole field, grouped by class.</h2>
+            <h2>The running order, grouped by class.</h2>
             <p class="row__body">
-              Each class opens with its own band — how many cars are in it, its
-              strength of field, and the lap that leads it. Underneath, the
-              running order with everything you would otherwise be squinting for.
-              Every car is on screen at once: no scroll bar, the table scales to
-              fit the window. Join a practice late and the times set before you
-              arrived are already on the board.
+              Each class opens with its own header — how many cars are in it, its
+              strength of field, and the lap that leads it. Underneath, every car
+              on its own strip with everything you would otherwise be squinting
+              for. Your class shows its leaders and the cars around you, other
+              classes their top runners, and there is no scroll bar: the table
+              scales to fit the window. Join a practice late and the times set
+              before you arrived are already on the board.
             </p>
             <ul class="reads">
               <li>Gap to the class leader, and the interval to the car directly ahead</li>
               <li>Sector times and deltas, graded against your own best and the field's</li>
               <li>iRating with a live projected change, licence class and safety rating</li>
-              <li>Slicks or wets at a glance, and laps on the set; pit and off-track state</li>
+              <li>Who just passed whom: a green or red arrow on every change of place</li>
             </ul>
           </div>
           <figure class="shot">
             <img
               src="assets/standings.png"
               width="2360"
-              height="1024"
+              height="856"
               loading="lazy"
-              alt="The standings overlay showing two class groups, GT3 and GT4. Each
-                   group has a coloured band with car count, strength of field and
-                   fastest lap, followed by rows carrying position, position change,
-                   car number, car brand, flag, driver, licence, iRating, gap,
-                   interval, last lap, best lap, tyre and three sector columns."
+              alt="The standings overlay showing two class groups: all six GT3 cars
+                   and the top three GT4 cars. Each group opens with a header strip
+                   carrying strength of field, car count and fastest lap, followed by
+                   rows — each a dark strip edged in its class colour — carrying
+                   position, position change, car number, car brand, flag, driver, a
+                   combined licence and iRating pill, gap, interval, last lap, best
+                   lap and three sector columns. Each class leader's row reads GAP
+                   and INT where it has no gap to show."
             />
           </figure>
         </section>
@@ -386,6 +391,7 @@
             <span class="band__chip">Relative</span>
             <span class="band__field"><span class="band__k">SORT</span><b class="band__v">track order</b></span>
             <span class="band__field"><span class="band__k">GAP</span><b class="band__v">signed</b></span>
+            <span class="band__field"><span class="band__k">TYRES</span><b class="band__v">D · W</b></span>
           </div>
           <div class="row__copy">
             <h2>Who is actually coming.</h2>
@@ -395,22 +401,27 @@
               signed and live. Cars you are lapping turn blue, every car from
               another class carries its class badge, and the only highlighted row
               is yours. A closing indicator fires when a faster car is catching
-              you, and turns red when that car is from another class.
+              you, and turns red when that car is from another class. And every
+              car shows its tyres — a white D for dries, a blue W for wets — with
+              the laps on the set, so you see who has gone to wets the moment the
+              rain comes.
             </p>
           </div>
           <figure class="shot">
             <img
               src="assets/relative.png"
               width="1120"
-              height="832"
+              height="788"
               loading="lazy"
               alt="The relative overlay in a two-class race: cars ahead and behind
-                   the player sorted by on-track time, each row opening with a GT3 or
-                   GT4 class badge in its class colour. GT3 cars on the player's lap
-                   are written in white; GT4 cars a lap down on the player, both ahead
-                   and behind, are written in blue with a minus-one-lap tag. The
-                   player's own row is the only highlighted one, outlined and set
-                   apart by a gap above and below."
+                   the player sorted by on-track time, each row a dark strip opening
+                   with a GT3 or GT4 class badge in its class colour. GT3 cars on the
+                   player's lap are written in white; GT4 cars a lap down on the
+                   player, both ahead and behind, are written in blue with a
+                   minus-one-lap tag. Every row shows its tyres: a white D in a circle
+                   for dries or a blue W for wets, then the laps on the set — three of
+                   the GT4 cars are on wets. The player's own row is the only
+                   highlighted one, outlined and set apart by a gap above and below."
             />
           </figure>
         </section>
@@ -519,11 +530,14 @@
                 <tr>
                   <th scope="row">POS</th>
                   <td>Position in class, or overall when the field is ungrouped</td>
-                  <td>—</td>
+                  <td>
+                    <span class="sw sw--pb">↑ gained</span> ·
+                    <span class="sw sw--bad">↓ lost</span> for three seconds after a pass
+                  </td>
                 </tr>
                 <tr>
                   <th scope="row">GAP</th>
-                  <td>Seconds behind the class leader, or laps down</td>
+                  <td>Seconds behind the class leader, or laps down — the leader's own row reads GAP</td>
                   <td>—</td>
                 </tr>
                 <tr>
@@ -554,13 +568,8 @@
                 </tr>
                 <tr>
                   <th scope="row">LIC</th>
-                  <td>Licence class and safety rating</td>
+                  <td>Licence class and safety rating, joined to the iRating as one pill</td>
                   <td>iRacing's own licence colour</td>
-                </tr>
-                <tr>
-                  <th scope="row">TYRE</th>
-                  <td>Slicks or wets, and laps on the current set</td>
-                  <td>— shape, not colour: a drop in the hub marks wets</td>
                 </tr>
                 <tr>
                   <th scope="row">S1–S3</th>

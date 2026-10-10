@@ -1169,11 +1169,12 @@ band were rewritten with it. The tyre column's move to Relative, and its
   change still dates the screenshots silently until someone runs it. Wiring it
   into a release step would close that.
 
-  **They are dated now.** The strip-per-row restyle and the tyre column's move
-  to Relative landed without a re-shoot, and the page's copy describes what the
-  old captures show — a tyre column on Standings, "shape, not colour" for wets,
-  fifteen columns. Copy and captures have to change together, or the alt text
-  describes a picture the page is not showing.
+  The strip-per-row restyle and the tyre column's move to Relative shipped
+  without one, and the page spent one release describing the old captures — a
+  tyre column on Standings, "shape, not colour" for wets, fifteen columns.
+  Re-shot for 1.15, with the copy and alt text changed in the same commit:
+  the two have to move together, or the alt text describes a picture the page
+  is not showing.
 - **The class band could carry its own projected race distance.** The
   reference this restyle followed prints one per class (`6/≈35.80`): in a timed
   multi-class race a GT4 and an LMP1 cover different distances, and the session
