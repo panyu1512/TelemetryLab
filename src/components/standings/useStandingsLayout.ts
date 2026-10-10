@@ -2,11 +2,13 @@ import { useMemo } from "react";
 import {
   useStandingsBestLapOrder,
   useStandingsClasses,
+  useStandingsMeta,
   useStandingsOrder,
 } from "../../stores/useStandingsStore";
 import { useRanksByLapTime } from "../../stores/useSessionStore";
 import { useStandingsUiStore } from "../../stores/useStandingsUiStore";
-import { BAND_GAP, CLASS_BAND_H, CLASS_GAP, ROW_H } from "./constants";
+import { sliceGroup } from "../../lib/standingsWindow";
+import { BAND_GAP, CLASS_BAND_H, CLASS_GAP, ROW_H, SKIP_H } from "./constants";
 
 /**
  * Flatten the grouped field into an absolutely-positioned item list.
@@ -27,6 +29,11 @@ import { BAND_GAP, CLASS_BAND_H, CLASS_GAP, ROW_H } from "./constants";
  *
  * Class groups open with a band item when bands are on (`design.md` § Dense
  * tabular overlays, rule 2), and are separated by {@link CLASS_GAP} either way.
+ *
+ * Unless the whole field is asked for, each group is capped (see
+ * `lib/standingsWindow`): the player's class keeps its leaders and the cars
+ * around the player, other classes their top runners. Where the kept rows skip
+ * part of the order, a {@link LayoutSkip} marks the break.
  */
 
 /** One field row. */
@@ -62,7 +69,15 @@ export interface LayoutBand {
   classId: number;
 }
 
-export type LayoutItem = LayoutRow | LayoutBand;
+/** A break in the running order, where a capped group skips cars. */
+export interface LayoutSkip {
+  kind: "skip";
+  key: string;
+  top: number;
+  classId: number;
+}
+
+export type LayoutItem = LayoutRow | LayoutBand | LayoutSkip;
 
 export interface StandingsLayout {
   items: LayoutItem[];
@@ -76,6 +91,10 @@ export function useStandingsLayout(): StandingsLayout {
   const byLapTime = useRanksByLapTime();
   const grouping = useStandingsUiStore((s) => s.grouping);
   const showClassBands = useStandingsUiStore((s) => s.showClassBands);
+  const showWholeField = useStandingsUiStore((s) => s.showWholeField);
+  const classRows = useStandingsUiStore((s) => s.classRows);
+  const otherClassRows = useStandingsUiStore((s) => s.otherClassRows);
+  const { playerCarIdx } = useStandingsMeta();
 
   // In a lap-time session the whole table reads off the best-lap ranking; in a
   // race it reads off the bridge's race order. Both arrays hold their identity
@@ -86,6 +105,44 @@ export function useStandingsLayout(): StandingsLayout {
     const items: LayoutItem[] = [];
     let top = 0;
 
+    // Lay out one group's kept rows (with a skip marker where the order
+    // breaks). `rank` is the car's place in the *whole* group, so a capped
+    // timesheet still prints P14 for the fourteenth car, not P4.
+    const pushGroup = (
+      group: readonly number[],
+      classOf: (carIdx: number) => number,
+      groupClassId: number,
+      cap: number,
+    ) => {
+      const slice = sliceGroup(
+        group.length,
+        group.indexOf(playerCarIdx),
+        showWholeField ? 0 : cap,
+      );
+      slice.positions.forEach((pos, i) => {
+        if (i === slice.breakAt) {
+          items.push({
+            kind: "skip",
+            key: `skip-${groupClassId}`,
+            top,
+            classId: groupClassId,
+          });
+          top += SKIP_H;
+        }
+        const carIdx = group[pos];
+        items.push({
+          kind: "row",
+          key: `row-${carIdx}`,
+          top,
+          carIdx,
+          classId: classOf(carIdx),
+          leader: i === 0,
+          rank: byLapTime ? pos + 1 : null,
+        });
+        top += ROW_H;
+      });
+    };
+
     if (grouping === "overall" || classes.length === 0) {
       // One flat table in overall order. Attribute a class id per row for the
       // class-colour accent, using the class grouping when available.
@@ -93,21 +150,12 @@ export function useStandingsLayout(): StandingsLayout {
       // No bands here, and not because they were switched off: a flat table has
       // one group, and a band over the whole field would be naming something
       // the reader can already see.
+      //
+      // One group ⇒ the overall leader carries the labels, and the player's
+      // cap applies to the whole table.
       const classOf = new Map<number, number>();
       for (const c of classes) for (const idx of c.order) classOf.set(idx, c.carClassId);
-      order.forEach((carIdx, i) => {
-        items.push({
-          kind: "row",
-          key: `row-${carIdx}`,
-          top,
-          carIdx,
-          classId: classOf.get(carIdx) ?? -1,
-          // One group ⇒ the overall leader carries the labels.
-          leader: i === 0,
-          rank: byLapTime ? i + 1 : null,
-        });
-        top += ROW_H;
-      });
+      pushGroup(order, (idx) => classOf.get(idx) ?? -1, -1, classRows);
       return { items, totalHeight: top };
     }
 
@@ -138,19 +186,19 @@ export function useStandingsLayout(): StandingsLayout {
         top += CLASS_BAND_H + BAND_GAP;
       }
       const group = memberships?.get(c.carClassId) ?? c.order;
-      group.forEach((carIdx, i) => {
-        items.push({
-          kind: "row",
-          key: `row-${carIdx}`,
-          top,
-          carIdx,
-          classId: c.carClassId,
-          leader: i === 0,
-          rank: byLapTime ? i + 1 : null,
-        });
-        top += ROW_H;
-      });
+      const cap = group.includes(playerCarIdx) ? classRows : otherClassRows;
+      pushGroup(group, () => c.carClassId, c.carClassId, cap);
     });
     return { items, totalHeight: top };
-  }, [classes, order, byLapTime, grouping, showClassBands]);
+  }, [
+    classes,
+    order,
+    byLapTime,
+    grouping,
+    showClassBands,
+    showWholeField,
+    classRows,
+    otherClassRows,
+    playerCarIdx,
+  ]);
 }

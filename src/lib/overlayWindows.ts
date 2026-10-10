@@ -12,6 +12,7 @@
  */
 
 import { getWindowBounds } from "./windowState";
+import { liveMonitors, monitorOf, placeWindow } from "./windowPlacement";
 import { broadcast } from "./windowBus";
 
 const isTauri =
@@ -183,9 +184,22 @@ async function openWindow(
         return;
       }
 
-      // Reopen exactly where it was last time, if we have saved bounds — so
-      // there's no default-position flash before the window restores itself.
-      const saved = getWindowBounds(winLabel);
+      // Reopen where it was last time, if we have saved bounds — so there's
+      // no default-position flash before the window restores itself. The
+      // saved bounds are checked against the monitors attached *now* (a
+      // window saved on a screen that is gone, or no longer where it was,
+      // would open invisible), and converted from the physical pixels they
+      // were saved in to the logical ones the builder takes. The window then
+      // sets its exact physical bounds itself on load (`initWindow`).
+      const monitors = await liveMonitors();
+      const placed = placeWindow(getWindowBounds(winLabel), monitors);
+      const dpi = placed ? (monitorOf(placed, monitors)?.scaleFactor ?? 1) : 1;
+      const saved = placed && {
+        x: placed.x / dpi,
+        y: placed.y / dpi,
+        width: placed.width / dpi,
+        height: placed.height / dpi,
+      };
       const win = new WebviewWindow(winLabel, {
         url: relativeUrl(param, id),
         title: `${label} — iRacing Telemetry`,

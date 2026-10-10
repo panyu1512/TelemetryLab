@@ -9,6 +9,8 @@ import { useStandingsUiStore } from "../../stores/useStandingsUiStore";
 import { useRanksByLapTime } from "../../stores/useSessionStore";
 import {
   CLASS_BAND_H,
+  CLASS_EDGE_WIDTH,
+  SKIP_H,
   scopeColumnsToSession,
   tableMinWidth,
   type ColumnVisibility,
@@ -47,19 +49,26 @@ const FIT_SLACK = 2;
  * clickable; the gap that separates the groups (rule 2) is still doing its job
  * underneath it.
  *
- * **The whole field, always, and no scroll bar.** The surface is scaled to the
- * tighter of its width and its height (`lib/tableScale.fitScale`), so every
- * car in the session is on screen at once and rows and type shrink together as
- * the field grows or the window shortens. It used to fit the width and scroll
- * for the rest, with a "follow my row" option to keep the player in view — on
- * a screen with no controls, that meant the back of a big field was simply
- * never seen.
+ * **A set number of rows, drawn as large as the window allows** — the
+ * Relative's model. Each class group is capped (`lib/standingsWindow`): the
+ * player's class shows its leaders plus the cars around the player, other
+ * classes their top runners, with a marker where the order skips. The row
+ * counts are set in the Overlay Manager, so the window only decides how large
+ * the rows are drawn, never which cars are on them. Fitting the whole grid
+ * instead — still available as "Whole field" — drew a 40-car field at a third
+ * of its size in an overlay-sized window: every car, and none of them
+ * readable at speed.
  *
- * Rendering budget: every row is mounted (there is nothing off screen to
- * window away any more), but each row subscribes to just its own entry, and
- * reorders animate purely via CSS transforms. A tick that moves three cars
- * re-renders three rows, which keeps a 60-car field at 10 Hz well inside a
- * 60 fps frame.
+ * Either way there is no scroll bar: the surface is scaled to the tighter of
+ * its width and its height (`lib/tableScale.fitScale`), never above full size,
+ * so with the rows capped it is the Relative's width-driven scale for any
+ * window tall enough to hold them, and shrinks rather than clipping when it is
+ * not.
+ *
+ * Rendering budget: every shown row is mounted, but each row subscribes to
+ * just its own entry, and reorders animate purely via CSS transforms. A tick
+ * that moves three cars re-renders three rows, which keeps even a 60-car whole
+ * field at 10 Hz well inside a 60 fps frame.
  *
  * **Outside a race the screen is a timesheet, not a running order** (see
  * `lib/sessionKind`). Practice and qualifying rank by best lap, so the rows are
@@ -194,6 +203,18 @@ export function StandingsScreen() {
               }}
             >
               {items.map((it) => {
+                if (it.kind === "skip") {
+                  return (
+                    <SkipMarker
+                      key={it.key}
+                      top={it.top}
+                      color={
+                        classColorById.get(it.classId) ??
+                        "var(--color-faint)"
+                      }
+                    />
+                  );
+                }
                 if (it.kind === "band") {
                   const standing = classById.get(it.classId);
                   if (!standing) return null;
@@ -237,6 +258,37 @@ export function StandingsScreen() {
             </div>
           </div>
         )}
+      </div>
+    </div>
+  );
+}
+
+/**
+ * Where a capped group skips cars: a short dotted rule in the class colour,
+ * set against the position column so it reads as "places missing here" in the
+ * rank block, not as a divider across the timing data.
+ */
+function SkipMarker({ top, color }: { top: number; color: string }) {
+  return (
+    <div
+      aria-hidden
+      className="row-glide absolute inset-x-0 flex items-center will-change-transform"
+      style={{
+        height: SKIP_H,
+        transform: `translateY(${top}px)`,
+        // Row padding plus the class edge, so the dots sit under the
+        // position column rather than under the edge.
+        paddingLeft: `calc(4px + ${CLASS_EDGE_WIDTH})`,
+      }}
+    >
+      <div className="flex w-[2.1rem] justify-center gap-[3px]">
+        {[0, 1, 2].map((i) => (
+          <span
+            key={i}
+            className="size-[3px] rounded-full opacity-80"
+            style={{ background: color }}
+          />
+        ))}
       </div>
     </div>
   );

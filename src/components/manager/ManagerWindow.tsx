@@ -240,7 +240,7 @@ function OverlayConfigSections({ overlayId }: { overlayId: string }) {
       {overlayId === "standings" && (
         <ConfigSection
           title="View"
-          description="How the field is grouped, and whether the table follows your row."
+          description="How the field is grouped, and how many cars it shows."
         >
           <StandingsViewPanel />
         </ConfigSection>

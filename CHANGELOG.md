@@ -7,6 +7,28 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.14.0] - 2026-10-10
+
+### Changed
+
+- **Standings shows fewer cars, bigger.** Instead of squeezing the whole grid
+  into the window (tiny text in a big field), Standings now works like
+  Relative: your class shows the leaders plus the cars around you, other
+  classes show their top runners, and the rows stay full size. A row of dots
+  marks where positions are skipped. Set how many cars in the Overlay Manager
+  ("Cars in your class", "Cars in other classes"), or turn on "Whole field" to
+  get the old every-car view back.
+
+### Fixed
+
+- **The app sometimes opening invisible.** Windows reopen where you left them,
+  but if your main monitor changed, a screen was unplugged, or a window was
+  minimized when the app closed, that spot could be off screen — the app was
+  running but you couldn't see it. Saved positions are now checked against the
+  monitors you actually have: a window that would land off screen is brought
+  back onto one (centred on your main monitor if its old screen is gone), and
+  minimized positions are no longer saved.
+
 ## [1.13.0] - 2026-10-05
 
 ### Added
@@ -408,7 +430,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.13.0...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.14.0...HEAD
+[1.14.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.11.0...v1.12.0
 [1.11.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.10.0...v1.11.0

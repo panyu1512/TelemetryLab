@@ -513,12 +513,24 @@ the fact that a header band and a row cost the same height.
    scaled means.
 
    **Standings fits its height too, and never scrolls.** It takes the tighter
-   of width and height (`fitScale`), so every car in the session is on screen
-   at once — a 60-car field in a short window is small, but it is all there.
-   It used to fit the width and scroll for the rest, with a "follow my row"
-   option to keep the player in view; on a screen with no controls that meant
-   the back of a big field was never seen, and the option is gone with the
-   scroll bar.
+   of width and height (`fitScale`), so every row it shows is on screen at
+   once. It used to fit the width and scroll for the rest, with a "follow my
+   row" option to keep the player in view; on a screen with no controls that
+   meant the back of a big field was never seen, and the option is gone with
+   the scroll bar.
+
+   **Standings shows a set number of rows per class, the way Relative does.**
+   Fitting *every* car turned out to be the same silent failure as shedding
+   columns, one axis over: a 40-car field in an overlay sized beside the
+   mirrors drew 13 px names at a third of their size — all there, none of it
+   readable at speed, and the window could only make it worse. So each class
+   group is capped (`lib/standingsWindow`): the player's class keeps its
+   leaders and the cars around the player, other classes their top runners,
+   and a dotted marker in the position column shows where the order skips.
+   The counts are set in the Overlay Manager — the driver chooses how many
+   cars, and the window then only decides how large they are drawn, which is
+   exactly the split Relative's "cars per side" makes. "Whole field" brings
+   back the every-car fit for anyone who wants it.
 
    The scale never exceeds 1 — a wide overlay is a table with room around it,
    not a table blown up. On Relative it stops at `MIN_TABLE_SCALE`, below which

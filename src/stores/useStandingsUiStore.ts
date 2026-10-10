@@ -22,6 +22,10 @@ import {
  */
 export type Grouping = "class" | "overall";
 
+/** Bounds for the per-class row caps (see `lib/standingsWindow`). */
+export const STANDINGS_ROWS_MIN = 3;
+export const STANDINGS_ROWS_MAX = 30;
+
 /** Column id → visible. Absent ids default to visible. */
 export type ColumnVisibilityMap = Partial<Record<StandingsColumnId, boolean>>;
 
@@ -52,10 +56,30 @@ export interface StandingsUiState {
    * once, then switchable off, beats permanent.
    */
   showColumnLabels: boolean;
+  /**
+   * Draw every car in the session, shrinking rows to fit the window, instead
+   * of capping each class at {@link classRows} / {@link otherClassRows}.
+   *
+   * Off by default. The whole grid fitted into an overlay-sized window draws a
+   * big field at a fraction of its size — every car, and none of them legible
+   * at speed. Capped, the Standings works like the Relative: a set number of
+   * rows, drawn as large as the window's width allows.
+   */
+  showWholeField: boolean;
+  /**
+   * Rows for the player's class (or the whole table when grouped overall):
+   * the class leaders plus the cars around the player.
+   */
+  classRows: number;
+  /** Rows for each class the player is not in: that class's top runners. */
+  otherClassRows: number;
   setGrouping: (g: Grouping) => void;
   setShowSessionStrip: (v: boolean) => void;
   setShowClassBands: (v: boolean) => void;
   setShowColumnLabels: (v: boolean) => void;
+  setShowWholeField: (v: boolean) => void;
+  setClassRows: (n: number) => void;
+  setOtherClassRows: (n: number) => void;
   /** Whether a column is currently visible (configurable ones default to true). */
   isColumnVisible: (id: StandingsColumnId) => boolean;
   toggleColumn: (id: StandingsColumnId) => void;
@@ -71,6 +95,9 @@ export interface Persisted {
   showSessionStrip: boolean;
   showClassBands: boolean;
   showColumnLabels: boolean;
+  showWholeField: boolean;
+  classRows: number;
+  otherClassRows: number;
 }
 
 const DEFAULTS: Persisted = {
@@ -79,7 +106,15 @@ const DEFAULTS: Persisted = {
   showSessionStrip: true,
   showClassBands: true,
   showColumnLabels: false,
+  showWholeField: false,
+  classRows: 12,
+  otherClassRows: 3,
 };
+
+function clampRows(n: unknown, fallback: number): number {
+  const v = typeof n === "number" && Number.isFinite(n) ? Math.round(n) : fallback;
+  return Math.max(STANDINGS_ROWS_MIN, Math.min(STANDINGS_ROWS_MAX, v));
+}
 
 function load(): Persisted {
   try {
@@ -90,7 +125,13 @@ function load(): Persisted {
     const { followPlayer: _retired, ...parsed } = JSON.parse(raw) as Partial<
       Persisted & { followPlayer: boolean }
     >;
-    return { ...DEFAULTS, ...parsed, columns: parsed.columns ?? {} };
+    return {
+      ...DEFAULTS,
+      ...parsed,
+      columns: parsed.columns ?? {},
+      classRows: clampRows(parsed.classRows, DEFAULTS.classRows),
+      otherClassRows: clampRows(parsed.otherClassRows, DEFAULTS.otherClassRows),
+    };
   } catch {
     return DEFAULTS;
   }
@@ -115,6 +156,9 @@ export const useStandingsUiStore = create<StandingsUiState>((set, get) => {
       showSessionStrip,
       showClassBands,
       showColumnLabels,
+      showWholeField,
+      classRows,
+      otherClassRows,
     } = get();
     const snapshot: Persisted = {
       grouping,
@@ -122,6 +166,9 @@ export const useStandingsUiStore = create<StandingsUiState>((set, get) => {
       showSessionStrip,
       showClassBands,
       showColumnLabels,
+      showWholeField,
+      classRows,
+      otherClassRows,
     };
     persist(snapshot);
     if (!applyingRemote) broadcast("standings-ui:changed", snapshot);
@@ -142,6 +189,18 @@ export const useStandingsUiStore = create<StandingsUiState>((set, get) => {
     },
     setShowColumnLabels: (showColumnLabels) => {
       set({ showColumnLabels });
+      save();
+    },
+    setShowWholeField: (showWholeField) => {
+      set({ showWholeField });
+      save();
+    },
+    setClassRows: (n) => {
+      set({ classRows: clampRows(n, DEFAULTS.classRows) });
+      save();
+    },
+    setOtherClassRows: (n) => {
+      set({ otherClassRows: clampRows(n, DEFAULTS.otherClassRows) });
       save();
     },
     isColumnVisible: (id) => get().columns[id] !== false,
@@ -172,6 +231,9 @@ subscribe("standings-ui:changed", (remote) => {
       showClassBands: remote.showClassBands ?? DEFAULTS.showClassBands,
       showColumnLabels:
         remote.showColumnLabels ?? DEFAULTS.showColumnLabels,
+      showWholeField: remote.showWholeField ?? DEFAULTS.showWholeField,
+      classRows: clampRows(remote.classRows, DEFAULTS.classRows),
+      otherClassRows: clampRows(remote.otherClassRows, DEFAULTS.otherClassRows),
     });
   } finally {
     applyingRemote = false;

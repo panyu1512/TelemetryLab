@@ -59,6 +59,13 @@ export const CLASS_BAND_H = 30;
  */
 export const BAND_GAP = 4;
 
+/**
+ * Height of the marker where a capped class group skips part of its order
+ * (between the leaders and the cars around the player). Small: it only has to
+ * say "cars missing here", and every pixel it takes is one a row could use.
+ */
+export const SKIP_H = 10;
+
 /** Every column in the timing table, in render order. */
 export type StandingsColumnId =
   | "pos"

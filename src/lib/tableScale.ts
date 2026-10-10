@@ -30,7 +30,7 @@ import type { CSSProperties } from "react";
  * comfortable to read at speed. Past this point the surface goes back to
  * scrolling sideways, which at least fails visibly.
  *
- * Relative only, now. Standings fits the whole field with {@link fitScale},
+ * Relative only, now. Standings fits its rows with {@link fitScale},
  * which has no floor because it has no scroll bar to fall back to.
  */
 export const MIN_TABLE_SCALE = 0.5;
