@@ -77,8 +77,8 @@ const PAST_A_LAP_MS = 40_000;
  *
  * The boundaries at these widths, from the live app: the standings field runs
  * strip 26 · [band 30 + gap 4 + 6 rows] · CLASS_GAP 10 · [band 30 + gap 4 +
- * 6 rows], with row bottoms at 71 · 107 · 139 … 267 for GT3 and 307 · 343 …
- * 503 for GT4.
+ * 3 rows] — the other class is capped at three cars by default — with each
+ * row a 29 px strip in a 32 px slot, and the last row's strip ending at 404.
  *
  * **Those are full-size numbers, and a narrow shot is not full size.** The
  * timing tables scale themselves to their window now, so below the width its
@@ -92,7 +92,10 @@ const PAST_A_LAP_MS = 40_000;
  * Standings no longer scrolls: it scales to the tighter of width *and* height
  * (`lib/tableScale.fitScale`), so its frame can never crop the field — the
  * table shrinks to fit instead. Height still decides how *large* it draws,
- * and an over-tall frame still leaves empty paper under the last row.
+ * and an over-tall frame still leaves empty paper under the last row. So its
+ * heights are the *smallest at which the table is still width-limited*: one
+ * pixel shorter and it starts shrinking to fit the height instead. Found by
+ * stepping the viewport down until the scale moves, not by arithmetic.
  *
  * The relative shot is meant to show a multi-class race with lapped traffic:
  * GT3 rows on the player's lap in white, GT4 rows a lap down in blue with a
@@ -107,19 +110,18 @@ const SHOTS = [
   // at 620 px every one of the fifteen columns is still there, drawn smaller.
   // (It used to prove the opposite. Columns stopped dropping when the tables
   // learned to scale — see `lib/tableScale`.)
-  // 306, down from 381: at this width the table no longer sheds columns, it
-  // draws them all at ~0.61 — so the field itself is ~0.61 as tall, and the old
-  // frame closed on 75 px of empty paper below the last row.
-  { name: "standings-compact", route: "?overlay=standings", w: 620, h: 306 },
-  // 512 = the whole two-class field (ends 503). This capture is the page's
-  // proof that the table groups by class; at 420 it cropped the GT4 group
-  // mid-row, which showed the reader four of six cars and a sliced fifth.
-  { name: "standings", route: "?overlay=standings", w: 1180, h: 512 },
-  // 416 fits five cars ahead, the player and four behind, all whole (the last
-  // row ends at 407). Down from 472 when the `YOU` / `BEHIND` labels became
-  // plain space either side of the player's row — the old frame closed on
-  // ~60 px of empty paper.
-  { name: "relative", route: "?overlay=relative", w: 560, h: 416 },
+  // 272: at this width the table draws every column at ~0.62, and 271 is the
+  // shortest frame that keeps it width-limited (one pixel of slack on top).
+  // Down from 306 when the other class was capped at three cars by default.
+  { name: "standings-compact", route: "?overlay=standings", w: 620, h: 272 },
+  // 428 = the whole two-class field at full size (width-limited from 426).
+  // This capture is the page's proof that the table groups by class; at 420
+  // an older layout cropped the GT4 group mid-row.
+  { name: "standings", route: "?overlay=standings", w: 1180, h: 428 },
+  // 394 fits five cars ahead, the player and four behind, all whole: the
+  // tenth row's strip ends at 387 at this width's ~0.90 scale. Down from 416
+  // once the tyre column joined the row and the table drew a step smaller.
+  { name: "relative", route: "?overlay=relative", w: 560, h: 394 },
   { name: "dashboard", route: "?overlay=dashboard", w: 1100, h: 620 },
   { name: "manager", route: "", w: 1400, h: 900, wait: PAST_A_LAP_MS },
   // Tall enough for the pit-strategies card, which stopped being collapsed and
