@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.15.0] - 2026-10-10
+
 ### Added
 
 - **See who just passed whom.** When a car changes place on Standings, its
@@ -16,14 +18,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   **D** in a circle for dries, a blue **W** for wets, and how many laps are on
   the set. Turn it on or off under Overlay Manager → Relative → Options →
   "Tyre compound" (on by default).
-
-### Fixed
-
-- **Car logos spilling out of the first row when column labels are on.** The
-  row that carries the labels is now tall enough for them and a full row
-  underneath, so logos and the licence pill no longer break out of it. Car
-  logos on Standings are also a touch smaller, so none of them touches the
-  edge of its row.
 
 ### Changed
 
@@ -42,6 +36,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   rows, the class headers and the session line.
 - **Tyres moved off Standings.** The tyre column now lives on the Relative
   (see above), which leaves Standings one column narrower.
+
+### Fixed
+
+- **Car logos spilling out of the first row when column labels are on.** The
+  row that carries the labels is now tall enough for them and a full row
+  underneath, so logos and the licence pill no longer break out of it. Car
+  logos on Standings are also a touch smaller, so none of them touches the
+  edge of its row.
 
 ## [1.14.0] - 2026-10-10
 
@@ -466,7 +468,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.14.0...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.15.0...HEAD
+[1.15.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.14.0...v1.15.0
 [1.14.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.12.0...v1.13.0
 [1.12.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.11.0...v1.12.0
