@@ -22,6 +22,7 @@ import {
   saveWindowBounds,
   saveWindowLock,
 } from "../lib/windowState";
+import { isPlausibleBounds, liveMonitors, placeWindow } from "../lib/windowPlacement";
 
 const isTauri =
   typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
@@ -136,12 +137,16 @@ export async function initWindow(): Promise<void> {
   const { listen } = await import("@tauri-apps/api/event");
   const w = getCurrentWindow();
 
-  // Restore saved bounds on launch (exact position + size).
-  const bounds = getWindowBounds(WINDOW_LABEL);
+  // Restore saved bounds on launch — but only onto a screen that exists now.
+  // Saved coordinates go stale when the primary monitor changes, a screen is
+  // unplugged, or the window was minimized when it last saved; restoring them
+  // blindly opens this borderless window somewhere nobody can see it (see
+  // `lib/windowPlacement`). Size first, so the position clamp holds.
+  const bounds = placeWindow(getWindowBounds(WINDOW_LABEL), await liveMonitors());
   if (bounds) {
     try {
-      await w.setPosition(new PhysicalPosition(bounds.x, bounds.y));
       await w.setSize(new PhysicalSize(bounds.width, bounds.height));
+      await w.setPosition(new PhysicalPosition(bounds.x, bounds.y));
     } catch {}
   }
 
@@ -150,14 +155,13 @@ export async function initWindow(): Promise<void> {
 
   const saveBounds = async () => {
     try {
+      // Minimizing fires a move to Windows' (-32000, -32000) parking spot;
+      // saving that would reopen the window off screen next launch.
+      if (await w.isMinimized()) return;
       const pos = await w.innerPosition();
       const size = await w.innerSize();
-      saveWindowBounds(WINDOW_LABEL, {
-        x: pos.x,
-        y: pos.y,
-        width: size.width,
-        height: size.height,
-      });
+      const next = { x: pos.x, y: pos.y, width: size.width, height: size.height };
+      if (isPlausibleBounds(next)) saveWindowBounds(WINDOW_LABEL, next);
     } catch {}
   };
   await w.listen("tauri://move", saveBounds);

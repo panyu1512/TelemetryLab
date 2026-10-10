@@ -17,7 +17,11 @@ vi.mock("../lib/windowBus", () => ({
   },
 }));
 
-import { useStandingsUiStore } from "./useStandingsUiStore";
+import {
+  STANDINGS_ROWS_MAX,
+  STANDINGS_ROWS_MIN,
+  useStandingsUiStore,
+} from "./useStandingsUiStore";
 
 const store = () => useStandingsUiStore.getState();
 
@@ -82,5 +86,29 @@ describe("standings column configuration", () => {
     expect(store().isColumnVisible("irating")).toBe(false);
     // Applying a remote change must not re-broadcast.
     expect(bus.broadcasts).toHaveLength(0);
+  });
+});
+
+describe("standings row caps", () => {
+  it("caps the field by default, like the Relative", () => {
+    expect(store().showWholeField).toBe(false);
+    expect(store().classRows).toBeGreaterThan(store().otherClassRows);
+  });
+
+  it("clamps row counts into range and broadcasts them", () => {
+    bus.broadcasts.length = 0;
+    store().setClassRows(500);
+    expect(store().classRows).toBe(STANDINGS_ROWS_MAX);
+    store().setOtherClassRows(0);
+    expect(store().otherClassRows).toBe(STANDINGS_ROWS_MIN);
+    const last = bus.broadcasts[bus.broadcasts.length - 1]?.payload as { classRows: number; otherClassRows: number };
+    expect(last.classRows).toBe(STANDINGS_ROWS_MAX);
+    expect(last.otherClassRows).toBe(STANDINGS_ROWS_MIN);
+  });
+
+  it("fills the caps in from an older window's broadcast that lacks them", () => {
+    bus.handlers["standings-ui:changed"]?.({ grouping: "class", columns: {} });
+    expect(store().showWholeField).toBe(false);
+    expect(store().classRows).toBeGreaterThanOrEqual(STANDINGS_ROWS_MIN);
   });
 });
