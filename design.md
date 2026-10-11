@@ -543,30 +543,47 @@ the fact that a header band and a row cost the same height.
 
    **The licence and iRating pill is a ground, not a fill.** Licence + safety
    rating and iRating + its projected change are one compound cell in two
-   segments (rule 4): `A3.45 | 8895 ⌃14`. The licence segment is the licence's
-   own colour as a diagonal gradient, 52 % toward black at its lighter
-   top-left and 30 % at its deeper bottom-right, with white ink — the light
-   end is held where white still clears 4.5:1 on C's yellow, the closest
-   call ([`lib/ratingPill.test.ts`](src/lib/ratingPill.test.ts)), so it reads
-   as a tone on the row rather than a beacon. The iRating segment is a glass
-   lift, lighter at the top, and both carry a one-pixel highlight along their
-   top edge, so the pill reads as one lit object rather than two painted
-   rectangles. The projected change is graded a second time by a 2 px rule
-   along the segment's foot, fading in toward the number — `accent` for a
-   gain, `danger` for a loss — ruled rather than tinted for rule 10's reason:
-   a status-coloured ground under status-coloured ink would cost the ink its
-   contrast. The two columns stay separately switchable; when both are on,
-   the licence segment reaches across the column gap and the two square off
-   where they meet.
+   segments (rule 4): `A3.45 | 8895 ▲14`. The licence segment is the licence's
+   own colour **held at one lightness** — its hue kept, its chroma as high as
+   sRGB allows there — lit from the top (OKLab L 0.52 down to 0.42), with
+   white ink; the top is held where white still clears 4.5:1 on B's green,
+   the closest call ([`lib/ratingPill.test.ts`](src/lib/ratingPill.test.ts)).
+   It used to be the colour mixed toward black, 52 % to 30 %, and that mix
+   scales chroma down with lightness: A's blue went navy, R's red maroon and
+   C's yellow mud, so the segment was worst at the one thing it is for —
+   telling licences apart at a glance. A colour a driver can name is not a
+   beacon; it is the licence. P's black stays black, a step darker than the
+   iRating segment, and the sheen draws its edge.
+
+   The iRating segment is a neutral glass lift, lighter at the top and darker
+   than any licence, so the rating's white digits are the strongest thing on
+   it. Both carry a one-pixel highlight along their top edge, from one light
+   source, so the pill reads as one lit object rather than two painted
+   rectangles. The projected change is graded a second time by a solid 2 px
+   rule under the change's fixed-width slot — `accent` for a gain, `danger`
+   for a loss — ruled rather than tinted for rule 10's reason: a
+   status-coloured ground under status-coloured ink would cost the ink its
+   contrast. The rule used to run the whole segment, fading in toward the
+   number; faded, it read as a rendering artefact before it read as a grade.
+   Under the slot, it underlines exactly the number it grades and lines up
+   down the column the way the numbers do. The two columns stay separately
+   switchable; when both are on, the licence segment reaches across the
+   column gap and the two square off where they meet.
+
+   **Every "which way" on the table is one mark**: a solid triangle, ▲ or ▼
+   (`DirectionMark` in `cells.tsx`) — on the position-change count, the
+   projected iRating change and the position flash alike. It replaced a
+   stroked chevron that, at 12 px, was thinner than the digits beside it, and
+   an arrow on the flash that was a third glyph for the same idea.
 
    This replaced the **tint** device — a ≤ 18 % wash of a value's own hue
    behind ink of that hue — that licence, iRating and position change used to
    wear. A tint grouped a compound cell on bare paper; on a strip it was a
    second ground inside the first. Position change is now coloured ink and a
-   chevron, with nothing behind it.
+   direction mark, with nothing behind it.
 
    **A chip in a column is sized by the column, not by its contents.** `8895
-   ⌃14` and `1423` hugging their own text are two different widths in the same
+   ▲14` and `1423` hugging their own text are two different widths in the same
    column, which turns a grouping device into a ragged edge down the table —
    and puts the values themselves on different verticals, which is the one
    thing a column of numbers may never do. Both segments fill their cells, and
@@ -844,14 +861,30 @@ the fact that a header band and a row cost the same height.
     new slots in 220 ms, and under reduced motion they do not glide at all; a
     driver who glances over a second after a pass sees a table in a new order
     with nothing to say what changed. So for three seconds the position cell
-    of each car that moved becomes an arrow on a status fill — up on `accent`,
-    down on `danger`, `on-accent` ink — and then the number comes back
-    ([`lib/positionFlash.ts`](src/lib/positionFlash.ts)). It costs the number
-    for those three seconds, which is the trade: the `Δ` chip beside it still
-    carries the count since the start, and the new position is the one fact
-    the arrow is about. A change of what the number *means* — grouping
-    switched between class and overall — re-baselines silently rather than
-    flashing every row.
+    of each car that moved is covered by a chip on a status fill — `▲ 3` on
+    `accent`, `▼ 4` on `danger`, `on-accent` ink, the pill's height and sheen
+    ([`lib/positionFlash.ts`](src/lib/positionFlash.ts)). A change of what the
+    number *means* — grouping switched between class and overall —
+    re-baselines silently rather than flashing every row.
+
+    **The chip keeps the number.** It used to be an arrow alone, which cost
+    the new position for three seconds — the one fact a driver looking at
+    the position column came for, swapped for the fact of a change. The
+    arrow and the number fit side by side in the column, so nothing has to
+    be traded.
+
+    **It arrives and leaves; it does not blink.** The chip used to appear and
+    vanish on single frames, so its last moment read as a fault rather than
+    an end. It now fades in on `--dur-mid` with the row's glide, the arrow
+    arriving the way the car went (rising for a gain, dropping for a loss),
+    and dissolves back into the plain number at the end of the hold. Its own
+    number sits half an arrow right of the plain one, so on the way out the
+    arrow leaves first and the number slides home before the chip fades —
+    both numbers are the same glyphs in the same place while they show
+    through each other, and the crossfade never prints the position twice.
+    Every phase is opacity or a transform. Under reduced motion none of it
+    runs: the chip shows for the hold and goes (`.pos-flash` in
+    `src/styles.css`).
 
     The leader's row has no gap and no interval, so those two cells print
     **`GAP` and `INT`** instead of two em dashes: on the one row where the

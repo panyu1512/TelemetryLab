@@ -1,4 +1,3 @@
-import { ChevronDown, ChevronUp } from "lucide-react";
 import type { SectorSplit } from "../../telemetry/types";
 import {
   delta as fmtDelta,
@@ -12,10 +11,56 @@ import { LAP_COLOR, SECTOR_COLOR } from "./constants";
 import { tyreKind, tyreName } from "../../lib/tyreCompound";
 import { useSessionStore } from "../../stores/useSessionStore";
 import { TyreCompoundIcon } from "../ui/TyreCompoundIcon";
-import { licenceGround, PILL_SHEEN, ratingGround } from "../../lib/ratingPill";
+import {
+  CHANGE_SLOT_W,
+  licenceGround,
+  PILL_SHEEN,
+  RATING_PAD_X,
+  ratingGround,
+} from "../../lib/ratingPill";
 
 /* -------------------------------------------------------------------------- */
-/*  Position-change arrow (⌃2 / ⌄1) — gain since the green flag                */
+/*  Direction mark (▲ / ▼) — one glyph for every "which way" on the table      */
+/* -------------------------------------------------------------------------- */
+
+/** Drawn width and height of {@link DirectionMark}, in px. */
+export const DIRECTION_MARK_W = 7;
+export const DIRECTION_MARK_H = 6;
+
+/**
+ * A solid triangle pointing the way a value moved. Places gained since the
+ * start, the projected iRating change and the flash on a change of place all
+ * draw this one mark, so "up" looks the same wherever it is printed.
+ *
+ * Solid rather than the stroked chevron it replaced: at 12 px a 3 px stroke
+ * left a caret thinner than the digits beside it, which is the wrong way round
+ * for the half of the cell that is read first in peripheral vision.
+ */
+export function DirectionMark({
+  up,
+  width = DIRECTION_MARK_W,
+  className,
+}: {
+  up: boolean;
+  /** Drawn width in px; the height keeps the mark's proportions. */
+  width?: number;
+  className?: string;
+}) {
+  return (
+    <svg
+      width={width}
+      height={(width * DIRECTION_MARK_H) / DIRECTION_MARK_W}
+      viewBox="0 0 7 6"
+      className={["shrink-0", className].filter(Boolean).join(" ")}
+      aria-hidden
+    >
+      <path d={up ? "M3.5 0 7 6H0Z" : "M0 0h7L3.5 6Z"} fill="currentColor" />
+    </svg>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Position change (▲2 / ▼1) — gain since the green flag                      */
 /* -------------------------------------------------------------------------- */
 
 export function PosChange({ value }: { value: number }) {
@@ -23,18 +68,17 @@ export function PosChange({ value }: { value: number }) {
     return <span className="text-[10px] leading-none text-faint/50">·</span>;
   }
   const up = value > 0;
-  const Icon = up ? ChevronUp : ChevronDown;
   const color = up ? "var(--color-accent)" : "var(--color-danger)";
   // Coloured ink and nothing behind it. It sat on a tint of its own hue while
   // the rows were bare paper; on a row strip that tint is a second ground
-  // inside the first, and the chevron already groups the arrow with its count.
+  // inside the first, and the mark already groups the arrow with its count.
   return (
     <span
-      className="flex items-center justify-center gap-px text-[12px] font-bold leading-none tnum"
+      className="flex items-center justify-center gap-[3px] text-[12px] font-bold leading-none tnum"
       style={{ color }}
       title={`${up ? "Gained" : "Lost"} ${Math.abs(value)} since start`}
     >
-      <Icon className="size-3.5" strokeWidth={3} />
+      <DirectionMark up={up} />
       {Math.abs(value)}
     </span>
   );
@@ -44,8 +88,11 @@ export function PosChange({ value }: { value: number }) {
 /*  Licence + iRating — one pill in two segments (A3.45 | 8895 ⌃14)            */
 /* -------------------------------------------------------------------------- */
 
-/** Height of both segments of the licence / iRating pill. */
-const PILL_H = 20;
+/**
+ * Height of both segments of the licence / iRating pill, and of the position
+ * flash, so every chip on the row stands the same height.
+ */
+export const PILL_H = 20;
 /** The pill's corner, matching the row strip it sits on (`rounded-sm`). */
 const PILL_R = "4px";
 /** The grid's `gap-x-1`, which the licence segment reaches across to join. */
@@ -63,15 +110,16 @@ function segmentRadius(side: "left" | "right", joined: boolean): string {
 }
 
 /*
- * The segments' grounds — a licence-coloured gradient and a glass lift with a
- * gain/loss rule — live in `lib/ratingPill`, where their contrast is tested.
+ * The segments' grounds — the licence's own colour, lit from the top, and a
+ * glass lift with a gain/loss rule — live in `lib/ratingPill`, where their
+ * contrast is tested.
  *
  * iRacing's licence colours run from a dark blue (A) to a near-white yellow
- * (C), so no one ink reads on all of them at full strength. Taking the colour
- * most of the way toward black in OKLab scales the lightness of any of them
- * to under the point where white reads, so the segment can always print
- * white, keep the colour a driver knows the class of licence by, and sit on
- * the row as a tone rather than a beacon.
+ * (C), so no one ink reads on all of them at full strength. Holding each at
+ * one lightness in OKLab — its hue kept, its chroma as high as the gamut
+ * allows there — puts all of them under the point where white reads, so the
+ * segment can always print white and still show the colour a driver knows
+ * the class of licence by.
  */
 
 export function LicenseBadge({
@@ -121,8 +169,6 @@ export function IRatingCell({
   /** The licence segment is shown in the previous column (see LicenseBadge). */
   joined?: boolean;
 }) {
-  const up = change > 0;
-  const Icon = up ? ChevronUp : ChevronDown;
   return (
     // Rating and its projected change are one compound cell in two voices
     // (rule 4), on the pill's neutral segment: the rating in full `text`, only
@@ -133,12 +179,14 @@ export function IRatingCell({
     // change sits in a fixed-width slot, so every rating in the column ends on
     // the same vertical — the one thing a column of numbers must never lose.
     //
-    // A glass lift, with the change graded by a rule along its foot that
-    // fades in toward the number (`lib/ratingPill`).
+    // A glass lift, with the change ruled underneath in its own colour
+    // (`lib/ratingPill`); the rule spans the slot, not the digits, so the
+    // rules line up down the column the way the numbers do.
     <div
-      className="tnum flex w-full items-center justify-end gap-1 px-1.5"
+      className="tnum flex w-full items-center justify-end gap-1"
       style={{
         height: PILL_H,
+        paddingInline: RATING_PAD_X,
         background: ratingGround(change),
         boxShadow: PILL_SHEEN,
         borderRadius: segmentRadius("right", joined),
@@ -148,15 +196,16 @@ export function IRatingCell({
         {rating(iRating)}
       </span>
       <span
-        className="flex w-[1.95rem] shrink-0 items-center justify-end text-[11px] font-bold leading-none"
+        className="flex shrink-0 items-center justify-end gap-[2px] text-[11px] font-bold leading-none"
         style={{
-          color: up ? "var(--color-accent)" : "var(--color-danger)",
+          width: CHANGE_SLOT_W,
+          color: change > 0 ? "var(--color-accent)" : "var(--color-danger)",
         }}
         title={change !== 0 ? "Projected iRating change (estimate)" : undefined}
       >
         {change !== 0 && (
           <>
-            <Icon className="size-3" strokeWidth={3} />
+            <DirectionMark up={change > 0} />
             {Math.abs(change)}
           </>
         )}

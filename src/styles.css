@@ -510,6 +510,115 @@ a {
   }
 }
 
+/*
+ * The position flash (`lib/positionFlash`): a chip on a status fill, `▲ 3` or
+ * `▼ 4`, laid over the position for `--pos-flash-ms`.
+ *
+ * It arrives with the row's glide and leaves as a dissolve, on the token
+ * scale. Its number sits `--pos-flash-shift` right of where the plain number
+ * underneath does, to make room for the arrow — so on the way in it starts at
+ * the plain number's place and slides over as the arrow rises (or drops) in,
+ * and on the way out it slides home *before* the chip has faded. Both numbers
+ * are the same glyphs in the same place while they show through each other,
+ * and the crossfade never prints the position twice.
+ *
+ * Every phase is either opacity or a transform. The fade-out is an animation
+ * delayed to the end of the hold rather than a keyframe percentage, so the
+ * hold stays `POSITION_FLASH_MS` and the fades stay `--dur-mid` whichever of
+ * the two changes.
+ */
+.pos-flash {
+  position: absolute;
+  inset-inline: 0;
+  top: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  color: var(--color-on-accent);
+  /* The overlay's legibility shadow is for white ink over footage; under dark
+   * ink on a light fill it reads as a smudge. */
+  text-shadow: none;
+  /* The pill's sheen, a touch stronger on a light fill. */
+  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.3);
+  animation:
+    pos-flash-in var(--dur-mid) var(--ease-out) both,
+    pos-flash-out var(--dur-mid) var(--ease-in)
+      calc(var(--pos-flash-ms) - var(--dur-mid)) forwards;
+}
+.pos-flash--up {
+  background: var(--color-accent);
+}
+.pos-flash--down {
+  background: var(--color-danger);
+}
+.pos-flash__num {
+  animation:
+    pos-flash-num-in var(--dur-mid) var(--ease-in-out) both,
+    pos-flash-num-out var(--dur-short) var(--ease-out)
+      calc(var(--pos-flash-ms) - var(--dur-mid)) forwards;
+}
+/* The arrow arrives a beat after the number starts making room for it, and
+ * leaves first, so the number has somewhere to slide home to. */
+.pos-flash--up .pos-flash__mark {
+  animation:
+    pos-flash-rise var(--dur-mid) var(--ease-out) var(--dur-instant) both,
+    pos-flash-out var(--dur-instant) var(--ease-out)
+      calc(var(--pos-flash-ms) - var(--dur-mid)) forwards;
+}
+.pos-flash--down .pos-flash__mark {
+  animation:
+    pos-flash-drop var(--dur-mid) var(--ease-out) var(--dur-instant) both,
+    pos-flash-out var(--dur-instant) var(--ease-out)
+      calc(var(--pos-flash-ms) - var(--dur-mid)) forwards;
+}
+
+@keyframes pos-flash-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes pos-flash-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes pos-flash-num-in {
+  from {
+    transform: translateX(calc(-1 * var(--pos-flash-shift)));
+  }
+}
+@keyframes pos-flash-num-out {
+  to {
+    transform: translateX(calc(-1 * var(--pos-flash-shift)));
+  }
+}
+/* The arrow arrives travelling the way the car did. */
+@keyframes pos-flash-rise {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+}
+@keyframes pos-flash-drop {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+}
+
+/* Under reduced motion the chip simply shows for the hold and goes: no fade,
+ * no slide. (The blanket rule above would otherwise run every phase in 0.01 ms
+ * and leave the chip on its last frame — invisible.) */
+@media (prefers-reduced-motion: reduce) {
+  .pos-flash,
+  .pos-flash__num,
+  .pos-flash--up .pos-flash__mark,
+  .pos-flash--down .pos-flash__mark {
+    animation: none;
+  }
+}
+
 /* --- overlay mode --------------------------------------------------------- */
 
 /*

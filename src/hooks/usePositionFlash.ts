@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import {
   POSITION_FLASH_MS,
   positionMove,
-  type PositionMove,
+  type PositionFlash,
 } from "../lib/positionFlash";
 
 /**
@@ -17,20 +17,25 @@ import {
 export function usePositionFlash(
   position: number | null | undefined,
   scope: string,
-): PositionMove | null {
+): PositionFlash | null {
   const last = useRef({ position, scope });
-  const [move, setMove] = useState<PositionMove | null>(null);
+  const seq = useRef(0);
+  const [flash, setFlash] = useState<PositionFlash | null>(null);
 
   useEffect(() => {
     const before = last.current;
     last.current = { position, scope };
-    const next =
+    const move =
       before.scope === scope ? positionMove(before.position, position) : null;
-    setMove(next);
-    if (!next) return;
-    const id = setTimeout(() => setMove(null), POSITION_FLASH_MS);
+    if (!move) {
+      setFlash(null);
+      return;
+    }
+    seq.current += 1;
+    setFlash({ move, id: seq.current });
+    const id = setTimeout(() => setFlash(null), POSITION_FLASH_MS);
     return () => clearTimeout(id);
   }, [position, scope]);
 
-  return move;
+  return flash;
 }

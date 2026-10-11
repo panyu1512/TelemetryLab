@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Licence colours you can actually tell apart.** The licence half of the
+  licence / iRating pill on Standings now shows each licence in its real
+  colour: blue A, green B, gold C, orange D, red Rookie and black Pro. Before,
+  they were all darkened to similar murky tones. White text stays easy to
+  read on every one.
+- **A clearer iRating change.** The iRating half of the pill is a little
+  darker, so the rating stands out. Your projected gain or loss now has a
+  solid ▲ or ▼ and a short green or red underline beneath it, in place of
+  the thin arrow and the faint line along the bottom.
+- **A smoother "who just passed whom".** When a car changes place, its
+  position now shows **▲ 3** or **▼ 4** on green or red, so the new position
+  stays visible instead of being replaced by an arrow. The chip fades in as
+  the row moves, the arrow slides in the direction the car went, and after
+  three seconds it fades back into the plain number instead of switching
+  off. With reduced motion turned on, it simply appears and disappears.
+- **One arrow style across Standings.** Places gained or lost since the
+  start use the same solid ▲ / ▼ as the iRating change and the pass
+  indicator.
+- **Mock data shows a real mix of licences**, Rookie to Pro, instead of every
+  driver on the same `A 3.50`.
+
 ## [1.17.0] - 2026-10-11
 
 ### Added

@@ -108,6 +108,29 @@ const COUNTRIES: Array<[string, string]> = [
   ["Brazil", "BRA"],
 ];
 
+/**
+ * Licence and safety rating per car, aligned with FIRST/LAST by index, in
+ * iRacing's own `LicColor`s. Every car used to be `A 3.50` in one green — not
+ * A's colour, and the same on every row — so the licence segment of the
+ * Standings pill could never be seen doing its one job, telling licences
+ * apart. A real grid mixes them; so does this one, with every class from
+ * Rookie to Pro somewhere in the field.
+ */
+const LICENCES: Array<{ group: string; level: number; sr: number; color: string }> = [
+  { group: "D", level: 8, sr: 3.71, color: "#ff8c00" },
+  { group: "A", level: 20, sr: 2.2, color: "#0153db" },
+  { group: "B", level: 16, sr: 4.68, color: "#00c702" },
+  { group: "A", level: 20, sr: 1.91, color: "#0153db" },
+  { group: "C", level: 12, sr: 4.32, color: "#feec04" },
+  { group: "P", level: 24, sr: 2.09, color: "#000000" },
+  { group: "A", level: 20, sr: 1.73, color: "#0153db" },
+  { group: "B", level: 16, sr: 4.71, color: "#00c702" },
+  { group: "A", level: 20, sr: 2.18, color: "#0153db" },
+  { group: "B", level: 16, sr: 3.98, color: "#00c702" },
+  { group: "R", level: 4, sr: 1.86, color: "#fc0706" },
+  { group: "C", level: 12, sr: 2.84, color: "#feec04" },
+];
+
 interface MockCar {
   idx: number;
   klass: typeof CLASS_GT3;
@@ -530,6 +553,7 @@ export function mockPlayerTelemetry(t: number): PlayerTelemetry {
 // ── session ─────────────────────────────────────────────────────────────────
 
 function driverEntry(car: MockCar, t: number): DriverEntry {
+  const licence = LICENCES[car.idx % LICENCES.length];
   return {
     carIdx: car.idx,
     userId: 100000 + car.idx,
@@ -543,12 +567,12 @@ function driverEntry(car: MockCar, t: number): DriverEntry {
     carModel: car.model,
     carScreenName: car.model,
     iRating: car.iRating,
-    licenseLevel: 13,
-    licenseString: "A 3.50",
-    licenseGroup: "A",
+    licenseLevel: licence.level,
+    licenseString: `${licence.group} ${licence.sr.toFixed(2)}`,
+    licenseGroup: licence.group,
     licenseCategory: "road",
-    safetyRating: 3.5,
-    licenseColor: "#00ff88",
+    safetyRating: licence.sr,
+    licenseColor: licence.color,
     carClassColor: car.klass.color,
     clubName: "Iberia",
     countryName: COUNTRIES[car.idx % COUNTRIES.length][0],
