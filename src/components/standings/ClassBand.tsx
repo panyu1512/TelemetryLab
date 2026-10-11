@@ -18,7 +18,7 @@ import { CLASS_EDGE_WIDTH, STANDINGS_FILL_REACH } from "./constants";
  * still true, and the gap is still here — but
  * separation was never the band's only job. A class's **own** numbers (how many
  * cars are in it, its strength of field, its fastest lap) are per-class and
- * per-group, so the session strip cannot hold them and no row can either. The
+ * per-group, so the session header cannot hold them and no row can either. The
  * band is the only place they exist.
  *
  * What the band is *not* is anything you can aim at (rule 7): it has no
@@ -26,7 +26,7 @@ import { CLASS_EDGE_WIDTH, STANDINGS_FILL_REACH } from "./constants";
  * class header are not coming back with it.
  *
  * It is a strip like the rows under it — the same `timing-row` ground and the
- * same class edge — and speaks the session strip's grammar ({@link StripField}),
+ * same class edge — and speaks the strip grammar ({@link StripField}),
  * set apart as a heading by the class name in front and by
  * `BAND_GAP` of paper under it, rather than by a solid block of the
  * class's colour. The solid block made the heading the loudest thing on the
@@ -49,7 +49,7 @@ function ClassBandInner({
   fastestIsOverall: boolean;
   /**
    * Measured width of the surface, in CSS px. Fields drop right-to-left as the
-   * overlay narrows, exactly as the session strip does — the class name is the
+   * overlay narrows, exactly as the session header does — the class name is the
    * last thing standing, because a band that has clipped its own name has
    * stopped doing its job.
    */

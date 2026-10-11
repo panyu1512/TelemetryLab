@@ -1,22 +1,26 @@
 /**
- * The session strip — one non-interactive readout line above the field on the
+ * The session header — one non-interactive readout row above the field on the
  * dense timing surfaces (Standings and Relative).
  *
  * `design.md` § Dense tabular overlays, rule 7 says a timing surface is rows and
- * nothing else *because nothing on it can be aimed at*. A strip that is purely a
- * readout — no buttons, no menus, nothing that rewards a click — sits inside
- * that rule rather than against it, which is why rule 7 now names the readout
- * exception explicitly. Whether the strip shows at all is still a Manager
- * setting, not a control on this surface.
+ * nothing else *because nothing on it can be aimed at*. A header that is purely
+ * a readout — no buttons, no menus, nothing that rewards a click — sits inside
+ * that rule rather than against it, which is why rule 7 names the readout
+ * exception explicitly. Whether it shows at all is still a Manager setting, not
+ * a control on this surface.
  *
- * It also settles the second half of § Deliberately not adopted: the reference
+ * It settles the second half of § Deliberately not adopted too: the reference
  * strips this app studied are icon-only (a thermometer glyph, a crossed-swords
  * glyph). Here every field carries a word, because a glyph the user has to
  * *learn* is not a readout, it is a quiz.
  *
- * It is drawn as a strip like the rows under it — the `timing-row` ground, no
- * hairline — so the surface reads as one stack of strips: session, class,
- * cars.
+ * **It is a different row from the ones under it, and is drawn to look like
+ * one** (§ The session header). It used to be a strip on the rows' own
+ * ground, one line of label/value pairs at the rows' height, and so it read as
+ * the table's first row rather than as what heads it. Now it is taller, on a
+ * lit ground of its own with the active flag's colour running along its foot,
+ * and each field is a stack — a small caps label over a large value — so the
+ * numbers in it read as instruments, not cells.
  *
  * Fields drop right-to-left as the overlay narrows, in {@link FIELDS} order, the
  * same way the table itself scales to its window (`lib/tableScale`).
@@ -29,46 +33,57 @@ import { degrees, duration, rating } from "../../lib/format";
 import {
   activeFlag,
   incidentColor,
-  raceDistance,
+  raceDistanceParts,
   sessionTag,
 } from "../../lib/sessionStrip";
 
 /**
- * Wall-clock refresh. The strip shows HH:MM, so a minute is the finest
+ * Wall-clock refresh. The header shows HH:MM, so a minute is the finest
  * granularity it can ever display — 15 s keeps the rollover from visibly
  * lagging without waking React every second of a two-hour enduro.
  */
 const CLOCK_MS = 15_000;
 
-/** Height of the strip in px, exported so callers can budget the field's space. */
+/**
+ * Height of the readout strip that heads Fuel & Strategy, in px. The Standings
+ * and Relative header is taller — see {@link SESSION_HEADER_H}.
+ */
 export const STRIP_H = 26;
 
-type FieldId = "lap" | "left" | "inc" | "trk" | "sof" | "air" | "clk";
+/**
+ * Height of the session header on Standings and Relative, in px: two lines —
+ * a 9 px label over a 16 px value — with room above and below them. It is
+ * taller than a row on purpose; at a row's height it read as one.
+ */
+export const SESSION_HEADER_H = 42;
+
+type FieldId = "track" | "lap" | "left" | "inc" | "trk" | "air" | "sof" | "clk";
 
 /**
- * Strip fields in render order, each with the surface width (px) below which it
- * drops. Ordered so the *last* field to survive a narrowing overlay is the one
- * the driver reads most: which lap they are on.
+ * Header fields in render order, each with the surface width (px) below which
+ * it drops. Ordered so the *last* field to survive a narrowing overlay is the
+ * one the driver reads most: which lap they are on. The track goes first — it
+ * is the one fact on the header that does not change during the session.
  *
- * The session tag is not in this list — it never drops, and it is the strip's
- * only item that isn't a label/value pair.
+ * The session tag is not in this list — it never drops.
  */
 const FIELDS: readonly { id: FieldId; label: string; minWidth: number }[] = [
+  { id: "track", label: "", minWidth: 640 },
   { id: "lap", label: "Lap", minWidth: 0 },
-  { id: "left", label: "Left", minWidth: 210 },
-  { id: "inc", label: "Inc", minWidth: 285 },
-  { id: "trk", label: "Trk", minWidth: 355 },
-  { id: "sof", label: "SoF", minWidth: 425 },
-  { id: "air", label: "Air", minWidth: 495 },
-  { id: "clk", label: "Clk", minWidth: 575 },
+  { id: "left", label: "Left", minWidth: 200 },
+  { id: "inc", label: "Inc", minWidth: 260 },
+  { id: "trk", label: "Track", minWidth: 330 },
+  { id: "air", label: "Air", minWidth: 390 },
+  { id: "sof", label: "SoF", minWidth: 460 },
+  { id: "clk", label: "Time", minWidth: 530 },
 ];
 
 export interface SessionStripProps {
   /**
    * Measured width of the host surface, in CSS px. Both timing screens already
-   * observe their own width for column fitting, so the strip reads that rather
+   * observe their own width for column fitting, so the header reads that rather
    * than mounting a second ResizeObserver. A width of 0 (not yet measured)
-   * shows every field; the strip clips rather than wraps until the first
+   * shows every field; the header clips rather than wraps until the first
    * measurement lands.
    */
   width: number;
@@ -96,58 +111,39 @@ export function SessionStrip({ width }: SessionStripProps) {
 
   const flag = activeFlag(session.flags);
   const incidents = player?.incidentCount ?? null;
-
-  const values: Record<
-    FieldId,
-    { text: string; color?: string; title?: string }
-  > = {
-    lap: {
-      text: raceDistance(session, telemetryLap ?? 0),
-      title: session.isTimed
-        ? "Lap · projected race distance"
-        : "Lap · race distance",
-    },
-    left: {
-      text: session.isTimed
-        ? duration(session.sessionTimeRemain)
-        : session.sessionLapsRemain != null
-          ? `${session.sessionLapsRemain}L`
-          : "—",
-      title: "Session remaining",
-    },
-    inc: {
-      text: incidents != null ? `${incidents}x` : "—",
-      color: incidentColor(incidents ?? 0),
-      title: "Your incident points this session",
-    },
-    trk: {
-      text: degrees(session.weather.trackTemp),
-      title: "Track temperature",
-    },
-    sof: { text: rating(session.sof), title: "Strength of field" },
-    air: { text: degrees(session.weather.airTemp), title: "Air temperature" },
-    clk: {
-      text: `${now.getHours()}:${String(now.getMinutes()).padStart(2, "0")}`,
-      title: "Local time",
-    },
+  const distance = raceDistanceParts(session, telemetryLap ?? 0);
+  const shows = (id: FieldId) => {
+    const f = FIELDS.find((x) => x.id === id)!;
+    return width <= 0 || width >= f.minWidth;
   };
+  const labelOf = (id: FieldId) => FIELDS.find((x) => x.id === id)!.label;
+
+  // The flag's colour, or a neutral when no flag the header shows is flying.
+  const tone = flag?.color ?? "rgb(255 255 255 / 0.35)";
 
   return (
     <div
-      className="bg-timing-row flex shrink-0 items-center gap-x-3 overflow-hidden rounded-sm px-2"
-      style={{ height: STRIP_H }}
+      className="session-header relative flex shrink-0 items-center gap-x-4 overflow-hidden rounded-sm pl-2 pr-3"
+      style={{
+        height: SESSION_HEADER_H,
+        // The flag's colour along the foot of the header, strongest under the
+        // session tag and fading out across the readout — the header's own
+        // version of the class edge each row opens on.
+        ["--header-tone" as string]: tone,
+      }}
     >
       {/* Session tag, with the active flag as its ground. Flag state is the one
-          thing on this strip that can change what the driver does *next*, so it
+          thing on the header that can change what the driver does *next*, so it
           is the one thing allowed a fill — and filled ink is `on-accent`
           (§ Theme, rule 1), never white on a light accent. */}
       <span
-        className="shrink-0 rounded-ctl px-1.5 py-[3px] text-[11px] font-bold uppercase leading-none tracking-[0.06em]"
+        className="session-tag shrink-0 rounded-sm px-2.5 text-[13px] font-bold uppercase leading-[26px] tracking-[0.08em]"
         style={
           flag
             ? { background: flag.color, color: "var(--color-on-accent)" }
-            : { color: "var(--color-muted)" }
+            : { color: "var(--color-text)" }
         }
+        data-flag={flag ? "" : undefined}
         title={
           flag ? `${session.sessionName} · ${flag.label}` : session.sessionName
         }
@@ -155,11 +151,115 @@ export function SessionStrip({ width }: SessionStripProps) {
         {sessionTag(session.sessionType)}
       </span>
 
-      {FIELDS.map(({ id, label, minWidth }) =>
-        width <= 0 || width >= minWidth ? (
-          <StripField key={id} label={label} voice="sans" {...values[id]} />
-        ) : null
+      {/* Where — the one field that never changes in a session, so it is the
+          one that gives way: it takes the slack, truncates, and is the first
+          to drop as the overlay narrows. */}
+      {shows("track") && session.track.name ? (
+        <div className="flex min-w-0 flex-1 flex-col justify-center gap-[4px]">
+          <span className="truncate text-[13px] font-bold leading-none text-text">
+            {session.track.name}
+          </span>
+          {session.track.config && (
+            <span className="truncate text-[9px] font-bold uppercase leading-none tracking-[0.12em] text-muted">
+              {session.track.config}
+            </span>
+          )}
+        </div>
+      ) : (
+        <div className="flex-1" />
       )}
+
+      {shows("lap") && (
+        <HeaderField
+          label={labelOf("lap")}
+          title={
+            session.isTimed
+              ? "Lap · projected race distance"
+              : "Lap · race distance"
+          }
+        >
+          {distance.lap}
+          {distance.total != null && (
+            <span className="text-[12px] text-muted">/{distance.total}</span>
+          )}
+        </HeaderField>
+      )}
+      {shows("left") && (
+        <HeaderField label={labelOf("left")} title="Session remaining">
+          {session.isTimed
+            ? duration(session.sessionTimeRemain)
+            : session.sessionLapsRemain != null
+              ? `${session.sessionLapsRemain}L`
+              : "—"}
+        </HeaderField>
+      )}
+      {shows("inc") && (
+        <HeaderField
+          label={labelOf("inc")}
+          title="Your incident points this session"
+          color={incidentColor(incidents ?? 0)}
+        >
+          {incidents != null ? `${incidents}x` : "—"}
+        </HeaderField>
+      )}
+      {shows("trk") && (
+        <HeaderField label={labelOf("trk")} title="Track temperature">
+          {degrees(session.weather.trackTemp)}
+        </HeaderField>
+      )}
+      {shows("air") && (
+        <HeaderField label={labelOf("air")} title="Air temperature">
+          {degrees(session.weather.airTemp)}
+        </HeaderField>
+      )}
+      {shows("sof") && (
+        <HeaderField label={labelOf("sof")} title="Strength of field">
+          {rating(session.sof)}
+        </HeaderField>
+      )}
+      {shows("clk") && (
+        <>
+          <span aria-hidden className="session-header-rule" />
+          <HeaderField label={labelOf("clk")} title="Local time">
+            {`${now.getHours()}:${String(now.getMinutes()).padStart(2, "0")}`}
+          </HeaderField>
+        </>
+      )}
+    </div>
+  );
+}
+
+/**
+ * One header field: a small caps label over a large bold value. The header's
+ * own voice — taller than {@link StripField}, which the class band and the
+ * Fuel & Strategy strip keep, because a row of label/value pairs at a row's
+ * height is what made the old header read as a row.
+ */
+function HeaderField({
+  label,
+  title,
+  color,
+  children,
+}: {
+  label: string;
+  title?: string;
+  color?: string;
+  children: ReactNode;
+}) {
+  return (
+    <div
+      className="flex shrink-0 flex-col justify-center gap-[4px]"
+      title={title}
+    >
+      <span className="text-[9px] font-bold uppercase leading-none tracking-[0.14em] text-muted">
+        {label}
+      </span>
+      <span
+        className="tnum text-[16px] font-bold leading-none"
+        style={{ color: color ?? "var(--color-text)" }}
+      >
+        {children}
+      </span>
     </div>
   );
 }

@@ -260,11 +260,12 @@ other direction.
 - Numerals in any column or ticking value carry `.tnum`.
 - Micro-labels are mono, uppercase, `tracking-[0.12em]`–`[0.14em]`, `text-faint`
   — except on Standings and Relative, where they are set in the tables' own
-  face: the column labels in `faint`, and the session strip's and class bands'
-  labels in bold caps `muted` (`StripField voice="sans"`, § The session strip).
-  Those strip labels sit on a lifted strip, where `faint` sinks under the floor
-  it was tuned to clear, and next to bold rows, where mono read as a different
-  kind of text.
+  face: the column labels in `faint`, the class bands' labels in bold caps
+  `muted` (`StripField voice="sans"`, § The class band), and the session
+  header's in smaller, wider-tracked bold caps `muted` over their values
+  (§ The session header). Those labels sit on a lifted ground, where `faint`
+  sinks under the floor it was tuned to clear, and next to bold rows, where
+  mono read as a different kind of text.
 - **Headings are roman.** No italic display type anywhere.
 - **Caps are structural, not emphatic.** Three things are set in capitals and
   nothing else is: micro-labels (mono, or the timing strips' sans), section and
@@ -473,8 +474,8 @@ in [`constants.ts`](src/components/standings/constants.ts): `ROW_H` 32 px, of
 which the row's strip takes all but `ROW_GAP` 3 — and a brand mark the strip
 less 4 px either side (`STANDINGS_BRAND_H`, 21; 24 on Relative's 34 px row),
 so no mark ever reads as touching the strip's edge — — the two the rules below
-buy back — `COL_LABEL_H` 10 and `CLASS_GAP` 10, plus `STRIP_H` 26 when the
-§ Session strip is on. Every rule below is downstream of
+buy back — `COL_LABEL_H` 10 and `CLASS_GAP` 10, plus `SESSION_HEADER_H` 42
+when the § Session header is on. Every rule below is downstream of
 the fact that a header band and a row cost the same height.
 
 1. **No vertical rules, no row separators — rows are strips, and paper
@@ -490,7 +491,7 @@ the fact that a header band and a row cost the same height.
    height by carrying the class's own numbers.** The gap does the separating;
    it reads pre-attentively and costs a third of a band. What the earlier absolutist version of this rule got wrong is that
    separation was never the only job. A class's **car count, strength of field
-   and fastest lap** are per-class and per-group: the session strip cannot hold
+   and fastest lap** are per-class and per-group: the session header cannot hold
    them (it is field-wide) and no row can (it is one car). The band is the only
    place they exist, and a band that is *carrying data* is not the labelled
    band this rule was written against.
@@ -570,6 +571,15 @@ the fact that a header band and a row cost the same height.
    switchable; when both are on, the licence segment reaches across the
    column gap and the two square off where they meet.
 
+   **The pill is on Relative too**, the same component at the same widths,
+   straight after the driver's name and before the brand mark: who the car
+   is, then what it is, then where. Licence and iRating are separate options
+   there ("Licence / SR" and "iRating"), both on by default. A relative is
+   about neighbours, and *who* a neighbour is — a 5k driver alongside or a
+   1k one — decides how hard to race them as much as the gap does. The pill
+   keeps its own grounds on a lapped row: lapped blue is ink about where a
+   car is, and a rating is about who is driving it.
+
    **Every "which way" on the table is one mark**: a solid triangle, ▲ or ▼
    (`DirectionMark` in `cells.tsx`) — on the position-change count, the
    projected iRating change and the position flash alike. It replaced a
@@ -604,7 +614,7 @@ the fact that a header band and a row cost the same height.
 
    So the surface takes one scale factor — the width it has over the width its
    columns want — and draws everything inside it: type, rows, gaps, column
-   widths, the § Session strip above them. The layout tuned at full size is the
+   widths, the § Session header above them. The layout tuned at full size is the
    same layout at half. It is `zoom` rather than `transform: scale()`, which
    matters here more than most places: a transform resamples what it scales and
    softens 12 px tabular digits at exactly the sizes where they are already
@@ -645,7 +655,7 @@ the fact that a header band and a row cost the same height.
    **Two things do not scale.** The 3 px class-colour edge divides the factor
    back out and holds its drawn size, because it went to 3 px precisely to stop
    disappearing in peripheral vision and a uniform scale takes it back under
-   the 2 px already rejected — see `CLASS_EDGE_WIDTH`. And the § Session strip
+   the 2 px already rejected — see `CLASS_EDGE_WIDTH`. And the § Session header
    and class band are handed the width they have to draw *in* rather than the
    window's, so they keep every field at the sizes this rule exists to keep
    them at. What holds its size is what carries presence rather than quantity.
@@ -660,7 +670,7 @@ the fact that a header band and a row cost the same height.
    that is interactive where the overlay is not is a preview that lies.
 
    The rule is about *interaction*, not about chrome, so a **pure readout is
-   allowed above the rows**: the § Session strip below, the per-class band in
+   allowed above the rows**: the § Session header below, the per-class band in
    rule 2, and the fuel screen's `MARGIN 1.0 lap`. None has a button or rewards a
    click, and the first two are Manager toggles, so they cost the driver
    nothing to ignore.
@@ -771,7 +781,7 @@ the fact that a header band and a row cost the same height.
       your mirrors mid-lap.
 
     **Nothing announces the switch**, and that is the restraint the rule turns
-    on. The § Session strip already names the session; the missing columns are
+    on. The § Session header already names the session; the missing columns are
     themselves the loudest possible signal; and a timesheet whose fastest-lap
     fill (rule 5) is always its own first row says what it is without a label.
     A banner reading `PRACTICE ORDER` would be a header band by another name,
@@ -911,7 +921,9 @@ One line opening each class group on Standings:
   column of positions it heads; its `ml-1` matches the row's `px-1`. And it is
   set apart from its group by `BAND_GAP` 4 under `CLASS_BAND_H` 30 — a band
   flush against the first row reads as that group's first entry.
-- **It speaks the session strip's grammar**, `StripField` in its sans voice:
+- **It speaks the strip grammar**, `StripField` in its sans voice — one line
+  of label/value pairs, which the session header spoke too until it became a
+  row of its own (§ The session header):
   `SOF` in full (`4078`, not `4.1k` — a rating is four characters either way,
   and the abbreviation threw away the digits a driver compares), the car count
   behind a helmet glyph (the population the other two measure, so a glyph
@@ -922,33 +934,55 @@ One line opening each class group on Standings:
   count, then `SOF`. The class name is the last to go, because a band that has
   clipped its own name has stopped doing its job.
 
-### The session strip
+### The session header
 
-One line above the field, on both timing surfaces:
-`RACE · LAP 6/≈36 · LEFT 50:24 · INC 4x · TRK 38° · SOF 3.3k · AIR 22° · CLK 20:46`.
+One row above the field, on both timing surfaces:
+`RACE · Circuit de Spa-Francorchamps / GRAND PRIX PITS · LAP 15/≈25 · LEFT
+23:47 · INC 7x · TRACK 31° · AIR 22° · SOF 4297 | TIME 18:16`.
 
-- **It is a strip like the rows**, on the same `--color-timing-row` ground,
-  not a line of type on a hairline. Standings and Relative read top to bottom
-  as one stack of strips: session, class, cars.
-- **Every field is a word plus a bold value**, both in the rows' bold sans —
-  the label in `muted` caps, the value in `text` (`StripField voice="sans"`).
-  They were mono with a `faint` label; on the strip's lifted ground `faint`
-  sank under its floor, and mono set the strip apart from the rows it heads.
-  This is still the § Deliberately not adopted note on icon-only strips,
-  cashed in: a thermometer glyph the user has to *learn* is not a readout, it
-  is a quiz.
+- **It is a different row from the ones it heads, and looks it.** It used to
+  be a strip like the rows — the same `--color-timing-row` ground, near a
+  row's height, one line of label/value pairs — on the argument that the
+  surface should read as one stack of strips: session, class, cars. It did,
+  and that was the trouble: it read as the table's first row, and a plain
+  one. So it is now its own device (`.session-header` in `styles.css`):
+  `SESSION_HEADER_H` 42 against a row's 32, on a ground lit from the top —
+  lighter than a row strip where it starts — with the licence pill's
+  one-pixel highlight along its top edge and a soft shadow under it, and the
+  active flag's colour running along its foot, strongest under the session
+  tag and gone by two thirds of the way across: the header's own version of
+  the class edge every row opens on.
+- **Every field is a stack, a word over a value.** A 9 px bold caps label in
+  `muted`, tracked wide, over a 16 px bold value in `text` — larger than the
+  rows' 12–14 px because the header is read before they are, and a readout
+  set at the rows' own size read as a row. The lap's distance is set smaller
+  and `muted` beside the lap itself (`15/≈25`): the lap is the number, the
+  distance is what it is measured against. This is still the § Deliberately
+  not adopted note on icon-only strips, cashed in: a thermometer glyph the
+  user has to *learn* is not a readout, it is a quiz.
+- **The track is named**, the circuit in the rows' 13 px bold over its layout
+  in the label voice. It is the one field that never changes during a
+  session, so it is the one that gives way: it takes the header's slack,
+  truncates, and is the first to drop as the overlay narrows.
 - **`SOF` prints in full**, as on the class bands and in the iRating column.
-- **The session tag is the strip's only fill**, and the active flag is what
-  fills it — flag state is the one thing here that changes what the driver does
-  next. Filled ink obeys § Theme rule 1. Flag colour comes from the *status*
-  table, not from the marshal's flag: a black flag is `danger`, because black on
-  black is nothing.
+- **The session tag is the header's only fill**, and the active flag is what
+  fills it — flag state is the one thing here that changes what the driver
+  does next. Filled ink obeys § Theme rule 1. The fill glows a little into the
+  header around it and repeats in the rule along the header's foot, so the
+  one filled thing on the header is unmistakably the flag. With no flag
+  flying, the tag is outlined rather than filled and the foot is a neutral
+  white. Flag colour comes from the *status* table, not from the marshal's
+  flag: a black flag is `danger`, because black on black is nothing.
+- **One rule, before the clock.** The clock is the driver's time rather than
+  the race's, so a hairline sets it apart at the right-hand end. Rule 1's ban
+  is on rules between *rows*; this one is inside a header.
 - **The lap field projects a distance for a timed race** (`6/≈36`, from time
   remaining ÷ estimated lap) rather than showing a bare lap counter. "Am I on
   the last lap" is a fuel and tyre decision, and a timed race never publishes
   an answer.
 - **Fields drop right-to-left as the overlay narrows**, in priority order, the
-  same way `fitColumns` narrows the table. The last field standing is the lap.
+  same way the table scales — the track first, then the clock, SoF and on
+  down. The last field standing is the lap.
 
 ### Fuel & Strategy in the timing language
 
@@ -956,8 +990,9 @@ Fuel & Strategy shares the timing paper (rule 9) and the no-aim rule (rule 7);
 it now shares their grammar too, because a driver glancing from the standings to
 the fuel panel should not have to re-learn where the numbers are.
 
-- **A strip, not a title bar.** `FUEL · <track> · MARGIN 1.0 lap`, at the
-  session strip's height on its hairline, built from the strip's own
+- **A strip, not a title bar.** `FUEL · <track> · MARGIN 1.0 lap`, at
+  `STRIP_H` 26 on its hairline — the height the session header had while it
+  was a strip —  built from the strip's own
   `StripField` in its default **mono** voice — the voice of every legend in the
   panel, which is why it did not follow the timing strips to sans. The icon-and-heading title it replaces was the last piece of
   window chrome on an overlay screen. The `FUEL` tag is unfilled: the panel's
@@ -1000,9 +1035,9 @@ things it does were left behind on purpose:
   compares against the car ahead (rule 10), and at the front of a field the
   difference is in the hundredths. Times stay `m:ss.mmm`.
 - **The session readout folded into the first class band** (`R LMP1 6/≈35.80
-  50:24/1h …`). The session strip is its own Manager toggle and is shared with
-  Relative, where there is no band to fold it into; it is restyled as a strip
-  of the same kind instead.
+  50:24/1h …`). The session header is its own Manager toggle and is shared
+  with Relative, where there is no band to fold it into; it is a row of its
+  own instead.
 - **Icon-only fields** (a track glyph for temperature). See above.
 
 Two things this section previously rejected have since flipped, and it is worth
@@ -1017,12 +1052,22 @@ a better reason than the last one:
   every shape is outlined in its own ink by a 0.9 px screen-space stroke
   (`.brand-icon` in `styles.css`), because marks cut for print — Mercedes'
   star, BMW's ring, the Aston Martin wings — thinned to hairlines at row size.
-  Marks whose detail is cut *out* of the ink (Ford's script, the Porsche and
-  Cadillac crests, the lettering in Nissan's ring, RAM's badge, Dallara's
-  wordmark) take a third of that stroke, since the full one grew the ink into
-  the cut-outs and closed them. The column is 3.5rem and a mark is capped at
-  48 px wide, so even Audi's rings or a wordmark sit with paper either side
-  instead of running into the number and the flag. This does not re-open
+  Marks with lettering in them, or detail cut *out* of the ink, take a
+  lighter stroke of their own (`MARK_STROKE` in `cells.tsx`), set by eye at
+  1× scale, since the full one grows the ink into the counters of letters a
+  few pixels tall: **none** on McLaren's and Dallara's wordmarks, Ford's
+  script and RAM's lettering; **0.3 px** on the Porsche and Cadillac crests;
+  **0.5 px** on Nissan's ring and the Aston Martin wings, whose hairlines
+  vanish with no stroke but whose lettering closes at the full one. They all
+  shared 0.3 px once, and McLaren's wordmark still printed as a white smear:
+  the owner could not read it.
+
+  The column is 4rem, and a mark is capped at 52 px wide — **60 px for the
+  wide marks** (the wordmarks, Kia, the Aston Martin wings), whose width cap
+  rather than their height decides how large their letters print. At the
+  old 48 px cap a 5.5:1 wordmark set its letters 6 px tall. Even the widest
+  mark still sits with paper either side instead of running into the number
+  and the flag. This does not re-open
   § Two colour systems rule 2 — the mark is drawn in the row's own ink.
 - **The class band** was rejected on the grounds that a gap separates classes
   for a third of the height. True, and irrelevant: separation was never the
@@ -1109,7 +1154,7 @@ Seven things it is allowed that no app surface is:
    product captures, and a progress rule along the pinned nav that fills with
    how far down the page you are. That last one is the reason the set is
    allowed at all: a bar reporting a measured quantity is the same instrument
-   voice as the § Session strip, not decoration borrowed from a template.
+   voice as the § Session header, not decoration borrowed from a template.
 
    Five fences, and the first two are the ones that keep this from becoming the
    templated-editorial tell it usually is:
@@ -1181,13 +1226,13 @@ Seven things it is allowed that no app surface is:
 
 8. **The product's own readout devices, at page scale.** Rule 6 admitted the
    progress rule on the argument that *a bar reporting a measured quantity is
-   the same instrument voice as the § Session strip*. Two devices now cash that
+   the same instrument voice as the § Session header*. Two devices now cash that
    argument in properly, and both are the app's own furniture rather than
    anything borrowed from a marketing template.
 
    - **The page's session strip** (`.readout`) sits in the dock under the nav
      row: the six sections as mono micro-labels, with the one you are reading
-     filled. It is the § Session strip's grammar exactly — a row of fields, one
+     filled. It is the § Session header's grammar exactly — a row of fields, one
      fill, and the fill marks the state that changes what you do next. It takes
      `primary` (§ Theme: selection) and `on-accent` ink (§ Theme rule 1).
 
@@ -1240,7 +1285,7 @@ markup, and no token value came from the source; every rule above is expressed
 in this system's own tokens. Colour values here remain those of the four
 runtime themes.
 
-Rules 8–11, the § Session strip and the § Class band were added on 2026-08-08
+Rules 8–11, the § Session header and the § Class band were added on 2026-08-08
 across two further passes over the same reference, after this app's surfaces
 were read against it side by side. The same boundary holds throughout: what was
 taken is *that* a timing overlay wants heavier type on darker paper, a readout
@@ -1303,6 +1348,16 @@ Standings brand mark's height, and stays on Relative. It is a column toggle on
 Standings (Manager → Columns) and the "Tyre compound" option on Relative, on
 by default on both. § Dense tabular overlays rule 15 and the `--color-tyre-wet`
 row of the theme table were rewritten with it.
+
+**Session header, legible marks, ratings on Relative, 2026-10-11.** Three
+asks from the owner, no outside reference: the session strip on Standings and
+Relative to be a modern header and a row of its own rather than a strip that
+read as the first row; the car marks whose letters could not be read
+(McLaren's above all) to be fixed; and an option for iRating on Relative.
+§ The session header was rewritten rather than patched — its first bullet was
+the argument for the look being replaced — and § Typography's micro-label
+note, § Dense tabular overlays' geometry and rule 5, § The class band and the
+marks entry in § Deliberately not adopted with it.
 
 ## Known follow-ups
 
@@ -1380,6 +1435,6 @@ row of the theme table were rewritten with it.
   unreadable without them.
 - **The class band repeats no session-wide value**, unlike the reference, which
   reprints lap, clock and track temperature on every band. Those live once, on
-  the session strip. If a user ever runs the band without the strip and misses
+  the session header. If a user ever runs the band without the header and misses
   them, the answer is to let the *strip* pin rather than to duplicate it per
   class.

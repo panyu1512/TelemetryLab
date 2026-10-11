@@ -92,7 +92,7 @@ export const CLASS_GAP = 10;
  * reading missed is that separation was never the only job: in a multi-class
  * field the band is also the only place the class's *own* numbers (its car
  * count, its strength of field, its fastest lap) can live at all, and those
- * have nowhere else to go — they are per-class, so the session strip cannot
+ * have nowhere else to go — they are per-class, so the session header cannot
  * hold them, and per-group, so no row can.
  *
  * 30 px, not the 34 the old class header cost: it carries a chip and three
@@ -173,10 +173,11 @@ export const STANDINGS_COLUMNS: readonly ColumnDef[] = [
   { id: "pos", label: "Pos", name: "Position", width: "2.1rem", px: 34, align: "center", always: true },
   { id: "change", label: "Δ", name: "Position change", width: "1.8rem", px: 29, align: "center" },
   { id: "num", label: "#", name: "Car number", width: "2.5rem", px: 40, align: "center" },
-  // Wide enough that the widest marks — Audi's rings, McLaren's speedmark, a
+  // Wide enough that the widest marks — Audi's rings, Aston Martin's wings, a
   // wordmark — sit inside the column with paper either side, rather than
-  // running up to the number and the flag beside them (see `.brand-icon`).
-  { id: "brand", label: "Car", name: "Car brand", width: "3.5rem", px: 56, align: "center" },
+  // running up to the number and the flag beside them, and wide enough that a
+  // wordmark's letters print large enough to read (see `.brand-icon--wide`).
+  { id: "brand", label: "Car", name: "Car brand", width: "4rem", px: 64, align: "center" },
   { id: "country", label: "Nat", name: "Country flag", width: "1.7rem", px: 27, align: "center" },
   // `minmax(0, 1fr)`, not `minmax(8rem, 1fr)`: the name absorbs all slack and is
   // the only column allowed to truncate. An 8rem floor made the grid overflow

@@ -1,5 +1,5 @@
 /**
- * Pure derivations behind the timing screens' session strip
+ * Pure derivations behind the timing screens' session header
  * (`src/components/timing/SessionStrip.tsx`).
  *
  * Kept out of the component for the usual reason this codebase splits logic
@@ -112,6 +112,17 @@ export function incidentColor(count: number): string {
 /*  Race distance                                                             */
 /* -------------------------------------------------------------------------- */
 
+/** The strip's lap value in its two halves: laps done, and the distance. */
+export interface RaceDistanceParts {
+  /** Laps completed, or `—` before the first lap of an unbounded session. */
+  lap: string;
+  /**
+   * The race distance — `35`, or `≈36` when projected for a timed race — or
+   * null when there is none to show.
+   */
+  total: string | null;
+}
+
 /**
  * The strip's `LAP` value: laps completed over the race distance.
  *
@@ -122,7 +133,32 @@ export function incidentColor(count: number): string {
  * it is the one thing the reference overlays get right that a bare lap counter
  * does not.
  *
- * Returns just the lap number when there is no distance to show at all.
+ * Split in two so the session header can set the lap a driver is on larger
+ * than the distance it is measured against; {@link raceDistance} joins them.
+ */
+export function raceDistanceParts(
+  session: Pick<
+    SessionInfo,
+    "isTimed" | "sessionTimeRemain" | "sessionLapsTotal" | "carEstLapTime"
+  >,
+  lap: number
+): RaceDistanceParts {
+  if (session.sessionLapsTotal != null) {
+    return { lap: String(lap), total: String(session.sessionLapsTotal) };
+  }
+  const est = session.carEstLapTime;
+  if (session.isTimed && session.sessionTimeRemain != null && est && est > 0) {
+    return {
+      lap: String(lap),
+      total: `≈${Math.round(lap + session.sessionTimeRemain / est)}`,
+    };
+  }
+  return { lap: lap > 0 ? String(lap) : "—", total: null };
+}
+
+/**
+ * {@link raceDistanceParts} as one string: `6/35`, `6/≈36`, or just the lap
+ * when there is no distance to show at all.
  */
 export function raceDistance(
   session: Pick<
@@ -131,12 +167,6 @@ export function raceDistance(
   >,
   lap: number
 ): string {
-  if (session.sessionLapsTotal != null) {
-    return `${lap}/${session.sessionLapsTotal}`;
-  }
-  const est = session.carEstLapTime;
-  if (session.isTimed && session.sessionTimeRemain != null && est && est > 0) {
-    return `${lap}/≈${Math.round(lap + session.sessionTimeRemain / est)}`;
-  }
-  return lap > 0 ? String(lap) : "—";
+  const { lap: done, total } = raceDistanceParts(session, lap);
+  return total != null ? `${done}/${total}` : done;
 }

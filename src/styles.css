@@ -397,12 +397,67 @@ a {
   box-shadow: inset 0 -1px 0 rgb(255 255 255 / 0.08);
 }
 
+/*
+ * The session header on Standings and Relative (§ The session header). Its
+ * own row, not one of the field's: a ground lit from the top — lighter than a
+ * row strip where it starts, so it never reads as the first of them — the
+ * pill's one-pixel highlight along its top edge, and the active flag's colour
+ * (`--header-tone`, set inline) along its foot, strongest under the session
+ * tag and gone by two thirds of the way across.
+ */
+.session-header {
+  background: linear-gradient(
+    180deg,
+    rgb(255 255 255 / 0.13),
+    rgb(255 255 255 / 0.05)
+  );
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.14),
+    0 2px 6px rgb(0 0 0 / 0.35);
+}
+.session-header::after {
+  content: "";
+  position: absolute;
+  inset: auto 0 0 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    var(--header-tone),
+    color-mix(in oklab, var(--header-tone) 35%, transparent) 30%,
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+/* The session tag's fill glows a little into the header around it, so the
+ * one filled thing on the header is unmistakably the flag. No flag: an
+ * outline instead of a fill, so the tag still reads as a tag. */
+.session-tag[data-flag] {
+  box-shadow:
+    inset 0 1px 0 rgb(255 255 255 / 0.35),
+    0 0 10px color-mix(in oklab, var(--header-tone) 45%, transparent);
+  text-shadow: none;
+}
+.session-tag:not([data-flag]) {
+  box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.35);
+}
+
+/* The one rule on the header: between the session's readout and the clock,
+ * which is the driver's time rather than the race's. */
+.session-header-rule {
+  align-self: stretch;
+  width: 1px;
+  margin-block: 9px;
+  background: rgb(255 255 255 / 0.12);
+  flex-shrink: 0;
+}
+
 /* Brand icon: the SVG child fills the container height and auto-sizes its
  * width from the viewBox aspect ratio, up to a cap. Every viewBox is cropped to
  * the mark's own ink, so height here is drawing rather than padding; the cap is
  * what keeps a wide wordmark (Dallara is 5.6:1) from running over its neighbour
- * — it fits to the cap and centres itself instead. The cap leaves 4 px of the
- * 56 px brand column either side, so even the widest mark has paper between it
+ * — it fits to the cap and centres itself instead. The cap leaves 6 px of the
+ * 64 px brand column either side, so even the widest mark has paper between it
  * and the number and flag beside it.
  *
  * `overflow: visible` because of the stroke below: it reaches half its width
@@ -411,7 +466,7 @@ a {
 .brand-icon > svg {
   height: 100%;
   width: auto;
-  max-width: 48px;
+  max-width: 52px;
   display: block;
   overflow: visible;
 }
@@ -422,19 +477,23 @@ a {
  * vision. Outlining every shape in its own fill thickens the whole mark by the
  * same amount. `non-scaling-stroke` makes that amount screen pixels rather
  * than viewBox units, so it is the same weight on every mark whatever its
- * viewBox's scale (they run from 24 to 360 units tall). */
+ * viewBox's scale (they run from 24 to 360 units tall).
+ *
+ * Marks with lettering or cut-out detail set a lighter `--mark-stroke` of their
+ * own (`MARK_STROKE` in cells.tsx) — the full weight closes the counters of
+ * letters a few pixels tall. */
 .brand-icon > svg :is(path, circle, ellipse, rect, polygon) {
   stroke: currentColor;
-  stroke-width: 0.9px;
+  stroke-width: var(--mark-stroke, 0.9px);
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
 }
 
-/* Marks whose detail is cut out of the ink (Ford's script, the Porsche crest —
- * `FINE_DETAIL_MARKS` in cells.tsx): the full stroke grows the ink into those
- * cut-outs and closes them, so they take a third of it. */
-.brand-icon--fine > svg :is(path, circle, ellipse, rect, polygon) {
-  stroke-width: 0.3px;
+/* Wide marks — a wordmark, Aston Martin's wings — are capped by their width,
+ * not their height, so the cap is what sets how large their letters print.
+ * They take the whole column less 2 px either side. */
+.brand-icon--wide > svg {
+  max-width: 60px;
 }
 
 /* Ink on the class fill (`lib/classFill`): white, which the fill's profile is

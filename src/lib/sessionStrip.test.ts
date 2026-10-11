@@ -4,6 +4,7 @@ import {
   activeFlag,
   incidentColor,
   raceDistance,
+  raceDistanceParts,
   sessionTag,
 } from "./sessionStrip";
 
@@ -94,5 +95,34 @@ describe("raceDistance", () => {
 
   it("renders an em dash before the first lap of an unbounded session", () => {
     expect(raceDistance({ ...timed, sessionTimeRemain: null }, 0)).toBe("—");
+  });
+});
+
+describe("raceDistanceParts", () => {
+  const timed = {
+    isTimed: true,
+    sessionTimeRemain: 3024,
+    sessionLapsTotal: null,
+    carEstLapTime: 120,
+  };
+
+  it("splits a published distance into the lap and the total", () => {
+    expect(
+      raceDistanceParts({ ...timed, isTimed: false, sessionLapsTotal: 35 }, 6)
+    ).toEqual({ lap: "6", total: "35" });
+  });
+
+  it("marks a projected total as an estimate", () => {
+    expect(raceDistanceParts(timed, 6)).toEqual({ lap: "6", total: "≈31" });
+  });
+
+  it("has no total when there is no distance to show", () => {
+    expect(raceDistanceParts({ ...timed, carEstLapTime: null }, 6)).toEqual({
+      lap: "6",
+      total: null,
+    });
+    expect(
+      raceDistanceParts({ ...timed, sessionTimeRemain: null }, 0)
+    ).toEqual({ lap: "—", total: null });
   });
 });

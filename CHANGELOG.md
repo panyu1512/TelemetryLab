@@ -7,6 +7,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Licence and iRating on the Relative.** Every car on the Relative can now
+  show the driver's licence and safety rating and their iRating with its
+  projected change — the same pill as on Standings, right after the name, so
+  you know who you are racing as well as where. Two new options in Manager →
+  Relative, "Licence / SR" and "iRating", both on by default.
+
+### Changed
+
+- **A new session header on Standings and Relative.** The line above the
+  field is now a header of its own instead of looking like the first row: a
+  taller bar lit from the top, the session tag in the flag's colour with that
+  colour running along the bottom edge, the track and its layout named, and
+  each reading — lap, time left, incidents, track and air temperature,
+  strength of field and the clock — as a small label over a large number.
+  The option is now called "Session header" in the Manager.
+- **Car logos you can read.** McLaren's, Dallara's and Ford's lettering no
+  longer blurs into a white smear, and Nissan's, RAM's, Porsche's, Cadillac's
+  and Aston Martin's marks are each drawn at the weight that keeps their
+  detail. Wide logos (McLaren, Dallara, Kia, Aston Martin) are drawn larger,
+  in a slightly wider brand column.
+
 ## [1.18.0] - 2026-10-11
 
 ### Changed

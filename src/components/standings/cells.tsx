@@ -423,24 +423,48 @@ BRAND_ICONS.VW = BRAND_ICONS.Volkswagen;
 BRAND_ICONS["Mercedes-AMG"] = BRAND_ICONS.Mercedes;
 
 /**
- * Marks whose detail is cut *out* of the ink — Ford's script in its oval,
- * Porsche's and Cadillac's crests, the lettering in Nissan's ring and RAM's
- * badge, Dallara's wordmark — and so take the lighter stroke
- * (`.brand-icon--fine`). The full stroke that makes every other mark heavier
- * grows the ink *into* those cut-outs, and at row size closed them: Ford's
- * script went, and the oval was left a blank white lozenge.
+ * Stroke weight, in screen px, for marks that cannot take the full 0.9 px
+ * every other mark is thickened by (`.brand-icon` in styles.css): marks with
+ * lettering in them, or detail cut *out* of the ink. The stroke grows the ink
+ * into those cut-outs, and in letters a few pixels tall it closed every
+ * counter — McLaren's wordmark printed as a white smear and Ford's oval as a
+ * blank lozenge. One lighter weight for all of them (0.3 px, which they used
+ * to share) was still wrong both ways, so each is set by eye at 1× scale:
+ *
+ *   - **0** — drawn exactly as cut: the wordmarks, Ford's script, RAM's
+ *     lettering under the head.
+ *   - **0.3** — the Porsche and Cadillac crests: enough to hold the outline,
+ *     not so much that the field inside it fills in.
+ *   - **0.5** — Nissan's ring and Aston Martin's wings, whose hairlines vanish
+ *     with no stroke at all but whose lettering (`NISSAN` in the bar, the
+ *     plaque between the wings) closes at the full one.
  */
-const FINE_DETAIL_MARKS: ReadonlySet<string> = new Set([
-  "Ford",
-  "Porsche",
-  "Cadillac",
-  "Nissan",
-  "RAM",
+const MARK_STROKE: Readonly<Record<string, number>> = {
+  McLaren: 0,
+  Dallara: 0,
+  Ford: 0,
+  RAM: 0,
+  Porsche: 0.3,
+  Cadillac: 0.3,
+  Nissan: 0.5,
+  "Aston Martin": 0.5,
+};
+
+/**
+ * Marks much wider than tall (4:1 and over), which their width cap governs
+ * rather than their height: the wordmarks and the Aston Martin wings. They
+ * take the whole column (`.brand-icon--wide`), since at the general cap a
+ * 5.5:1 wordmark printed letters 6 px tall.
+ */
+const WIDE_MARKS: ReadonlySet<string> = new Set([
+  "McLaren",
   "Dallara",
+  "Aston Martin",
+  "Kia",
 ]);
 
 /**
- * Default brand-mark box: 24 px tall, capped at 48 px wide — the Relative's
+ * Default brand-mark box: 24 px tall, capped at 52 px wide — the Relative's
  * size, on its 34 px row. Standings passes its own (`STANDINGS_BRAND_H`).
  *
  * Height alone never governed how big a mark *looked*. Every viewBox above is
@@ -464,7 +488,7 @@ export function BrandIcon({
   if (!make) return null;
   const Icon = BRAND_ICONS[make];
   if (Icon) {
-    // .brand-icon CSS rule: > svg { height: 100%; width: auto; max-width: 48px }
+    // .brand-icon CSS rule: > svg { height: 100%; width: auto; max-width: 52px }
     // inline-flex default (align-items: stretch) lets height:100% resolve.
     //
     // Pure white, not the old 94% and certainly not the 55%-alpha grey before
@@ -477,9 +501,15 @@ export function BrandIcon({
     return (
       <span
         className={`brand-icon inline-flex shrink-0 items-center justify-center${
-          FINE_DETAIL_MARKS.has(make) ? " brand-icon--fine" : ""
+          WIDE_MARKS.has(make) ? " brand-icon--wide" : ""
         }`}
-        style={{ height, color: "#fff" }}
+        style={{
+          height,
+          color: "#fff",
+          ...(make in MARK_STROKE
+            ? { ["--mark-stroke" as string]: `${MARK_STROKE[make]}px` }
+            : undefined),
+        }}
         title={make}
       >
         <Icon />

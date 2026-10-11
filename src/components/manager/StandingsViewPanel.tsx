@@ -128,11 +128,11 @@ export function StandingsViewPanel() {
       <label className="flex cursor-pointer items-center gap-3 rounded-card border border-border bg-surface px-3 py-2.5 transition-colors hover:border-border-strong">
         <div className="min-w-0 flex-1">
           <span className="block text-xs font-medium text-text">
-            Session strip
+            Session header
           </span>
           <span className="block text-[11px] text-faint">
-            Lap, time left, incidents, temperatures, SoF and the clock, above
-            the field.
+            Session, track, lap, time left, incidents, temperatures, SoF and
+            the clock, above the field.
           </span>
         </div>
         <ToggleSwitch
