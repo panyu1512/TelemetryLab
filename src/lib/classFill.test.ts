@@ -103,15 +103,22 @@ describe("white position digits on the fill", () => {
   }
 });
 
-describe("the Relative's class badge", () => {
-  // The badge sits on the strongest part of the fill; take the worst case of
-  // the class colour at full strength under it.
+function contrast(a: Rgb, b: Rgb): number {
+  const la = relativeLuminance(toHex(a))!;
+  const lb = relativeLuminance(toHex(b))!;
+  return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
+}
+
+describe("a class name on its chip", () => {
+  // The chip sits on the strongest part of the fill; take the worst case of
+  // the class colour at full strength under it, with the name in that same
+  // colour on top.
   const black = Number(/0\.\d+/.exec(CLASS_BADGE_GROUND)![0]);
 
   for (const color of CLASS_RAMP) {
-    it(`keeps white above 6:1 over ${color}`, () => {
+    it(`clears 4.5:1 in ${color} over ${color}`, () => {
       const chip = over([0, 0, 0], black, hex(color));
-      expect(whiteContrastOn(chip)).toBeGreaterThan(6);
+      expect(contrast(hex(color), chip)).toBeGreaterThanOrEqual(4.5);
     });
   }
 });

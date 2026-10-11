@@ -79,9 +79,10 @@ export function classFill(color: string, reach: string): string {
 }
 
 /**
- * The Relative's class badge: a dark chip cut into the fill, under white ink.
- * It sits where the fill is strongest, and a chip of solid class colour there
- * had no edge left to read by. The contrast test holds white on it above 6:1
- * over every ramp colour at full strength.
+ * The chip a class's name is set on — the Relative's class badge and the
+ * Standings band's class name — in the class's own colour. Both sit on the
+ * fill where it is strongest, so the chip has to be dark enough that every
+ * ramp colour reads on it even over itself at full strength: the contrast test
+ * holds the darkest, violet, above 4.5:1 there.
  */
-export const CLASS_BADGE_GROUND = "rgb(0 0 0 / 0.55)";
+export const CLASS_BADGE_GROUND = "rgb(0 0 0 / 0.8)";

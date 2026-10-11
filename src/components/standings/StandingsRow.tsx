@@ -232,8 +232,7 @@ function StandingsRowInner({
           </div>
         )}
 
-        {/* driver — in the class's colour, so the name carries the class the
-            edge opens the row with.
+        {/* driver.
 
             Title case, through the same `formatDriverName` the Relative uses.
             Caps used to set these, for one optical weight down the ragged
@@ -242,10 +241,7 @@ function StandingsRowInner({
             to truncate. Normalising the member's own casing gives the column
             its single voice without either cost. */}
         <div className="flex min-w-0 items-center">
-          <span
-            className="truncate text-[13px] font-bold tracking-[0.01em]"
-            style={{ color: classColor }}
-          >
+          <span className="truncate text-[13px] font-bold tracking-[0.01em] text-text">
             {formatDriverName(driver?.userName) || `Car ${carIdx}`}
           </span>
         </div>

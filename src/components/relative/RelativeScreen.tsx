@@ -43,9 +43,9 @@
  * **Exactly one row has a ground, and it is yours.** Lapped traffic used to take
  * a danger-tinted ground and every other row a wash of its class colour; with
  * three kinds of ground in six rows the player's own was one block among many.
- * Lapped is now ink, class is the leading edge and the fill it runs into, a
- * badge at the start of the row and the colour of the driver's name, and the
- * only filled row on the surface is the one you are driving.
+ * Lapped is now ink, class is the leading edge, the fill it runs into and a
+ * badge at the start of the row, and the only filled row on the surface is the
+ * one you are driving.
  *
  * Closing-rate hints flag cars that are approaching the player faster than a
  * threshold. A ⚡ icon in the closing column indicates the car is gaining
@@ -360,10 +360,9 @@ function RowInner({
   const isDiffClass = !isPlayer && entry.carClassId !== playerClassId;
   const dimmed = !isPlayer && (entry.isRetired || !entry.isInWorld);
 
-  // The row's ink. Lapped traffic prints every value but the name (which is
-  // always its class's colour) in `--color-lapped` blue — the sim's own
-  // blue-flag convention, so it is read rather than learned — and every other
-  // row keeps the surface's default ink. Ink, not ground: the one
+  // The row's ink. Lapped traffic prints every value in `--color-lapped` blue —
+  // the sim's own blue-flag convention, so it is read rather than learned — and
+  // every other row keeps the surface's default ink. Ink, not ground: the one
   // ground on this surface is the player's, and a lapped car is never you.
   const ink = lapped ? "var(--color-lapped)" : undefined;
 
@@ -412,21 +411,19 @@ function RowInner({
     >
       {labelled && <ColumnLabels isOn={isOn} template={template} />}
 
-      {/* class badge — the class's short name, cut into the class fill as a
-          dark chip with white ink. It sits on the strongest part of the fill,
-          so the fill supplies the colour and the chip only has to carry the
-          name: a chip of solid class colour on its own class colour had no
-          edge left to read by. Black at 55 % over even the lightest ramp
-          colour leaves white above 6:1, so the ink is fixed rather than
-          measured (§ Dense tabular overlays, rule 11). Standings needs no such
-          badge — its rows sit under a band that names the class — but a
-          Relative mixes classes row by row. Only drawn in a multi-class
-          field. */}
+      {/* class badge — the class's short name in its class colour, on a dark
+          chip cut into the class fill: the same chip the Standings band sets
+          its class name on. A chip of solid class colour on its own class
+          colour had no edge left to read by; the chip is dark enough that
+          every ramp colour clears 4.5:1 on it (§ Dense tabular overlays, rule
+          11). Standings needs no such badge — its rows sit under a band that
+          names the class — but a Relative mixes classes row by row. Only
+          drawn in a multi-class field. */}
       {isOn("class") && (
         <div className="flex justify-center">
           <span
             className="min-w-0 max-w-full truncate rounded-ctl px-1 py-0.5 text-center text-[11px] font-bold uppercase leading-none tracking-[0.04em]"
-            style={{ background: CLASS_BADGE_GROUND, color: "#fff" }}
+            style={{ background: CLASS_BADGE_GROUND, color: classColor }}
             title={driver?.carClassShortName || undefined}
           >
             {driver?.carClassShortName || "?"}
@@ -462,16 +459,15 @@ function RowInner({
         </div>
       )}
 
-      {/* driver name — in the class's colour on every row, lapped traffic
-          and the player included: the name carries the class, the rest of a
-          lapped row's values and its tag carry the blue, and the row's ground
-          says "you" (§ Two colour systems, rule 3). Title case through the
-          same `formatDriverName` Standings uses: the two surfaces are read the
-          same way and must not set the same fact two ways. */}
+      {/* driver name — `text` for everyone but lapped traffic, the player
+          included; the row's ground says "you" (§ Two colour systems, rule 3).
+          Title case through the same `formatDriverName` Standings uses: the
+          two surfaces are read the same way and must not set the same fact
+          two ways. */}
       <div className="flex min-w-0 items-center gap-1">
         <span
-          className="truncate text-[13px] font-bold tracking-[0.01em]"
-          style={{ color: classColor }}
+          className="truncate text-[13px] font-bold tracking-[0.01em] text-text"
+          style={{ color: ink }}
         >
           {formatDriverName(driver?.userName) || `Car ${entry.carIdx}`}
         </span>

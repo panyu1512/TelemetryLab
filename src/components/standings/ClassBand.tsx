@@ -3,7 +3,7 @@ import type { ClassStanding } from "../../telemetry/types";
 import { lapTime, rating } from "../../lib/format";
 import { RacingHelmet } from "../ui/RacingHelmet";
 import { StripField } from "../timing/SessionStrip";
-import { classFill } from "../../lib/classFill";
+import { CLASS_BADGE_GROUND, classFill } from "../../lib/classFill";
 import { CLASS_EDGE_WIDTH, STANDINGS_FILL_REACH } from "./constants";
 
 /**
@@ -74,7 +74,13 @@ function ClassBandInner({
           Its `ml-1` matches the row's `px-1` and its minimum width is the
           position column's, so `GT3` sits centred over the column of
           positions it heads. */}
-      <span className="class-fill-ink ml-1 min-w-[2.1rem] shrink-0 text-center text-[13px] font-bold uppercase leading-none tracking-[0.02em] text-text">
+      <span
+        className="ml-1 min-w-[2.1rem] shrink-0 rounded-ctl px-1 py-0.5 text-center text-[13px] font-bold uppercase leading-none tracking-[0.02em]"
+        // In its class colour, on the dark chip the Relative's class badge
+        // uses: the name sits on the class fill, where class-coloured ink on
+        // its own colour would vanish (§ Dense tabular overlays, rule 11).
+        style={{ background: CLASS_BADGE_GROUND, color }}
+      >
         {shortName || "—"}
       </span>
 

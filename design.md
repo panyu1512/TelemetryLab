@@ -107,8 +107,8 @@ standings table stops being readable at a glance.
    fits between `primary` at 255 and `sectorPurple` at 300, and this is the
    cheapest collision available — `sectorPurple` is ink on a single lap time,
    transient and rare, where identity is a row's leading edge, the fill it
-   runs into, and the driver's name. Both are ink now, but never in the same
-   cell: a name is never a lap time.
+   runs into, and a class's name. Both are ink now, but never in the same
+   cell: a class name is never a lap time.
 
    `carClassColor` is still on the wire and still unused for display. Do not
    add it to `tokens.css`, and do not let a theme try to correct it.
@@ -122,10 +122,9 @@ standings table stops being readable at a glance.
      ([`lib/classFill.ts`](src/lib/classFill.ts)), strong against the edge
      and gone by the end of the position cell, so the position — and, at the
      same reach, the class band's name — sits on its class's colour;
-   - **the driver's name**, set in the class colour.
-
-   On Relative, which mixes classes row by row under no band, they are joined
-   by a class badge opening the row.
+   - **the class's name** — the band's on Standings, the badge's on Relative,
+     which mixes classes row by row under no band — set in the class colour
+     on a dark chip.
 
    **The edge is full strength on every row, on both surfaces.** It used to
    drop to 40 % below the class leader (and, on Relative, below the player),
@@ -141,7 +140,8 @@ standings table stops being readable at a glance.
    covers the row's opening cells and nothing past the position, so the strip
    under the name and the timing data stays the neutral ground every row
    shares. The Relative row also opens with a **class badge**: the class's
-   short name, cut into the class fill as a dark chip. It is only drawn when
+   short name in its colour, on a dark chip cut into the class fill. It is
+   only drawn when
    the field has more than one class; a column where every row says `GT3`
    says nothing.
 
@@ -181,16 +181,21 @@ standings table stops being readable at a glance.
    rather than the ink being chosen per class. See § Dense tabular overlays
    rule 11.
 
-   **The name is the one identity ink.** With class only at a row's left end,
-   reading a car's class meant tracking back from the name to the edge; in
-   its class colour, the name carries the class in the column the eye is
-   already reading. Coloured ink is how the status system speaks too, so one
-   guard holds: **nothing about status ever recolours a name.** Lapped
-   traffic's blue rides on every other value on the row and on the `-1L`
-   beside the name (§ Dense tabular overlays, rule 14), and "this is you"
-   stays the player's ground (rule 3). Rule 1's 25° clearance from every
-   status hue is what makes a class-coloured name safe to set beside
-   status-coloured values at all.
+   **A class's name is the one identity ink, and driver names stay white.**
+   The band's class name and the Relative's badge print in the class colour,
+   on a chip of black at 80 % — dark enough that every ramp colour reads on it
+   even with its own colour at full strength under the chip (rule 11). A
+   class-coloured name on the fill itself would vanish into its own colour,
+   and a chip of solid class colour, which the badge used to be, had no edge
+   left on the fill to read by.
+
+   Driver names were set in their class colour for one release candidate and
+   went back to white: the name is the value most read on the row, white is
+   the highest-contrast ink on this paper, and a column of names in two or
+   three hues read as decoration rather than as a column. Lapped traffic's
+   blue (§ Dense tabular overlays, rule 14) is still the only thing that
+   recolours a name. Rule 1's 25° clearance from every status hue is what
+   makes class-coloured ink safe beside status-coloured values at all.
 3. **"This is you" is `primary`, and it is the row's ground, not its ink.**
    `bg-primary/25` plus an inset `primary/50` ring, on both surfaces
    (`PLAYER_ROW_GROUND`). It was `/15` while it was the only ground on bare
@@ -687,10 +692,11 @@ the fact that a header band and a row cost the same height.
       ([`lib/classFill.test.ts`](src/lib/classFill.test.ts)). The test, not
       taste, sets how strong the fill may be: a profile a step stronger fails
       on lime, and on cyan under the player's ground.
-    - **The Relative's badge is a dark chip cut into the fill**, black at
-      55 %, so white clears 6:1 on it over every ramp colour at full
-      strength. A chip of solid class colour sitting on its own class's fill
-      had no edge left to read by.
+    - **A class's name sits on a dark chip** — the Relative's badge and the
+      Standings band's name alike — black at 80 %, so the name, in its own
+      class colour, clears 4.5:1 on it even over that colour at full
+      strength (violet is the closest call). A chip of solid class colour
+      sitting on its own class's fill had no edge left to read by.
 
     `readableInk` has no caller as a result. It is kept and tested on purpose:
     the next thing that wants solid class colour under text will need it, and
@@ -752,12 +758,6 @@ the fact that a header band and a row cost the same height.
     blue with a `-1L` tag, the convention the sim's own blue flag and relative
     box already taught every driver. A car a lap or more *ahead* keeps the
     default ink and a `+1L` tag; everyone else is default ink.
-
-    **Every value but the name.** The name is the class's ink on every row
-    (§ Two colour systems, rule 2), lapped or not: position, number, tyre
-    laps, gap and last lap carry the blue, and the tag that names the lap
-    sits right beside the name, so a lapped row still reads as lapped from
-    the column the eye reads it by.
 
     This replaces a `danger` ground on every off-lap row, which in a race
     neighbourhood mostly off your lap turned the table into a stack of red
@@ -840,7 +840,9 @@ One line opening each class group on Standings:
   like the rows under it — the same `--color-timing-row` ground, the same
   class edge on the same vertical, and the same class fill behind its class
   name at the reach the rows use for their positions — so the band's edge and
-  the rows' make one spine of class colour down the group. It used to be the class colour
+  the rows' make one spine of class colour down the group. The class name
+  itself is set in the class colour on a dark chip, the Relative badge's
+  chip, since class-coloured ink straight on the fill would vanish. It used to be the class colour
   **solid** across its whole width; see § Two colour systems rule 2 for why
   that turned, once the rows became strips.
 - **It is a heading because of what it says and where it sits, not because of
@@ -1214,17 +1216,18 @@ why, and § Dense tabular overlays rules 1, 5, 11, 13 and 14 and § The class
 band were rewritten with it. The tyre column's move to Relative, and its
 `D`/`W` badge, came with the same brief (rule 15).
 
-**Class fill, 2026-10-11.** The owner asked for four things directly: car
-marks drawn bolder and given room in their column, each driver's name in its
-class colour, the class colour carried from the edge to the position as a
-gradient, and the Relative's tyre badge at the brand mark's size. No outside
+**Class fill, 2026-10-11.** The owner asked for these directly: car marks
+drawn bolder and given room in their column, the class colour carried from
+the edge to the position as a gradient, the Relative's tyre badge at the
+brand mark's size, and each class's name in its class colour (driver names
+were class-coloured first, and returned to white on review). No outside
 reference. It takes back part of what the strip-rows pass retired — identity
 colour behind the position — in a form that answers the reasons that pass
 gave: faded rather than solid, and held by a test to what white digits need.
 § Two colour systems rules 1–3 and § Dense tabular overlays rules 5, 11, 13,
 14 and 15, § The class band and § Deliberately not adopted were rewritten
-with it. The Relative's class badge became a dark chip as a consequence, not
-a request: solid class colour on its own class's fill had no edge.
+with it. The class name's dark chip came with it as a consequence, not a
+request: solid class colour on its own class's fill had no edge.
 
 ## Known follow-ups
 
