@@ -27,7 +27,7 @@
     />
     <meta property="og:image" content="https://telemetrylab.app/assets/standings.png" />
     <meta property="og:image:width" content="2360" />
-    <meta property="og:image:height" content="1024" />
+    <meta property="og:image:height" content="888" />
     <meta
       property="og:image:alt"
       content="The TelemetryLab standings overlay showing two class groups, GT3 and GT4, with gaps and lap times."
@@ -326,11 +326,12 @@
             <img
               src="assets/standings-compact.png"
               width="1240"
-              height="512"
+              height="526"
               alt="The standings overlay in a narrow window, drawn small enough that
-                   every column still fits: a session strip reading lap, time left,
-                   incidents, track and air temperature, strength of field and the
-                   clock, then a GT3 class header with strength of field, car count
+                   every column still fits: a session header of its own — a green
+                   RACE tag, the track, then lap, time left, incidents, track and
+                   air temperature, strength of field and the clock, each a small
+                   label over a large value — then a GT3 class header with strength of field, car count
                    and fastest lap over six driver rows, and the top three of the GT4
                    group below it. Each row is a dark strip whose class colour runs
                    from its left edge and fades out behind the position, carrying
@@ -375,10 +376,12 @@
             <img
               src="assets/standings.png"
               width="2360"
-              height="856"
+              height="888"
               loading="lazy"
               alt="The standings overlay showing two class groups: all six GT3 cars
-                   and the top three GT4 cars. Each group opens with a header strip
+                   and the top three GT4 cars, under a session header naming the
+                   session, the track and its layout, with the lap, time left,
+                   incidents, temperatures, strength of field and clock. Each group opens with a header strip
                    carrying strength of field, car count and fastest lap, followed by
                    rows — each a dark strip whose class colour fades from its left
                    edge to the position — carrying
@@ -386,7 +389,8 @@
                    combined licence and iRating pill — the licence in its own colour,
                    blue A, red R, green B, gold C, orange D and black P — gap,
                    interval, last lap, best lap, tyre and three sector columns — two of the GT4 cars are on
-                   wets, shown by a blue W. Each class leader's row reads GAP and INT
+                   wets, shown by a blue W. The car brands are drawn as their own
+                   marks in white, McLaren's and Aston Martin's lettering included. Each class leader's row reads GAP and INT
                    where it has no gap to show."
             />
           </figure>
@@ -397,6 +401,7 @@
             <span class="band__chip">Relative</span>
             <span class="band__field"><span class="band__k">SORT</span><b class="band__v">track order</b></span>
             <span class="band__field"><span class="band__k">GAP</span><b class="band__v">signed</b></span>
+            <span class="band__field"><span class="band__k">iRATING</span><b class="band__v">live Δ</b></span>
             <span class="band__field"><span class="band__k">TYRES</span><b class="band__v">D · W</b></span>
           </div>
           <div class="row__copy">
@@ -407,25 +412,29 @@
               signed and live. Cars you are lapping turn blue, every car from
               another class carries its class badge, and the only highlighted row
               is yours. A closing indicator fires when a faster car is catching
-              you, and turns red when that car is from another class. And every
-              car shows its tyres — a white D for dries, a blue W for wets — with
-              the laps on the set, so you see who has gone to wets the moment the
-              rain comes.
+              you, and turns red when that car is from another class. Every car
+              carries its licence and iRating, with the projected change, so you
+              know who you are racing as well as where. And every car shows its
+              tyres — a white D for dries, a blue W for wets — with the laps on
+              the set, so you see who has gone to wets the moment the rain comes.
             </p>
           </div>
           <figure class="shot">
             <img
               src="assets/relative.png"
-              width="1120"
-              height="768"
+              width="1400"
+              height="806"
               loading="lazy"
-              alt="The relative overlay in a two-class race: cars ahead and behind
+              alt="The relative overlay in a two-class race, under the same session
+                   header as the standings: cars ahead and behind
                    the player sorted by on-track time, each row a dark strip opening
                    on a fade of its class colour, with its GT3 or GT4 class name
                    lettered in that colour. GT3 cars on the
                    player's lap are written in white; GT4 cars a lap down on the
                    player, both ahead and behind, are written in blue with a
-                   minus-one-lap tag. Every row shows its tyres: a white D in a circle
+                   minus-one-lap tag. Every row carries the driver's licence and
+                   iRating as one pill — the licence in its own colour, the rating
+                   with its projected change, a green ▲ or red ▼ — and its tyres: a white D in a circle
                    for dries or a blue W for wets, then the laps on the set — three of
                    the GT4 cars are on wets. The player's own row is the only
                    highlighted one, outlined and set apart by a gap above and below."
@@ -509,7 +518,7 @@
         <section id="spec" class="spec">
           <div class="band">
             <span class="band__chip">Legend</span>
-            <span class="band__field"><span class="band__k">FIELDS</span><b class="band__v">16</b></span>
+            <span class="band__field"><span class="band__k">FIELDS</span><b class="band__v">17</b></span>
             <span class="band__field"><span class="band__k">TABLES</span><b class="band__v">2</b></span>
           </div>
           <div class="spec__intro">
@@ -595,7 +604,7 @@
           <div class="spec__scroll spec__scroll--stacked">
             <table class="tnum">
               <caption class="micro spec__cap">
-                Session strip
+                Session header
               </caption>
               <thead>
                 <tr>
@@ -613,6 +622,11 @@
                     <span class="sw sw--warn">yellow</span> ·
                     <span class="sw sw--bad">red</span>
                   </td>
+                </tr>
+                <tr>
+                  <th scope="row">CIRCUIT</th>
+                  <td>The circuit and its layout — the first field to go when the overlay narrows</td>
+                  <td>—</td>
                 </tr>
                 <tr>
                   <th scope="row">LAP</th>
@@ -633,7 +647,7 @@
                   </td>
                 </tr>
                 <tr>
-                  <th scope="row">TRK · AIR</th>
+                  <th scope="row">TRACK · AIR</th>
                   <td>Track and air temperature</td>
                   <td>—</td>
                 </tr>
@@ -643,7 +657,7 @@
                   <td>—</td>
                 </tr>
                 <tr>
-                  <th scope="row">CLK</th>
+                  <th scope="row">TIME</th>
                   <td>Local time, for when the stint has stopped meaning anything</td>
                   <td>—</td>
                 </tr>
