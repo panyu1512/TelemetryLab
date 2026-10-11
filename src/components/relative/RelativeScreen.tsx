@@ -132,11 +132,12 @@ const REL_COLUMNS: { id: RelColumnId; width: string; px: number }[] = [
   // width it would like, which is what the table's natural width is summed
   // from — and therefore what the scale is measured against.
   { id: "driver", width: "minmax(0, 1fr)", px: 112 },
-  // Licence + SR, then iRating + its projected change: the Standings' pill,
-  // at the Standings' widths, straight after the name it qualifies — who the
-  // car is before what it is and where.
+  // Licence + SR, then iRating: the Standings' pill, straight after the name
+  // it qualifies — who the car is before what it is and where. The iRating
+  // segment is narrower than Standings' because it carries no projected
+  // change here, only a four-digit rating.
   { id: "license", width: "3.4rem", px: 54 },
-  { id: "irating", width: "5.2rem", px: 83 },
+  { id: "irating", width: "3.2rem", px: 51 },
   // Wide enough that the widest marks sit inside the column with paper either
   // side, and a wordmark's letters print large enough to read (see
   // `.brand-icon--wide`), as on Standings.
@@ -265,7 +266,7 @@ const REL_HEADER_LABEL: Record<RelColumnId, string> = {
 const REL_LABEL_H = 10;
 
 function alignOf(id: RelColumnId): string {
-  if (id === "gap" || id === "last" || id === "irating") return "text-right";
+  if (id === "gap" || id === "last") return "text-right";
   if (id === "driver") return "text-left";
   return "text-center";
 }
@@ -521,8 +522,8 @@ function RowInner({
         )}
       </div>
 
-      {/* licence + SR, then iRating + projected change — the Standings' pill,
-          one pill in two segments when both are on. Its grounds are the
+      {/* licence + SR, then iRating — the Standings' pill without the
+          projected change, one pill in two segments when both are on. Its grounds are the
           licence's own colour and a glass lift, so lapped blue does not reach
           it: a rating is who the driver is, not where they are. */}
       {isOn("license") &&
@@ -539,8 +540,9 @@ function RowInner({
       {isOn("irating") && (
         <IRatingCell
           iRating={driver?.iRating ?? entry.iRating ?? 0}
-          change={entry.iRatingChangeEst ?? 0}
+          change={0}
           joined={isOn("license")}
+          showChange={false}
         />
       )}
 

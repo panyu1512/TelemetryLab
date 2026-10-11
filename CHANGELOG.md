@@ -12,9 +12,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - **Licence and iRating on the Relative.** Every car on the Relative can now
-  show the driver's licence and safety rating and their iRating with its
-  projected change — the same pill as on Standings, right after the name, so
-  you know who you are racing as well as where. Two new options in Manager →
+  show the driver's licence, safety rating and iRating — the same pill as on
+  Standings, right after the name, so you know who you are racing as well as
+  where. The projected iRating change stays on Standings only. Two new options in Manager →
   Relative, "Licence / SR" and "iRating", both on by default.
 
 ### Changed

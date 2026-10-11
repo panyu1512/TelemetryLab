@@ -53,7 +53,7 @@ export function RelativeOptionsPanel() {
       />
       <OptionRow
         label="iRating"
-        description="Each driver's iRating and its projected change this race."
+        description="Each driver's iRating."
         checked={showIRating}
         onChange={setShowIRating}
       />

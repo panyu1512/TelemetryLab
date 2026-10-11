@@ -123,12 +123,11 @@ const SHOTS = [
   // This capture is the page's proof that the table groups by class; at 420
   // an older layout cropped the GT4 group mid-row.
   { name: "standings", route: "?overlay=standings", w: 1180, h: 444 },
-  // 403 fits five cars ahead, the player and four behind, all whole: the
-  // tenth row's strip ends at 396 at this width's ~0.89 scale. Widened from
-  // 560 for 1.19, when licence and iRating joined the row: 700 keeps the
-  // table at the scale the 560 frame drew it at before they did, instead of
-  // shrinking every glyph by a fifth to make room for them.
-  { name: "relative", route: "?overlay=relative", w: 700, h: 403 },
+  // 420 fits five cars ahead, the player and four behind, all whole: the
+  // tenth row's strip ends at 413 at this width's ~0.93 scale. Widened from
+  // 560 for 1.19, when licence and iRating joined the row, so the table is
+  // not shrunk by a fifth to make room for them.
+  { name: "relative", route: "?overlay=relative", w: 700, h: 420 },
   { name: "dashboard", route: "?overlay=dashboard", w: 1100, h: 620 },
   { name: "manager", route: "", w: 1400, h: 900, wait: PAST_A_LAP_MS },
   // Tall enough for the pit-strategies card, which stopped being collapsed and

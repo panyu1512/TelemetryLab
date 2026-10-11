@@ -29,9 +29,9 @@ export interface RelativeUiState {
    */
   showLicense: boolean;
   /**
-   * Show each driver's iRating and its projected change — the pill's right
-   * segment. Who you are racing, not only where: a 5k driver alongside is a
-   * different fight from a 1k one.
+   * Show each driver's iRating — the pill's right segment, without the
+   * projected change Standings carries. Who you are racing, not only where:
+   * a 5k driver alongside is a different fight from a 1k one.
    */
   showIRating: boolean;
   /** Cars shown per side (ahead/behind). */

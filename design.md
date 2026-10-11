@@ -571,9 +571,12 @@ the fact that a header band and a row cost the same height.
    switchable; when both are on, the licence segment reaches across the
    column gap and the two square off where they meet.
 
-   **The pill is on Relative too**, the same component at the same widths,
-   straight after the driver's name and before the brand mark: who the car
-   is, then what it is, then where. Licence and iRating are separate options
+   **The pill is on Relative too**, straight after the driver's name and
+   before the brand mark: who the car is, then what it is, then where.
+   **Without the projected change** — the owner asked for licence, safety
+   rating and iRating there and not what the race is worth to each driver —
+   so its iRating segment is narrower (3.2rem) and centres the rating, since
+   there is no change slot for it to line up against. Licence and iRating are separate options
    there ("Licence / SR" and "iRating"), both on by default. A relative is
    about neighbours, and *who* a neighbour is — a 5k driver alongside or a
    1k one — decides how hard to race them as much as the gap does. The pill
@@ -1353,7 +1356,8 @@ row of the theme table were rewritten with it.
 asks from the owner, no outside reference: the session strip on Standings and
 Relative to be a modern header and a row of its own rather than a strip that
 read as the first row; the car marks whose letters could not be read
-(McLaren's above all) to be fixed; and an option for iRating on Relative.
+(McLaren's above all) to be fixed; and an option for iRating on Relative —
+then, on review, without the projected change.
 § The session header was rewritten rather than patched — its first bullet was
 the argument for the look being replaced — and § Typography's micro-label
 note, § Dense tabular overlays' geometry and rule 5, § The class band and the

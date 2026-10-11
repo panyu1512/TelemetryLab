@@ -163,12 +163,38 @@ export function IRatingCell({
   iRating,
   change,
   joined = false,
+  showChange = true,
 }: {
   iRating: number;
   change: number;
   /** The licence segment is shown in the previous column (see LicenseBadge). */
   joined?: boolean;
+  /**
+   * Print the projected change and its rule. Off on Relative, which shows
+   * who a neighbour is — rating and licence — and leaves what the race is
+   * worth to them on Standings. Without the change the segment centres the
+   * rating, since there is no slot for it to line up against.
+   */
+  showChange?: boolean;
 }) {
+  if (!showChange) {
+    return (
+      <div
+        className="tnum flex w-full items-center justify-center"
+        style={{
+          height: PILL_H,
+          paddingInline: RATING_PAD_X,
+          background: ratingGround(0),
+          boxShadow: PILL_SHEEN,
+          borderRadius: segmentRadius("right", joined),
+        }}
+      >
+        <span className="text-[12px] font-bold leading-none text-text">
+          {rating(iRating)}
+        </span>
+      </div>
+    );
+  }
   return (
     // Rating and its projected change are one compound cell in two voices
     // (rule 4), on the pill's neutral segment: the rating in full `text`, only
