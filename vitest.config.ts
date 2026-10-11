@@ -18,6 +18,7 @@ export default defineConfig({
         "src/lib/format.ts",
         "src/lib/classColors.ts",
         "src/lib/classFill.ts",
+        "src/lib/ratingPill.ts",
         "src/lib/driverName.ts",
         "src/lib/lapTimeOrder.ts",
         "src/lib/positionFlash.ts",

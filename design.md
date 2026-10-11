@@ -533,11 +533,20 @@ the fact that a header band and a row cost the same height.
    **The licence and iRating pill is a ground, not a fill.** Licence + safety
    rating and iRating + its projected change are one compound cell in two
    segments (rule 4): `A3.45 | 8895 ⌃14`. The licence segment is the licence's
-   own colour taken to 42 % toward black, with white ink — dark enough that
-   white clears 8:1 on even C's yellow, so it reads as a tone on the row rather
-   than a beacon — and the iRating segment is a neutral white lift. The two
-   columns stay separately switchable; when both are on, the licence segment
-   reaches across the column gap and the two square off where they meet.
+   own colour as a diagonal gradient, 52 % toward black at its lighter
+   top-left and 30 % at its deeper bottom-right, with white ink — the light
+   end is held where white still clears 4.5:1 on C's yellow, the closest
+   call ([`lib/ratingPill.test.ts`](src/lib/ratingPill.test.ts)), so it reads
+   as a tone on the row rather than a beacon. The iRating segment is a glass
+   lift, lighter at the top, and both carry a one-pixel highlight along their
+   top edge, so the pill reads as one lit object rather than two painted
+   rectangles. The projected change is graded a second time by a 2 px rule
+   along the segment's foot, fading in toward the number — `accent` for a
+   gain, `danger` for a loss — ruled rather than tinted for rule 10's reason:
+   a status-coloured ground under status-coloured ink would cost the ink its
+   contrast. The two columns stay separately switchable; when both are on,
+   the licence segment reaches across the column gap and the two square off
+   where they meet.
 
    This replaced the **tint** device — a ≤ 18 % wash of a value's own hue
    behind ink of that hue — that licence, iRating and position change used to

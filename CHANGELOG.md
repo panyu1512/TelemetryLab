@@ -21,6 +21,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   longer crowd the car number and flag.
 - **Tyre badge the same size as the car logo** on the Relative, with a
   slightly larger lap count beside it.
+- **A sharper licence and iRating pill on Standings.** The licence half is
+  now a gradient in the licence's own colour, both halves have a glassy top
+  edge, and your projected iRating gain or loss gets a green or red glow line
+  under it.
 - **Class names in their class colour.** The `GT3` / `GT4` name on the
   Standings class headers and on the Relative's class badge is now printed in
   that class's colour, on a dark tag so it stays readable on top of the new

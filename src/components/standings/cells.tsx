@@ -12,6 +12,7 @@ import { LAP_COLOR, SECTOR_COLOR } from "./constants";
 import { tyreKind, tyreName } from "../../lib/tyreCompound";
 import { useSessionStore } from "../../stores/useSessionStore";
 import { TyreCompoundIcon } from "../ui/TyreCompoundIcon";
+import { licenceGround, PILL_SHEEN, ratingGround } from "../../lib/ratingPill";
 
 /* -------------------------------------------------------------------------- */
 /*  Position-change arrow (⌃2 / ⌄1) — gain since the green flag                */
@@ -61,20 +62,17 @@ function segmentRadius(side: "left" | "right", joined: boolean): string {
     : `0 ${PILL_R} ${PILL_R} 0`;
 }
 
-/**
- * The licence segment's ground: the licence's own colour taken well toward
- * black.
+/*
+ * The segments' grounds — a licence-coloured gradient and a glass lift with a
+ * gain/loss rule — live in `lib/ratingPill`, where their contrast is tested.
  *
  * iRacing's licence colours run from a dark blue (A) to a near-white yellow
- * (C), so no one ink reads on all of them at full strength. 42 % of the colour
- * in OKLab scales the lightness of any of them to under half — the lightest,
- * C's yellow, lands near L 0.4, where white measures better than 8:1 — so the
- * segment can always print white, keep the colour a driver knows the class
- * of licence by, and sit on the row as a tone rather than a beacon.
+ * (C), so no one ink reads on all of them at full strength. Taking the colour
+ * most of the way toward black in OKLab scales the lightness of any of them
+ * to under the point where white reads, so the segment can always print
+ * white, keep the colour a driver knows the class of licence by, and sit on
+ * the row as a tone rather than a beacon.
  */
-function licenceGround(color: string): string {
-  return `color-mix(in oklab, ${color} 42%, black)`;
-}
 
 export function LicenseBadge({
   group,
@@ -102,6 +100,7 @@ export function LicenseBadge({
         justifySelf: "start",
         color: "#fff",
         background: licenceGround(color),
+        boxShadow: PILL_SHEEN,
         borderRadius: segmentRadius("left", joined),
       }}
       title={`${group} ${safetyRating.toFixed(2)}`}
@@ -133,11 +132,15 @@ export function IRatingCell({
     // The segment fills its column rather than hugging its contents, and the
     // change sits in a fixed-width slot, so every rating in the column ends on
     // the same vertical — the one thing a column of numbers must never lose.
+    //
+    // A glass lift, with the change graded by a rule along its foot that
+    // fades in toward the number (`lib/ratingPill`).
     <div
       className="tnum flex w-full items-center justify-end gap-1 px-1.5"
       style={{
         height: PILL_H,
-        background: "rgb(255 255 255 / 0.1)",
+        background: ratingGround(change),
+        boxShadow: PILL_SHEEN,
         borderRadius: segmentRadius("right", joined),
       }}
     >
