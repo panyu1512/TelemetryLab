@@ -110,12 +110,14 @@ const SHOTS = [
   // at 620 px every one of the fifteen columns is still there, drawn smaller.
   // (It used to prove the opposite. Columns stopped dropping when the tables
   // learned to scale — see `lib/tableScale`.)
-  // 269: at this width the table draws every column at ~0.61, and 268 is the
+  // 256: at this width the table draws every column at ~0.58, and 255 is the
   // shortest frame that keeps it width-limited (one pixel of slack on top).
   // Down from 306 when the other class was capped at three cars by default,
-  // and from 272 when the brand column widened for 1.16.
-  { name: "standings-compact", route: "?overlay=standings", w: 620, h: 269 },
-  // 428 = the whole two-class field at full size (width-limited from 426).
+  // from 272 when the brand column widened for 1.16, and from 269 when the
+  // tyre column came back for 1.17 and the table drew a step smaller.
+  { name: "standings-compact", route: "?overlay=standings", w: 620, h: 256 },
+  // 428 = the whole two-class field at full size (width-limited from 426;
+  // re-measured with the tyre column back for 1.17, still full size).
   // This capture is the page's proof that the table groups by class; at 420
   // an older layout cropped the GT4 group mid-row.
   { name: "standings", route: "?overlay=standings", w: 1180, h: 428 },

@@ -29,6 +29,7 @@ import {
   LicenseBadge,
   PosChange,
   SectorCell,
+  TireCell,
 } from "./cells";
 
 interface StandingsRowProps {
@@ -309,6 +310,16 @@ function StandingsRowInner({
                   ? "Fastest lap in class"
                   : undefined
             }
+          />
+        )}
+
+        {/* tyre compound + laps on the set, the badge at the brand mark's
+            height so the two read as a pair (as on Relative) */}
+        {isVisible("tire") && (
+          <TireCell
+            compound={row?.tireCompound ?? null}
+            laps={row?.tireLaps ?? 0}
+            size={STANDINGS_BRAND_H}
           />
         )}
 

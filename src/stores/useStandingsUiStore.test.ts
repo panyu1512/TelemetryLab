@@ -45,6 +45,12 @@ describe("standings column configuration", () => {
   it("shows every column by default", () => {
     expect(store().isColumnVisible("irating")).toBe(true);
     expect(store().isColumnVisible("sectors")).toBe(true);
+    expect(store().isColumnVisible("tire")).toBe(true);
+  });
+
+  it("can switch the tyre column off", () => {
+    store().toggleColumn("tire");
+    expect(store().isColumnVisible("tire")).toBe(false);
   });
 
   it("toggles a column off and back on", () => {

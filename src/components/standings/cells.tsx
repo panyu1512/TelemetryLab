@@ -593,7 +593,7 @@ export function SectorCell({ sector }: { sector: SectorSplit | undefined }) {
 }
 
 /* -------------------------------------------------------------------------- */
-/*  Tyre compound + age cell (Relative)                                       */
+/*  Tyre compound + age cell                                                  */
 /* -------------------------------------------------------------------------- */
 
 /**
@@ -610,11 +610,10 @@ const COMPOUND_LABEL: Record<number, string> = { 0: "P", 1: "A", 2: "B", 3: "C" 
 /**
  * Compound badge (`D` dry / `W` wet), then laps on the set.
  *
- * It lives on the Relative now, not Standings: what a driver wants from a tyre
- * readout is whether the cars *around them* have gone to wets, and how old the
- * rubber is on the car they are about to race — a question about neighbours,
- * which is the Relative's whole subject. Standings carried it for the full
- * field, at a cost of a column on the widest surface in the app.
+ * Both timing tables carry it, each as an option that is on by default. On the
+ * Relative it answers whether the cars *around you* have gone to wets and how
+ * old the rubber is on the car you are about to race; on Standings, the same
+ * for the whole field — who pitted for wets, and who is on an old set.
  *
  * The badge's colour is the one exception to "the row's own ink": blue for a
  * wet is the meaning, so it is fixed (see {@link TyreCompoundIcon}). The lap
@@ -628,11 +627,14 @@ export function TireCell({
   compound,
   laps,
   ink,
+  size = BRAND_ICON_H,
 }: {
   compound: number | null;
   laps: number;
   /** The row's ink, for the lap count. Defaults to `muted`. */
   ink?: string;
+  /** Badge height in px — the brand mark's height on the same row. */
+  size?: number;
 }) {
   const kind = useSessionStore((s) => tyreKind(compound, s.session?.tireCompounds));
   const name = useSessionStore((s) => tyreName(compound, s.session?.tireCompounds));
@@ -643,18 +645,18 @@ export function TireCell({
   const title = kind
     ? `${kind === "wet" ? "Wet" : "Dry"}${name && name.toLowerCase() !== kind ? ` (${name})` : ""}`
     : `Compound ${label}`;
-  // The badge is drawn at the brand mark's height (`BRAND_ICON_H`), so the car's
-  // mark and its tyre, side by side on the row, read as a pair of the same size
-  // rather than a large badge and a small one.
+  // The badge is drawn at the brand mark's height (`BRAND_ICON_H` on Relative,
+  // `STANDINGS_BRAND_H` on Standings), so the car's mark and its tyre read as a
+  // pair of the same size rather than a large badge and a small one.
   return (
     <div className="flex items-center justify-center gap-1">
       <span
         className="flex justify-center text-center text-[13px] font-bold leading-none text-text"
-        style={{ width: BRAND_ICON_H }}
+        style={{ width: size }}
         title={title}
       >
         {kind ? (
-          <TyreCompoundIcon kind={kind} size={`${BRAND_ICON_H}px`} label={title} />
+          <TyreCompoundIcon kind={kind} size={`${size}px`} label={title} />
         ) : (
           label
         )}

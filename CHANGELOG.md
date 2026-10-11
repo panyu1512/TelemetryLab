@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Tyres back on Standings.** Every car on Standings shows its tyre again —
+  the same white **D** for dries and blue **W** for wets as the Relative,
+  with the laps on the set — in a `Tyre` column between the best lap and the
+  sectors. It is on by default; turn it off under Overlay Manager →
+  Standings → Columns → "Tyre compound". The Relative keeps its tyres and its
+  own on/off option.
+
 ## [1.16.0] - 2026-10-11
 
 ### Changed
