@@ -43,8 +43,9 @@
  * **Exactly one row has a ground, and it is yours.** Lapped traffic used to take
  * a danger-tinted ground and every other row a wash of its class colour; with
  * three kinds of ground in six rows the player's own was one block among many.
- * Lapped is now ink, class is a badge at the start of the row (plus the leading
- * edge), and the only filled row on the surface is the one you are driving.
+ * Lapped is now ink, class is the leading edge, the fill it runs into and a
+ * badge at the start of the row, and the only filled row on the surface is the
+ * one you are driving.
  *
  * Closing-rate hints flag cars that are approaching the player faster than a
  * threshold. A ⚡ icon in the closing column indicates the car is gaining
@@ -81,7 +82,11 @@ import { CountryFlag } from "../ui/CountryFlag";
 import { SessionStrip } from "../timing/SessionStrip";
 import { scaleBox, tableScale, unscaled } from "../../lib/tableScale";
 import { CLASS_RAMP, classColorFor } from "../../lib/classColors";
-import { readableInk } from "../../lib/contrast";
+import {
+  CLASS_NAME_OUTLINE,
+  CLASS_NAME_OUTLINE_PX,
+  classFill,
+} from "../../lib/classFill";
 import { formatDriverName } from "../../lib/driverName";
 
 // ─── Layout constants ────────────────────────────────────────────────────────
@@ -120,12 +125,14 @@ const REL_COLUMNS: { id: RelColumnId; width: string; px: number }[] = [
   // width it would like, which is what the table's natural width is summed
   // from — and therefore what the scale is measured against.
   { id: "driver", width: "minmax(0, 1fr)", px: 112 },
-  { id: "brand", width: "2.75rem", px: 44 },
+  // Wide enough that the widest marks sit inside the column with paper either
+  // side (see `.brand-icon`), as on Standings.
+  { id: "brand", width: "3.5rem", px: 56 },
   // Compound badge + laps on the set, beside the car it belongs to and ahead
   // of the gap: "who is this, what are they on" before "how far away".
   // Wide enough for a three-digit lap count beside the badge (an enduro
-  // stint).
-  { id: "tyre", width: "3.1rem", px: 50 },
+  // stint), now that the badge is drawn at the brand mark's height.
+  { id: "tyre", width: "3.4rem", px: 54 },
   { id: "gap", width: "4.8rem", px: 77 },
   { id: "last", width: "5rem", px: 80 },
   { id: "hint", width: "1.8rem", px: 29 },
@@ -170,6 +177,21 @@ function relNaturalWidth(isOn: RelVisibility): number {
   return (
     on.reduce((sum, c) => sum + c.px, 0) + Math.max(0, on.length - 1) * 4 + 20
   );
+}
+
+/**
+ * Where the row's class fill (`lib/classFill`) has faded out: the row's `px-2`,
+ * then every visible column up to and including the position, with the
+ * `gap-x-1` between them. In a multi-class field that takes in the class
+ * badge, so the badge and the position both sit on the fill.
+ */
+function relFillReach(isOn: RelVisibility): string {
+  const through = REL_COLUMNS.slice(
+    0,
+    REL_COLUMNS.findIndex((c) => c.id === "pos") + 1
+  ).filter((c) => isOn(c.id));
+  const gaps = Math.max(0, through.length - 1);
+  return `calc(0.5rem + ${through.map((c) => c.width).join(" + ")} + ${gaps * 0.25}rem)`;
 }
 
 function relGridTemplate(isOn: RelVisibility): string {
@@ -290,6 +312,8 @@ interface RowProps {
   showLapRelation: boolean;
   isOn: RelVisibility;
   template: string;
+  /** CSS length where the class fill has faded out (see `relFillReach`). */
+  fillReach: string;
   isPlayer?: boolean;
   /** First row of the table: carries the column labels (rule 3). */
   labelled?: boolean;
@@ -305,6 +329,7 @@ function RowInner({
   showLapRelation,
   isOn,
   template,
+  fillReach,
   isPlayer = false,
   labelled = false,
 }: RowProps) {
@@ -381,23 +406,31 @@ function RowInner({
         borderLeftWidth: CLASS_EDGE_WIDTH,
         borderLeftStyle: "solid",
         borderLeftColor: classColor,
+        // …running on into the row as a fill that fades out by the end of the
+        // position cell, as on Standings (see `lib/classFill`).
+        backgroundImage: classFill(classColor, fillReach),
         // Clear the in-row column labels rather than centring under them.
         paddingTop: labelled ? REL_LABEL_H : undefined,
       }}
     >
       {labelled && <ColumnLabels isOn={isOn} template={template} />}
 
-      {/* class badge — the class's short name on a solid block of its colour,
-          directly against the edge it repeats: a heading-sized identity fill,
-          one per row, ink measured by `readableInk` (§ Dense tabular
-          overlays, rule 11). Standings needs no such badge — its rows sit
-          under a band that names the class — but a Relative mixes classes
-          row by row. Only drawn in a multi-class field. */}
+      {/* class badge — the class's short name in its class colour, straight
+          on the class fill with a dark outline under the glyphs, as the
+          Standings band sets its class name. Class-coloured ink on its own
+          colour has no edge; the outline gives every letter one, and every
+          ramp colour clears 4.5:1 against it (§ Dense tabular overlays, rule
+          11). Standings needs no such badge — its rows sit under a band that
+          names the class — but a Relative mixes classes row by row. Only
+          drawn in a multi-class field. */}
       {isOn("class") && (
         <div className="flex justify-center">
           <span
-            className="min-w-0 max-w-full truncate rounded-ctl px-1 py-0.5 text-center text-[11px] font-bold uppercase leading-none tracking-[0.04em]"
-            style={{ background: classColor, color: readableInk(classColor) }}
+            className="class-name-ink min-w-0 max-w-full truncate text-center text-[12px] font-bold uppercase leading-none tracking-[0.04em]"
+            style={{
+              color: classColor,
+              WebkitTextStroke: `${CLASS_NAME_OUTLINE_PX}px ${CLASS_NAME_OUTLINE}`,
+            }}
             title={driver?.carClassShortName || undefined}
           >
             {driver?.carClassShortName || "?"}
@@ -405,9 +438,9 @@ function RowInner({
         </div>
       )}
 
-      {/* overall position — full `text`, as on Standings */}
+      {/* overall position — full `text` on the class fill, as on Standings */}
       <div
-        className="text-center text-[14px] font-bold tabular-nums tnum text-text"
+        className="class-fill-ink text-center text-[14px] font-bold tabular-nums tnum text-text"
         style={{ color: ink }}
       >
         {entry.position ?? "—"}
@@ -588,6 +621,7 @@ export function RelativeScreen() {
     [showBrand, showCountry, showTyre, multiClass]
   );
   const template = useMemo(() => relGridTemplate(isOn), [isOn]);
+  const fillReach = useMemo(() => relFillReach(isOn), [isOn]);
 
   // Scale the whole table to the width it has, rather than shedding columns to
   // fit — see `lib/tableScale`.
@@ -662,6 +696,7 @@ export function RelativeScreen() {
     showLapRelation: !byLapTime,
     isOn,
     template,
+    fillReach,
   };
   // The first row of the table carries the labels when they are on: the
   // furthest car ahead, or the player when nobody is ahead of them.

@@ -106,16 +106,25 @@ standings table stops being readable at a glance.
    One exception is deliberate: **violet sits 3° from `sectorPurple`.** Nothing
    fits between `primary` at 255 and `sectorPurple` at 300, and this is the
    cheapest collision available — `sectorPurple` is ink on a single lap time,
-   transient and rare, where identity is a row's leading edge and its ground.
-   Different carrier, different place, never the same cell.
+   transient and rare, where identity is a row's leading edge, the fill it
+   runs into, and a class's name. Both are ink now, but never in the same
+   cell: a class name is never a lap time.
 
    `carClassColor` is still on the wire and still unused for display. Do not
    add it to `tokens.css`, and do not let a theme try to correct it.
-2. **Identity colour is the leading edge — never a row's ground.** The edge —
-   4 px on a row ([`StandingsRow.tsx`](src/components/standings/StandingsRow.tsx)),
-   the same device on a class band — is the one carrier of class on Standings.
-   On Relative, which mixes classes row by row under no band, it is joined by a
-   class badge opening the row.
+2. **Identity colour opens the row and names the driver — it never grounds
+   the row.** Class has three carriers, the same on both surfaces:
+
+   - **the leading edge**, 4 px on a row
+     ([`StandingsRow.tsx`](src/components/standings/StandingsRow.tsx)), the
+     same device on a class band;
+   - **the class fill**: the edge running on into the row as a gradient
+     ([`lib/classFill.ts`](src/lib/classFill.ts)), strong against the edge
+     and gone by the end of the position cell, so the position — and, at the
+     same reach, the class band's name — sits on its class's colour;
+   - **the class's name** — the band's on Standings, the badge's on Relative,
+     which mixes classes row by row under no band — set in the class colour
+     straight on the fill, with a dark outline under the glyphs.
 
    **The edge is full strength on every row, on both surfaces.** It used to
    drop to 40 % below the class leader (and, on Relative, below the player),
@@ -127,15 +136,20 @@ standings table stops being readable at a glance.
    **Neither surface gives a row a class ground.** Relative used to wash every
    row at 14 % of its class colour; in a race that produced a table of grounds
    — class washes, red off-lap tints, the player's blue — in which "this is
-   you" was one block of colour among six. The Relative row now opens with a
-   **class badge** instead: the class's short name on a solid block of its
-   colour, flush against the edge. It is only drawn when the field has more
-   than one class; a column where every row says `GT3` says nothing.
+   you" was one block of colour among six. The class fill is not that: it
+   covers the row's opening cells and nothing past the position, so the strip
+   under the name and the timing data stays the neutral ground every row
+   shares. The Relative row also opens with a **class badge**: the class's
+   short name in its colour, outlined, straight on the class fill. It is
+   only drawn when
+   the field has more than one class; a column where every row says `GT3`
+   says nothing.
 
    Nothing drives an identity carrier's extent per row, and nothing should.
    Everything on these surfaces that could — lap progress, gap to the class
    leader — moves at 10 Hz, and a fill redrawing itself on every row on every
-   tick is motion in the corner of the eye that means nothing.
+   tick is motion in the corner of the eye that means nothing. The class
+   fill's reach is a column boundary, the same on every row on every tick.
 
    **Every row is a strip on one neutral ground, and the only coloured ground
    is the player's.** Both surfaces lay each row on `--color-timing-row` — a
@@ -146,18 +160,43 @@ standings table stops being readable at a glance.
    them. Status still rides in ink (lapped traffic's blue, the gap's red) or in
    a single cell (the fastest-lap fill), never across a row.
 
-   **Identity colour fills one thing: the Relative's class badge.** Standings
-   used to fill its class band solid with the class colour, and the position
-   cell of every row under it with the same block one column wide —
-   masthead a block, each row opening on it. That was right while the rows sat
-   on bare paper and the band had to out-shout nothing. With the field drawn as
-   a stack of strips it reversed: a solid band became the loudest object on
-   the surface, louder than the fastest-lap fill rule 5 reserves that for, and
-   a solid block in every row put identity colour in front of the one number
-   read first. The band is now a strip like the rows, with the same edge; the
-   position is a plain number. Ink on the badge is measured by `readableInk`,
-   not declared — a class colour can land anywhere on the wheel, so neither
-   white nor `on-accent` can be assumed. See § Dense tabular overlays rule 11.
+   **Identity colour fills one place — the opening of every row — and it
+   fades.** Standings used to fill its class band solid with the class colour,
+   and the position cell of every row under it with the same block one column
+   wide — masthead a block, each row opening on it. That was right while the
+   rows sat on bare paper and the band had to out-shout nothing. With the
+   field drawn as a stack of strips it reversed: a solid band became the
+   loudest object on the surface, louder than the fastest-lap fill rule 5
+   reserves that for, and a solid block in every row put identity colour in
+   front of the one number read first. So the band became a strip like the
+   rows, and the position a plain number on the neutral ground.
+
+   The class fill brings the colour back to the position as a gradient
+   rather than a block. Strong only against the edge, under half strength
+   where the digits start and gone at the end of the cell, it keeps what the
+   block was right about — the class registers on the number the eye lands on
+   first, and the edge reads as the start of something rather than a 4 px
+   hairline that happens to match — without the block's volume. The position
+   stays white: the fill's profile is held to what white needs, by a test,
+   rather than the ink being chosen per class. See § Dense tabular overlays
+   rule 11.
+
+   **A class's name is the one identity ink, and driver names stay white.**
+   The band's class name and the Relative's badge print in the class colour,
+   straight on the class fill, each glyph drawn over a 3 px outline of black
+   at 85 % (`CLASS_NAME_OUTLINE`, painted under the fill of the letters) — the
+   edge its own colour cannot give it on its own fill (rule 11). They sat on a
+   dark chip for one release candidate; the chip read as a second badge laid
+   over the fill, and the owner asked for the background gone. The outline
+   keeps the contrast the chip bought without a shape of its own.
+
+   Driver names were set in their class colour for one release candidate and
+   went back to white: the name is the value most read on the row, white is
+   the highest-contrast ink on this paper, and a column of names in two or
+   three hues read as decoration rather than as a column. Lapped traffic's
+   blue (§ Dense tabular overlays, rule 14) is still the only thing that
+   recolours a name. Rule 1's 25° clearance from every status hue is what
+   makes class-coloured ink safe beside status-coloured values at all.
 3. **"This is you" is `primary`, and it is the row's ground, not its ink.**
    `bg-primary/25` plus an inset `primary/50` ring, on both surfaces
    (`PLAYER_ROW_GROUND`). It was `/15` while it was the only ground on bare
@@ -165,7 +204,9 @@ standings table stops being readable at a glance.
    that has to say "this is you", and at `/15` that hue barely cleared the
    neutral strips around it. The ring keeps it findable in Graphite, whose
    `primary` is close to neutral. **It is the only ringed row, and on both
-   surfaces the only row whose ground has a hue**: lapped traffic is blue *ink*
+   surfaces the only row whose ground has a hue** — the class fill opens every
+   row, but stops at the position and fades, so it is never a row's ground
+   (rule 2): lapped traffic is blue *ink*
    (§ Dense tabular overlays, rule 14), so the ground and ring stay an answer
    to "which one is me" and nothing else. This is the "selection"
    sense of `primary` in the table above, which is why the token row now says
@@ -184,9 +225,11 @@ other direction.
   single-family system — this genre allows it, and a second display face on a
   panel this dense would be noise. 700 is reserved: CTAs, headings, and the
   values on the timing surfaces.
-- **The timing tables: Saira** (`--font-timing`), on Standings and Relative
-  and nothing else — rows, bands, strips, column labels and the tyre badge
-  alike, so each table speaks one face. Inter is a superb interface face and,
+- **The overlays: Saira** (`--font-timing`), on everything that paints on
+  the timing paper (`.timing-surface`) — Standings, Relative, Fuel &
+  Strategy and every dashboard widget: rows, bands, strips, column labels,
+  gauges, readouts and the tyre badge alike, so every overlay speaks one
+  face. Inter is a superb interface face and,
   across a whole overlay, an anonymous one; these two tables are the app's
   signature and wanted a face that reads as motorsport at a glance. Saira's
   squared, technical forms do, and it was chosen over the obvious field on
@@ -197,9 +240,17 @@ other direction.
   axis**, so 600 and 700 are both real cuts. Bundled with the app
   (`@fontsource-variable/saira`), never fetched: the overlays run offline.
 
-  It stops at those two tables. Fuel & Strategy, the dashboard widgets and the
-  Manager stay Inter — the Manager is a surface you configure in, not one you
-  read at speed, and the other overlays have layouts tuned to Inter's metrics.
+  It began on the two tables alone, with Fuel & Strategy and the widgets
+  left in Inter on the grounds that their layouts were tuned to Inter's
+  metrics. Side by side on one screen that read as two products, and the
+  owner asked for one: the face now goes wherever the timing paper goes.
+  `.timing-surface` sets it, and points `--font-mono` at it too, so the
+  overlays' mono micro-labels follow without a per-label change. **And it
+  is bold throughout**: unclassed text on the paper is 600, and the normal /
+  medium / semibold utilities resolve to 600 / 700 / 700 there, so no
+  overlay carries a lighter voice than the tables'. The Manager stays Inter
+  at its own weights — a surface you configure in, not one you read at
+  speed.
 - **Mono** (`--font-mono`) is the third voice, and it is *semantic*, not
   stylistic. It marks **instrument nomenclature**: measured values, coordinates,
   counts, protocol versions, log lines, channel labels, status readouts.
@@ -485,17 +536,28 @@ the fact that a header band and a row cost the same height.
      becomes an arrow on `accent` (gained) or `danger` (lost). See rule 16.
 
    The test is whether the fill is a graded or changing value the driver has to
-   catch. Identity no longer fills anything on Standings (§ Two colour systems,
-   rule 2); on Relative the class badge is the one identity fill.
+   catch. Identity's one fill, the class fill opening every row (§ Two colour
+   systems, rule 2), is not a fill in this rule's sense: it is translucent and
+   fades out, it carries white ink rather than contrasting ink, and it is the
+   same on every row of a class — nothing to catch, so nothing to ration.
 
    **The licence and iRating pill is a ground, not a fill.** Licence + safety
    rating and iRating + its projected change are one compound cell in two
    segments (rule 4): `A3.45 | 8895 ⌃14`. The licence segment is the licence's
-   own colour taken to 42 % toward black, with white ink — dark enough that
-   white clears 8:1 on even C's yellow, so it reads as a tone on the row rather
-   than a beacon — and the iRating segment is a neutral white lift. The two
-   columns stay separately switchable; when both are on, the licence segment
-   reaches across the column gap and the two square off where they meet.
+   own colour as a diagonal gradient, 52 % toward black at its lighter
+   top-left and 30 % at its deeper bottom-right, with white ink — the light
+   end is held where white still clears 4.5:1 on C's yellow, the closest
+   call ([`lib/ratingPill.test.ts`](src/lib/ratingPill.test.ts)), so it reads
+   as a tone on the row rather than a beacon. The iRating segment is a glass
+   lift, lighter at the top, and both carry a one-pixel highlight along their
+   top edge, so the pill reads as one lit object rather than two painted
+   rectangles. The projected change is graded a second time by a 2 px rule
+   along the segment's foot, fading in toward the number — `accent` for a
+   gain, `danger` for a loss — ruled rather than tinted for rule 10's reason:
+   a status-coloured ground under status-coloured ink would cost the ink its
+   contrast. The two columns stay separately switchable; when both are on,
+   the licence segment reaches across the column gap and the two square off
+   where they meet.
 
    This replaced the **tint** device — a ≤ 18 % wash of a value's own hue
    behind ink of that hue — that licence, iRating and position change used to
@@ -596,8 +658,9 @@ the fact that a header band and a row cost the same height.
    either one may come back only in the Manager.
 
 8. **Type on these two surfaces runs one step larger and one weight heavier
-   than anywhere else in the app.** 13 px bold names, 12 px semibold-to-bold
-   values, 14 px bold positions, on `ROW_H` 32 (Standings) / 34 (Relative). Every other
+   than anywhere else in the app.** 13 px bold names, 12 px bold values
+   (`semibold` resolves to bold on every overlay — § Typography), 14 px bold
+   positions, on `ROW_H` 32 (Standings) / 34 (Relative). Every other
    surface in this system is read by someone looking *at* it; these are read in
    peripheral vision at 200 km/h by someone who must not look away for long.
    The density lost to the extra pixels is bought back by rules 2, 3 and 7,
@@ -630,22 +693,38 @@ the fact that a header band and a row cost the same height.
     at no cost. `sector-purple` still colours the digits themselves, because a
     session-best lap is an event rather than a comparison.
 
-11. **Ink on identity colour is measured, never declared.** The Relative's
-    class badge is solid class colour (§ Two colour systems rule 2), so it
-    prints in ink chosen from its own fill's WCAG luminance by `readableInk` in
-    [`lib/contrast.ts`](src/lib/contrast.ts) — the only place in the app where
-    ink on a fill is computed.
+11. **Ink on identity colour is never assumed.** Even inside a palette this
+    app owns, the five-colour ramp spans violet at L≈0.24 and lime at L≈0.65:
+    white reads on one and vanishes on the other, and `on-accent` does the
+    reverse. A single declared ink on *solid* class colour is wrong for half
+    the ramp whichever one you pick.
 
-    It has to be. Even inside a palette this app owns, the five-colour ramp
-    spans violet at L≈0.24 and lime at L≈0.65: white reads on one and vanishes
-    on the other, and `on-accent` does the reverse. A single declared ink is
-    wrong for half the ramp whichever one you pick.
+    There are two honest ways out, and these surfaces have used both. While
+    the class band, the position block and then the Relative's class badge
+    were solid class colour, each chose its ink from its own fill's WCAG
+    luminance with `readableInk` in [`lib/contrast.ts`](src/lib/contrast.ts).
+    Now nothing on either surface prints on solid class colour, and the
+    measuring moved from the ink to the ground:
 
-    The class band and the position block used to be solid class colour too,
-    and measured their ink the same way — which is also why the band's
-    session-best lap moved from purple ink to a purple fill, since purple on
-    lime is unreadable. Both are neutral strips now; the band's `BEST` keeps
-    the purple fill, which reads the same on a strip as it does on a row.
+    - **The class fill is held weak enough for white.** Where the position
+      digits sit, white has to clear 4.5:1 over every ramp colour, on the
+      neutral strip and on the player's lighter one, measured at the left
+      edge of a two-digit position, the strongest point under any digit
+      ([`lib/classFill.test.ts`](src/lib/classFill.test.ts)). The test, not
+      taste, sets how strong the fill may be: a profile a step stronger fails
+      on lime, and on cyan under the player's ground.
+    - **A class's name carries its own edge** — the Relative's badge and the
+      Standings band's name alike are outlined in black at 85 % under the
+      glyphs, so the name, in its own class colour, clears 4.5:1 against the
+      outline even over that colour at full strength (violet is the closest
+      call). Class-coloured ink straight on its own class's fill has no edge
+      to read by otherwise.
+
+    `readableInk` has no caller as a result. It is kept and tested on purpose:
+    the next thing that wants solid class colour under text will need it, and
+    this rule is why. The band's session-best lap moved from purple ink to a
+    purple fill while the band was solid (purple on lime is unreadable), and
+    keeps it — it reads the same on a strip as it does on a row.
 
 12. **A column that would lie in this session is not shown in this session.**
     Almost every number on these two surfaces is a race concept wearing a
@@ -686,9 +765,9 @@ the fact that a header band and a row cost the same height.
 
 13. **Standings reads rank, car, driver — then the data.** The column order is
     `pos · Δ · # · make · flag · NAME` and then the timing columns. Position
-    leads, flush against the class edge and directly under the band's class
-    name, so the band's name and the column of positions it heads share one
-    vertical. Position change used to sit in front of it, which put a
+    leads, flush against the class edge on the class fill and directly under
+    the band's class name, so the band's name and the column of positions it
+    heads share one vertical and one fill. Position change used to sit in front of it, which put a
     green/red status mark between the edge and the number it qualifies. The car's mark sits with its number and the
     flag with the name it belongs to, so the name column's slack (rule 6)
     falls *between* who-it-is and the timing data, instead of stranding the
@@ -728,6 +807,12 @@ the fact that a header band and a row cost the same height.
     for a wet**, then laps on the set in the row's ink. Blue is its own token,
     fixed and unthemed like `lapped` and deeper than it, so a wet badge on a
     lapped row still reads as a badge (§ Theme table).
+
+    **The badge is the brand mark's height** (`BRAND_ICON_H`, 24 px), and its
+    letter the name's 13 px. Side by side on the row, a 24 px roundel beside a
+    17 px badge read as a large thing and a small one, which ranks two facts
+    about the car that are equal; at one height they read as a pair. The
+    column is 3.4rem, so a three-digit lap count still fits beside it.
 
     This reverses two earlier calls. A letter in a ring was rejected because at
     the table's smaller scales an 8 px letter in a thin 15 px circle read as a
@@ -775,8 +860,11 @@ One line opening each class group on Standings:
 
 - **The band is part of its group, not furniture above it.** It is a strip
   like the rows under it — the same `--color-timing-row` ground, the same
-  class edge on the same vertical — so the band's edge and the rows' make one
-  spine of class colour down the group. It used to be the class colour
+  class edge on the same vertical, and the same class fill behind its class
+  name at the reach the rows use for their positions — so the band's edge and
+  the rows' make one spine of class colour down the group. The class name
+  itself is set in the class colour, outlined as the Relative's badge is,
+  since class-coloured ink straight on the fill would vanish. It used to be the class colour
   **solid** across its whole width; see § Two colour systems rule 2 for why
   that turned, once the rows became strips.
 - **It is a heading because of what it says and where it sits, not because of
@@ -886,9 +974,18 @@ a better reason than the last one:
 - **Manufacturer marks** were drawn at 13 px in 55 % grey, on the theory that
   identity should stay quiet next to the status colours. At that size an Audi's
   four rings and a Porsche crest resolved to the same smudge in peripheral
-  vision, which is the one place this surface is actually read. Now 17 px in
-  near-white. This does not re-open § Two colour systems rule 2 — the mark is
-  drawn in the row's own ink.
+  vision, which is the one place this surface is actually read. Now 21 px on
+  Standings and 24 on Relative, in white, and **heavier than their artwork**:
+  every shape is outlined in its own ink by a 0.9 px screen-space stroke
+  (`.brand-icon` in `styles.css`), because marks cut for print — Mercedes'
+  star, BMW's ring, the Aston Martin wings — thinned to hairlines at row size.
+  Marks whose detail is cut *out* of the ink (Ford's script, the Porsche and
+  Cadillac crests, the lettering in Nissan's ring, RAM's badge, Dallara's
+  wordmark) take a third of that stroke, since the full one grew the ink into
+  the cut-outs and closed them. The column is 3.5rem and a mark is capped at
+  48 px wide, so even Audi's rings or a wordmark sit with paper either side
+  instead of running into the number and the flag. This does not re-open
+  § Two colour systems rule 2 — the mark is drawn in the row's own ink.
 - **The class band** was rejected on the grounds that a gap separates classes
   for a third of the height. True, and irrelevant: separation was never the
   band's job. See rule 2.
@@ -1140,6 +1237,27 @@ solid class band and the position block; § Two colour systems rule 2 says
 why, and § Dense tabular overlays rules 1, 5, 11, 13 and 14 and § The class
 band were rewritten with it. The tyre column's move to Relative, and its
 `D`/`W` badge, came with the same brief (rule 15).
+
+**Class fill, 2026-10-11.** The owner asked for these directly: car marks
+drawn bolder and given room in their column, the class colour carried from
+the edge to the position as a gradient, the Relative's tyre badge at the
+brand mark's size, and each class's name in its class colour (driver names
+were class-coloured first, and returned to white on review). No outside
+reference. It takes back part of what the strip-rows pass retired — identity
+colour behind the position — in a form that answers the reasons that pass
+gave: faded rather than solid, and held by a test to what white digits need.
+§ Two colour systems rules 1–3 and § Dense tabular overlays rules 5, 11, 13,
+14 and 15, § The class band and § Deliberately not adopted were rewritten
+with it. The class name's outline came with it as a consequence, not a
+request: class-coloured ink on its own class's fill has no edge (a dark chip
+did the job first, and went when the owner asked for no background).
+
+**One type across the overlays, 2026-10-11.** Also at the owner's request:
+Fuel & Strategy and every dashboard widget — on the overlay, in their own
+windows and in the Manager's preview — are now set in Saira like the two
+tables, mono micro-labels included, and nothing on the timing paper is
+lighter than semibold. § Typography and § Dense tabular overlays rule 8 were
+rewritten with it.
 
 ## Known follow-ups
 

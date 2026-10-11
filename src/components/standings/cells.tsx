@@ -12,6 +12,7 @@ import { LAP_COLOR, SECTOR_COLOR } from "./constants";
 import { tyreKind, tyreName } from "../../lib/tyreCompound";
 import { useSessionStore } from "../../stores/useSessionStore";
 import { TyreCompoundIcon } from "../ui/TyreCompoundIcon";
+import { licenceGround, PILL_SHEEN, ratingGround } from "../../lib/ratingPill";
 
 /* -------------------------------------------------------------------------- */
 /*  Position-change arrow (⌃2 / ⌄1) — gain since the green flag                */
@@ -61,20 +62,17 @@ function segmentRadius(side: "left" | "right", joined: boolean): string {
     : `0 ${PILL_R} ${PILL_R} 0`;
 }
 
-/**
- * The licence segment's ground: the licence's own colour taken well toward
- * black.
+/*
+ * The segments' grounds — a licence-coloured gradient and a glass lift with a
+ * gain/loss rule — live in `lib/ratingPill`, where their contrast is tested.
  *
  * iRacing's licence colours run from a dark blue (A) to a near-white yellow
- * (C), so no one ink reads on all of them at full strength. 42 % of the colour
- * in OKLab scales the lightness of any of them to under half — the lightest,
- * C's yellow, lands near L 0.4, where white measures better than 8:1 — so the
- * segment can always print white, keep the colour a driver knows the class
- * of licence by, and sit on the row as a tone rather than a beacon.
+ * (C), so no one ink reads on all of them at full strength. Taking the colour
+ * most of the way toward black in OKLab scales the lightness of any of them
+ * to under the point where white reads, so the segment can always print
+ * white, keep the colour a driver knows the class of licence by, and sit on
+ * the row as a tone rather than a beacon.
  */
-function licenceGround(color: string): string {
-  return `color-mix(in oklab, ${color} 42%, black)`;
-}
 
 export function LicenseBadge({
   group,
@@ -102,6 +100,7 @@ export function LicenseBadge({
         justifySelf: "start",
         color: "#fff",
         background: licenceGround(color),
+        boxShadow: PILL_SHEEN,
         borderRadius: segmentRadius("left", joined),
       }}
       title={`${group} ${safetyRating.toFixed(2)}`}
@@ -133,11 +132,15 @@ export function IRatingCell({
     // The segment fills its column rather than hugging its contents, and the
     // change sits in a fixed-width slot, so every rating in the column ends on
     // the same vertical — the one thing a column of numbers must never lose.
+    //
+    // A glass lift, with the change graded by a rule along its foot that
+    // fades in toward the number (`lib/ratingPill`).
     <div
       className="tnum flex w-full items-center justify-end gap-1 px-1.5"
       style={{
         height: PILL_H,
-        background: "rgb(255 255 255 / 0.1)",
+        background: ratingGround(change),
+        boxShadow: PILL_SHEEN,
         borderRadius: segmentRadius("right", joined),
       }}
     >
@@ -371,7 +374,24 @@ BRAND_ICONS.VW = BRAND_ICONS.Volkswagen;
 BRAND_ICONS["Mercedes-AMG"] = BRAND_ICONS.Mercedes;
 
 /**
- * Default brand-mark box: 24 px tall, capped at 40 px wide — the Relative's
+ * Marks whose detail is cut *out* of the ink — Ford's script in its oval,
+ * Porsche's and Cadillac's crests, the lettering in Nissan's ring and RAM's
+ * badge, Dallara's wordmark — and so take the lighter stroke
+ * (`.brand-icon--fine`). The full stroke that makes every other mark heavier
+ * grows the ink *into* those cut-outs, and at row size closed them: Ford's
+ * script went, and the oval was left a blank white lozenge.
+ */
+const FINE_DETAIL_MARKS: ReadonlySet<string> = new Set([
+  "Ford",
+  "Porsche",
+  "Cadillac",
+  "Nissan",
+  "RAM",
+  "Dallara",
+]);
+
+/**
+ * Default brand-mark box: 24 px tall, capped at 48 px wide — the Relative's
  * size, on its 34 px row. Standings passes its own (`STANDINGS_BRAND_H`).
  *
  * Height alone never governed how big a mark *looked*. Every viewBox above is
@@ -395,18 +415,21 @@ export function BrandIcon({
   if (!make) return null;
   const Icon = BRAND_ICONS[make];
   if (Icon) {
-    // .brand-icon CSS rule: > svg { height: 100%; width: auto; max-width: 40px }
+    // .brand-icon CSS rule: > svg { height: 100%; width: auto; max-width: 48px }
     // inline-flex default (align-items: stretch) lets height:100% resolve.
     //
     // Pure white, not the old 94% and certainly not the 55%-alpha grey before
-    // that. A manufacturer mark is *identity*, and identity on this surface has
-    // exactly one coloured carrier, the left border (§ Two colour systems, rule
-    // 2) — so the mark reads in the row's own ink at full strength, and gets out
-    // of the way of the coloured status values by being monochrome, not by
-    // being dim. Dimming it only made it unreadable at speed.
+    // that. A manufacturer mark is *identity*, but class is the identity this
+    // surface colours (§ Two colour systems, rule 2) — so the mark reads in
+    // the row's own ink at full strength, and gets out of the way of the
+    // coloured status values by being monochrome, not by being dim. Dimming
+    // it only made it unreadable at speed. It is drawn heavier than its
+    // artwork for the same reason (see `.brand-icon` in styles.css).
     return (
       <span
-        className="brand-icon inline-flex shrink-0 items-center justify-center"
+        className={`brand-icon inline-flex shrink-0 items-center justify-center${
+          FINE_DETAIL_MARKS.has(make) ? " brand-icon--fine" : ""
+        }`}
         style={{ height, color: "#fff" }}
         title={make}
       >
@@ -415,10 +438,11 @@ export function BrandIcon({
     );
   }
   // Unknown brand: the make's first three letters in the same white ink as a
-  // mark — no pill, since fill is rationed to the fastest-lap cell (rule 5).
+  // mark, at the heaviest weight the face has, as the marks are drawn heavier
+  // — no pill, since fill is rationed to the fastest-lap cell (rule 5).
   return (
     <span
-      className="shrink-0 text-[12px] font-bold uppercase leading-none tracking-[0.02em] text-white"
+      className="shrink-0 text-[12px] font-black uppercase leading-none tracking-[0.02em] text-white"
       title={make}
     >
       {make.slice(0, 3)}
@@ -619,16 +643,24 @@ export function TireCell({
   const title = kind
     ? `${kind === "wet" ? "Wet" : "Dry"}${name && name.toLowerCase() !== kind ? ` (${name})` : ""}`
     : `Compound ${label}`;
+  // The badge is drawn at the brand mark's height (`BRAND_ICON_H`), so the car's
+  // mark and its tyre, side by side on the row, read as a pair of the same size
+  // rather than a large badge and a small one.
   return (
     <div className="flex items-center justify-center gap-1">
       <span
-        className="flex w-[1.05rem] justify-center text-center text-[12px] font-bold leading-none text-text"
+        className="flex justify-center text-center text-[13px] font-bold leading-none text-text"
+        style={{ width: BRAND_ICON_H }}
         title={title}
       >
-        {kind ? <TyreCompoundIcon kind={kind} size="1.05rem" label={title} /> : label}
+        {kind ? (
+          <TyreCompoundIcon kind={kind} size={`${BRAND_ICON_H}px`} label={title} />
+        ) : (
+          label
+        )}
       </span>
       <span
-        className="w-[1.45rem] text-left text-[11px] font-semibold leading-none tabular-nums tnum text-muted"
+        className="w-[1.45rem] text-left text-[12px] font-semibold leading-none tabular-nums tnum text-muted"
         style={{ color: ink }}
         title={`${laps} laps on tyres`}
       >

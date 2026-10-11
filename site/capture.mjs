@@ -110,18 +110,20 @@ const SHOTS = [
   // at 620 px every one of the fifteen columns is still there, drawn smaller.
   // (It used to prove the opposite. Columns stopped dropping when the tables
   // learned to scale — see `lib/tableScale`.)
-  // 272: at this width the table draws every column at ~0.62, and 271 is the
+  // 269: at this width the table draws every column at ~0.61, and 268 is the
   // shortest frame that keeps it width-limited (one pixel of slack on top).
-  // Down from 306 when the other class was capped at three cars by default.
-  { name: "standings-compact", route: "?overlay=standings", w: 620, h: 272 },
+  // Down from 306 when the other class was capped at three cars by default,
+  // and from 272 when the brand column widened for 1.16.
+  { name: "standings-compact", route: "?overlay=standings", w: 620, h: 269 },
   // 428 = the whole two-class field at full size (width-limited from 426).
   // This capture is the page's proof that the table groups by class; at 420
   // an older layout cropped the GT4 group mid-row.
   { name: "standings", route: "?overlay=standings", w: 1180, h: 428 },
-  // 394 fits five cars ahead, the player and four behind, all whole: the
-  // tenth row's strip ends at 387 at this width's ~0.90 scale. Down from 416
-  // once the tyre column joined the row and the table drew a step smaller.
-  { name: "relative", route: "?overlay=relative", w: 560, h: 394 },
+  // 384 fits five cars ahead, the player and four behind, all whole: the
+  // tenth row's strip ends at 377 at this width's ~0.88 scale. Down from 416
+  // once the tyre column joined the row and the table drew a step smaller,
+  // and from 394 when the brand and tyre columns widened for 1.16.
+  { name: "relative", route: "?overlay=relative", w: 560, h: 384 },
   { name: "dashboard", route: "?overlay=dashboard", w: 1100, h: 620 },
   { name: "manager", route: "", w: 1400, h: 900, wait: PAST_A_LAP_MS },
   // Tall enough for the pit-strategies card, which stopped being collapsed and

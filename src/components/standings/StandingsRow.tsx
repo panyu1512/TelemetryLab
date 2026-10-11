@@ -12,9 +12,11 @@ import {
   ROW_GAP,
   rowSlotHeight,
   STANDINGS_BRAND_H,
+  STANDINGS_FILL_REACH,
   type ColumnVisibility,
 } from "./constants";
 import { ColumnLabels } from "./ColumnLabels";
+import { classFill } from "../../lib/classFill";
 import { formatDriverName } from "../../lib/driverName";
 import { usePositionFlash } from "../../hooks/usePositionFlash";
 import { CountryFlag } from "../ui/CountryFlag";
@@ -145,6 +147,11 @@ function StandingsRowInner({
           borderLeftWidth: CLASS_EDGE_WIDTH,
           borderLeftStyle: "solid",
           borderLeftColor: classColor,
+          // …and the edge runs on into the row as a fill that fades out by
+          // the end of the position cell, so the number read first sits on
+          // its class's colour. Layered over the row's ground, so the
+          // player's strip keeps its `primary` (see `lib/classFill`).
+          backgroundImage: classFill(classColor, STANDINGS_FILL_REACH),
           // Clear the in-row column labels rather than centring under them;
           // the slot is a label slice taller, so the content keeps a full
           // row's height below them.
@@ -155,10 +162,12 @@ function StandingsRowInner({
           <ColumnLabels sectorCount={sectorCount} isVisible={isVisible} />
         )}
 
-        {/* position — plain bold `text`, straight after the class edge. It
-            sat in a solid block of the class's colour while the band above
-            was one; with the band now a strip like the rows, the edge alone
-            carries the class down the group and the number is just a number.
+        {/* position — bold white, on the class fill. It sat in a solid
+            block of the class's colour while the band above was one; the
+            fill is that block faded, strong at the edge and under half
+            strength where the digits start, so white reads on every class
+            colour (`lib/classFill`). The shadow lifts the digits off the
+            stronger part of the fill.
 
             For a few seconds after the car changes place, the block becomes
             an arrow on a status fill — `accent` up, `danger` down — with
@@ -180,7 +189,7 @@ function StandingsRowInner({
             )}
           </div>
         ) : (
-          <div className="tnum text-center text-[14px] font-bold leading-none tabular-nums text-text">
+          <div className="tnum class-fill-ink text-center text-[14px] font-bold leading-none tabular-nums text-text">
             {position ?? "—"}
           </div>
         )}

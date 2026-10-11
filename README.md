@@ -39,7 +39,7 @@
 <br>
 
 <div align="center">
-  <img src="site/assets/standings-compact.png" alt="The TelemetryLab standings overlay: a session strip, then GT3 and GT4 class groups, each car on its own strip edged in its class colour" width="800">
+  <img src="site/assets/standings-compact.png" alt="The TelemetryLab standings overlay: a session strip, then GT3 and GT4 class groups, each car on its own strip with its class colour fading in from the left edge" width="800">
 </div>
 
 <br>

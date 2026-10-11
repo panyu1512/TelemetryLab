@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.16.0] - 2026-10-11
+
+### Changed
+
+- **Class colour on every row of Standings and Relative.** The coloured edge
+  on the left of each row now runs into the row as a fade that reaches the
+  car's position, so each position sits on its class's colour. The class
+  headers on Standings get the same fade behind the class name.
+- **Bolder car logos with more room.** Logos are drawn heavier, so thin marks
+  like Mercedes' star, BMW's roundel and the Aston Martin wings stay readable
+  at a glance. The logo column is wider, so wide logos like Audi's rings no
+  longer crowd the car number and flag.
+- **Tyre badge the same size as the car logo** on the Relative, with a
+  slightly larger lap count beside it.
+- **A sharper licence and iRating pill on Standings.** The licence half is
+  now a gradient in the licence's own colour, both halves have a glassy top
+  edge, and your projected iRating gain or loss gets a green or red glow line
+  under it.
+- **Class names in their class colour.** The `GT3` / `GT4` name on the
+  Standings class headers and on the Relative's class badge is now printed in
+  that class's colour, with a dark outline so it stays readable on top of the
+  new class-colour fade.
+- **One font, bold, across every overlay.** Fuel & Strategy and all the
+  dashboard widgets now use the same motorsport-style font as Standings and
+  Relative, and all overlay text is bold or semibold, so every overlay looks
+  like part of the same set. The Overlay Manager keeps its current font.
+
 ## [1.15.0] - 2026-10-10
 
 ### Added
@@ -468,7 +495,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.15.0...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.16.0...HEAD
+[1.16.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.15.0...v1.16.0
 [1.15.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.14.0...v1.15.0
 [1.14.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.13.0...v1.14.0
 [1.13.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.12.0...v1.13.0

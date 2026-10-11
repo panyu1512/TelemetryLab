@@ -368,9 +368,23 @@ a {
  * whose type ran a step larger and a weight heavier. Extending it to the fuel
  * screen and the widgets is what makes a dashboard read as one instrument
  * instead of graphite cards sitting next to a black table.
+ *
+ * The type goes with the paper. Every surface on it is set in Saira
+ * (`--font-timing`), its mono micro-labels included — `--font-mono` is
+ * pointed at the same face inside it — and nothing on it is lighter than
+ * semibold: unclassed text is 600, and the normal / medium / semibold
+ * utilities resolve to 600 / 700 / 700. One face and one weight band across
+ * Standings, Relative, Fuel & Strategy and every widget, so the overlays read
+ * as one set; the Manager, which is not read at speed, keeps Inter.
  */
 .timing-surface {
   background: var(--color-timing-bg);
+  font-family: var(--font-timing);
+  --font-mono: var(--font-timing);
+  font-weight: 600;
+  --font-weight-normal: 600;
+  --font-weight-medium: 700;
+  --font-weight-semibold: 700;
 }
 
 /*
@@ -387,12 +401,55 @@ a {
  * width from the viewBox aspect ratio, up to a cap. Every viewBox is cropped to
  * the mark's own ink, so height here is drawing rather than padding; the cap is
  * what keeps a wide wordmark (Dallara is 5.6:1) from running over its neighbour
- * — it fits to the cap and centres itself instead. */
+ * — it fits to the cap and centres itself instead. The cap leaves 4 px of the
+ * 56 px brand column either side, so even the widest mark has paper between it
+ * and the number and flag beside it.
+ *
+ * `overflow: visible` because of the stroke below: it reaches half its width
+ * past the ink the viewBox is cropped to, and an SVG clips to its viewBox by
+ * default. */
 .brand-icon > svg {
   height: 100%;
   width: auto;
-  max-width: 40px;
+  max-width: 48px;
   display: block;
+  overflow: visible;
+}
+
+/* A heavier mark. Every brand icon is filled shapes in `currentColor`, cut for
+ * print, where a hairline survives — at 21–24 px on a dark strip, Mercedes'
+ * star, BMW's ring and the Aston Martin wings thinned to nothing in peripheral
+ * vision. Outlining every shape in its own fill thickens the whole mark by the
+ * same amount. `non-scaling-stroke` makes that amount screen pixels rather
+ * than viewBox units, so it is the same weight on every mark whatever its
+ * viewBox's scale (they run from 24 to 360 units tall). */
+.brand-icon > svg :is(path, circle, ellipse, rect, polygon) {
+  stroke: currentColor;
+  stroke-width: 0.9px;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Marks whose detail is cut out of the ink (Ford's script, the Porsche crest —
+ * `FINE_DETAIL_MARKS` in cells.tsx): the full stroke grows the ink into those
+ * cut-outs and closes them, so they take a third of it. */
+.brand-icon--fine > svg :is(path, circle, ellipse, rect, polygon) {
+  stroke-width: 0.3px;
+}
+
+/* Ink on the class fill (`lib/classFill`): white, which the fill's profile is
+ * measured to carry, with a tight shadow to lift it off the fill where the
+ * fill is at its strongest. */
+.class-fill-ink {
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.45);
+}
+
+/* A class's name in its class colour, straight on the class fill: an outline
+ * painted *under* the glyphs gives each letter the edge its own colour cannot
+ * (`CLASS_NAME_OUTLINE` in lib/classFill, where its contrast is tested; the
+ * stroke itself is set inline from there). */
+.class-name-ink {
+  paint-order: stroke fill;
 }
 
 /* A freshly completed sector fades up as its colored value/delta lands. Keyed
