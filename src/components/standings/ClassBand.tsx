@@ -3,7 +3,11 @@ import type { ClassStanding } from "../../telemetry/types";
 import { lapTime, rating } from "../../lib/format";
 import { RacingHelmet } from "../ui/RacingHelmet";
 import { StripField } from "../timing/SessionStrip";
-import { CLASS_BADGE_GROUND, classFill } from "../../lib/classFill";
+import {
+  CLASS_NAME_OUTLINE,
+  CLASS_NAME_OUTLINE_PX,
+  classFill,
+} from "../../lib/classFill";
 import { CLASS_EDGE_WIDTH, STANDINGS_FILL_REACH } from "./constants";
 
 /**
@@ -75,11 +79,14 @@ function ClassBandInner({
           position column's, so `GT3` sits centred over the column of
           positions it heads. */}
       <span
-        className="ml-1 min-w-[2.1rem] shrink-0 rounded-ctl px-1 py-0.5 text-center text-[13px] font-bold uppercase leading-none tracking-[0.02em]"
-        // In its class colour, on the dark chip the Relative's class badge
-        // uses: the name sits on the class fill, where class-coloured ink on
-        // its own colour would vanish (§ Dense tabular overlays, rule 11).
-        style={{ background: CLASS_BADGE_GROUND, color }}
+        className="class-name-ink ml-1 min-w-[2.1rem] shrink-0 text-center text-[13px] font-bold uppercase leading-none tracking-[0.02em]"
+        // In its class colour, straight on the class fill, with a dark outline
+        // under the glyphs for the edge its own colour cannot give it
+        // (§ Dense tabular overlays, rule 11).
+        style={{
+          color,
+          WebkitTextStroke: `${CLASS_NAME_OUTLINE_PX}px ${CLASS_NAME_OUTLINE}`,
+        }}
       >
         {shortName || "—"}
       </span>

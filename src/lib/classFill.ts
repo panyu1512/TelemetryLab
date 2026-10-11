@@ -79,10 +79,12 @@ export function classFill(color: string, reach: string): string {
 }
 
 /**
- * The chip a class's name is set on — the Relative's class badge and the
- * Standings band's class name — in the class's own colour. Both sit on the
- * fill where it is strongest, so the chip has to be dark enough that every
- * ramp colour reads on it even over itself at full strength: the contrast test
- * holds the darkest, violet, above 4.5:1 there.
+ * The outline a class's name is drawn with — the Standings band's class name
+ * and the Relative's class badge, both in the class's own colour, straight on
+ * the fill where it is strongest (`.class-name-ink`, painted under the glyphs).
+ * Class-coloured ink on its own colour has no edge, so the outline gives every
+ * letter one: the contrast test holds each ramp colour above 4.5:1 against the
+ * outline even with that colour at full strength under it.
  */
-export const CLASS_BADGE_GROUND = "rgb(0 0 0 / 0.8)";
+export const CLASS_NAME_OUTLINE = "rgb(0 0 0 / 0.85)";
+export const CLASS_NAME_OUTLINE_PX = 3;

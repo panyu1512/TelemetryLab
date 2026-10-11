@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
-  CLASS_BADGE_GROUND,
+  CLASS_NAME_OUTLINE,
   CLASS_FILL_STOPS,
   classFill,
   classFillStrength,
@@ -109,11 +109,11 @@ function contrast(a: Rgb, b: Rgb): number {
   return (Math.max(la, lb) + 0.05) / (Math.min(la, lb) + 0.05);
 }
 
-describe("a class name on its chip", () => {
-  // The chip sits on the strongest part of the fill; take the worst case of
-  // the class colour at full strength under it, with the name in that same
-  // colour on top.
-  const black = Number(/0\.\d+/.exec(CLASS_BADGE_GROUND)![0]);
+describe("a class name against its outline", () => {
+  // The name sits on the strongest part of the fill; take the worst case of
+  // the class colour at full strength under the outline, with the name in that
+  // same colour inside it.
+  const black = Number(/0\.\d+/.exec(CLASS_NAME_OUTLINE)![0]);
 
   for (const color of CLASS_RAMP) {
     it(`clears 4.5:1 in ${color} over ${color}`, () => {

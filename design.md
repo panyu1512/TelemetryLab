@@ -124,7 +124,7 @@ standings table stops being readable at a glance.
      same reach, the class band's name — sits on its class's colour;
    - **the class's name** — the band's on Standings, the badge's on Relative,
      which mixes classes row by row under no band — set in the class colour
-     on a dark chip.
+     straight on the fill, with a dark outline under the glyphs.
 
    **The edge is full strength on every row, on both surfaces.** It used to
    drop to 40 % below the class leader (and, on Relative, below the player),
@@ -140,7 +140,7 @@ standings table stops being readable at a glance.
    covers the row's opening cells and nothing past the position, so the strip
    under the name and the timing data stays the neutral ground every row
    shares. The Relative row also opens with a **class badge**: the class's
-   short name in its colour, on a dark chip cut into the class fill. It is
+   short name in its colour, outlined, straight on the class fill. It is
    only drawn when
    the field has more than one class; a column where every row says `GT3`
    says nothing.
@@ -183,11 +183,12 @@ standings table stops being readable at a glance.
 
    **A class's name is the one identity ink, and driver names stay white.**
    The band's class name and the Relative's badge print in the class colour,
-   on a chip of black at 80 % — dark enough that every ramp colour reads on it
-   even with its own colour at full strength under the chip (rule 11). A
-   class-coloured name on the fill itself would vanish into its own colour,
-   and a chip of solid class colour, which the badge used to be, had no edge
-   left on the fill to read by.
+   straight on the class fill, each glyph drawn over a 3 px outline of black
+   at 85 % (`CLASS_NAME_OUTLINE`, painted under the fill of the letters) — the
+   edge its own colour cannot give it on its own fill (rule 11). They sat on a
+   dark chip for one release candidate; the chip read as a second badge laid
+   over the fill, and the owner asked for the background gone. The outline
+   keeps the contrast the chip bought without a shape of its own.
 
    Driver names were set in their class colour for one release candidate and
    went back to white: the name is the value most read on the row, white is
@@ -224,9 +225,11 @@ other direction.
   single-family system — this genre allows it, and a second display face on a
   panel this dense would be noise. 700 is reserved: CTAs, headings, and the
   values on the timing surfaces.
-- **The timing tables: Saira** (`--font-timing`), on Standings and Relative
-  and nothing else — rows, bands, strips, column labels and the tyre badge
-  alike, so each table speaks one face. Inter is a superb interface face and,
+- **The overlays: Saira** (`--font-timing`), on everything that paints on
+  the timing paper (`.timing-surface`) — Standings, Relative, Fuel &
+  Strategy and every dashboard widget: rows, bands, strips, column labels,
+  gauges, readouts and the tyre badge alike, so every overlay speaks one
+  face. Inter is a superb interface face and,
   across a whole overlay, an anonymous one; these two tables are the app's
   signature and wanted a face that reads as motorsport at a glance. Saira's
   squared, technical forms do, and it was chosen over the obvious field on
@@ -237,9 +240,17 @@ other direction.
   axis**, so 600 and 700 are both real cuts. Bundled with the app
   (`@fontsource-variable/saira`), never fetched: the overlays run offline.
 
-  It stops at those two tables. Fuel & Strategy, the dashboard widgets and the
-  Manager stay Inter — the Manager is a surface you configure in, not one you
-  read at speed, and the other overlays have layouts tuned to Inter's metrics.
+  It began on the two tables alone, with Fuel & Strategy and the widgets
+  left in Inter on the grounds that their layouts were tuned to Inter's
+  metrics. Side by side on one screen that read as two products, and the
+  owner asked for one: the face now goes wherever the timing paper goes.
+  `.timing-surface` sets it, and points `--font-mono` at it too, so the
+  overlays' mono micro-labels follow without a per-label change. **And it
+  is bold throughout**: unclassed text on the paper is 600, and the normal /
+  medium / semibold utilities resolve to 600 / 700 / 700 there, so no
+  overlay carries a lighter voice than the tables'. The Manager stays Inter
+  at its own weights — a surface you configure in, not one you read at
+  speed.
 - **Mono** (`--font-mono`) is the third voice, and it is *semantic*, not
   stylistic. It marks **instrument nomenclature**: measured values, coordinates,
   counts, protocol versions, log lines, channel labels, status readouts.
@@ -647,8 +658,9 @@ the fact that a header band and a row cost the same height.
    either one may come back only in the Manager.
 
 8. **Type on these two surfaces runs one step larger and one weight heavier
-   than anywhere else in the app.** 13 px bold names, 12 px semibold-to-bold
-   values, 14 px bold positions, on `ROW_H` 32 (Standings) / 34 (Relative). Every other
+   than anywhere else in the app.** 13 px bold names, 12 px bold values
+   (`semibold` resolves to bold on every overlay — § Typography), 14 px bold
+   positions, on `ROW_H` 32 (Standings) / 34 (Relative). Every other
    surface in this system is read by someone looking *at* it; these are read in
    peripheral vision at 200 km/h by someone who must not look away for long.
    The density lost to the extra pixels is bought back by rules 2, 3 and 7,
@@ -701,11 +713,12 @@ the fact that a header band and a row cost the same height.
       ([`lib/classFill.test.ts`](src/lib/classFill.test.ts)). The test, not
       taste, sets how strong the fill may be: a profile a step stronger fails
       on lime, and on cyan under the player's ground.
-    - **A class's name sits on a dark chip** — the Relative's badge and the
-      Standings band's name alike — black at 80 %, so the name, in its own
-      class colour, clears 4.5:1 on it even over that colour at full
-      strength (violet is the closest call). A chip of solid class colour
-      sitting on its own class's fill had no edge left to read by.
+    - **A class's name carries its own edge** — the Relative's badge and the
+      Standings band's name alike are outlined in black at 85 % under the
+      glyphs, so the name, in its own class colour, clears 4.5:1 against the
+      outline even over that colour at full strength (violet is the closest
+      call). Class-coloured ink straight on its own class's fill has no edge
+      to read by otherwise.
 
     `readableInk` has no caller as a result. It is kept and tested on purpose:
     the next thing that wants solid class colour under text will need it, and
@@ -850,8 +863,8 @@ One line opening each class group on Standings:
   class edge on the same vertical, and the same class fill behind its class
   name at the reach the rows use for their positions — so the band's edge and
   the rows' make one spine of class colour down the group. The class name
-  itself is set in the class colour on a dark chip, the Relative badge's
-  chip, since class-coloured ink straight on the fill would vanish. It used to be the class colour
+  itself is set in the class colour, outlined as the Relative's badge is,
+  since class-coloured ink straight on the fill would vanish. It used to be the class colour
   **solid** across its whole width; see § Two colour systems rule 2 for why
   that turned, once the rows became strips.
 - **It is a heading because of what it says and where it sits, not because of
@@ -1235,8 +1248,16 @@ colour behind the position — in a form that answers the reasons that pass
 gave: faded rather than solid, and held by a test to what white digits need.
 § Two colour systems rules 1–3 and § Dense tabular overlays rules 5, 11, 13,
 14 and 15, § The class band and § Deliberately not adopted were rewritten
-with it. The class name's dark chip came with it as a consequence, not a
-request: solid class colour on its own class's fill had no edge.
+with it. The class name's outline came with it as a consequence, not a
+request: class-coloured ink on its own class's fill has no edge (a dark chip
+did the job first, and went when the owner asked for no background).
+
+**One type across the overlays, 2026-10-11.** Also at the owner's request:
+Fuel & Strategy and every dashboard widget — on the overlay, in their own
+windows and in the Manager's preview — are now set in Saira like the two
+tables, mono micro-labels included, and nothing on the timing paper is
+lighter than semibold. § Typography and § Dense tabular overlays rule 8 were
+rewritten with it.
 
 ## Known follow-ups
 

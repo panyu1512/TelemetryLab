@@ -82,7 +82,11 @@ import { CountryFlag } from "../ui/CountryFlag";
 import { SessionStrip } from "../timing/SessionStrip";
 import { scaleBox, tableScale, unscaled } from "../../lib/tableScale";
 import { CLASS_RAMP, classColorFor } from "../../lib/classColors";
-import { CLASS_BADGE_GROUND, classFill } from "../../lib/classFill";
+import {
+  CLASS_NAME_OUTLINE,
+  CLASS_NAME_OUTLINE_PX,
+  classFill,
+} from "../../lib/classFill";
 import { formatDriverName } from "../../lib/driverName";
 
 // ─── Layout constants ────────────────────────────────────────────────────────
@@ -411,19 +415,22 @@ function RowInner({
     >
       {labelled && <ColumnLabels isOn={isOn} template={template} />}
 
-      {/* class badge — the class's short name in its class colour, on a dark
-          chip cut into the class fill: the same chip the Standings band sets
-          its class name on. A chip of solid class colour on its own class
-          colour had no edge left to read by; the chip is dark enough that
-          every ramp colour clears 4.5:1 on it (§ Dense tabular overlays, rule
+      {/* class badge — the class's short name in its class colour, straight
+          on the class fill with a dark outline under the glyphs, as the
+          Standings band sets its class name. Class-coloured ink on its own
+          colour has no edge; the outline gives every letter one, and every
+          ramp colour clears 4.5:1 against it (§ Dense tabular overlays, rule
           11). Standings needs no such badge — its rows sit under a band that
           names the class — but a Relative mixes classes row by row. Only
           drawn in a multi-class field. */}
       {isOn("class") && (
         <div className="flex justify-center">
           <span
-            className="min-w-0 max-w-full truncate rounded-ctl px-1 py-0.5 text-center text-[11px] font-bold uppercase leading-none tracking-[0.04em]"
-            style={{ background: CLASS_BADGE_GROUND, color: classColor }}
+            className="class-name-ink min-w-0 max-w-full truncate text-center text-[12px] font-bold uppercase leading-none tracking-[0.04em]"
+            style={{
+              color: classColor,
+              WebkitTextStroke: `${CLASS_NAME_OUTLINE_PX}px ${CLASS_NAME_OUTLINE}`,
+            }}
             title={driver?.carClassShortName || undefined}
           >
             {driver?.carClassShortName || "?"}

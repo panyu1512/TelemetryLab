@@ -368,9 +368,23 @@ a {
  * whose type ran a step larger and a weight heavier. Extending it to the fuel
  * screen and the widgets is what makes a dashboard read as one instrument
  * instead of graphite cards sitting next to a black table.
+ *
+ * The type goes with the paper. Every surface on it is set in Saira
+ * (`--font-timing`), its mono micro-labels included — `--font-mono` is
+ * pointed at the same face inside it — and nothing on it is lighter than
+ * semibold: unclassed text is 600, and the normal / medium / semibold
+ * utilities resolve to 600 / 700 / 700. One face and one weight band across
+ * Standings, Relative, Fuel & Strategy and every widget, so the overlays read
+ * as one set; the Manager, which is not read at speed, keeps Inter.
  */
 .timing-surface {
   background: var(--color-timing-bg);
+  font-family: var(--font-timing);
+  --font-mono: var(--font-timing);
+  font-weight: 600;
+  --font-weight-normal: 600;
+  --font-weight-medium: 700;
+  --font-weight-semibold: 700;
 }
 
 /*
@@ -428,6 +442,14 @@ a {
  * fill is at its strongest. */
 .class-fill-ink {
   text-shadow: 0 1px 2px rgb(0 0 0 / 0.45);
+}
+
+/* A class's name in its class colour, straight on the class fill: an outline
+ * painted *under* the glyphs gives each letter the edge its own colour cannot
+ * (`CLASS_NAME_OUTLINE` in lib/classFill, where its contrast is tested; the
+ * stroke itself is set inline from there). */
+.class-name-ink {
+  paint-order: stroke fill;
 }
 
 /* A freshly completed sector fades up as its colored value/delta lands. Keyed

@@ -27,8 +27,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   under it.
 - **Class names in their class colour.** The `GT3` / `GT4` name on the
   Standings class headers and on the Relative's class badge is now printed in
-  that class's colour, on a dark tag so it stays readable on top of the new
-  class-colour fade.
+  that class's colour, with a dark outline so it stays readable on top of the
+  new class-colour fade.
+- **One font, bold, across every overlay.** Fuel & Strategy and all the
+  dashboard widgets now use the same motorsport-style font as Standings and
+  Relative, and all overlay text is bold or semibold, so every overlay looks
+  like part of the same set. The Overlay Manager keeps its current font.
 
 ## [1.15.0] - 2026-10-10
 
