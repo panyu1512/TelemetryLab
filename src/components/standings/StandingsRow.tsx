@@ -1,5 +1,6 @@
 import { memo } from "react";
-import { ArrowDown, ArrowUp, Wrench, AlertTriangle } from "lucide-react";
+import type { CSSProperties } from "react";
+import { Wrench, AlertTriangle } from "lucide-react";
 import { useStandingsRow } from "../../stores/useStandingsStore";
 import { useDriver } from "../../stores/useSessionStore";
 import {
@@ -19,18 +20,25 @@ import { ColumnLabels } from "./ColumnLabels";
 import { classFill } from "../../lib/classFill";
 import { formatDriverName } from "../../lib/driverName";
 import { usePositionFlash } from "../../hooks/usePositionFlash";
+import { POSITION_FLASH_MS } from "../../lib/positionFlash";
 import { CountryFlag } from "../ui/CountryFlag";
 import {
   BrandIcon,
+  DirectionMark,
   GapCell,
   IntervalCell,
   IRatingCell,
   LapCell,
   LicenseBadge,
+  PILL_H,
   PosChange,
   SectorCell,
   TireCell,
 } from "./cells";
+
+/** The arrow on the position flash, and its gap to the number, in px. */
+const FLASH_MARK_W = 8;
+const FLASH_MARK_GAP = 2;
 
 interface StandingsRowProps {
   carIdx: number;
@@ -108,7 +116,7 @@ function StandingsRowInner({
     (classRelative
       ? row?.classPosition ?? row?.position
       : row?.position ?? row?.classPosition);
-  const moved = usePositionFlash(
+  const flash = usePositionFlash(
     position,
     rank != null ? "rank" : classRelative ? "class" : "overall"
   );
@@ -170,30 +178,41 @@ function StandingsRowInner({
             colour (`lib/classFill`). The shadow lifts the digits off the
             stronger part of the fill.
 
-            For a few seconds after the car changes place, the block becomes
-            an arrow on a status fill — `accent` up, `danger` down — with
-            `on-accent` ink (§ Theme, rule 1). See `lib/positionFlash`. */}
-        {moved ? (
-          <div
-            className="flex items-center justify-center rounded-ctl py-[3px]"
-            style={{
-              background:
-                moved === "up" ? "var(--color-accent)" : "var(--color-danger)",
-              color: "var(--color-on-accent)",
-            }}
-            title={`${moved === "up" ? "Gained" : "Lost"} a place — now P${position}`}
-          >
-            {moved === "up" ? (
-              <ArrowUp className="size-3.5" strokeWidth={3.5} />
-            ) : (
-              <ArrowDown className="size-3.5" strokeWidth={3.5} />
-            )}
-          </div>
-        ) : (
+            For a few seconds after the car changes place, a chip on a status
+            fill covers it — `▲ 3` on `accent`, `▼ 4` on `danger`, with
+            `on-accent` ink (§ Theme, rule 1) — and keeps the new position on
+            it. It fades in as the row glides and dissolves back into the
+            number, its own number sliding home to where the plain one sits
+            so the two never print side by side. See `lib/positionFlash` and
+            `.pos-flash` in styles.css. */}
+        <div className="relative">
           <div className="tnum class-fill-ink text-center text-[14px] font-bold leading-none tabular-nums text-text">
             {position ?? "—"}
           </div>
-        )}
+          {flash && (
+            <div
+              key={flash.id}
+              className={`pos-flash pos-flash--${flash.move} tnum text-[14px] font-bold leading-none`}
+              style={
+                {
+                  height: PILL_H,
+                  marginTop: -PILL_H / 2,
+                  gap: FLASH_MARK_GAP,
+                  "--pos-flash-ms": `${POSITION_FLASH_MS}ms`,
+                  "--pos-flash-shift": `${(FLASH_MARK_W + FLASH_MARK_GAP) / 2}px`,
+                } as CSSProperties
+              }
+              title={`${flash.move === "up" ? "Gained" : "Lost"} a place — now P${position}`}
+            >
+              <DirectionMark
+                up={flash.move === "up"}
+                width={FLASH_MARK_W}
+                className="pos-flash__mark"
+              />
+              <span className="pos-flash__num">{position}</span>
+            </div>
+          )}
+        </div>
 
         {/* position change */}
         {isVisible("change") && (

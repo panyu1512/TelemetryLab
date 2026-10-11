@@ -1,22 +1,33 @@
 /**
  * The position block's flash when a car changes place.
  *
- * For a few seconds after a pass, the Standings position block turns into an
- * arrow on a status fill — up on `accent` for the car that gained, down on
+ * For a few seconds after a pass, the Standings position block becomes a chip
+ * on a status fill — `▲ 3` on `accent` for the car that gained, `▼ 4` on
  * `danger` for the car that lost. The rows already *glide* to their new slots,
  * but a glide is over in 220 ms and is switched off entirely under reduced
  * motion; a driver who glances over a second later sees a table in a new order
  * with nothing to say what changed. The flash holds the answer long enough to
- * be caught in peripheral vision.
+ * be caught in peripheral vision, and keeps the new position on it: the arrow
+ * says what happened, the number is still the one the column is for.
  *
- * The cumulative `▲2` chip beside the block is a different fact — places won or
+ * The cumulative `▲2` beside the block is a different fact — places won or
  * lost since the start — so the two never stand in for each other.
  */
 
 /** Which way a car just moved in the running order. */
 export type PositionMove = "up" | "down";
 
-/** How long the block holds the arrow after a change, in ms. */
+/**
+ * One flash: which way, and an id that is new for every change of place, so
+ * a car passed twice inside the hold starts its flash over rather than
+ * inheriting the first one's half-finished fade.
+ */
+export interface PositionFlash {
+  move: PositionMove;
+  id: number;
+}
+
+/** How long the block holds the flash after a change, in ms. */
 export const POSITION_FLASH_MS = 3000;
 
 /**
