@@ -387,12 +387,47 @@ a {
  * width from the viewBox aspect ratio, up to a cap. Every viewBox is cropped to
  * the mark's own ink, so height here is drawing rather than padding; the cap is
  * what keeps a wide wordmark (Dallara is 5.6:1) from running over its neighbour
- * — it fits to the cap and centres itself instead. */
+ * — it fits to the cap and centres itself instead. The cap leaves 4 px of the
+ * 56 px brand column either side, so even the widest mark has paper between it
+ * and the number and flag beside it.
+ *
+ * `overflow: visible` because of the stroke below: it reaches half its width
+ * past the ink the viewBox is cropped to, and an SVG clips to its viewBox by
+ * default. */
 .brand-icon > svg {
   height: 100%;
   width: auto;
-  max-width: 40px;
+  max-width: 48px;
   display: block;
+  overflow: visible;
+}
+
+/* A heavier mark. Every brand icon is filled shapes in `currentColor`, cut for
+ * print, where a hairline survives — at 21–24 px on a dark strip, Mercedes'
+ * star, BMW's ring and the Aston Martin wings thinned to nothing in peripheral
+ * vision. Outlining every shape in its own fill thickens the whole mark by the
+ * same amount. `non-scaling-stroke` makes that amount screen pixels rather
+ * than viewBox units, so it is the same weight on every mark whatever its
+ * viewBox's scale (they run from 24 to 360 units tall). */
+.brand-icon > svg :is(path, circle, ellipse, rect, polygon) {
+  stroke: currentColor;
+  stroke-width: 0.9px;
+  stroke-linejoin: round;
+  vector-effect: non-scaling-stroke;
+}
+
+/* Marks whose detail is cut out of the ink (Ford's script, the Porsche crest —
+ * `FINE_DETAIL_MARKS` in cells.tsx): the full stroke grows the ink into those
+ * cut-outs and closes them, so they take a third of it. */
+.brand-icon--fine > svg :is(path, circle, ellipse, rect, polygon) {
+  stroke-width: 0.3px;
+}
+
+/* Ink on the class fill (`lib/classFill`): white, which the fill's profile is
+ * measured to carry, with a tight shadow to lift it off the fill where the
+ * fill is at its strongest. */
+.class-fill-ink {
+  text-shadow: 0 1px 2px rgb(0 0 0 / 0.45);
 }
 
 /* A freshly completed sector fades up as its colored value/delta lands. Keyed

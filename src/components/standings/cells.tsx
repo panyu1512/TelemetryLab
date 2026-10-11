@@ -371,7 +371,24 @@ BRAND_ICONS.VW = BRAND_ICONS.Volkswagen;
 BRAND_ICONS["Mercedes-AMG"] = BRAND_ICONS.Mercedes;
 
 /**
- * Default brand-mark box: 24 px tall, capped at 40 px wide — the Relative's
+ * Marks whose detail is cut *out* of the ink — Ford's script in its oval,
+ * Porsche's and Cadillac's crests, the lettering in Nissan's ring and RAM's
+ * badge, Dallara's wordmark — and so take the lighter stroke
+ * (`.brand-icon--fine`). The full stroke that makes every other mark heavier
+ * grows the ink *into* those cut-outs, and at row size closed them: Ford's
+ * script went, and the oval was left a blank white lozenge.
+ */
+const FINE_DETAIL_MARKS: ReadonlySet<string> = new Set([
+  "Ford",
+  "Porsche",
+  "Cadillac",
+  "Nissan",
+  "RAM",
+  "Dallara",
+]);
+
+/**
+ * Default brand-mark box: 24 px tall, capped at 48 px wide — the Relative's
  * size, on its 34 px row. Standings passes its own (`STANDINGS_BRAND_H`).
  *
  * Height alone never governed how big a mark *looked*. Every viewBox above is
@@ -395,18 +412,21 @@ export function BrandIcon({
   if (!make) return null;
   const Icon = BRAND_ICONS[make];
   if (Icon) {
-    // .brand-icon CSS rule: > svg { height: 100%; width: auto; max-width: 40px }
+    // .brand-icon CSS rule: > svg { height: 100%; width: auto; max-width: 48px }
     // inline-flex default (align-items: stretch) lets height:100% resolve.
     //
     // Pure white, not the old 94% and certainly not the 55%-alpha grey before
-    // that. A manufacturer mark is *identity*, and identity on this surface has
-    // exactly one coloured carrier, the left border (§ Two colour systems, rule
-    // 2) — so the mark reads in the row's own ink at full strength, and gets out
-    // of the way of the coloured status values by being monochrome, not by
-    // being dim. Dimming it only made it unreadable at speed.
+    // that. A manufacturer mark is *identity*, but class is the identity this
+    // surface colours (§ Two colour systems, rule 2) — so the mark reads in
+    // the row's own ink at full strength, and gets out of the way of the
+    // coloured status values by being monochrome, not by being dim. Dimming
+    // it only made it unreadable at speed. It is drawn heavier than its
+    // artwork for the same reason (see `.brand-icon` in styles.css).
     return (
       <span
-        className="brand-icon inline-flex shrink-0 items-center justify-center"
+        className={`brand-icon inline-flex shrink-0 items-center justify-center${
+          FINE_DETAIL_MARKS.has(make) ? " brand-icon--fine" : ""
+        }`}
         style={{ height, color: "#fff" }}
         title={make}
       >
@@ -415,10 +435,11 @@ export function BrandIcon({
     );
   }
   // Unknown brand: the make's first three letters in the same white ink as a
-  // mark — no pill, since fill is rationed to the fastest-lap cell (rule 5).
+  // mark, at the heaviest weight the face has, as the marks are drawn heavier
+  // — no pill, since fill is rationed to the fastest-lap cell (rule 5).
   return (
     <span
-      className="shrink-0 text-[12px] font-bold uppercase leading-none tracking-[0.02em] text-white"
+      className="shrink-0 text-[12px] font-black uppercase leading-none tracking-[0.02em] text-white"
       title={make}
     >
       {make.slice(0, 3)}
@@ -619,16 +640,24 @@ export function TireCell({
   const title = kind
     ? `${kind === "wet" ? "Wet" : "Dry"}${name && name.toLowerCase() !== kind ? ` (${name})` : ""}`
     : `Compound ${label}`;
+  // The badge is drawn at the brand mark's height (`BRAND_ICON_H`), so the car's
+  // mark and its tyre, side by side on the row, read as a pair of the same size
+  // rather than a large badge and a small one.
   return (
     <div className="flex items-center justify-center gap-1">
       <span
-        className="flex w-[1.05rem] justify-center text-center text-[12px] font-bold leading-none text-text"
+        className="flex justify-center text-center text-[13px] font-bold leading-none text-text"
+        style={{ width: BRAND_ICON_H }}
         title={title}
       >
-        {kind ? <TyreCompoundIcon kind={kind} size="1.05rem" label={title} /> : label}
+        {kind ? (
+          <TyreCompoundIcon kind={kind} size={`${BRAND_ICON_H}px`} label={title} />
+        ) : (
+          label
+        )}
       </span>
       <span
-        className="w-[1.45rem] text-left text-[11px] font-semibold leading-none tabular-nums tnum text-muted"
+        className="w-[1.45rem] text-left text-[12px] font-semibold leading-none tabular-nums tnum text-muted"
         style={{ color: ink }}
         title={`${laps} laps on tyres`}
       >

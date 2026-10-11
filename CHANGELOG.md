@@ -7,6 +7,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Class colour on every row of Standings and Relative.** The coloured edge
+  on the left of each row now runs into the row as a fade that reaches the
+  car's position, so each position sits on its class's colour. The class
+  headers on Standings get the same fade behind the class name.
+- **Driver names in their class colour.** On both tables, a driver's name is
+  now the colour of their class, so you can tell a car's class from its name.
+  On the Relative, lapped cars keep their blue on every other value and on the
+  `-1L` tag next to the name.
+- **Bolder car logos with more room.** Logos are drawn heavier, so thin marks
+  like Mercedes' star, BMW's roundel and the Aston Martin wings stay readable
+  at a glance. The logo column is wider, so wide logos like Audi's rings no
+  longer crowd the car number and flag.
+- **Tyre badge the same size as the car logo** on the Relative, with a
+  slightly larger lap count beside it.
+- **Relative class badge.** The `GT3` / `GT4` badge is now a dark tag with
+  white text, so it stays readable on top of the new class-colour fade.
+
 ## [1.15.0] - 2026-10-10
 
 ### Added

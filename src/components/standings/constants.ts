@@ -172,7 +172,10 @@ export const STANDINGS_COLUMNS: readonly ColumnDef[] = [
   { id: "pos", label: "Pos", name: "Position", width: "2.1rem", px: 34, align: "center", always: true },
   { id: "change", label: "Δ", name: "Position change", width: "1.8rem", px: 29, align: "center" },
   { id: "num", label: "#", name: "Car number", width: "2.5rem", px: 40, align: "center" },
-  { id: "brand", label: "Car", name: "Car brand", width: "2.75rem", px: 44, align: "center" },
+  // Wide enough that the widest marks — Audi's rings, McLaren's speedmark, a
+  // wordmark — sit inside the column with paper either side, rather than
+  // running up to the number and the flag beside them (see `.brand-icon`).
+  { id: "brand", label: "Car", name: "Car brand", width: "3.5rem", px: 56, align: "center" },
   { id: "country", label: "Nat", name: "Country flag", width: "1.7rem", px: 27, align: "center" },
   // `minmax(0, 1fr)`, not `minmax(8rem, 1fr)`: the name absorbs all slack and is
   // the only column allowed to truncate. An 8rem floor made the grid overflow
@@ -190,6 +193,17 @@ export const STANDINGS_COLUMNS: readonly ColumnDef[] = [
   { id: "sectors", label: "S", name: "Sector deltas", width: "3rem", px: 48, align: "center" },
   { id: "state", label: "", name: "Pit / off-track", width: "2.2rem", px: 35, align: "center", always: true },
 ];
+
+/**
+ * Where a Standings row's class fill (`lib/classFill`) has faded out: the
+ * row's `px-1` plus the position column, measured from the inside of the class
+ * edge. The class band uses the same reach — its name sits in a box of the
+ * position column's width behind the same `0.25rem` — so the band's name and
+ * the column of positions under it sit on one fill.
+ */
+export const STANDINGS_FILL_REACH = `calc(0.25rem + ${
+  STANDINGS_COLUMNS.find((c) => c.id === "pos")!.width
+})`;
 
 /** Columns the user can toggle (everything not marked `always`). */
 export const CONFIGURABLE_COLUMNS = STANDINGS_COLUMNS.filter((c) => !c.always);

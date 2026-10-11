@@ -3,7 +3,8 @@ import type { ClassStanding } from "../../telemetry/types";
 import { lapTime, rating } from "../../lib/format";
 import { RacingHelmet } from "../ui/RacingHelmet";
 import { StripField } from "../timing/SessionStrip";
-import { CLASS_EDGE_WIDTH } from "./constants";
+import { classFill } from "../../lib/classFill";
+import { CLASS_EDGE_WIDTH, STANDINGS_FILL_REACH } from "./constants";
 
 /**
  * The band that opens a class group.
@@ -63,6 +64,9 @@ function ClassBandInner({
         borderLeftWidth: CLASS_EDGE_WIDTH,
         borderLeftStyle: "solid",
         borderLeftColor: color,
+        // The rows' class fill, to the same reach: the class name sits on it
+        // exactly where the positions under it do.
+        backgroundImage: classFill(color, STANDINGS_FILL_REACH),
       }}
     >
       {/* The class name, in the rows' own bold sans at their 13 px: a heading
@@ -70,7 +74,7 @@ function ClassBandInner({
           Its `ml-1` matches the row's `px-1` and its minimum width is the
           position column's, so `GT3` sits centred over the column of
           positions it heads. */}
-      <span className="ml-1 min-w-[2.1rem] shrink-0 text-center text-[13px] font-bold uppercase leading-none tracking-[0.02em] text-text">
+      <span className="class-fill-ink ml-1 min-w-[2.1rem] shrink-0 text-center text-[13px] font-bold uppercase leading-none tracking-[0.02em] text-text">
         {shortName || "—"}
       </span>
 
