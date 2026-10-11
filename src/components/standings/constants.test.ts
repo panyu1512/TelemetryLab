@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import {
+  CONFIGURABLE_COLUMNS,
   scopeColumnsToSession,
   tableMinWidth,
   visibleColumns,
@@ -45,6 +46,22 @@ describe("scopeColumnsToSession", () => {
     const scoped = scopeColumnsToSession(noBrand, true);
     expect(scoped("brand")).toBe(false);
     expect(scoped("irating")).toBe(true);
+  });
+});
+
+describe("tyre column", () => {
+  it("is a column the user can switch off", () => {
+    expect(CONFIGURABLE_COLUMNS.some((c) => c.id === "tire")).toBe(true);
+  });
+
+  it("sits after the lap times and before the sectors", () => {
+    const ids = visibleColumns(3, allOn).map((c) => c.col.id);
+    expect(ids.indexOf("tire")).toBe(ids.indexOf("best") + 1);
+    expect(ids.indexOf("tire")).toBeLessThan(ids.indexOf("sectors"));
+  });
+
+  it("stays in a lap-time session — tyres matter on a timesheet too", () => {
+    expect(scopeColumnsToSession(allOn, true)("tire")).toBe(true);
   });
 });
 

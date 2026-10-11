@@ -129,6 +129,7 @@ export type StandingsColumnId =
   | "interval"
   | "last"
   | "best"
+  | "tire"
   | "sectors"
   | "state";
 
@@ -190,6 +191,9 @@ export const STANDINGS_COLUMNS: readonly ColumnDef[] = [
   { id: "interval", label: "Int", name: "Interval", width: "3.6rem", px: 58, align: "right" },
   { id: "last", label: "Last", name: "Last lap", width: "4.9rem", px: 78, align: "right" },
   { id: "best", label: "Best", name: "Best lap", width: "4.9rem", px: 78, align: "right" },
+  // The Relative's column width: a brand-mark-sized badge and a three-digit
+  // lap count side by side (`TireCell`).
+  { id: "tire", label: "Tyre", name: "Tyre compound", width: "3.4rem", px: 54, align: "center" },
   { id: "sectors", label: "S", name: "Sector deltas", width: "3rem", px: 48, align: "center" },
   { id: "state", label: "", name: "Pit / off-track", width: "2.2rem", px: 35, align: "center", always: true },
 ];

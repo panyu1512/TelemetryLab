@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.17.0] - 2026-10-11
+
+### Added
+
+- **Tyres back on Standings.** Every car on Standings shows its tyre again —
+  the same white **D** for dries and blue **W** for wets as the Relative,
+  with the laps on the set — in a `Tyre` column between the best lap and the
+  sectors. It is on by default; turn it off under Overlay Manager →
+  Standings → Columns → "Tyre compound". The Relative keeps its tyres and its
+  own on/off option.
+
 ## [1.16.0] - 2026-10-11
 
 ### Changed
@@ -495,7 +506,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.16.0...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.17.0...HEAD
+[1.17.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.16.0...v1.17.0
 [1.16.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.15.0...v1.16.0
 [1.15.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.14.0...v1.15.0
 [1.14.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.13.0...v1.14.0

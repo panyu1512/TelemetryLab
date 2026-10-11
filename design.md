@@ -66,7 +66,7 @@ separating one class group from the next.
 | `--color-primary` | interactive & informational: selection, links, **the player's own row** | telemetry values |
 | `--color-sector-purple` | overall-best lap/sector | anything else |
 | `--color-lapped` | Relative ink for a car a lap or more behind you — the sim's blue flag. Fixed, not themed | grounds, fills, anything but that ink |
-| `--color-tyre-wet` | a wet tyre: the ring and `W` of the Relative's compound badge. Fixed, not themed | anything but that badge |
+| `--color-tyre-wet` | a wet tyre: the ring and `W` of the compound badge on Standings and Relative. Fixed, not themed | anything but that badge |
 
 Two rules that fall out of that table and are easy to break:
 
@@ -802,14 +802,15 @@ the fact that a header band and a row cost the same height.
     about a compound is good, cautionary, critical or a session best.
 
     What a compound *does* have is a colour every driver already reads: blue
-    for rain. So the cell — now on Relative, see below — is a ring with one
+    for rain. So the cell — on both tables, see below — is a ring with one
     letter: **`D` in white (`text`) for a dry, `W` in `--color-tyre-wet` blue
     for a wet**, then laps on the set in the row's ink. Blue is its own token,
     fixed and unthemed like `lapped` and deeper than it, so a wet badge on a
     lapped row still reads as a badge (§ Theme table).
 
-    **The badge is the brand mark's height** (`BRAND_ICON_H`, 24 px), and its
-    letter the name's 13 px. Side by side on the row, a 24 px roundel beside a
+    **The badge is the brand mark's height** (`BRAND_ICON_H`, 24 px, on
+    Relative; `STANDINGS_BRAND_H`, 21 px, on Standings), and its letter the
+    name's 13 px. Side by side on the row, a 24 px roundel beside a
     17 px badge read as a large thing and a small one, which ranks two facts
     about the car that are equal; at one height they read as a pair. The
     column is 3.4rem, so a three-digit lap count still fits beside it.
@@ -822,12 +823,16 @@ the fact that a header band and a row cost the same height.
     only — replaced the letter; at row size that asked the reader to tell a
     dot from a drop.
 
-    **The tyre lives on Relative, not Standings.** Whether the cars around you
-    have gone to wets, and how old the rubber is on the car you are about to
-    race, is a question about neighbours, which is the Relative's whole
-    subject. Standings carried it for the whole field, at the cost of a column
-    on the widest surface in the app. It is a Manager option there, on by
-    default.
+    **The tyre is on both tables, and optional on both.** It moved to Relative
+    alone for 1.15: whether the cars around you have gone to wets, and how old
+    the rubber is on the car you are about to race, is a question about
+    neighbours, which is the Relative's whole subject. That call is reversed
+    for Standings, not for Relative. The whole-field version of the question
+    — who pitted for wets, who is on an old set in a long stint — has no other
+    place to be answered, and the column's cost on the widest surface is the
+    driver's to pay or not. On Relative it is the "Tyre compound" option; on
+    Standings it is the `Tyre` column, between the lap times and the sectors.
+    Both are on by default.
 
     The same rule covers alignment. **Every lap cell carries the fastest-lap
     chip's padding, filled or not**, so the filled time sits on the same
@@ -1258,6 +1263,13 @@ windows and in the Manager's preview — are now set in Saira like the two
 tables, mono micro-labels included, and nothing on the timing paper is
 lighter than semibold. § Typography and § Dense tabular overlays rule 8 were
 rewritten with it.
+
+**Tyres back on Standings, 2026-10-11.** At the owner's request the tyre
+column returns to Standings, with the Relative's `D`/`W` badge at the
+Standings brand mark's height, and stays on Relative. It is a column toggle on
+Standings (Manager → Columns) and the "Tyre compound" option on Relative, on
+by default on both. § Dense tabular overlays rule 15 and the `--color-tyre-wet`
+row of the theme table were rewritten with it.
 
 ## Known follow-ups
 
