@@ -302,6 +302,48 @@ function ColumnLabels({
   );
 }
 
+// ─── Class runs ──────────────────────────────────────────────────────────────
+
+/** Split a list of neighbours into stretches of consecutive same-class cars. */
+function classRuns(entries: readonly StandingsEntry[]): StandingsEntry[][] {
+  const runs: StandingsEntry[][] = [];
+  for (const e of entries) {
+    const run = runs[runs.length - 1];
+    if (run && run[0].carClassId === e.carClassId) run.push(e);
+    else runs.push([e]);
+  }
+  return runs;
+}
+
+/**
+ * One stretch of same-class rows, carrying the class edge and its fill for all
+ * of them — drawn once, so the colour has no join between cars to seam at when
+ * the table scales (as Standings' `LayoutRun`).
+ */
+function ClassRun({
+  color,
+  fillReach,
+  children,
+}: {
+  color: string;
+  fillReach: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div
+      className="flex flex-col"
+      style={{
+        borderLeftWidth: CLASS_EDGE_WIDTH,
+        borderLeftStyle: "solid",
+        borderLeftColor: color,
+        backgroundImage: classFill(color, fillReach),
+      }}
+    >
+      {children}
+    </div>
+  );
+}
+
 // ─── Separator ───────────────────────────────────────────────────────────────
 
 /**
@@ -341,8 +383,6 @@ interface RowProps {
   showLapRelation: boolean;
   isOn: RelVisibility;
   template: string;
-  /** CSS length where the class fill has faded out (see `relFillReach`). */
-  fillReach: string;
   isPlayer?: boolean;
   /** First row of the table: carries the column labels (rule 3). */
   labelled?: boolean;
@@ -358,7 +398,6 @@ function RowInner({
   showLapRelation,
   isOn,
   template,
-  fillReach,
   isPlayer = false,
   labelled = false,
 }: RowProps) {
@@ -428,15 +467,10 @@ function RowInner({
         // row's height under the labels — a 24 px brand mark in the 24 px left
         // over sat flush on the strip's bottom edge.
         height: ROW_H + (labelled ? REL_LABEL_H : 0),
-        // The class edge, at full strength on every row exactly as on Standings
-        // — the same device has to read the same way on both surfaces. It holds
-        // its drawn size as the table scales down (see CLASS_EDGE_WIDTH).
-        borderLeftWidth: CLASS_EDGE_WIDTH,
-        borderLeftStyle: "solid",
-        borderLeftColor: classColor,
-        // …running on into the row as a fill that fades out by the end of the
-        // position cell, as on Standings (see `lib/classFill`).
-        backgroundImage: classFill(classColor, fillReach),
+        // No edge or fill of its own: the `ClassRun` around the row draws
+        // both, once for each stretch of same-class cars, so neighbours of
+        // one class share one unbroken stripe instead of a piece each that
+        // seams at fractional pixels when the table scales.
         // Clear the in-row column labels rather than centring under them.
         paddingTop: labelled ? REL_LABEL_H : undefined,
       }}
@@ -760,7 +794,6 @@ export function RelativeScreen() {
     showLapRelation: !byLapTime,
     isOn,
     template,
-    fillReach,
   };
   // The first row of the table carries the labels when they are on: the
   // furthest car ahead, or the player when nobody is ahead of them.
@@ -791,44 +824,60 @@ export function RelativeScreen() {
             style={scaleBox(scale)}
           >
             {/* Cars ahead — furthest at top, closest just above player */}
-            {ahead.map((entry, i) => (
-              <Row
-                key={entry.carIdx}
-                entry={entry}
-                driver={driversByIdx.get(entry.carIdx)}
-                classColor={classColorMap.get(entry.carClassId) ?? CLASS_RAMP[0]}
-                labelled={labelRow && i === 0}
-                {...rowProps}
-              />
-            ))}
+            {classRuns(ahead).map((run) => {
+              const color = classColorMap.get(run[0].carClassId) ?? CLASS_RAMP[0];
+              return (
+                <ClassRun key={run[0].carIdx} color={color} fillReach={fillReach}>
+                  {run.map((entry) => (
+                    <Row
+                      key={entry.carIdx}
+                      entry={entry}
+                      driver={driversByIdx.get(entry.carIdx)}
+                      classColor={color}
+                      labelled={labelRow && entry === ahead[0]}
+                      {...rowProps}
+                    />
+                  ))}
+                </ClassRun>
+              );
+            })}
 
             <Separator />
 
             {/* Player row */}
             {player && (
-              <Row
-                key={player.carIdx}
-                entry={player}
-                driver={driversByIdx.get(player.carIdx)}
-                classColor={playerClassColor}
-                labelled={labelRow && ahead.length === 0}
-                {...rowProps}
-                isPlayer
-              />
+              <ClassRun color={playerClassColor} fillReach={fillReach}>
+                <Row
+                  key={player.carIdx}
+                  entry={player}
+                  driver={driversByIdx.get(player.carIdx)}
+                  classColor={playerClassColor}
+                  labelled={labelRow && ahead.length === 0}
+                  {...rowProps}
+                  isPlayer
+                />
+              </ClassRun>
             )}
 
             <Separator />
 
             {/* Cars behind — closest at top, furthest at bottom */}
-            {behind.map((entry) => (
-              <Row
-                key={entry.carIdx}
-                entry={entry}
-                driver={driversByIdx.get(entry.carIdx)}
-                classColor={classColorMap.get(entry.carClassId) ?? CLASS_RAMP[0]}
-                {...rowProps}
-              />
-            ))}
+            {classRuns(behind).map((run) => {
+              const color = classColorMap.get(run[0].carClassId) ?? CLASS_RAMP[0];
+              return (
+                <ClassRun key={run[0].carIdx} color={color} fillReach={fillReach}>
+                  {run.map((entry) => (
+                    <Row
+                      key={entry.carIdx}
+                      entry={entry}
+                      driver={driversByIdx.get(entry.carIdx)}
+                      classColor={color}
+                      {...rowProps}
+                    />
+                  ))}
+                </ClassRun>
+              );
+            })}
           </div>
         </div>
       )}

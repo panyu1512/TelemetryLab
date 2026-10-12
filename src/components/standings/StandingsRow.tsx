@@ -12,11 +12,9 @@ import {
   PLAYER_ROW_GROUND,
   rowSlotHeight,
   STANDINGS_BRAND_H,
-  STANDINGS_FILL_REACH,
   type ColumnVisibility,
 } from "./constants";
 import { ColumnLabels } from "./ColumnLabels";
-import { classFill } from "../../lib/classFill";
 import { formatDriverName } from "../../lib/driverName";
 import { usePositionFlash } from "../../hooks/usePositionFlash";
 import { POSITION_FLASH_MS } from "../../lib/positionFlash";
@@ -45,7 +43,6 @@ interface StandingsRowProps {
   carIdx: number;
   top: number;
   sectorCount: number;
-  classColor: string;
   /** Grouped by class ⇒ show gap/interval relative to the class, not overall. */
   classRelative: boolean;
   /**
@@ -101,7 +98,6 @@ function StandingsRowInner({
   carIdx,
   top,
   sectorCount,
-  classColor,
   classRelative,
   rank,
   isVisible,
@@ -176,21 +172,14 @@ function StandingsRowInner({
           // seam of paper breaking them into a piece per car.
           height: rowSlotHeight(labelled),
           gridTemplateColumns: gridTemplate(sectorCount, isVisible),
-          // The row's leading edge, in the class's colour at full strength on
-          // every row. It used to drop to 40 % below the class leader, which
-          // under a solid band read as a rendering fault rather than a rank —
-          // the leader's row looked lit and the rest looked broken. Solid, the
-          // edges join into one spine running down from the band.
-          //
-          // It holds its drawn size as the table scales — see CLASS_EDGE_WIDTH.
+          // The class edge and its fill are drawn behind the row, once for
+          // each run of same-class rows (`LayoutRun`), so the colour runs
+          // down the group with no join per car to seam at. The row keeps a
+          // transparent edge of the same width so its content stays where
+          // the fill expects it.
           borderLeftWidth: CLASS_EDGE_WIDTH,
           borderLeftStyle: "solid",
-          borderLeftColor: classColor,
-          // …and the edge runs on into the row as a fill that fades out by
-          // the end of the position cell, so the number read first sits on
-          // its class's colour. Layered over the row's ground, so the
-          // player's strip keeps its `primary` (see `lib/classFill`).
-          backgroundImage: classFill(classColor, STANDINGS_FILL_REACH),
+          borderLeftColor: "transparent",
           // Clear the in-row column labels rather than centring under them;
           // the slot is a label slice taller, so the content keeps a full
           // row's height below them.

@@ -16,12 +16,14 @@ import {
   CLASS_EDGE_WIDTH,
   CLASS_GAP,
   SKIP_H,
+  STANDINGS_FILL_REACH,
   scopeColumnsToSession,
   tableMinWidth,
   type ColumnVisibility,
 } from "./constants";
 import { fitScale, scaleBox, unscaled } from "../../lib/tableScale";
 import { CLASS_RAMP, classColorFor } from "../../lib/classColors";
+import { classFill } from "../../lib/classFill";
 import { StandingsRow } from "./StandingsRow";
 import { useStandingsLayout } from "./useStandingsLayout";
 import { SESSION_HEADER_H, SessionStrip } from "../timing/SessionStrip";
@@ -96,7 +98,7 @@ export function StandingsScreen() {
   const byLapTime = useRanksByLapTime();
   const showSessionStrip = useStandingsUiStore((s) => s.showSessionStrip);
   const qualifying = useSessionKind() === SessionKind.Qualify;
-  const { items, blocks, totalHeight } = useStandingsLayout();
+  const { items, blocks, runs, totalHeight } = useStandingsLayout();
   const fieldTop = showSessionStrip ? HEADER_GAP : 0;
 
   // In qualifying, a row that mounts after the screen's first paint is a car
@@ -232,6 +234,28 @@ export function StandingsScreen() {
                   }}
                 />
               ))}
+              {/* The class edge and its fill, once per run of same-class
+                  rows, so the colour has no joins to seam at (see
+                  `LayoutRun`). The rows draw neither. */}
+              {runs.map((r) => {
+                const color = classColorById.get(r.classId);
+                if (!color) return null;
+                return (
+                  <div
+                    key={r.key}
+                    aria-hidden
+                    className="row-glide absolute inset-x-0 will-change-transform"
+                    style={{
+                      height: r.height,
+                      transform: `translateY(${r.top}px)`,
+                      borderLeftWidth: CLASS_EDGE_WIDTH,
+                      borderLeftStyle: "solid",
+                      borderLeftColor: color,
+                      backgroundImage: classFill(color, STANDINGS_FILL_REACH),
+                    }}
+                  />
+                );
+              })}
               {items.map((it) => {
                 if (it.kind === "skip") {
                   return (
@@ -276,7 +300,6 @@ export function StandingsScreen() {
                     carIdx={it.carIdx}
                     top={it.top}
                     sectorCount={meta.sectorCount}
-                    classColor={classColorById.get(it.classId) ?? CLASS_RAMP[0]}
                     classRelative={classRelative}
                     rank={it.rank}
                     isVisible={isVisible}

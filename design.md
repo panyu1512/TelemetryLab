@@ -115,9 +115,11 @@ standings table stops being readable at a glance.
 2. **Identity colour opens the row and names the driver — it never grounds
    the row.** Class has three carriers, the same on both surfaces:
 
-   - **the leading edge**, 4 px on a row
-     ([`StandingsRow.tsx`](src/components/standings/StandingsRow.tsx)), the
-     same device on a class band;
+   - **the leading edge**, 4 px down every row — drawn once per run of
+     same-class rows (`LayoutRun` in
+     [`useStandingsLayout.ts`](src/components/standings/useStandingsLayout.ts),
+     `ClassRun` on Relative), not once per row — and the same device on a
+     class band;
    - **the class fill**: the edge running on into the row as a gradient
      ([`lib/classFill.ts`](src/lib/classFill.ts)), strong against the edge
      and gone by the end of the position cell, so the position — and, at the
@@ -714,10 +716,17 @@ the fact that a header band and a row cost the same height.
    row fills its whole slot, so there is no `ROW_GAP` seam and no frame of
    paper round the block: the owner read those seams as a black border round
    every row, and they cut the class edge and fill into a piece per car. Now
-   a class's edge and fill run down its group as one spine, and on Relative
-   neighbouring cars' colours meet with nothing between them (the space
-   either side of the player's row, rule 14, stays). The player's `primary`
-   ground still marks theirs. Rule 1's strips hold on every other surface. The `CLASS_GAP` between
+   a class's edge and fill run down its group as one spine — **drawn once
+   per run of same-class rows, behind them**, not once per row. Abutting
+   per-row pieces still showed a hairline at every join whenever the table
+   was scaled, because `zoom` puts the joins on fractional pixels and two
+   anti-aliased edges never quite cover one. On Relative, where classes
+   interleave, each stretch of same-class neighbours shares one stripe and
+   different classes meet with nothing between them (the space either side
+   of the player's row, rule 14, stays). The player's `primary` ground still
+   marks theirs; it now lies *over* the fill rather than under it, and white
+   digits still clear 4.5:1 on every ramp colour that way
+   ([`lib/classFill.test.ts`](src/lib/classFill.test.ts)). Rule 1's strips hold on every other surface. The `CLASS_GAP` between
    two class groups, the same gap between the header and the field, and the
    `BAND_GAP` between a band and its rows show the game through. The owner asked
    for it: a single slab of black the size of the whole field hid more of the

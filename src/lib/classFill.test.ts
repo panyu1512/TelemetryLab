@@ -103,6 +103,31 @@ describe("white position digits on the fill", () => {
   }
 });
 
+describe("white position digits where the fill runs behind the rows", () => {
+  // Standings and Relative now draw the fill once per run of same-class rows,
+  // *behind* them, on bare paper (the rows' 7 % lift is cleared there). So the
+  // neutral row is the fill straight over the paper, and the player's row is
+  // its `primary` at 25 % laid *over* the fill rather than under it.
+  const PAPER: Rgb = [3, 4, 6];
+  // Carbon's `primary`, recovered from PLAYER_ROW: 25 % of it over the
+  // neutral strip.
+  const PRIMARY = PLAYER_ROW.map((c, i) =>
+    Math.round((c - 0.75 * NEUTRAL_ROW[i]) / 0.25),
+  ) as Rgb;
+  const strength = classFillStrength(1 / 3);
+
+  for (const color of CLASS_RAMP) {
+    it(`clear 4.5:1 on ${color} over bare paper`, () => {
+      const fill = over(hex(color), strength, PAPER);
+      expect(whiteContrastOn(fill)).toBeGreaterThanOrEqual(4.5);
+    });
+    it(`clear 4.5:1 on ${color} under the player's ground`, () => {
+      const fill = over(PRIMARY, 0.25, over(hex(color), strength, PAPER));
+      expect(whiteContrastOn(fill)).toBeGreaterThanOrEqual(4.5);
+    });
+  }
+});
+
 function contrast(a: Rgb, b: Rgb): number {
   const la = relativeLuminance(toHex(a))!;
   const lb = relativeLuminance(toHex(b))!;

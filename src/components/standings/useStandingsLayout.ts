@@ -110,9 +110,25 @@ export interface LayoutBlock {
   height: number;
 }
 
+/**
+ * A run of consecutive rows (and any skip marker between them) in one class:
+ * where the class edge and its fill are drawn, once for the whole run, behind
+ * the rows. Drawn per row, the pieces met at fractional pixel offsets whenever
+ * the table was scaled, and every join showed as a hairline seam across the
+ * colour. Grouped by class, a run is a whole group; in the flat table it is
+ * each stretch of same-class cars.
+ */
+export interface LayoutRun {
+  key: string;
+  top: number;
+  height: number;
+  classId: number;
+}
+
 export interface StandingsLayout {
   items: LayoutItem[];
   blocks: LayoutBlock[];
+  runs: LayoutRun[];
   totalHeight: number;
 }
 
@@ -142,6 +158,17 @@ export function useStandingsLayout(): StandingsLayout {
   return useMemo(() => {
     const items: LayoutItem[] = [];
     const blocks: LayoutBlock[] = [];
+    const runs: LayoutRun[] = [];
+    // Extend the current run when this slot continues it — same class, and
+    // starting exactly where the run ends — otherwise start a new one.
+    const addToRun = (classId: number, at: number, height: number) => {
+      const run = runs[runs.length - 1];
+      if (run && run.classId === classId && run.top + run.height === at) {
+        run.height += height;
+      } else {
+        runs.push({ key: `run-${runs.length}`, top: at, height, classId });
+      }
+    };
     let top = 0;
     let blockTop = 0;
     const openBlock = () => {
@@ -173,6 +200,7 @@ export function useStandingsLayout(): StandingsLayout {
             top,
             classId: groupClassId,
           });
+          addToRun(groupClassId, top, SKIP_H);
           top += SKIP_H;
         }
         const carIdx = group[pos];
@@ -187,6 +215,7 @@ export function useStandingsLayout(): StandingsLayout {
           labelled,
           rank: byLapTime ? pos + 1 : null,
         });
+        addToRun(classOf(carIdx), top, rowSlotHeight(labelled));
         top += rowSlotHeight(labelled);
       });
     };
@@ -203,11 +232,11 @@ export function useStandingsLayout(): StandingsLayout {
       // cap applies to the whole table.
       const classOf = new Map<number, number>();
       for (const c of classes) for (const idx of c.order) classOf.set(idx, c.carClassId);
-      if (order.length === 0) return { items, blocks, totalHeight: 0 };
+      if (order.length === 0) return { items, blocks, runs, totalHeight: 0 };
       openBlock();
       pushGroup(order, (idx) => classOf.get(idx) ?? -1, -1, classRows);
       closeBlock("block-all");
-      return { items, blocks, totalHeight: top };
+      return { items, blocks, runs, totalHeight: top };
     }
 
     // Grouped by class. The bridge's per-class `order` is a race order, so a
@@ -254,7 +283,7 @@ export function useStandingsLayout(): StandingsLayout {
       pushGroup(group, () => c.carClassId, c.carClassId, cap);
       closeBlock(`block-${c.carClassId}`);
     }
-    return { items, blocks, totalHeight: groupIndex > 0 ? top : 0 };
+    return { items, blocks, runs, totalHeight: groupIndex > 0 ? top : 0 };
   }, [
     classes,
     order,
