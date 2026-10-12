@@ -13,6 +13,10 @@
 import { clutchFor, cornerSeverity, pedalsFor } from "./drivingInputs";
 import type {
   ClassStanding,
+  CoachCause,
+  CoachCorner,
+  CoachingPayload,
+  CornerAnalysis,
   DriverEntry,
   PlayerTelemetry,
   SectorSplit,
@@ -539,6 +543,8 @@ export function mockPlayerTelemetry(t: number): PlayerTelemetry {
     latAccel: round(near.dir * nearness * 2.4 * (kmh / 100), 2),
     lonAccel: round(6.5 * throttle - 11 * brake, 2),
     onPitRoad: false,
+    trackSurface: offTrackAt(lap, pct) ? 0 : 3,
+    incidentCount: incidentsBy(lap, pct),
     airTemp: 22,
     trackTemp: round(30 + 2 * Math.sin(t * 0.01), 1),
     tyres: {
@@ -1061,6 +1067,251 @@ export function mockStandings(
     overallBestSectors: [null, null, null],
     classes,
     entries,
+  };
+}
+
+// ── coaching ────────────────────────────────────────────────────────────────
+
+/*
+ * The bridge's coach measures every lap against the player's best and names
+ * what each corner cost. This synthesizes the payload it would send for the
+ * mock lap, from the same lap model the inputs above are read off — so the
+ * lifts `liftFor` puts in the throttle trace come back here as "coasting", in
+ * the corner the trace shows them.
+ *
+ * What it cannot do is *measure*: the numbers are drawn per (lap, corner) and
+ * then shared out so they add up to the real mock lap time minus the mock
+ * best, the one invariant the overlay leans on. The analysis itself is tested
+ * in the bridge, against laps with known mistakes (`telemetrylab/mocktrack.py`).
+ */
+
+/** Every ninth lap the mock driver runs wide at Pouhon, as the Python mock does. */
+const OFF_TRACK_EVERY = 9;
+const OFF_TRACK_AT: readonly [number, number] = [0.552, 0.556];
+
+function offTrackAt(lap: number, pct: number): boolean {
+  return (
+    lap % OFF_TRACK_EVERY === OFF_TRACK_EVERY - 1 &&
+    pct >= OFF_TRACK_AT[0] &&
+    pct < OFF_TRACK_AT[1]
+  );
+}
+
+function incidentsBy(lap: number, pct: number): number {
+  const passed = Math.floor(lap / OFF_TRACK_EVERY);
+  const thisLap = lap % OFF_TRACK_EVERY === OFF_TRACK_EVERY - 1 && pct >= OFF_TRACK_AT[0];
+  return passed + (thisLap ? 1 : 0);
+}
+
+/** Spa's length in metres — what the bridge would read from `TrackLength`. */
+const MOCK_TRACK_M = 7004;
+/** How far a corner's segment opens before its braking point (the bridge's margin). */
+const SEGMENT_LEAD = 80 / MOCK_TRACK_M;
+
+/** The coach's corner map of the mock lap: one corner per braking zone. */
+export const MOCK_COACH_CORNERS: readonly CoachCorner[] = CORNERS.map((c, i) => {
+  const zone = CORNER_ZONES[i];
+  const wrap = (x: number) => round(((x % 1) + 1) % 1, 4);
+  return {
+    number: i + 1,
+    label: `T${i + 1}`,
+    startPct: wrap(c.at - zone.brake - SEGMENT_LEAD),
+    entryPct: wrap(c.at - zone.brake),
+    apexPct: wrap(c.at),
+    exitPct: wrap(c.at + zone.exit),
+  };
+});
+
+/** Rivage is this driver's habit — braked early on most laps — as in the Python mock. */
+const HABIT_CORNER = 2;
+
+type MistakeCause = Exclude<CoachCause, "gain" | "even" | "traffic" | "line">;
+
+interface MockMistake {
+  cause: MistakeCause;
+  /** How big this mistake is next to the lap's others: its share of the loss. */
+  weight: number;
+}
+
+/** The mistake (if any) the mock driver made at `corner` on `lap`. Pure. */
+function mockMistake(lap: number, corner: number): MockMistake | null {
+  const lift = liftFor(lap, corner);
+  if (lift > 0) return { cause: "coasting", weight: 0.5 + lift };
+  const size = cornerHash(lap, corner + 31);
+  if (corner === HABIT_CORNER && cornerHash(lap, corner + 47) < 0.7) {
+    return { cause: "early_brake", weight: 0.6 + size };
+  }
+  if (cornerHash(lap, corner + 11) >= 0.3) return null;
+  const kinds: MistakeCause[] = ["early_brake", "over_slowed", "late_throttle", "overdrove"];
+  return { cause: kinds[Math.floor(cornerHash(lap, corner + 23) * 4)], weight: 0.5 + size };
+}
+
+/** The measurements a mistake of this cause, costing `loss`, would show. */
+function mistakeMeasures(cause: MistakeCause, loss: number): Partial<CornerAnalysis> {
+  const clamp = (x: number, lo: number, hi: number) => Math.max(lo, Math.min(hi, x));
+  switch (cause) {
+    case "early_brake": {
+      const m = clamp(6 + loss * 45, 6, 40);
+      return { brakeDeltaM: m, entrySpeedDeltaKmh: -(5 + m) };
+    }
+    case "coasting":
+      return { coastDeltaM: clamp(50 + loss * 200, 30, 220) };
+    case "over_slowed": {
+      const v = clamp(loss / 0.04, 3, 14);
+      return { minSpeedDeltaKmh: -v, exitSpeedDeltaKmh: -v * 0.9, brakeDeltaM: v * 0.5 };
+    }
+    case "late_throttle": {
+      const m = clamp(loss / 0.009, 10, 45);
+      return { throttleDeltaM: m, exitSpeedDeltaKmh: -m * 0.08 };
+    }
+    default: {
+      const v = clamp(loss / 0.035, 3, 12); // overdrove
+      return {
+        brakeDeltaM: -(6 + v),
+        entrySpeedDeltaKmh: 3 + v * 0.3,
+        minSpeedDeltaKmh: -v,
+        exitSpeedDeltaKmh: -v,
+      };
+    }
+  }
+}
+
+/** How many recent laps the "N of the last M" tally looks back over. */
+const REPEAT_WINDOW = 6;
+
+/** Share of a slower lap's delta the mistakes account for; the rest is spread thin. */
+const EXPLAINED = 0.8;
+
+function lapAnalysis(lap: number, delta: number): CornerAnalysis[] {
+  const n = CORNERS.length;
+  const draws: Array<MockMistake | null> = Array.from({ length: n }, (_, i) =>
+    mockMistake(lap, i),
+  );
+  // A slow lap with no mistake drawn still lost its time somewhere: put one
+  // in the corner this lap's hash likes least.
+  if (delta > 0.15 && !draws.some((d) => d !== null)) {
+    const worst = Array.from({ length: n }, (_, i) => cornerHash(lap, i + 71));
+    const i = worst.indexOf(Math.max(...worst));
+    draws[i] = { cause: "late_throttle", weight: 1 };
+  }
+  const weightOf = draws.reduce((sum, d) => sum + (d?.weight ?? 0), 0);
+  // On a slower lap the mistakes carry most of the delta; on a quicker one
+  // they still cost a little, and the clean corners make up the gain.
+  const toMistakes = weightOf === 0 ? 0 : delta > 0 ? delta * EXPLAINED : 0.04 * weightOf;
+  const clean = draws.map((d, i) => (d ? 0 : 0.4 + cornerHash(lap, i + 59)));
+  const cleanWeight = clean.reduce((a, b) => a + b, 0);
+  const toClean = cleanWeight > 0 ? delta - toMistakes : 0;
+
+  const first = Math.max(1, lap - REPEAT_WINDOW + 1);
+  const window = lap - first + 1;
+  const out: CornerAnalysis[] = draws.map((d, i) => {
+    const loss = d
+      ? (toMistakes * d.weight) / weightOf
+      : cleanWeight > 0
+        ? (toClean * clean[i]) / cleanWeight
+        : 0;
+    const noise = (k: number) => (cornerHash(lap, i + k) - 0.5) * 2;
+    const cause: CoachCause = d
+      ? d.cause
+      : loss <= -0.02
+        ? "gain"
+        : loss < 0.02
+          ? "even"
+          : "line";
+    const m = d ? mistakeMeasures(d.cause, loss) : {};
+    const repeat = d
+      ? Array.from({ length: window }, (_, k) => mockMistake(first + k, i)?.cause).filter(
+          (c) => c === cause,
+        ).length
+      : 0;
+    return {
+      corner: i + 1,
+      timeLost: round(loss, 3),
+      cause,
+      brakeDeltaM: round(m.brakeDeltaM ?? noise(3) * 1.5, 1),
+      entrySpeedDeltaKmh: round(m.entrySpeedDeltaKmh ?? noise(5), 1),
+      minSpeedDeltaKmh: round(m.minSpeedDeltaKmh ?? noise(7) * 0.8 - loss * 4, 1),
+      exitSpeedDeltaKmh: round(m.exitSpeedDeltaKmh ?? noise(9) * 0.8 - loss * 3, 1),
+      throttleDeltaM: round(m.throttleDeltaM ?? noise(13) * 3, 1),
+      coastDeltaM: round(m.coastDeltaM ?? Math.max(0, noise(17) * 4), 1),
+      traffic: false,
+      repeat,
+      repeatWindow: window,
+    };
+  });
+  // Rounding must not break the invariant the overlay leans on: the corners
+  // add up to the lap delta. Park the residue on the biggest corner.
+  const residue = round(delta - out.reduce((a, x) => a + x.timeLost, 0), 3);
+  if (residue !== 0) {
+    const target = out.reduce((a, x) => (Math.abs(x.timeLost) > Math.abs(a.timeLost) ? x : a));
+    target.timeLost = round(target.timeLost + residue, 3);
+  }
+  return out;
+}
+
+/**
+ * The mock player's time for completed lap `k`: what `lapLastLapTime` shows
+ * while lap `k + 1` is under way (`lapTime` keys on the lap in progress).
+ */
+function mockLapTime(k: number): number {
+  const car = MOCK_FIELD[MOCK_PLAYER_IDX];
+  return round(car.pace + car.wobble * Math.sin((k + 1) * 1.7 + car.idx), 3);
+}
+
+function isCleanLap(k: number): boolean {
+  return k % OFF_TRACK_EVERY !== OFF_TRACK_EVERY - 1;
+}
+
+/** The coach's reference before lap `k`: the quickest clean lap from lap 1. */
+function referenceBefore(k: number): { lap: number; lapTime: number } | null {
+  let best: { lap: number; lapTime: number } | null = null;
+  for (let j = 1; j < k; j++) {
+    if (!isCleanLap(j)) continue;
+    const time = mockLapTime(j);
+    if (!best || time < best.lapTime) best = { lap: j, lapTime: time };
+  }
+  return best;
+}
+
+/**
+ * The `coaching` payload for mock time `t`: the last completed lap against
+ * the quickest clean lap before it, exactly as the bridge's coach keeps it.
+ */
+export function mockCoaching(t: number): CoachingPayload {
+  const car = MOCK_FIELD[MOCK_PLAYER_IDX];
+  const lap = Math.floor(progress(car, t)) - 1; // the lap just completed
+  const ref = referenceBefore(lap);
+  if (lap < 1 || !ref) {
+    return {
+      state: "waiting",
+      trackLengthM: MOCK_TRACK_M,
+      reference: null,
+      lastLap: null,
+      newReference: false,
+      corners: [],
+      analysis: [],
+      lapsAnalysed: 0,
+    };
+  }
+  const lapTimeS = mockLapTime(lap);
+  const delta = round(lapTimeS - ref.lapTime, 3);
+  const valid = isCleanLap(lap);
+  const newReference = valid && delta < 0;
+  return {
+    state: "analysed",
+    trackLengthM: MOCK_TRACK_M,
+    reference: newReference ? { lap, lapTime: lapTimeS } : ref,
+    lastLap: {
+      lap,
+      lapTime: lapTimeS,
+      valid,
+      invalidReason: valid ? null : "off_track",
+      delta,
+    },
+    newReference,
+    corners: [...MOCK_COACH_CORNERS],
+    analysis: lapAnalysis(lap, delta),
+    lapsAnalysed: Math.max(0, lap - 1),
   };
 }
 

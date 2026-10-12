@@ -7,6 +7,32 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A coach that tells you where the lap went.** A new **Coach** overlay
+  lines every lap you complete up against your quickest clean lap and splits
+  it into corners. It names the one or two corners that cost you most, and
+  why — "Braked 14 m early", "Coasted 120 m off both pedals", "Over-slowed —
+  apex 8 km/h slower", "Back on the throttle 30 m later" — with the time each
+  one cost. When the same mistake keeps coming back it says so ("4 of the
+  last 6 laps"). Underneath, a strip of the lap shows where time went, and a
+  list of every corner shows what it gained or lost; the corners always add
+  up to the lap's difference from your reference. A quicker clean lap
+  becomes your new reference, and the coach shows where you found the time.
+  Laps through the pit lane or with a reset are not compared, an off-track
+  lap is compared but never becomes your reference, and a corner driven
+  behind or alongside another car is marked as traffic instead of being
+  blamed on you. Manager → Coach sets the smallest loss worth a tip, how many
+  tips to show, and whether the lap strip and corner list are shown.
+  Everything runs on your PC in the bridge. The reference is kept until you
+  change car or track or the bridge restarts. Corners are numbered T1, T2, …
+  in the order the coach finds them, not by the track's official turn
+  numbers.
+- **The mock bridge drives a real lap.** The Python mock now drives your car
+  round a synthetic lap of Spa with real braking zones and a driver who makes
+  known mistakes — and runs wide every ninth lap — so the Coach works end to
+  end without iRacing.
+
 ## [1.21.0] - 2026-10-12
 
 ### Changed

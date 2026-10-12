@@ -26,7 +26,7 @@
 <br>
 
 <div align="center">
-  <strong>Multi-class standings, an on-track relative, fuel strategy and a driving cluster — each in its own always-on-top window.</strong>
+  <strong>Multi-class standings, an on-track relative, fuel strategy, a corner-by-corner coach and a driving cluster — each in its own always-on-top window.</strong>
 </div>
 
 <br> 
@@ -76,6 +76,19 @@ Each overlay lives in its own frameless, always-on-top window rather than inside
 </details>
 
 <details>
+<summary><b>A coach that reads your laps</b></summary>
+
+<br>
+
+Every lap you complete is lined up against your quickest clean lap, metre by metre, and split into corners. Each corner gets the time it cost and the reason — braked 14 m early, coasted off both pedals, over-slowed the apex, back on the throttle late — and the Coach overlay says the one or two that matter, with a "4 of the last 6 laps" when it is a habit rather than a one-off. The corner losses always add up to the lap delta, laps through the pits or with a reset are never compared, and an off-track lap is compared but never becomes your reference. Corners driven in traffic are marked as traffic, not blamed on you. It all runs locally in the bridge, on the telemetry iRacing already exposes.
+
+<div align="center">
+  <img src="site/assets/coach.png" alt="The Coach overlay: a headline tip for T4 reading 'Coasted off both pedals' with the time it cost, a second tip for T3 'Braked early' marked as a habit on most recent laps, a strip of the lap coloured by where time went, and every corner's loss or gain as a bar with its cause" width="620">
+</div>
+
+</details>
+
+<details>
 <summary><b>Configuration with an instant live preview</b></summary>
 
 <br>
@@ -98,7 +111,7 @@ The bridge multiplexes several channels over a single WebSocket, each in a versi
 
 <br>
 
-iRacing and `pyirsdk` are Windows-only, so the repo ships a mock bridge that synthesizes a full multi-class field. `docker compose up --build` brings up the mock bridge and the Vite dev server together, and the standings, relative and fuel screens can be built end to end on macOS or Linux.
+iRacing and `pyirsdk` are Windows-only, so the repo ships a mock bridge that synthesizes a full multi-class field. `docker compose up --build` brings up the mock bridge and the Vite dev server together, and the standings, relative, fuel and coach screens can be built end to end on macOS or Linux. The mock drives the player's car round a synthetic lap of Spa with known mistakes, so the coach has real laps to analyse.
 
 </details>
 
@@ -107,7 +120,7 @@ iRacing and `pyirsdk` are Windows-only, so the repo ships a mock bridge that syn
 
 <br>
 
-The pure logic on both sides of the socket is covered by fast, isolated tests — no sim, no socket, no DOM — plus an integration test that drives the bridge service with a fake source. The bridge sits at ~97% line coverage behind an 85% gate; the frontend covers the formatters, the tyre-heat scale, the wire parser and the full fuel-and-strategy solver. Every push and PR runs both. See [Testing](#testing--quality-gates).
+The pure logic on both sides of the socket is covered by fast, isolated tests — no sim, no socket, no DOM — plus an integration test that drives the bridge service with a fake source. The bridge sits at ~97% line coverage behind an 85% gate; the frontend covers the formatters, the tyre-heat scale, the wire parser, the full fuel-and-strategy solver and the coach's tip selection. Every push and PR runs both. See [Testing](#testing--quality-gates).
 
 </details>
 
@@ -280,7 +293,7 @@ On Windows the real bridge talks to iRacing; on macOS and Linux a mock bridge ge
 │   ├── telemetry/            # Wire protocol, typed models, WS connection
 │   │   └── protocol.test.ts  # Wire-envelope parser specs
 │   ├── stores/               # Zustand stores (session/telemetry/standings/bridge)
-│   ├── lib/                  # Pure helpers (format/scales/fuelStrategy) + *.test.ts
+│   ├── lib/                  # Pure helpers (format/scales/fuelStrategy/coaching) + *.test.ts
 │   ├── hooks/
 │   │   ├── useBridge.ts      # Owns the WS connection; feeds the stores
 │   │   └── useTelemetry.ts   # Single-car compatibility selector
@@ -295,6 +308,8 @@ On Windows the real bridge talks to iRacing; on macOS and Linux a mock bridge ge
 │   └── Cargo.toml
 ├── bridge/                   # Python sidecar
 │   ├── telemetrylab/         # Shared core: protocol, models, repos, service
+│   │   ├── coaching/         # Lap recorder, corner detection, per-corner causes
+│   │   └── mocktrack.py      # Synthetic Spa lap with known mistakes (mock + tests)
 │   ├── tests/                # pytest suite (unit + service integration)
 │   ├── bridge.py             # Real bridge source (Windows, pyirsdk)
 │   ├── mock_bridge.py        # Synthetic multi-car field source (Mac/Linux dev)
@@ -342,8 +357,9 @@ The bridge multiplexes several **channels** over the single WebSocket, each in a
 | `standings` | ~5–10 Hz (on change) | Computed field order: positions, gaps, per-car timing, pit state.    |
 | `session`   | on change / ~1 Hz    | Driver roster, session/track/weather metadata, flags, SOF.           |
 | `bridge`    | on change            | `{ iracingActive }` — replaces the old `{connected:false}` heartbeat. |
+| `coaching`  | once per lap         | The last lap against your reference, corner by corner: loss and cause. |
 
-Stateful channels (`session` / `standings` / `bridge`) are **replayed on connect**, so a client that joins mid-session renders the current world immediately instead of waiting for the next tick.
+Stateful channels (`session` / `standings` / `bridge` / `coaching`) are **replayed on connect**, so a client that joins mid-session renders the current world immediately instead of waiting for the next tick.
 
 The models are defined once and mirrored on both sides:
 
@@ -398,7 +414,7 @@ ruff check .           # lint
 ruff format --check .  # formatting
 ```
 
-Tests live in [`bridge/tests/`](bridge/tests/) and cover session parsing, SOF, the CarIdx ingest, the derived-sector timer, the stateful standings engine, the repositories/event bus, and the async service loop (~97% line coverage).
+Tests live in [`bridge/tests/`](bridge/tests/) and cover session parsing, SOF, the CarIdx ingest, the derived-sector timer, the stateful standings engine, the coach — checked against synthetic laps with known, injected mistakes — the repositories/event bus, and the async service loop (~97% line coverage).
 
 **Frontend** ([`src/`](src/)) — [Vitest](https://vitest.dev) + `tsc`:
 
@@ -409,7 +425,7 @@ npm test                # vitest run
 npm run test:coverage   # with coverage thresholds
 ```
 
-Specs sit next to the code they exercise (`*.test.ts`) and cover the value formatters, the tyre-heat colour scale, the wire-protocol parser, and the full fuel-and-strategy solver.
+Specs sit next to the code they exercise (`*.test.ts`) and cover the value formatters, the tyre-heat colour scale, the wire-protocol parser, the full fuel-and-strategy solver, and the coach's tip selection and wording.
 
 <details>
 <summary><b>Continuous integration and how a release is cut</b></summary>

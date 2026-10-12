@@ -13,11 +13,13 @@ import { pushLog } from "../lib/debugLog";
 import {
   MOCK_START_OFFSET_S,
   MOCK_TIME_SCALE,
+  mockCoaching,
   mockPlayerTelemetry,
   mockSession,
   mockStandings,
 } from "../lib/mockData";
 import { useBridgeStore } from "../stores/useBridgeStore";
+import { useCoachingStore } from "../stores/useCoachingStore";
 import { useOverlayConfigStore } from "../stores/useOverlayConfigStore";
 import { useSessionStore } from "../stores/useSessionStore";
 import { useStandingsStore } from "../stores/useStandingsStore";
@@ -36,12 +38,15 @@ export class MockFeed {
   /** The mock session type last pushed, and the mock time it was switched to. */
   private sessionType_: string | null = null;
   private sessionStart_ = MOCK_START_OFFSET_S;
+  /** The lap the last coaching payload was for: it only changes once a lap. */
+  private coachLap_: number | null = null;
 
   start(): void {
     if (this.telemetryTimer) return;
     this.start_ = Date.now();
     this.seq = 0;
     this.sessionType_ = null;
+    this.coachLap_ = null;
 
     const bridge = useBridgeStore.getState();
     bridge.setProtocolVersion(1);
@@ -71,6 +76,7 @@ export class MockFeed {
     bridge.setSocketConnected(false);
     useTelemetryStore.getState().clear();
     useStandingsStore.getState().clear();
+    useCoachingStore.getState().clear();
     pushLog("info", "Mock data mode disabled.");
   }
 
@@ -120,5 +126,15 @@ export class MockFeed {
     const sessionType =
       useOverlayConfigStore.getState().globalSettings.mockSessionType;
     useSessionStore.getState().setSession(mockSession(this.elapsed(), sessionType));
+    this.pushCoaching();
+  }
+
+  /** Rides the session tick, and only writes when a lap has completed. */
+  private pushCoaching(): void {
+    const payload = mockCoaching(this.elapsed());
+    const lap = payload.lastLap?.lap ?? null;
+    if (lap === this.coachLap_ && useCoachingStore.getState().coaching) return;
+    this.coachLap_ = lap;
+    useCoachingStore.getState().setCoaching(payload);
   }
 }

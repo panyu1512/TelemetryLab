@@ -10,10 +10,11 @@ from __future__ import annotations
 import asyncio
 import contextlib
 
-from telemetrylab.protocol import Channel
-from telemetrylab.service import BridgeService
+from telemetrylab import mocktrack as mt
+from telemetrylab.protocol import SNAPSHOT_CHANNELS, Channel
+from telemetrylab.service import BridgeService, coach_context
 
-from .conftest import make_driver, make_session_raw
+from .conftest import lap_frames, make_driver, make_session_raw
 
 
 class FakePublisher:
@@ -146,3 +147,59 @@ class TestBridgeServiceInactive:
         asyncio.run(scenario())
         bridge_states = [p["iracingActive"] for p in pub.payloads(Channel.BRIDGE)]
         assert bridge_states == [True, False]
+
+
+class TestCoaching:
+    def _service(self) -> tuple[BridgeService, FakePublisher]:
+        service = BridgeService(FakeSource(active=True))
+        pub = FakePublisher()
+        service._publisher = pub
+        return service, pub
+
+    def test_announces_the_track_then_publishes_once_per_lap(self):
+        service, pub = self._service()
+        service._session_repo.update(make_session_raw(drivers=[make_driver(0)]))
+        lap = mt.drive_lap()
+
+        async def drive():
+            for frame in lap_frames([lap, lap, lap]):
+                await service._coach_frame(frame)
+
+        asyncio.run(drive())
+        states = [(p["state"], p["newReference"]) for p in pub.payloads(Channel.COACHING)]
+        # Waiting on the new track, the reference lap, then one analysis.
+        assert states == [("waiting", False), ("analysed", True), ("analysed", False)]
+
+    def test_nothing_without_a_session(self):
+        service, pub = self._service()
+        asyncio.run(service._coach_frame({"sessionTime": 1.0, "lapDistPct": 0.5}))
+        assert pub.payloads(Channel.COACHING) == []
+
+    def test_disconnect_forgets_the_reference(self):
+        service, pub = self._service()
+        service._coach.set_track("spa", 7004.0)
+
+        async def flap():
+            await service._set_active(True)
+            await service._set_active(False)
+
+        asyncio.run(flap())
+        assert service._coach.track_key is None
+        # And the replay cache no longer holds the old analysis.
+        assert pub.payloads(Channel.COACHING)[-1]["state"] == "waiting"
+
+    def test_context_is_track_layout_and_car(self):
+        raw = make_session_raw(drivers=[make_driver(0)])
+        service, _ = self._service()
+        service._session_repo.update(raw)
+        session = service._session_repo.current
+        key, length = coach_context(session, service._session_repo.drivers_by_idx)
+        car = service._session_repo.drivers_by_idx[0].car_path
+        assert key == f"42|Grand Prix|{car}"
+        assert length == 4650.0
+        # No roster entry for the player, and no length: still a usable key.
+        key, length = coach_context(session, {})
+        assert key == "42|Grand Prix|"
+
+    def test_coaching_is_replayed_to_late_joiners(self):
+        assert Channel.COACHING in SNAPSHOT_CHANNELS

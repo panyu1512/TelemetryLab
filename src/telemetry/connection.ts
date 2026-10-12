@@ -15,6 +15,7 @@
 import { RECONNECT_BASE_MS, RECONNECT_MAX_MS, WS_URL } from "../config";
 import { pushLog } from "../lib/debugLog";
 import { useBridgeStore } from "../stores/useBridgeStore";
+import { useCoachingStore } from "../stores/useCoachingStore";
 import { useSessionStore } from "../stores/useSessionStore";
 import { useStandingsStore } from "../stores/useStandingsStore";
 import { useTelemetryStore } from "../stores/useTelemetryStore";
@@ -127,6 +128,9 @@ export class BridgeConnection {
           .getState()
           .setStandings(msg.payload, msg.seq);
         break;
+      case Channel.Coaching:
+        useCoachingStore.getState().setCoaching(msg.payload);
+        break;
       case Channel.Bridge: {
         const status = msg.payload;
         const wasActive = useBridgeStore.getState().iracingActive;
@@ -140,6 +144,8 @@ export class BridgeConnection {
           // iRacing went away: telemetry is dead, standings are stale.
           useTelemetryStore.getState().clear();
           useStandingsStore.getState().clear();
+          // The bridge's coach forgets its reference on disconnect; so do we.
+          useCoachingStore.getState().clear();
         }
         break;
       }

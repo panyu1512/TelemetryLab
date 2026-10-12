@@ -43,12 +43,20 @@ class Channel:
     STANDINGS: Final = "standings"
     #: On change. Bridge/iRacing connection status (replaces the old heartbeat).
     BRIDGE: Final = "bridge"
+    #: Once per completed lap. The coach's corner-by-corner comparison of that
+    #: lap against the player's reference lap (see :mod:`telemetrylab.coaching`).
+    COACHING: Final = "coaching"
 
 
 #: Channels replayed to a client the instant it connects, so a late joiner sees
 #: the current world immediately instead of waiting for the next tick. Telemetry
 #: is intentionally excluded: it is ephemeral and the next frame is ~16 ms away.
-SNAPSHOT_CHANNELS: Final = (Channel.BRIDGE, Channel.SESSION, Channel.STANDINGS)
+SNAPSHOT_CHANNELS: Final = (
+    Channel.BRIDGE,
+    Channel.SESSION,
+    Channel.STANDINGS,
+    Channel.COACHING,
+)
 
 
 def now_ms() -> int:

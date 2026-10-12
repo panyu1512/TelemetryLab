@@ -10,6 +10,7 @@ dict shapes.
 from __future__ import annotations
 
 import sys
+from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
 
@@ -116,3 +117,57 @@ def driver_factory():
 @pytest.fixture
 def session_raw_factory():
     return make_session_raw
+
+
+def lap_frames(
+    laps: list[Any],
+    *,
+    hz: float = 60.0,
+    start_lap: int = 0,
+    t0: float = 0.0,
+    overrides: Any = None,
+) -> Iterator[dict[str, Any]]:
+    """Telemetry frames for consecutive :class:`~telemetrylab.mocktrack.MockLap` s.
+
+    Sampled at ``hz`` on the session clock, the way the bridge reads them.
+    ``overrides(lap_index, pct)`` may return a dict merged into a frame — how a
+    test puts the car on pit road, off track or through a reset.
+    """
+    t = t0
+    start = t0
+    for k, lap in enumerate(laps):
+        while t < start + lap.lap_time:
+            s = lap.at_time(t - start)
+            frame = {
+                "sessionTime": t,
+                "lapDistPct": s["pct"] % 1.0,
+                "speedKmh": s["speed"],
+                "throttle": s["throttle"],
+                "brake": s["brake"],
+                "gear": int(s["gear"]),
+                "lap": start_lap + k,
+                "onPitRoad": False,
+                "trackSurface": 3,
+                "incidentCount": 0,
+            }
+            if overrides is not None:
+                frame.update(overrides(k, frame["lapDistPct"]) or {})
+            yield frame
+            t += 1.0 / hz
+        start += lap.lap_time
+    if laps:
+        # One frame over the line, so the last lap completes: N laps in, N - 1
+        # recorded — the first is joined part-way, as on track.
+        first = laps[0].at_time(t - start)
+        yield {
+            "sessionTime": t,
+            "lapDistPct": first["pct"] % 1.0,
+            "speedKmh": first["speed"],
+            "throttle": first["throttle"],
+            "brake": first["brake"],
+            "gear": int(first["gear"]),
+            "lap": start_lap + len(laps),
+            "onPitRoad": False,
+            "trackSurface": 3,
+            "incidentCount": 0,
+        }

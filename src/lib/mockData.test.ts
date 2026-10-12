@@ -8,6 +8,8 @@ import {
   MOCK_PLAYER_IDX,
   MOCK_PRE_JOIN_IDX,
   MOCK_START_OFFSET_S,
+  MOCK_COACH_CORNERS,
+  mockCoaching,
   mockPlayerTelemetry,
   mockSession,
   mockStandings,
@@ -368,5 +370,91 @@ describe("mockStandings — qualifying", () => {
     expect(
       p.entries.find((e) => e.carIdx === p.overallBestLapCarIdx)?.bestLapTime,
     ).toBe(fastest);
+  });
+});
+
+describe("mockCoaching", () => {
+  it("waits for a reference at the very start", () => {
+    const p = mockCoaching(0);
+    expect(p.state).toBe("waiting");
+    expect(p.reference).toBeNull();
+  });
+
+  it("maps one corner per braking zone, in order round the lap", () => {
+    expect(MOCK_COACH_CORNERS.map((c) => c.label)).toEqual(["T1", "T2", "T3", "T4", "T5", "T6"]);
+    for (const c of MOCK_COACH_CORNERS) {
+      for (const k of ["startPct", "entryPct", "apexPct", "exitPct"] as const) {
+        expect(c[k]).toBeGreaterThanOrEqual(0);
+        expect(c[k]).toBeLessThan(1);
+      }
+    }
+  });
+
+  it("adds up: the corners always sum to the lap delta", () => {
+    for (let lap = 2; lap < 60; lap++) {
+      const t = (lap + 0.4) * MOCK_FIELD[MOCK_PLAYER_IDX].pace;
+      const p = mockCoaching(t);
+      if (p.state !== "analysed") continue;
+      const sum = p.analysis.reduce((a, x) => a + x.timeLost, 0);
+      expect(sum).toBeCloseTo(p.lastLap!.delta!, 2);
+      expect(p.analysis).toHaveLength(6);
+    }
+  });
+
+  it("runs wide every ninth lap, and that lap never becomes the reference", () => {
+    const pace = MOCK_FIELD[MOCK_PLAYER_IDX].pace;
+    const offLaps: number[] = [];
+    for (let k = 2; k < 40; k++) {
+      const p = mockCoaching((k + 0.3) * pace);
+      if (p.lastLap && !p.lastLap.valid) {
+        offLaps.push(p.lastLap.lap);
+        expect(p.lastLap.invalidReason).toBe("off_track");
+        expect(p.newReference).toBe(false);
+      }
+    }
+    expect(offLaps.length).toBeGreaterThan(0);
+    for (const lap of offLaps) expect(lap % 9).toBe(8);
+  });
+
+  it("keeps a coherent reference: the quickest clean lap so far", () => {
+    const pace = MOCK_FIELD[MOCK_PLAYER_IDX].pace;
+    let ref: number | null = null;
+    for (let k = 2; k < 40; k++) {
+      const p = mockCoaching((k + 0.5) * pace);
+      if (p.state !== "analysed") continue;
+      if (ref != null) expect(p.reference!.lapTime).toBeLessThanOrEqual(ref);
+      if (p.newReference) expect(p.reference!.lapTime).toBe(p.lastLap!.lapTime);
+      ref = p.reference!.lapTime;
+    }
+  });
+
+  it("agrees with the timing widget's last lap", () => {
+    const pace = MOCK_FIELD[MOCK_PLAYER_IDX].pace;
+    const t = 20.5 * pace;
+    expect(mockCoaching(t).lastLap!.lapTime).toBe(mockPlayerTelemetry(t).lapLastLapTime);
+  });
+
+  it("explains a slow lap mostly with named mistakes", () => {
+    const pace = MOCK_FIELD[MOCK_PLAYER_IDX].pace;
+    for (let k = 3; k < 40; k++) {
+      const p = mockCoaching((k + 0.5) * pace);
+      const delta = p.lastLap?.delta ?? 0;
+      if (p.state !== "analysed" || delta < 0.3) continue;
+      const named = p.analysis
+        .filter((a) => !["gain", "even", "line", "traffic"].includes(a.cause))
+        .reduce((s, a) => s + a.timeLost, 0);
+      expect(named).toBeGreaterThan(delta * 0.5);
+    }
+  });
+
+  it("puts the off-track excursion in the telemetry too", () => {
+    const pace = MOCK_FIELD[MOCK_PLAYER_IDX].pace;
+    let sawOff = false;
+    for (let t = 8 * pace; t < 9.2 * pace; t += 0.05) {
+      const f = mockPlayerTelemetry(t);
+      if (f.trackSurface === 0) sawOff = true;
+    }
+    expect(sawOff).toBe(true);
+    expect(mockPlayerTelemetry(10 * pace).incidentCount).toBeGreaterThan(0);
   });
 });

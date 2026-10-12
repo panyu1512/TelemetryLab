@@ -7,6 +7,7 @@
  *   - `PlayerTelemetry` → `telemetry` channel (~60 Hz)
  *   - `SessionInfo`     → `session`   channel (on change / ~1 Hz)
  *   - `StandingsPayload`→ `standings` channel (~5–10 Hz)
+ *   - `CoachingPayload` → `coaching`  channel (once per completed lap)
  *
  * Raw SDK values are preserved alongside derived, presentation-friendly fields
  * (e.g. `trackSurface` + `trackSurfaceLabel`) so the UI can build rich visual
@@ -86,6 +87,14 @@ export interface PlayerTelemetry {
   lonAccel: number | null;
 
   onPitRoad: boolean | null;
+  /**
+   * Where the player's car is: iRacing `PlayerTrackSurface` (irsdk_TrkLoc) —
+   * -1 not in world, 0 off track, 1 pit stall, 2 approaching pits, 3 on track.
+   * Read by the bridge's coach to decide whether a lap was clean.
+   */
+  trackSurface: number | null;
+  /** The player's own incident count this session (`PlayerCarMyIncidentCount`). */
+  incidentCount: number | null;
 
   airTemp: number | null;
   trackTemp: number | null;
@@ -346,4 +355,96 @@ export interface StandingsPayload {
 /** Bridge/iRacing connection status (bridge channel). */
 export interface BridgeStatus {
   iracingActive: boolean;
+}
+
+// ---------------------------------------------------------------------------
+// Coaching (coaching channel) — mirrors `bridge/telemetrylab/coaching/`
+// ---------------------------------------------------------------------------
+
+/**
+ * Why a corner lost (or did not lose) time, as the bridge's rule set names it
+ * (`compare.classify`). Signs elsewhere are always "you minus reference".
+ */
+export type CoachCause =
+  | "gain"
+  | "even"
+  | "traffic"
+  | "early_brake"
+  | "coasting"
+  | "overdrove"
+  | "over_slowed"
+  | "late_throttle"
+  | "slow_exit"
+  | "line";
+
+/**
+ * Why a lap was not clean. `pit`, `reset` and `incomplete` laps are not
+ * compared at all; `off_track` and `incident` laps are compared but never
+ * become the reference.
+ */
+export type CoachInvalidReason = "pit" | "reset" | "incomplete" | "off_track" | "incident";
+
+/** One corner of the coach's map, drawn from the first clean lap. */
+export interface CoachCorner {
+  number: number;
+  /** "T1", "T2", … in order from the line. */
+  label: string;
+  /** Where the corner's segment starts (it runs to the next corner's start). */
+  startPct: number;
+  entryPct: number;
+  apexPct: number;
+  exitPct: number;
+}
+
+/** One corner of the last lap, measured against the reference. */
+export interface CornerAnalysis {
+  /** {@link CoachCorner.number}. */
+  corner: number;
+  /** Seconds: + lost, − gained. The corners sum to the lap delta. */
+  timeLost: number;
+  cause: CoachCause;
+  /** Metres: + braked earlier than the reference. */
+  brakeDeltaM: number | null;
+  entrySpeedDeltaKmh: number | null;
+  /** Apex speed: + faster. */
+  minSpeedDeltaKmh: number | null;
+  exitSpeedDeltaKmh: number | null;
+  /** Metres: + back on the throttle later. */
+  throttleDeltaM: number | null;
+  /** Metres: + more distance off both pedals. */
+  coastDeltaM: number | null;
+  /** Another car was close ahead or alongside through this corner. */
+  traffic: boolean;
+  /** Laps, of the last {@link repeatWindow}, with this same cause here. */
+  repeat: number;
+  repeatWindow: number;
+}
+
+export interface CoachLapRef {
+  lap: number;
+  lapTime: number;
+}
+
+export interface CoachLastLap extends CoachLapRef {
+  valid: boolean;
+  invalidReason: CoachInvalidReason | null;
+  /** Seconds against the reference it was compared with; null if not compared. */
+  delta: number | null;
+}
+
+/** The `coaching` channel payload. */
+export interface CoachingPayload {
+  /**
+   * `waiting` — no reference yet; `analysed` — the last lap was compared (or
+   * became the first reference); `skipped` — the last lap could not be compared.
+   */
+  state: "waiting" | "analysed" | "skipped";
+  trackLengthM: number | null;
+  reference: CoachLapRef | null;
+  lastLap: CoachLastLap | null;
+  /** The last lap is the new reference (the first one, or a new best). */
+  newReference: boolean;
+  corners: CoachCorner[];
+  analysis: CornerAnalysis[];
+  lapsAnalysed: number;
 }

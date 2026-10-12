@@ -547,6 +547,28 @@ a {
   animation: sector-pop 260ms ease-out;
 }
 
+/* The coach's verdict fades up once per analysed lap (keyed on the lap). It is
+ * the one moment the driver might glance across for it; after that it holds
+ * still until the next line crossing. */
+@keyframes coach-in {
+  from {
+    opacity: 0;
+    transform: translateY(-2px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+.coach-in {
+  animation: coach-in 320ms ease-out;
+}
+@media (prefers-reduced-motion: reduce) {
+  .coach-in {
+    animation: none;
+  }
+}
+
 /* A new overall-fastest lap flashes purple once (keyed on the lap time). */
 @keyframes lap-flash {
   0% {
