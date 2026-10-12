@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.21.0] - 2026-10-12
+
+### Changed
+
+- **Rounded table panels.** On Standings and Relative, the session header,
+  each class's name band and each class's drivers are now panels with
+  rounded corners. The class colour on the left edge and your own row's
+  highlight follow the curve.
+
 ## [1.20.0] - 2026-10-12
 
 ### Added
@@ -583,7 +592,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.20.0...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.21.0...HEAD
+[1.21.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.20.0...v1.21.0
 [1.20.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.19.0...v1.20.0
 [1.19.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.18.0...v1.19.0
 [1.18.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.17.0...v1.18.0

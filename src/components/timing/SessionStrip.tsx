@@ -123,7 +123,7 @@ export function SessionStrip({ width }: SessionStripProps) {
 
   return (
     <div
-      className="session-header relative flex shrink-0 items-center gap-x-4 overflow-hidden rounded-sm pl-2 pr-3"
+      className="session-header timing-block relative flex shrink-0 items-center gap-x-4 overflow-hidden pl-2 pr-3"
       style={{
         height: SESSION_HEADER_H,
         // The flag's colour along the foot of the header, strongest under the

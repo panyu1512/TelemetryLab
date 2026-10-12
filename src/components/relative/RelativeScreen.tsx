@@ -820,7 +820,7 @@ export function RelativeScreen() {
           {/* No column-header band ever: when labels are on at all they ride in
               the first row's top slice, out of flow (rule 3). */}
           <div
-            className="timing-paper flex flex-col"
+            className="timing-paper timing-block flex flex-col overflow-hidden"
             style={scaleBox(scale)}
           >
             {/* Cars ahead — furthest at top, closest just above player */}

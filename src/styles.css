@@ -394,6 +394,20 @@ a {
 }
 
 /*
+ * The corners of each block on Standings and Relative — the session header,
+ * a class band, a class's rows. Rounded well past the 2 px the rest of the
+ * system cuts its corners at: the owner asked for it, and with the game
+ * showing between them the blocks read as panels laid over the footage, not
+ * as cells of one card. Drawn inside the table's `zoom`, so it scales with
+ * the rows. Whatever is drawn in a block is clipped to it (`overflow:
+ * hidden` on the block), so the class colour and the player's ground round
+ * off with the paper.
+ */
+.timing-block {
+  border-radius: 8px;
+}
+
+/*
  * The session strip's baseline: a hairline under the readout, so the strip
  * reads as the table's masthead rather than as a first row. This is *not* the
  * row separator rule 1 bans — it separates the strip from the field, which is
