@@ -18,7 +18,13 @@
 export const ROW_H = 32;
 
 /**
- * Paper left showing between one row's strip and the next.
+ * Paper that used to show between one row's strip and the next.
+ *
+ * No longer drawn: on Standings and Relative the rows fill their slots edge
+ * to edge, so a class's colour edge runs down its group unbroken (see
+ * `design.md` § Dense tabular overlays, rule 9). It survives as the
+ * allowance {@link STANDINGS_BRAND_H} is derived from, so the brand marks
+ * keep the size they were tuned at. What follows is its original reasoning.
  *
  * Every row sits on its own `--color-timing-row` ground, inset this far from
  * the bottom of its {@link ROW_H} slot, so the field reads as a stack of

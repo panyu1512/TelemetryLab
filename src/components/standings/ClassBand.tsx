@@ -60,7 +60,7 @@ function ClassBandInner({
 
   return (
     <div
-      className="bg-timing-row flex h-full items-center gap-3 overflow-hidden rounded-sm pr-2"
+      className="bg-timing-row flex h-full items-center gap-3 overflow-hidden pr-2"
       style={{
         // The band's leading edge is the row's — the same device, so it takes
         // the same width and holds the same drawn size as the table scales

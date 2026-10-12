@@ -29,8 +29,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   whole table. The rows themselves are on black, a little darker than before
   over the game.
 - **No more black lines around rows.** On Standings and Relative the rows now
-  sit straight on the black panel, so there is no thin black border between
-  or around them; each class reads as one solid black panel.
+  sit straight on the black panel and touch each other, so there is no thin
+  black border between or around them. Each class reads as one solid black
+  panel, and its colour runs down the left edge as one unbroken stripe
+  instead of a separate piece per car.
 
 ## [1.19.0] - 2026-10-11
 

@@ -10,7 +10,6 @@ import {
   LAP_COLOR,
   LAP_UNDERLINE,
   PLAYER_ROW_GROUND,
-  ROW_GAP,
   rowSlotHeight,
   STANDINGS_BRAND_H,
   STANDINGS_FILL_REACH,
@@ -149,7 +148,7 @@ function StandingsRowInner({
 
   return (
     <div
-      className="row-glide absolute inset-x-0 rounded-sm will-change-transform"
+      className="row-glide absolute inset-x-0 will-change-transform"
       style={{
         height: rowSlotHeight(labelled),
         transform: `translateY(${top}px)`,
@@ -157,9 +156,10 @@ function StandingsRowInner({
     >
       <div
         className={[
-          "relative grid items-center gap-x-1 rounded-sm px-1 text-xs",
-          // Every row is its own strip: the neutral row ground, with paper
-          // showing through the `ROW_GAP` under it, exactly as on Relative.
+          "relative grid items-center gap-x-1 px-1 text-xs",
+          // Every row is on the same neutral ground — on these tables the
+          // paper itself (`.timing-blocks`), edge to edge with its
+          // neighbours, exactly as on Relative.
           // "This is you" is the one strip on `primary` (§ Two colour systems,
           // rule 3). The zebra and class-group tones this replaced made
           // alternate rows different for no reason the reader could name; a
@@ -171,7 +171,10 @@ function StandingsRowInner({
           .filter(Boolean)
           .join(" ")}
         style={{
-          height: rowSlotHeight(labelled) - ROW_GAP,
+          // The whole slot, edge to edge with the rows above and below: the
+          // class edge and fill run down the group as one spine, with no
+          // seam of paper breaking them into a piece per car.
+          height: rowSlotHeight(labelled),
           gridTemplateColumns: gridTemplate(sectorCount, isVisible),
           // The row's leading edge, in the class's colour at full strength on
           // every row. It used to drop to 40 % below the class leader, which

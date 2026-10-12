@@ -17,7 +17,6 @@ import {
   BAND_GAP,
   CLASS_BAND_H,
   CLASS_GAP,
-  ROW_GAP,
   SKIP_H,
   rowSlotHeight,
 } from "./constants";
@@ -99,11 +98,11 @@ export type LayoutItem = LayoutRow | LayoutBand | LayoutSkip;
 
 /**
  * A block of paper: a class band, or a class group's rows and skip marker,
- * from {@link ROW_GAP} above its first strip to {@link ROW_GAP} below its
- * last. The space between blocks is left clear — {@link CLASS_GAP} between
- * classes, {@link BAND_GAP} between a band and its rows — so over live
- * footage the game shows between them (and between the session header and
- * the field) while every strip stays on black.
+ * fitted to them exactly. The space between blocks is left clear —
+ * {@link CLASS_GAP} between classes, {@link BAND_GAP} between a band and its
+ * rows — so over live footage the game shows between them (and between the
+ * session header and the field). Inside a block the rows fill their slots
+ * edge to edge, so a class's colour runs down the group as one spine.
  */
 export interface LayoutBlock {
   key: string;
@@ -143,12 +142,10 @@ export function useStandingsLayout(): StandingsLayout {
   return useMemo(() => {
     const items: LayoutItem[] = [];
     const blocks: LayoutBlock[] = [];
-    // Every group opens `ROW_GAP` into its block, so the strips have paper
-    // above them as well as the `ROW_GAP` each slot leaves below.
-    let top = ROW_GAP;
+    let top = 0;
     let blockTop = 0;
     const openBlock = () => {
-      blockTop = top - ROW_GAP;
+      blockTop = top;
     };
     const closeBlock = (key: string) => {
       blocks.push({ key, top: blockTop, height: top - blockTop });
@@ -233,10 +230,9 @@ export function useStandingsLayout(): StandingsLayout {
       // no band naming an empty group, and no gap for it.
       if (group.length === 0) continue;
       // A gap between groups, and none before the first, which would just be
-      // padding at the top of the overlay. The gap is clear — the paper is
-      // per block — so it is the previous block's bottom inset plus this
-      // one's top inset away.
-      if (groupIndex > 0) top += CLASS_GAP + ROW_GAP;
+      // padding at the top of the overlay. The gap is clear: the paper is
+      // per block.
+      if (groupIndex > 0) top += CLASS_GAP;
       groupIndex += 1;
       openBlock();
       if (showClassBands) {
@@ -246,12 +242,12 @@ export function useStandingsLayout(): StandingsLayout {
           top,
           classId: c.carClassId,
         });
-        // The band is a block of its own: its paper closes `ROW_GAP` under
-        // it, `BAND_GAP` is left clear, and the rows' block opens below — so
-        // the game shows between a class's name and its first position.
-        top += CLASS_BAND_H + ROW_GAP;
+        // The band is a block of its own, with `BAND_GAP` left clear under
+        // it before the rows' block — so the game shows between a class's
+        // name and its first position.
+        top += CLASS_BAND_H;
         closeBlock(`block-band-${c.carClassId}`);
-        top += BAND_GAP + ROW_GAP;
+        top += BAND_GAP;
         openBlock();
       }
       const cap = group.includes(playerCarIdx) ? classRows : otherClassRows;

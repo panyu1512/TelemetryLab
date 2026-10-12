@@ -82,7 +82,6 @@ import {
   CLASS_GAP,
   LAP_UNDERLINE,
   PLAYER_ROW_GROUND,
-  ROW_GAP,
 } from "../standings/constants";
 import { CountryFlag } from "../ui/CountryFlag";
 import { SessionStrip } from "../timing/SessionStrip";
@@ -412,7 +411,6 @@ function RowInner({
     <div
       className={[
         "relative grid items-center gap-x-1 px-2 text-xs",
-        "rounded-sm",
         // Every row is its own strip on the neutral row ground, exactly as on
         // Standings; the player's is the one strip in `primary`
         // (§ Dense tabular overlays, rule 14). Off-lap rows used to take a
@@ -789,8 +787,8 @@ export function RelativeScreen() {
           {/* No column-header band ever: when labels are on at all they ride in
               the first row's top slice, out of flow (rule 3). */}
           <div
-            className="timing-paper flex flex-col rounded-sm"
-            style={{ ...scaleBox(scale), gap: ROW_GAP, padding: ROW_GAP }}
+            className="timing-paper flex flex-col"
+            style={scaleBox(scale)}
           >
             {/* Cars ahead — furthest at top, closest just above player */}
             {ahead.map((entry, i) => (

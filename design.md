@@ -710,11 +710,14 @@ the fact that a header band and a row cost the same height.
    blocks is clear.** The session header is one block, each class band
    another and each class's rows another (`.timing-paper` under a
    `.timing-blocks` surface). Inside a block the rows sit **straight on the
-   black** — `--color-timing-row` is cleared there, so no strip is lifted
-   off the paper and no `ROW_GAP` seam or frame of darker paper shows: the
-   owner read those seams as a black border round every row. The class edge
-   and fill still open each row, and the player's `primary` ground still
-   marks theirs. Rule 1's strips hold on every other surface. The `CLASS_GAP` between
+   black, edge to edge** — `--color-timing-row` is cleared there, and each
+   row fills its whole slot, so there is no `ROW_GAP` seam and no frame of
+   paper round the block: the owner read those seams as a black border round
+   every row, and they cut the class edge and fill into a piece per car. Now
+   a class's edge and fill run down its group as one spine, and on Relative
+   neighbouring cars' colours meet with nothing between them (the space
+   either side of the player's row, rule 14, stays). The player's `primary`
+   ground still marks theirs. Rule 1's strips hold on every other surface. The `CLASS_GAP` between
    two class groups, the same gap between the header and the field, and the
    `BAND_GAP` between a band and its rows show the game through. The owner asked
    for it: a single slab of black the size of the whole field hid more of the

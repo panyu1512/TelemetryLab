@@ -225,7 +225,7 @@ export function StandingsScreen() {
                 <div
                   key={b.key}
                   aria-hidden
-                  className="timing-paper row-glide absolute inset-x-0 rounded-sm will-change-transform"
+                  className="timing-paper row-glide absolute inset-x-0 will-change-transform"
                   style={{
                     height: b.height,
                     transform: `translateY(${b.top}px)`,
