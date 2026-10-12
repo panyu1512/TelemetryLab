@@ -79,6 +79,7 @@ import {
 } from "../standings/cells";
 import {
   CLASS_EDGE_WIDTH,
+  CLASS_GAP,
   LAP_UNDERLINE,
   PLAYER_ROW_GROUND,
   ROW_GAP,
@@ -770,13 +771,14 @@ export function RelativeScreen() {
   return (
     <div
       ref={bodyRef}
-      className="overlay-card timing-surface font-timing @container flex h-full flex-col overflow-hidden rounded-card border border-border/60"
+      className="overlay-card timing-surface timing-blocks font-timing @container flex h-full flex-col overflow-hidden rounded-card border border-border/60"
     >
-      {/* Inset by the field's own `p-1`, so the header and the row strips
-          under it share one left and right edge; `pb-0.5` and the field's
-          `p-1` leave the same 6 px under it as Standings' `FIELD_TOP`. */}
+      {/* Its own block, flush with the field's: the header and the rows'
+          paper share one left and right edge, and the space between them is
+          left clear, as on Standings, so the game shows between the two over
+          live footage. */}
       {showSessionStrip && !isEmpty && (
-        <div className="px-1 pt-1 pb-0.5" style={scaleBox(scale)}>
+        <div style={{ ...scaleBox(scale), marginBottom: CLASS_GAP }}>
           <SessionStrip width={innerWidth} />
         </div>
       )}
@@ -787,8 +789,8 @@ export function RelativeScreen() {
           {/* No column-header band ever: when labels are on at all they ride in
               the first row's top slice, out of flow (rule 3). */}
           <div
-            className="flex flex-col p-1"
-            style={{ ...scaleBox(scale), gap: ROW_GAP }}
+            className="timing-paper flex flex-col rounded-sm"
+            style={{ ...scaleBox(scale), gap: ROW_GAP, padding: ROW_GAP }}
           >
             {/* Cars ahead — furthest at top, closest just above player */}
             {ahead.map((entry, i) => (

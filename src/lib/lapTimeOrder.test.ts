@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { orderByBestLap } from "./lapTimeOrder";
+import { orderByBestLap, timedOnly } from "./lapTimeOrder";
 
 /** Build a `bestLapOf` lookup from a carIdx → time map. */
 function times(map: Record<number, number | null | undefined>) {
@@ -57,5 +57,22 @@ describe("orderByBestLap", () => {
 
   it("handles an empty field", () => {
     expect(orderByBestLap([], times({}))).toEqual([]);
+  });
+});
+
+describe("timedOnly", () => {
+  it("keeps only cars with a lap, in the order given", () => {
+    // Qualifying's board starts empty and fills as laps are set.
+    expect(
+      timedOnly([2, 4, 7, 9], times({ 2: 90.0, 4: 91.0, 7: null, 9: undefined })),
+    ).toEqual([2, 4]);
+  });
+
+  it("drops iRacing's zero and negative sentinels", () => {
+    expect(timedOnly([1, 2, 3], times({ 1: 0, 2: -1, 3: 92.1 }))).toEqual([3]);
+  });
+
+  it("is empty before anyone has set a time", () => {
+    expect(timedOnly([1, 2], times({}))).toEqual([]);
   });
 });

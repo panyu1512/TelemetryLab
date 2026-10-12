@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { orderByBestLap } from "../lib/lapTimeOrder";
+import { orderByBestLap, timedOnly } from "../lib/lapTimeOrder";
 import type {
   ClassStanding,
   SectorSplit,
@@ -46,6 +46,12 @@ export interface StandingsState {
    * data, which is the whole reason the table holds 60 fps at 100 cars.
    */
   bestLapOrder: number[];
+  /**
+   * {@link bestLapOrder} without the cars that have not set a time — the order
+   * a qualifying board is read in, which starts empty and fills lap by lap.
+   * Same identity discipline: replaced only when the sequence changes.
+   */
+  timedOrder: number[];
   byIdx: Record<number, StandingsEntry>;
   classes: ClassStanding[];
   meta: StandingsMeta;
@@ -153,6 +159,7 @@ function metaEqual(a: StandingsMeta, b: StandingsMeta): boolean {
 export const useStandingsStore = create<StandingsState>((set) => ({
   order: [],
   bestLapOrder: [],
+  timedOrder: [],
   byIdx: {},
   classes: [],
   meta: EMPTY_META,
@@ -182,12 +189,19 @@ export const useStandingsStore = create<StandingsState>((set) => ({
         order,
         (idx) => nextByIdx[idx]?.bestLapTime,
       );
+      const timedOrder = timedOnly(
+        bestLapOrder,
+        (idx) => nextByIdx[idx]?.bestLapTime,
+      );
 
       return {
         order: sameOrder(prev.order, order) ? prev.order : order,
         bestLapOrder: sameOrder(prev.bestLapOrder, bestLapOrder)
           ? prev.bestLapOrder
           : bestLapOrder,
+        timedOrder: sameOrder(prev.timedOrder, timedOrder)
+          ? prev.timedOrder
+          : timedOrder,
         byIdx: nextByIdx,
         classes: classesEqual(prev.classes, payload.classes)
           ? prev.classes
@@ -200,6 +214,7 @@ export const useStandingsStore = create<StandingsState>((set) => ({
     set({
       order: [],
       bestLapOrder: [],
+      timedOrder: [],
       byIdx: {},
       classes: [],
       meta: EMPTY_META,
@@ -230,4 +245,9 @@ export function useStandingsOrder(): number[] {
 /** The field ranked by best lap — the reading order of a lap-time session. */
 export function useStandingsBestLapOrder(): number[] {
   return useStandingsStore((s) => s.bestLapOrder);
+}
+
+/** The cars that have set a time, fastest first — qualifying's board. */
+export function useStandingsTimedOrder(): number[] {
+  return useStandingsStore((s) => s.timedOrder);
 }

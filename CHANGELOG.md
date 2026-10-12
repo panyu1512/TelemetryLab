@@ -7,6 +7,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A live qualifying board on Standings.** In qualifying the table now starts
+  empty and fills as drivers set times. A driver's first lap slides their row
+  onto the board with a sweep of light; every time a driver goes quicker, their
+  row lights up in green (or purple for the fastest lap of the session), and if
+  the lap moves them up the order, the rows glide into place and the position
+  shows the places gained or lost. A class appears on the board when its first
+  driver sets a time. Practice is unchanged: everyone is listed, timed or not.
+  The mock feed's **Qualifying** session now runs a qualifying session like
+  this from the moment you switch to it, so you can see it without iRacing.
+
+### Changed
+
+- **See the track between the blocks.** On Standings and Relative, the session
+  header, each class's name band and each class's drivers now sit on
+  separate black panels with the game visible in the gaps between them, instead of one solid black slab behind the
+  whole table. The rows themselves are on black, a little darker than before
+  over the game.
+
 ## [1.19.0] - 2026-10-11
 
 ### Added

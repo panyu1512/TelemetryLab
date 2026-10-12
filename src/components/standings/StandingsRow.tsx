@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useState } from "react";
 import type { CSSProperties } from "react";
 import { Wrench, AlertTriangle } from "lucide-react";
 import { useStandingsRow } from "../../stores/useStandingsStore";
@@ -21,6 +21,8 @@ import { classFill } from "../../lib/classFill";
 import { formatDriverName } from "../../lib/driverName";
 import { usePositionFlash } from "../../hooks/usePositionFlash";
 import { POSITION_FLASH_MS } from "../../lib/positionFlash";
+import { useLapImprove } from "../../hooks/useLapImprove";
+import { LAP_IMPROVE_MS } from "../../lib/lapImprove";
 import { CountryFlag } from "../ui/CountryFlag";
 import {
   BrandIcon,
@@ -72,7 +74,21 @@ interface StandingsRowProps {
    * colour gets coloured text.
    */
   fastest: "class" | "overall" | null;
+  /**
+   * The row is mounting because its car just arrived on the board — in
+   * qualifying, its first time. Read once, at mount: it plays the arrival
+   * effect and is ignored after.
+   */
+  arriving: boolean;
+  /**
+   * A qualifying session: an improved best lap sweeps the row in its grade
+   * (see `lib/lapImprove`).
+   */
+  qualifying: boolean;
 }
+
+/** How long the arrival sweep runs, in ms. */
+const ARRIVE_MS = 900;
 
 /**
  * One field row. Subscribes to *only* its own timing entry (fast, 10 Hz) and its
@@ -93,9 +109,19 @@ function StandingsRowInner({
   leader,
   labelled,
   fastest,
+  arriving,
+  qualifying,
 }: StandingsRowProps) {
   const row = useStandingsRow(carIdx);
   const driver = useDriver(carIdx);
+
+  // Captured at mount: a car that arrived stays arrived, whatever re-renders.
+  const [arrived] = useState(arriving);
+  const improve = useLapImprove(
+    row?.bestLapTime,
+    fastest === "overall" ? "overall" : "personal",
+    qualifying,
+  );
 
   const dimmed = row ? row.isRetired || !row.isInWorld : false;
   const inPit = row?.onPitRoad || row?.isInPitStall;
@@ -140,6 +166,7 @@ function StandingsRowInner({
           // strip per row separates them without ranking any of them.
           row?.isPlayer ? PLAYER_ROW_GROUND : "bg-timing-row",
           dimmed ? "opacity-40" : "",
+          arrived ? "row-arrive" : "",
         ]
           .filter(Boolean)
           .join(" ")}
@@ -169,6 +196,33 @@ function StandingsRowInner({
       >
         {labelled && (
           <ColumnLabels sectorCount={sectorCount} isVisible={isVisible} />
+        )}
+
+        {/* Qualifying's two events, laid over the strip and gone again: a
+            car arriving on the board (its first time) takes a white sweep as
+            it slides in; a car improving its best takes a sweep and a glow in
+            the lap's own grade — `accent`, or `sector-purple` for the session
+            best. A position change on the same lap flags the position as
+            well, through the flash below. See `.row-fx` in styles.css. */}
+        {arrived && (
+          <span
+            aria-hidden
+            className="row-fx row-fx--arrive"
+            style={{ "--row-fx-ms": `${ARRIVE_MS}ms` } as CSSProperties}
+          >
+            <span className="row-fx__sweep" />
+          </span>
+        )}
+        {improve && (
+          <span
+            key={improve.id}
+            aria-hidden
+            className={`row-fx row-fx--improve row-fx--${improve.grade}`}
+            style={{ "--row-fx-ms": `${LAP_IMPROVE_MS}ms` } as CSSProperties}
+          >
+            <span className="row-fx__glow" />
+            <span className="row-fx__sweep" />
+          </span>
         )}
 
         {/* position — bold white, on the class fill. It sat in a solid
@@ -313,6 +367,8 @@ function StandingsRowInner({
             leads the field and accent when it only leads the class (rule 5). */}
         {isVisible("best") && (
           <LapCell
+            key={`best-${improve?.id ?? 0}`}
+            flash={improve?.grade === "overall"}
             time={row?.bestLapTime ?? null}
             color="var(--color-muted)"
             fill={

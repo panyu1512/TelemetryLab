@@ -67,3 +67,32 @@ describe("useStandingsStore — bestLapOrder", () => {
     expect(useStandingsStore.getState().bestLapOrder).toEqual([]);
   });
 });
+
+describe("useStandingsStore — timedOrder", () => {
+  beforeEach(() => useStandingsStore.getState().clear());
+
+  it("leaves out cars without a best lap, keeping the best-lap ranking", () => {
+    const payload = mockStandings(400);
+    const untimed = payload.entries[0].carIdx;
+    useStandingsStore.getState().setStandings(
+      {
+        ...payload,
+        entries: payload.entries.map((e) =>
+          e.carIdx === untimed ? { ...e, bestLapTime: null } : e,
+        ),
+      },
+      1,
+    );
+    const { bestLapOrder, timedOrder } = useStandingsStore.getState();
+    expect(timedOrder).not.toContain(untimed);
+    expect(timedOrder).toEqual(bestLapOrder.filter((idx) => idx !== untimed));
+  });
+
+  it("keeps the same array when nobody set a new time", () => {
+    const payload = mockStandings(400);
+    useStandingsStore.getState().setStandings(payload, 1);
+    const first = useStandingsStore.getState().timedOrder;
+    useStandingsStore.getState().setStandings(payload, 2);
+    expect(useStandingsStore.getState().timedOrder).toBe(first);
+  });
+});

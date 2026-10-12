@@ -103,10 +103,14 @@ export const CLASS_GAP = 10;
 export const CLASS_BAND_H = 30;
 
 /**
- * Space between a class band and the first row of its group. Small, but it is
- * what separates "this heads the group" from "this is the group's first entry".
+ * Space between a class band and the first row of its group — clear, not
+ * paper: the band and the rows are separate blocks (see `LayoutBlock`), so
+ * over live footage the game shows here. Small, but it is what separates
+ * "this heads the group" from "this is the group's first entry". 6 rather
+ * than the 4 it was as a seam of paper, so the footage in it reads as a gap
+ * rather than a hairline.
  */
-export const BAND_GAP = 4;
+export const BAND_GAP = 6;
 
 /**
  * Height of the marker where a capped class group skips part of its order

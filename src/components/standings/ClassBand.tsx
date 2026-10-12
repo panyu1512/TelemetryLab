@@ -28,7 +28,8 @@ import { CLASS_EDGE_WIDTH, STANDINGS_FILL_REACH } from "./constants";
  * It is a strip like the rows under it — the same `timing-row` ground and the
  * same class edge — and speaks the strip grammar ({@link StripField}),
  * set apart as a heading by the class name in front and by
- * `BAND_GAP` of paper under it, rather than by a solid block of the
+ * a clear `BAND_GAP` under it — the band is its own block of paper, with the
+ * game showing between it and its rows — rather than by a solid block of the
  * class's colour. The solid block made the heading the loudest thing on the
  * surface, louder than the fastest-lap fill rule 5 reserves that for.
  */

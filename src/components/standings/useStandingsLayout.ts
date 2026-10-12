@@ -4,14 +4,20 @@ import {
   useStandingsClasses,
   useStandingsMeta,
   useStandingsOrder,
+  useStandingsTimedOrder,
 } from "../../stores/useStandingsStore";
-import { useRanksByLapTime } from "../../stores/useSessionStore";
+import {
+  useRanksByLapTime,
+  useSessionKind,
+} from "../../stores/useSessionStore";
+import { SessionKind } from "../../lib/sessionKind";
 import { useStandingsUiStore } from "../../stores/useStandingsUiStore";
 import { sliceGroup } from "../../lib/standingsWindow";
 import {
   BAND_GAP,
   CLASS_BAND_H,
   CLASS_GAP,
+  ROW_GAP,
   SKIP_H,
   rowSlotHeight,
 } from "./constants";
@@ -91,8 +97,23 @@ export interface LayoutSkip {
 
 export type LayoutItem = LayoutRow | LayoutBand | LayoutSkip;
 
+/**
+ * A block of paper: a class band, or a class group's rows and skip marker,
+ * from {@link ROW_GAP} above its first strip to {@link ROW_GAP} below its
+ * last. The space between blocks is left clear — {@link CLASS_GAP} between
+ * classes, {@link BAND_GAP} between a band and its rows — so over live
+ * footage the game shows between them (and between the session header and
+ * the field) while every strip stays on black.
+ */
+export interface LayoutBlock {
+  key: string;
+  top: number;
+  height: number;
+}
+
 export interface StandingsLayout {
   items: LayoutItem[];
+  blocks: LayoutBlock[];
   totalHeight: number;
 }
 
@@ -100,7 +121,9 @@ export function useStandingsLayout(): StandingsLayout {
   const classes = useStandingsClasses();
   const raceOrder = useStandingsOrder();
   const bestLapOrder = useStandingsBestLapOrder();
+  const timedOrder = useStandingsTimedOrder();
   const byLapTime = useRanksByLapTime();
+  const qualifying = useSessionKind() === SessionKind.Qualify;
   const grouping = useStandingsUiStore((s) => s.grouping);
   const showClassBands = useStandingsUiStore((s) => s.showClassBands);
   const showColumnLabels = useStandingsUiStore((s) => s.showColumnLabels);
@@ -112,11 +135,24 @@ export function useStandingsLayout(): StandingsLayout {
   // In a lap-time session the whole table reads off the best-lap ranking; in a
   // race it reads off the bridge's race order. Both arrays hold their identity
   // between ticks, so this memo still only reruns when the field moves.
-  const order = byLapTime ? bestLapOrder : raceOrder;
+  //
+  // Qualifying reads off the timed cars alone: the board starts empty and a
+  // car joins it when it sets its first lap (`lib/lapTimeOrder.timedOnly`).
+  const order = qualifying ? timedOrder : byLapTime ? bestLapOrder : raceOrder;
 
   return useMemo(() => {
     const items: LayoutItem[] = [];
-    let top = 0;
+    const blocks: LayoutBlock[] = [];
+    // Every group opens `ROW_GAP` into its block, so the strips have paper
+    // above them as well as the `ROW_GAP` each slot leaves below.
+    let top = ROW_GAP;
+    let blockTop = 0;
+    const openBlock = () => {
+      blockTop = top - ROW_GAP;
+    };
+    const closeBlock = (key: string) => {
+      blocks.push({ key, top: blockTop, height: top - blockTop });
+    };
 
     // Lay out one group's kept rows (with a skip marker where the order
     // breaks). `rank` is the car's place in the *whole* group, so a capped
@@ -170,8 +206,11 @@ export function useStandingsLayout(): StandingsLayout {
       // cap applies to the whole table.
       const classOf = new Map<number, number>();
       for (const c of classes) for (const idx of c.order) classOf.set(idx, c.carClassId);
+      if (order.length === 0) return { items, blocks, totalHeight: 0 };
+      openBlock();
       pushGroup(order, (idx) => classOf.get(idx) ?? -1, -1, classRows);
-      return { items, totalHeight: top };
+      closeBlock("block-all");
+      return { items, blocks, totalHeight: top };
     }
 
     // Grouped by class. The bridge's per-class `order` is a race order, so a
@@ -187,10 +226,19 @@ export function useStandingsLayout(): StandingsLayout {
         )
       : null;
 
-    classes.forEach((c, groupIndex) => {
+    let groupIndex = 0;
+    for (const c of classes) {
+      const group = memberships?.get(c.carClassId) ?? c.order;
+      // A qualifying class nobody has set a time in yet is not on the board:
+      // no band naming an empty group, and no gap for it.
+      if (group.length === 0) continue;
       // A gap between groups, and none before the first, which would just be
-      // padding at the top of the overlay.
-      if (groupIndex > 0) top += CLASS_GAP;
+      // padding at the top of the overlay. The gap is clear — the paper is
+      // per block — so it is the previous block's bottom inset plus this
+      // one's top inset away.
+      if (groupIndex > 0) top += CLASS_GAP + ROW_GAP;
+      groupIndex += 1;
+      openBlock();
       if (showClassBands) {
         items.push({
           kind: "band",
@@ -198,13 +246,19 @@ export function useStandingsLayout(): StandingsLayout {
           top,
           classId: c.carClassId,
         });
-        top += CLASS_BAND_H + BAND_GAP;
+        // The band is a block of its own: its paper closes `ROW_GAP` under
+        // it, `BAND_GAP` is left clear, and the rows' block opens below — so
+        // the game shows between a class's name and its first position.
+        top += CLASS_BAND_H + ROW_GAP;
+        closeBlock(`block-band-${c.carClassId}`);
+        top += BAND_GAP + ROW_GAP;
+        openBlock();
       }
-      const group = memberships?.get(c.carClassId) ?? c.order;
       const cap = group.includes(playerCarIdx) ? classRows : otherClassRows;
       pushGroup(group, () => c.carClassId, c.carClassId, cap);
-    });
-    return { items, totalHeight: top };
+      closeBlock(`block-${c.carClassId}`);
+    }
+    return { items, blocks, totalHeight: groupIndex > 0 ? top : 0 };
   }, [
     classes,
     order,

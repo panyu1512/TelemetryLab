@@ -34,7 +34,7 @@ export function orderByBestLap(
   const timed = new Map<number, number>();
   for (const idx of carIdxs) {
     const t = bestLapOf(idx);
-    if (t != null && Number.isFinite(t) && t > 0) timed.set(idx, t);
+    if (isLapTime(t)) timed.set(idx, t);
   }
   return [...carIdxs].sort((a, b) => {
     const ta = timed.get(a);
@@ -44,4 +44,28 @@ export function orderByBestLap(
     if (tb == null) return -1;
     return ta - tb;
   });
+}
+
+/**
+ * True for a lap that was actually set. iRacing publishes `0` and `-1` for a
+ * lap that never was, so anything non-positive or non-finite is "no lap".
+ */
+export function isLapTime(t: number | null | undefined): t is number {
+  return t != null && Number.isFinite(t) && t > 0;
+}
+
+/**
+ * The cars that have set a time, in the order given.
+ *
+ * Qualifying's board, as opposed to practice's: a qualifying timesheet is a
+ * list of times, and a car without one has nothing on it to be ranked by. So
+ * the board starts empty and fills as laps are set, which is how a qualifying
+ * board on TV reads — practice keeps its untimed cars (see
+ * {@link orderByBestLap}), because there the garage is part of the picture.
+ */
+export function timedOnly(
+  carIdxs: readonly number[],
+  bestLapOf: (carIdx: number) => number | null | undefined,
+): number[] {
+  return carIdxs.filter((idx) => isLapTime(bestLapOf(idx)));
 }
