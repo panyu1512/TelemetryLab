@@ -25,7 +25,7 @@ import { fitScale, scaleBox, unscaled } from "../../lib/tableScale";
 import { CLASS_RAMP, classColorFor } from "../../lib/classColors";
 import { classFill } from "../../lib/classFill";
 import { StandingsRow } from "./StandingsRow";
-import { useStandingsLayout } from "./useStandingsLayout";
+import { useStandingsLayout, type LayoutBlock } from "./useStandingsLayout";
 import { SESSION_HEADER_H, SessionStrip } from "../timing/SessionStrip";
 import { ClassBand } from "./ClassBand";
 
@@ -221,102 +221,113 @@ export function StandingsScreen() {
               className="relative"
               style={{ height: totalHeight, marginTop: fieldTop }}
             >
-              {/* The paper, one block per class group, under the rows. The
-                  gaps between blocks are left clear (see `LayoutBlock`). */}
+              {/* One block of paper per class band and per class's rows,
+                  rounded, with the gaps between blocks left clear (see
+                  `LayoutBlock`). Everything in a block is drawn inside it, at
+                  offsets from its top, so its corners clip the class colour
+                  and the rows as well as the paper. */}
               {blocks.map((b) => (
                 <div
                   key={b.key}
-                  aria-hidden
-                  className="timing-paper row-glide absolute inset-x-0 will-change-transform"
+                  className="timing-paper timing-block row-glide absolute inset-x-0 overflow-hidden will-change-transform"
                   style={{
                     height: b.height,
                     transform: `translateY(${b.top}px)`,
                   }}
-                />
-              ))}
-              {/* The class edge and its fill, once per run of same-class
-                  rows, so the colour has no joins to seam at (see
-                  `LayoutRun`). The rows draw neither. */}
-              {runs.map((r) => {
-                const color = classColorById.get(r.classId);
-                if (!color) return null;
-                return (
-                  <div
-                    key={r.key}
-                    aria-hidden
-                    className="row-glide absolute inset-x-0 will-change-transform"
-                    style={{
-                      height: r.height,
-                      transform: `translateY(${r.top}px)`,
-                      borderLeftWidth: CLASS_EDGE_WIDTH,
-                      borderLeftStyle: "solid",
-                      borderLeftColor: color,
-                      backgroundImage: classFill(color, STANDINGS_FILL_REACH),
-                    }}
-                  />
-                );
-              })}
-              {items.map((it) => {
-                if (it.kind === "skip") {
-                  return (
-                    <SkipMarker
-                      key={it.key}
-                      top={it.top}
-                      color={
-                        classColorById.get(it.classId) ??
-                        "var(--color-faint)"
-                      }
-                    />
-                  );
-                }
-                if (it.kind === "band") {
-                  const standing = classById.get(it.classId);
-                  if (!standing) return null;
-                  return (
-                    <div
-                      key={it.key}
-                      className="row-glide absolute inset-x-0 will-change-transform"
-                      style={{
-                        height: CLASS_BAND_H,
-                        transform: `translateY(${it.top}px)`,
-                      }}
-                    >
-                      <ClassBand
-                        standing={standing}
-                        color={classColorById.get(it.classId) ?? CLASS_RAMP[0]}
-                        fastestIsOverall={
-                          standing.fastestLapCarIdx != null &&
-                          fastestByCar.get(standing.fastestLapCarIdx) ===
-                            "overall"
-                        }
-                        width={innerWidth}
+                >
+                  {/* The class edge and its fill, once per run of same-class
+                      rows, so the colour has no joins to seam at (see
+                      `LayoutRun`). The rows draw neither. */}
+                  {inBlock(runs, b).map((r) => {
+                    const color = classColorById.get(r.classId);
+                    if (!color) return null;
+                    return (
+                      <div
+                        key={r.key}
+                        aria-hidden
+                        className="row-glide absolute inset-x-0 will-change-transform"
+                        style={{
+                          height: r.height,
+                          transform: `translateY(${r.top - b.top}px)`,
+                          borderLeftWidth: CLASS_EDGE_WIDTH,
+                          borderLeftStyle: "solid",
+                          borderLeftColor: color,
+                          backgroundImage: classFill(color, STANDINGS_FILL_REACH),
+                        }}
                       />
-                    </div>
-                  );
-                }
-                return (
-                  <StandingsRow
-                    key={it.key}
-                    carIdx={it.carIdx}
-                    top={it.top}
-                    sectorCount={meta.sectorCount}
-                    classRelative={classRelative}
-                    rank={it.rank}
-                    isVisible={isVisible}
-                    leader={it.leader}
-                    labelled={it.labelled}
-                    fastest={fastestByCar.get(it.carIdx) ?? null}
-                    arriving={qualifying && mounted.current}
-                    qualifying={qualifying}
-                  />
-                );
-              })}
+                    );
+                  })}
+                  {inBlock(items, b).map((it) => {
+                    const top = it.top - b.top;
+                    if (it.kind === "skip") {
+                      return (
+                        <SkipMarker
+                          key={it.key}
+                          top={top}
+                          color={
+                            classColorById.get(it.classId) ??
+                            "var(--color-faint)"
+                          }
+                        />
+                      );
+                    }
+                    if (it.kind === "band") {
+                      const standing = classById.get(it.classId);
+                      if (!standing) return null;
+                      return (
+                        <div
+                          key={it.key}
+                          className="row-glide absolute inset-x-0 will-change-transform"
+                          style={{
+                            height: CLASS_BAND_H,
+                            transform: `translateY(${top}px)`,
+                          }}
+                        >
+                          <ClassBand
+                            standing={standing}
+                            color={
+                              classColorById.get(it.classId) ?? CLASS_RAMP[0]
+                            }
+                            fastestIsOverall={
+                              standing.fastestLapCarIdx != null &&
+                              fastestByCar.get(standing.fastestLapCarIdx) ===
+                                "overall"
+                            }
+                            width={innerWidth}
+                          />
+                        </div>
+                      );
+                    }
+                    return (
+                      <StandingsRow
+                        key={it.key}
+                        carIdx={it.carIdx}
+                        top={top}
+                        sectorCount={meta.sectorCount}
+                        classRelative={classRelative}
+                        rank={it.rank}
+                        isVisible={isVisible}
+                        leader={it.leader}
+                        labelled={it.labelled}
+                        fastest={fastestByCar.get(it.carIdx) ?? null}
+                        arriving={qualifying && mounted.current}
+                        qualifying={qualifying}
+                      />
+                    );
+                  })}
+                </div>
+              ))}
             </div>
           </div>
         )}
       </div>
     </div>
   );
+}
+
+/** The layout entries that start inside block `b` (blocks never overlap). */
+function inBlock<T extends { top: number }>(entries: readonly T[], b: LayoutBlock): T[] {
+  return entries.filter((e) => e.top >= b.top && e.top < b.top + b.height);
 }
 
 /**

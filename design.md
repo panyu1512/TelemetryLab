@@ -736,6 +736,23 @@ the fact that a header band and a row cost the same height.
    has opaque paper under it. On Relative the field is one block, so the only
    clear gap is the one under the header.
 
+   **The blocks are rounded, 8 px** (`.timing-block`) — the one place this
+   system's corners go past 2 px (§ Theme's near-square radii). The owner
+   asked for it, and it follows from the clear gaps: a 2 px cut reads as a
+   cell of one card, and with the game showing between them these are
+   panels laid over the footage. Everything in a block is drawn *inside*
+   it and clipped to it — on Standings each row, band and class run is
+   positioned from its block's top rather than the field's — so the class
+   colour and the player's ground round off with the paper instead of
+   poking out of the corners.
+
+   **Nothing in Tauri makes the gaps clear; the overlay windows already
+   are.** Each pop-out is created `transparent`, without decorations and
+   without the OS shadow (`lib/overlayWindows.ts`), and paints a
+   transparent page (`overlay-mode`). The gaps show the game in those
+   windows and in an OBS browser source; in the main window and the
+   Manager's preview they show the app's own background instead.
+
    **This paper is no longer only theirs.** It was, on the argument that a
    gauge can afford a kerb showing through where a table cannot — but that
    argument was about legibility, and a fuel figure read mid-corner needs the
