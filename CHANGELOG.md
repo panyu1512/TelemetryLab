@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.20.0] - 2026-10-12
+
 ### Added
 
 - **A live qualifying board on Standings.** In qualifying the table now starts
@@ -576,7 +578,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.19.0...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.20.0...HEAD
+[1.20.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.19.0...v1.20.0
 [1.19.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.18.0...v1.19.0
 [1.18.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.17.0...v1.18.0
 [1.17.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.16.0...v1.17.0
