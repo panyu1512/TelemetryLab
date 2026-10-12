@@ -1,4 +1,4 @@
-import { memo } from "react";
+import { memo, useState } from "react";
 import type { CSSProperties } from "react";
 import { Wrench, AlertTriangle } from "lucide-react";
 import { useStandingsRow } from "../../stores/useStandingsStore";
@@ -10,17 +10,16 @@ import {
   LAP_COLOR,
   LAP_UNDERLINE,
   PLAYER_ROW_GROUND,
-  ROW_GAP,
   rowSlotHeight,
   STANDINGS_BRAND_H,
-  STANDINGS_FILL_REACH,
   type ColumnVisibility,
 } from "./constants";
 import { ColumnLabels } from "./ColumnLabels";
-import { classFill } from "../../lib/classFill";
 import { formatDriverName } from "../../lib/driverName";
 import { usePositionFlash } from "../../hooks/usePositionFlash";
 import { POSITION_FLASH_MS } from "../../lib/positionFlash";
+import { useLapImprove } from "../../hooks/useLapImprove";
+import { LAP_IMPROVE_MS } from "../../lib/lapImprove";
 import { CountryFlag } from "../ui/CountryFlag";
 import {
   BrandIcon,
@@ -44,7 +43,6 @@ interface StandingsRowProps {
   carIdx: number;
   top: number;
   sectorCount: number;
-  classColor: string;
   /** Grouped by class ⇒ show gap/interval relative to the class, not overall. */
   classRelative: boolean;
   /**
@@ -72,7 +70,21 @@ interface StandingsRowProps {
    * colour gets coloured text.
    */
   fastest: "class" | "overall" | null;
+  /**
+   * The row is mounting because its car just arrived on the board — in
+   * qualifying, its first time. Read once, at mount: it plays the arrival
+   * effect and is ignored after.
+   */
+  arriving: boolean;
+  /**
+   * A qualifying session: an improved best lap sweeps the row in its grade
+   * (see `lib/lapImprove`).
+   */
+  qualifying: boolean;
 }
+
+/** How long the arrival sweep runs, in ms. */
+const ARRIVE_MS = 900;
 
 /**
  * One field row. Subscribes to *only* its own timing entry (fast, 10 Hz) and its
@@ -86,16 +98,25 @@ function StandingsRowInner({
   carIdx,
   top,
   sectorCount,
-  classColor,
   classRelative,
   rank,
   isVisible,
   leader,
   labelled,
   fastest,
+  arriving,
+  qualifying,
 }: StandingsRowProps) {
   const row = useStandingsRow(carIdx);
   const driver = useDriver(carIdx);
+
+  // Captured at mount: a car that arrived stays arrived, whatever re-renders.
+  const [arrived] = useState(arriving);
+  const improve = useLapImprove(
+    row?.bestLapTime,
+    fastest === "overall" ? "overall" : "personal",
+    qualifying,
+  );
 
   const dimmed = row ? row.isRetired || !row.isInWorld : false;
   const inPit = row?.onPitRoad || row?.isInPitStall;
@@ -123,7 +144,7 @@ function StandingsRowInner({
 
   return (
     <div
-      className="row-glide absolute inset-x-0 rounded-sm will-change-transform"
+      className="row-glide absolute inset-x-0 will-change-transform"
       style={{
         height: rowSlotHeight(labelled),
         transform: `translateY(${top}px)`,
@@ -131,36 +152,34 @@ function StandingsRowInner({
     >
       <div
         className={[
-          "relative grid items-center gap-x-1 rounded-sm px-1 text-xs",
-          // Every row is its own strip: the neutral row ground, with paper
-          // showing through the `ROW_GAP` under it, exactly as on Relative.
+          "relative grid items-center gap-x-1 px-1 text-xs",
+          // Every row is on the same neutral ground — on these tables the
+          // paper itself (`.timing-blocks`), edge to edge with its
+          // neighbours, exactly as on Relative.
           // "This is you" is the one strip on `primary` (§ Two colour systems,
           // rule 3). The zebra and class-group tones this replaced made
           // alternate rows different for no reason the reader could name; a
           // strip per row separates them without ranking any of them.
           row?.isPlayer ? PLAYER_ROW_GROUND : "bg-timing-row",
           dimmed ? "opacity-40" : "",
+          arrived ? "row-arrive" : "",
         ]
           .filter(Boolean)
           .join(" ")}
         style={{
-          height: rowSlotHeight(labelled) - ROW_GAP,
+          // The whole slot, edge to edge with the rows above and below: the
+          // class edge and fill run down the group as one spine, with no
+          // seam of paper breaking them into a piece per car.
+          height: rowSlotHeight(labelled),
           gridTemplateColumns: gridTemplate(sectorCount, isVisible),
-          // The row's leading edge, in the class's colour at full strength on
-          // every row. It used to drop to 40 % below the class leader, which
-          // under a solid band read as a rendering fault rather than a rank —
-          // the leader's row looked lit and the rest looked broken. Solid, the
-          // edges join into one spine running down from the band.
-          //
-          // It holds its drawn size as the table scales — see CLASS_EDGE_WIDTH.
+          // The class edge and its fill are drawn behind the row, once for
+          // each run of same-class rows (`LayoutRun`), so the colour runs
+          // down the group with no join per car to seam at. The row keeps a
+          // transparent edge of the same width so its content stays where
+          // the fill expects it.
           borderLeftWidth: CLASS_EDGE_WIDTH,
           borderLeftStyle: "solid",
-          borderLeftColor: classColor,
-          // …and the edge runs on into the row as a fill that fades out by
-          // the end of the position cell, so the number read first sits on
-          // its class's colour. Layered over the row's ground, so the
-          // player's strip keeps its `primary` (see `lib/classFill`).
-          backgroundImage: classFill(classColor, STANDINGS_FILL_REACH),
+          borderLeftColor: "transparent",
           // Clear the in-row column labels rather than centring under them;
           // the slot is a label slice taller, so the content keeps a full
           // row's height below them.
@@ -169,6 +188,33 @@ function StandingsRowInner({
       >
         {labelled && (
           <ColumnLabels sectorCount={sectorCount} isVisible={isVisible} />
+        )}
+
+        {/* Qualifying's two events, laid over the strip and gone again: a
+            car arriving on the board (its first time) takes a white sweep as
+            it slides in; a car improving its best takes a sweep and a glow in
+            the lap's own grade — `accent`, or `sector-purple` for the session
+            best. A position change on the same lap flags the position as
+            well, through the flash below. See `.row-fx` in styles.css. */}
+        {arrived && (
+          <span
+            aria-hidden
+            className="row-fx row-fx--arrive"
+            style={{ "--row-fx-ms": `${ARRIVE_MS}ms` } as CSSProperties}
+          >
+            <span className="row-fx__sweep" />
+          </span>
+        )}
+        {improve && (
+          <span
+            key={improve.id}
+            aria-hidden
+            className={`row-fx row-fx--improve row-fx--${improve.grade}`}
+            style={{ "--row-fx-ms": `${LAP_IMPROVE_MS}ms` } as CSSProperties}
+          >
+            <span className="row-fx__glow" />
+            <span className="row-fx__sweep" />
+          </span>
         )}
 
         {/* position — bold white, on the class fill. It sat in a solid
@@ -313,6 +359,8 @@ function StandingsRowInner({
             leads the field and accent when it only leads the class (rule 5). */}
         {isVisible("best") && (
           <LapCell
+            key={`best-${improve?.id ?? 0}`}
+            flash={improve?.grade === "overall"}
             time={row?.bestLapTime ?? null}
             color="var(--color-muted)"
             fill={

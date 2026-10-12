@@ -312,3 +312,61 @@ describe("mockStandings — a practice joined part-way through", () => {
     expect(race.entries.every((e) => e.isInWorld)).toBe(true);
   });
 });
+
+describe("mockStandings — qualifying", () => {
+  const start = MOCK_START_OFFSET_S;
+  const bests = (t: number) =>
+    new Map(
+      mockStandings(t, "Open Qualify", start).entries.map((e) => [
+        e.carIdx,
+        e.bestLapTime,
+      ]),
+    );
+
+  it("opens with nobody on the board", () => {
+    const p = mockStandings(start, "Open Qualify", start);
+    expect(p.entries.every((e) => e.bestLapTime == null)).toBe(true);
+    expect(p.overallBestLap).toBeNull();
+    expect(p.classes.every((c) => c.fastestLapCarIdx == null)).toBe(true);
+  });
+
+  it("fills the board one car at a time, not all at once", () => {
+    const counts = Array.from({ length: 60 }, (_, i) =>
+      [...bests(start + i * 15).values()].filter((b) => b != null).length,
+    );
+    expect(counts[counts.length - 1]).toBe(MOCK_FIELD_SIZE);
+    // Never more than a few cars posting a first time in the same 15 s.
+    for (let i = 1; i < counts.length; i++) {
+      expect(counts[i] - counts[i - 1]).toBeLessThanOrEqual(4);
+    }
+  });
+
+  it("only ever improves a car's best, and does improve some", () => {
+    let improved = 0;
+    let prev = bests(start);
+    for (let i = 1; i < 120; i++) {
+      const next = bests(start + i * 15);
+      for (const [idx, b] of next) {
+        const a = prev.get(idx);
+        if (a != null) {
+          expect(b).not.toBeNull();
+          expect(b!).toBeLessThanOrEqual(a);
+          if (b! < a) improved++;
+        }
+      }
+      prev = next;
+    }
+    expect(improved).toBeGreaterThan(MOCK_FIELD_SIZE);
+  });
+
+  it("credits the fastest lap to the car that set it", () => {
+    const p = mockStandings(start + 1800, "Open Qualify", start);
+    const fastest = Math.min(
+      ...p.entries.map((e) => e.bestLapTime ?? Infinity),
+    );
+    expect(p.overallBestLap).toBe(fastest);
+    expect(
+      p.entries.find((e) => e.carIdx === p.overallBestLapCarIdx)?.bestLapTime,
+    ).toBe(fastest);
+  });
+});

@@ -6,29 +6,36 @@ import {
   useStandingsMeta,
 } from "../../stores/useStandingsStore";
 import { useStandingsUiStore } from "../../stores/useStandingsUiStore";
-import { useRanksByLapTime } from "../../stores/useSessionStore";
+import {
+  useRanksByLapTime,
+  useSessionKind,
+} from "../../stores/useSessionStore";
+import { SessionKind } from "../../lib/sessionKind";
 import {
   CLASS_BAND_H,
   CLASS_EDGE_WIDTH,
+  CLASS_GAP,
   SKIP_H,
+  STANDINGS_FILL_REACH,
   scopeColumnsToSession,
   tableMinWidth,
   type ColumnVisibility,
 } from "./constants";
 import { fitScale, scaleBox, unscaled } from "../../lib/tableScale";
 import { CLASS_RAMP, classColorFor } from "../../lib/classColors";
+import { classFill } from "../../lib/classFill";
 import { StandingsRow } from "./StandingsRow";
 import { useStandingsLayout } from "./useStandingsLayout";
 import { SESSION_HEADER_H, SessionStrip } from "../timing/SessionStrip";
 import { ClassBand } from "./ClassBand";
 
 /**
- * Paper above the first band/row, inside the scaled box — and so the gap
- * between the session header and the field when the header is on.
+ * Clear space between the session header and the first class block, inside
+ * the scaled box — the same gap that separates one class block from the next,
+ * so over live footage the header and every class read as separate panels
+ * with the game showing between them.
  */
-const FIELD_TOP = 6;
-/** Paper below the last row, inside the scaled box. */
-const FIELD_BOTTOM = 8;
+const HEADER_GAP = CLASS_GAP;
 /**
  * Window pixels held back from the fit. `zoom` lays the box out at fractional
  * sizes and the browser rounds each row on its own, so a fit computed to the
@@ -90,7 +97,18 @@ export function StandingsScreen() {
   const columns = useStandingsUiStore((s) => s.columns);
   const byLapTime = useRanksByLapTime();
   const showSessionStrip = useStandingsUiStore((s) => s.showSessionStrip);
-  const { items, totalHeight } = useStandingsLayout();
+  const qualifying = useSessionKind() === SessionKind.Qualify;
+  const { items, blocks, runs, totalHeight } = useStandingsLayout();
+  const fieldTop = showSessionStrip ? HEADER_GAP : 0;
+
+  // In qualifying, a row that mounts after the screen's first paint is a car
+  // *arriving* on the board — its driver has just set a first time — and plays
+  // the arrival effect. Rows already on the board when the overlay opens just
+  // appear.
+  const mounted = useRef(false);
+  useEffect(() => {
+    mounted.current = true;
+  }, []);
   const classRelative = grouping === "class";
 
   // The box the whole surface has to fit in, strip included.
@@ -128,10 +146,7 @@ export function StandingsScreen() {
   // full size is the same layout at a quarter.
   const naturalWidth = tableMinWidth(meta.sectorCount, isVisible);
   const naturalHeight =
-    (showSessionStrip ? SESSION_HEADER_H : 0) +
-    FIELD_TOP +
-    totalHeight +
-    FIELD_BOTTOM;
+    (showSessionStrip ? SESSION_HEADER_H : 0) + fieldTop + totalHeight;
   const scale = fitScale(
     viewW,
     naturalWidth,
@@ -174,12 +189,14 @@ export function StandingsScreen() {
     return map;
   }, [classes]);
 
-  const isEmpty = items.length === 0;
+  // An empty qualifying board is not a missing feed: nobody has set a time
+  // yet, and the board stays empty until someone does.
+  const isEmpty = items.length === 0 && !qualifying;
 
   return (
     <div
       ref={rootRef}
-      className="overlay-card timing-surface font-timing flex h-full flex-col overflow-hidden rounded-card border border-border/60"
+      className="overlay-card timing-surface timing-blocks font-timing flex h-full flex-col overflow-hidden rounded-card border border-border/60"
     >
       {/*
         The strip scales with the field — it is part of the same surface, and a
@@ -202,11 +219,43 @@ export function StandingsScreen() {
           <div style={{ ...scaleBox(scale), minWidth: naturalWidth }}>
             <div
               className="relative"
-              style={{
-                height: totalHeight + FIELD_BOTTOM,
-                marginTop: FIELD_TOP,
-              }}
+              style={{ height: totalHeight, marginTop: fieldTop }}
             >
+              {/* The paper, one block per class group, under the rows. The
+                  gaps between blocks are left clear (see `LayoutBlock`). */}
+              {blocks.map((b) => (
+                <div
+                  key={b.key}
+                  aria-hidden
+                  className="timing-paper row-glide absolute inset-x-0 will-change-transform"
+                  style={{
+                    height: b.height,
+                    transform: `translateY(${b.top}px)`,
+                  }}
+                />
+              ))}
+              {/* The class edge and its fill, once per run of same-class
+                  rows, so the colour has no joins to seam at (see
+                  `LayoutRun`). The rows draw neither. */}
+              {runs.map((r) => {
+                const color = classColorById.get(r.classId);
+                if (!color) return null;
+                return (
+                  <div
+                    key={r.key}
+                    aria-hidden
+                    className="row-glide absolute inset-x-0 will-change-transform"
+                    style={{
+                      height: r.height,
+                      transform: `translateY(${r.top}px)`,
+                      borderLeftWidth: CLASS_EDGE_WIDTH,
+                      borderLeftStyle: "solid",
+                      borderLeftColor: color,
+                      backgroundImage: classFill(color, STANDINGS_FILL_REACH),
+                    }}
+                  />
+                );
+              })}
               {items.map((it) => {
                 if (it.kind === "skip") {
                   return (
@@ -251,13 +300,14 @@ export function StandingsScreen() {
                     carIdx={it.carIdx}
                     top={it.top}
                     sectorCount={meta.sectorCount}
-                    classColor={classColorById.get(it.classId) ?? CLASS_RAMP[0]}
                     classRelative={classRelative}
                     rank={it.rank}
                     isVisible={isVisible}
                     leader={it.leader}
                     labelled={it.labelled}
                     fastest={fastestByCar.get(it.carIdx) ?? null}
+                    arriving={qualifying && mounted.current}
+                    qualifying={qualifying}
                   />
                 );
               })}

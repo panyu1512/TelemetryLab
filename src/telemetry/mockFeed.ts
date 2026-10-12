@@ -33,11 +33,15 @@ export class MockFeed {
   private sessionTimer: ReturnType<typeof setInterval> | null = null;
   private start_ = 0;
   private seq = 0;
+  /** The mock session type last pushed, and the mock time it was switched to. */
+  private sessionType_: string | null = null;
+  private sessionStart_ = MOCK_START_OFFSET_S;
 
   start(): void {
     if (this.telemetryTimer) return;
     this.start_ = Date.now();
     this.seq = 0;
+    this.sessionType_ = null;
 
     const bridge = useBridgeStore.getState();
     bridge.setProtocolVersion(1);
@@ -91,9 +95,20 @@ export class MockFeed {
   private pushStandings(): void {
     const sessionType =
       useOverlayConfigStore.getState().globalSettings.mockSessionType;
+    const t = this.elapsed();
+    // Switching the mock session opens a new one there and then: qualifying's
+    // board starts empty from the moment it is picked, not from the race's
+    // start fourteen laps ago.
+    if (sessionType !== this.sessionType_) {
+      this.sessionType_ = sessionType;
+      this.sessionStart_ = t;
+    }
     useStandingsStore
       .getState()
-      .setStandings(mockStandings(this.elapsed(), sessionType), this.seq++);
+      .setStandings(
+        mockStandings(t, sessionType, this.sessionStart_),
+        this.seq++,
+      );
   }
 
   /**

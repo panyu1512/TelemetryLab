@@ -7,6 +7,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.20.0] - 2026-10-12
+
+### Added
+
+- **A live qualifying board on Standings.** In qualifying the table now starts
+  empty and fills as drivers set times. A driver's first lap slides their row
+  onto the board with a sweep of light; every time a driver goes quicker, their
+  row lights up in green (or purple for the fastest lap of the session), and if
+  the lap moves them up the order, the rows glide into place and the position
+  shows the places gained or lost. A class appears on the board when its first
+  driver sets a time. Practice is unchanged: everyone is listed, timed or not.
+  The mock feed's **Qualifying** session now runs a qualifying session like
+  this from the moment you switch to it, so you can see it without iRacing.
+
+### Changed
+
+- **See the track between the blocks.** On Standings and Relative, the session
+  header, each class's name band and each class's drivers now sit on
+  separate black panels with the game visible in the gaps between them, instead of one solid black slab behind the
+  whole table. The rows themselves are on black, a little darker than before
+  over the game.
+- **No more black lines around rows.** On Standings and Relative the rows now
+  sit straight on the black panel and touch each other, so there is no thin
+  black border between or around them. Each class reads as one solid black
+  panel, and its colour runs down the left edge as one unbroken stripe
+  instead of a separate piece per car.
+
 ## [1.19.0] - 2026-10-11
 
 ### Added
@@ -556,7 +583,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.19.0...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.20.0...HEAD
+[1.20.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.19.0...v1.20.0
 [1.19.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.18.0...v1.19.0
 [1.18.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.17.0...v1.18.0
 [1.17.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.16.0...v1.17.0

@@ -748,12 +748,89 @@ function playerPosition(t: number): { overall: number; inClass: number } {
  */
 export const MOCK_PRE_JOIN_IDX: readonly number[] = [7, 8, 11];
 
+/**
+ * How long after a mock qualifying session opens each car leaves the pits, in
+ * mock seconds — up to about seventy real seconds at `MOCK_TIME_SCALE`.
+ *
+ * A qualifying board starts empty and fills as laps are set. Every car leaving
+ * at once would post its first time on the same lap boundary and the board
+ * would fill in one frame, so they are staggered the way a real session
+ * trickles out of the pit lane.
+ */
+function qualifyExit(car: MockCar): number {
+  return rand(car.idx + 17) * 360;
+}
+
+/** How much quicker each lap of a qualifying run gets as the track rubbers in
+ *  and the driver finds the limit, in seconds, for this many laps. */
+const QUALIFY_EVOLUTION_S = 0.35;
+const QUALIFY_EVOLUTION_LAPS = 4;
+
+/**
+ * A car's qualifying laps at `t`: its last and best timed lap, or nulls before
+ * it has completed one.
+ *
+ * The car leaves the pits at `start + qualifyExit`, runs an out-lap to the
+ * next line crossing, and every lap it completes after that is timed. Each
+ * timed lap is the race's lap shape (`lapTime`'s swing) less a little for
+ * every lap into the run, so most cars improve a few times before they settle
+ * — which is what the improvement sweep and the position flash on the
+ * qualifying board need to be seen doing.
+ */
+function qualifyLaps(
+  car: MockCar,
+  t: number,
+  start: number,
+): { last: number | null; best: number | null } {
+  const exit = start + qualifyExit(car);
+  if (t < exit) return { last: null, best: null };
+  const firstTimed = Math.floor(progress(car, exit)) + 2;
+  const completed = Math.floor(progress(car, t));
+  if (completed < firstTimed) return { last: null, best: null };
+  const lapOf = (k: number) =>
+    car.pace +
+    car.wobble * Math.sin(k * 1.7 + car.idx) -
+    QUALIFY_EVOLUTION_S * Math.min(k - firstTimed, QUALIFY_EVOLUTION_LAPS);
+  let best = Infinity;
+  for (let k = firstTimed; k <= completed; k++) best = Math.min(best, lapOf(k));
+  return { last: lapOf(completed), best };
+}
+
 export function mockStandings(
   t: number,
   sessionType: MockSessionType = "Race",
+  /**
+   * Mock time the session opened at. Only qualifying reads it: its board is
+   * empty when the session opens, so the feed passes the moment the mock
+   * session was switched to it rather than the race's start.
+   */
+  sessionStart: number = MOCK_START_OFFSET_S,
 ): StandingsPayload {
   const inGarage = (idx: number) =>
     sessionType === "Practice" && MOCK_PRE_JOIN_IDX.includes(idx);
+  const qualifying = sessionType === "Open Qualify";
+  const qualify = new Map(
+    qualifying
+      ? MOCK_FIELD.map((c) => [c.idx, qualifyLaps(c, t, sessionStart)] as const)
+      : [],
+  );
+  /* Each car's best lap and the class/field fastest, from qualifying's own
+     laps in qualifying and from the race's fixed bests otherwise. */
+  const bestOf = (car: MockCar): number | null =>
+    qualifying ? qualify.get(car.idx)?.best ?? null : car.pace - 0.8;
+  const fastestOf = (cars: readonly MockCar[]): MockCar | null => {
+    let found: MockCar | null = null;
+    let time = Infinity;
+    for (const c of cars) {
+      const b = bestOf(c);
+      if (b != null && b < time) {
+        time = b;
+        found = c;
+      }
+    }
+    return found;
+  };
+  const fieldFastest = fastestOf(MOCK_FIELD);
   const ordered = runningOrder(t);
   /* The order one lap ago, so the position-change arrow has something to show.
      It was hard-coded to 0, which meant the column existed in every screenshot
@@ -829,12 +906,21 @@ export function mockStandings(
     // Lap grade. Purple only for the single quickest lap on track right now,
     // and only when it actually beats the field's best; green whenever a car
     // improves on its own.
-    const last = lastLapOf.get(car.idx) ?? lapTime(car, t);
-    const best = car.pace - 0.8;
-    const lastLapStatus: StandingsEntry["lastLapStatus"] =
-      last <= fastestLapNow && last < fieldBestLap
+    const quali = qualify.get(car.idx);
+    const last = quali ? quali.last : lastLapOf.get(car.idx) ?? lapTime(car, t);
+    const best = bestOf(car);
+    const lastLapStatus: StandingsEntry["lastLapStatus"] = quali
+      ? last == null || best == null || last > best
+        ? "normal"
+        : car === fieldFastest
+          ? "overall_best"
+          : "personal_best"
+      : last != null &&
+          best != null &&
+          last <= fastestLapNow &&
+          last < fieldBestLap
         ? "overall_best"
-        : last <= best
+        : last != null && best != null && last <= best
           ? "personal_best"
           : "normal";
 
@@ -897,8 +983,8 @@ export function mockStandings(
       carClassId: car.klass.id,
       lap,
       lapDistPct: round(pct, 4),
-      lastLapTime: round(last, 3),
-      bestLapTime: round(best, 3),
+      lastLapTime: last == null ? null : round(last, 3),
+      bestLapTime: best == null ? null : round(best, 3),
       gapToLeader: round(Math.max(0, gap), 3),
       interval: interval(car, ordered),
       gapIsLaps: lapsBehind >= 1,
@@ -948,7 +1034,8 @@ export function mockStandings(
     // generally the car leading it. The standings spend their one filled cell on
     // this car, so pinning it to the leader made the preview misrepresent the
     // design (`design.md` § Dense tabular overlays, rule 5).
-    const fastest = inClass.reduce((a, c) => (c.pace < a.pace ? c : a), inClass[0]);
+    const fastest = fastestOf(inClass);
+    const fastestLap = fastest ? bestOf(fastest) : null;
     return {
       carClassId: k.id,
       shortName: k.short,
@@ -957,7 +1044,7 @@ export function mockStandings(
       carCount: inClass.length,
       leaderCarIdx: leader?.idx ?? null,
       leaderLap: leader ? Math.floor(progress(leader, t)) : null,
-      fastestLap: fastest ? round(fastest.pace - 0.8, 3) : null,
+      fastestLap: fastestLap == null ? null : round(fastestLap, 3),
       fastestLapCarIdx: fastest?.idx ?? null,
       order: inClass.map((c) => c.idx),
     };
@@ -966,12 +1053,11 @@ export function mockStandings(
   return {
     playerCarIdx: MOCK_PLAYER_IDX,
     sectorCount: 3,
-    overallBestLap: round(Math.min(...MOCK_FIELD.map((c) => c.pace - 0.8)), 3),
+    overallBestLap: fieldFastest
+      ? round(bestOf(fieldFastest) ?? 0, 3)
+      : null,
     // The field's fastest lap, not whoever happens to be leading it.
-    overallBestLapCarIdx: MOCK_FIELD.reduce(
-      (a, c) => (c.pace < a.pace ? c : a),
-      MOCK_FIELD[0]
-    ).idx,
+    overallBestLapCarIdx: fieldFastest?.idx ?? null,
     overallBestSectors: [null, null, null],
     classes,
     entries,

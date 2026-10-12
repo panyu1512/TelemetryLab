@@ -115,9 +115,11 @@ standings table stops being readable at a glance.
 2. **Identity colour opens the row and names the driver — it never grounds
    the row.** Class has three carriers, the same on both surfaces:
 
-   - **the leading edge**, 4 px on a row
-     ([`StandingsRow.tsx`](src/components/standings/StandingsRow.tsx)), the
-     same device on a class band;
+   - **the leading edge**, 4 px down every row — drawn once per run of
+     same-class rows (`LayoutRun` in
+     [`useStandingsLayout.ts`](src/components/standings/useStandingsLayout.ts),
+     `ClassRun` on Relative), not once per row — and the same device on a
+     class band;
    - **the class fill**: the edge running on into the row as a gradient
      ([`lib/classFill.ts`](src/lib/classFill.ts)), strong against the edge
      and gone by the end of the position cell, so the position — and, at the
@@ -479,7 +481,8 @@ when the § Session header is on. Every rule below is downstream of
 the fact that a header band and a row cost the same height.
 
 1. **No vertical rules, no row separators — rows are strips, and paper
-   separates them.** Every row sits on the same `--color-timing-row` ground
+   separates them.** (On Standings and Relative the strips are now cleared
+   to the paper itself; see rule 9.) Every row sits on the same `--color-timing-row` ground
    with `ROW_GAP` of paper under it, so the field reads as a stack of strips,
    each opening on its class edge. At 32 px a drawn rule costs more attention
    than it returns; a 3 px seam of the darker paper does the same separating
@@ -702,8 +705,36 @@ the fact that a header band and a row cost the same height.
    sunlit kerb through. The token carries the active theme's hue so the surface
    stays part of the system. Rows sit on it as strips of `--color-timing-row`,
    a white alpha rather than a mixed colour, so a strip lifts whatever paper is
-   under it — every theme's, and the translucent black the paper becomes over
-   live footage.
+   under it — every theme's, and the near-opaque black (90 %) the paper becomes
+   over live footage.
+
+   **On these two tables the paper is laid per block, and the space between
+   blocks is clear.** The session header is one block, each class band
+   another and each class's rows another (`.timing-paper` under a
+   `.timing-blocks` surface). Inside a block the rows sit **straight on the
+   black, edge to edge** — `--color-timing-row` is cleared there, and each
+   row fills its whole slot, so there is no `ROW_GAP` seam and no frame of
+   paper round the block: the owner read those seams as a black border round
+   every row, and they cut the class edge and fill into a piece per car. Now
+   a class's edge and fill run down its group as one spine — **drawn once
+   per run of same-class rows, behind them**, not once per row. Abutting
+   per-row pieces still showed a hairline at every join whenever the table
+   was scaled, because `zoom` puts the joins on fractional pixels and two
+   anti-aliased edges never quite cover one. On Relative, where classes
+   interleave, each stretch of same-class neighbours shares one stripe and
+   different classes meet with nothing between them (the space either side
+   of the player's row, rule 14, stays). The player's `primary` ground still
+   marks theirs; it now lies *over* the fill rather than under it, and white
+   digits still clear 4.5:1 on every ramp colour that way
+   ([`lib/classFill.test.ts`](src/lib/classFill.test.ts)). Rule 1's strips hold on every other surface. The `CLASS_GAP` between
+   two class groups, the same gap between the header and the field, and the
+   `BAND_GAP` between a band and its rows show the game through. The owner asked
+   for it: a single slab of black the size of the whole field hid more of the
+   track than the data needed, and the clear gaps do rule 2's separating with
+   the footage itself. The legibility argument above is untouched, because it
+   was about the ground under the *type*, and every row, band and header still
+   has opaque paper under it. On Relative the field is one block, so the only
+   clear gap is the one under the header.
 
    **This paper is no longer only theirs.** It was, on the argument that a
    gauge can afford a kerb showing through where a table cannot — but that
@@ -776,6 +807,12 @@ the fact that a header band and a row cost the same height.
       `best` column becomes structural in the sense `pos` and `driver` are —
       never user-hidden, never auto-dropped, because a table ranked by a column
       you cannot see is a table in no order at all.
+    - **Qualifying's board starts empty.** A car is on it once it has set a
+      time, and not before (`lib/lapTimeOrder.timedOnly`); a class nobody has
+      timed in yet has no band. Practice keeps its untimed cars at the foot of
+      the sheet, because there the garage is part of the picture; in
+      qualifying a car without a time has nothing to be ranked by, and the
+      board filling up *is* the session. How a car arrives on it is rule 17.
     - Relative **stops calling neighbours lapped traffic**. The tag and the
       blue ink are a race warning: they mean someone is losing a position
       or about to take one. Left on in practice they land on nearly every row —
@@ -904,6 +941,37 @@ the fact that a header band and a row cost the same height.
     number cannot exist, the cell names its column rather than reporting
     something missing.
 
+17. **In qualifying, a lap is an event, and the row says so.** Two effects,
+    both laid over the strip (`.row-fx` in `styles.css`) and gone again, and
+    both qualifying-only — in a race the best lap is a footnote to the order
+    and nothing flashes for it.
+
+    - **Arrival.** A car that sets its first time joins the board: its strip
+      slides in from the left as it fades up, a white sweep crosses it once,
+      and the rows below glide down to make room on the ordinary row glide.
+      Only rows that mount after the screen's first paint arrive — a board
+      already full when the overlay opens just appears.
+    - **Improvement.** A car that beats its own best takes a sweep and a glow
+      across the strip in the lap's own grade — `accent`, or `sector-purple`
+      when the new lap is the session's best, which is the meaning both
+      colours already carry on the lap cells (rule 10). The glow holds for
+      `LAP_IMPROVE_MS` and dissolves the way the position flash does
+      ([`lib/lapImprove.ts`](src/lib/lapImprove.ts)). A first lap is not an
+      improvement; that is the arrival.
+
+    **A lap that also changes places fires both**: the row sweeps for the
+    lap, glides to its new slot, and the position flash (rule 16) flags the
+    places it took — and every car it passed flags `▼`. The two say
+    different things, *went faster* and *moved*, and in qualifying either
+    can happen without the other.
+
+    This is the one place § Microinteractions' "silent success" bends, and
+    it bends for the same reason rule 16 exists: a qualifying board changes
+    between glances, and a driver looking over a second later should see
+    which line just changed. Every phase is opacity or a transform. Under
+    reduced motion there is no slide and no sweep; the arrival is the row
+    appearing, and the improvement's glow shows for the hold and goes.
+
 ### The class band
 
 One line opening each class group on Standings:
@@ -922,8 +990,11 @@ One line opening each class group on Standings:
   its fill.** The class name opens it, in the rows' 13 px bold, caps, with a
   minimum width equal to the position column's so `GT3` sits centred over the
   column of positions it heads; its `ml-1` matches the row's `px-1`. And it is
-  set apart from its group by `BAND_GAP` 4 under `CLASS_BAND_H` 30 — a band
-  flush against the first row reads as that group's first entry.
+  set apart from its group by `BAND_GAP` 6 under `CLASS_BAND_H` 30 — a band
+  flush against the first row reads as that group's first entry. The gap is
+  clear rather than paper: the band is a block of its own (§ Dense tabular
+  overlays, rule 9), so over live footage the game shows between a class's
+  name and its first position, as it does between classes.
 - **It speaks the strip grammar**, `StripField` in its sans voice — one line
   of label/value pairs, which the session header spoke too until it became a
   row of its own (§ The session header):

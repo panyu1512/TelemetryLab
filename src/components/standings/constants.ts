@@ -18,7 +18,13 @@
 export const ROW_H = 32;
 
 /**
- * Paper left showing between one row's strip and the next.
+ * Paper that used to show between one row's strip and the next.
+ *
+ * No longer drawn: on Standings and Relative the rows fill their slots edge
+ * to edge, so a class's colour edge runs down its group unbroken (see
+ * `design.md` § Dense tabular overlays, rule 9). It survives as the
+ * allowance {@link STANDINGS_BRAND_H} is derived from, so the brand marks
+ * keep the size they were tuned at. What follows is its original reasoning.
  *
  * Every row sits on its own `--color-timing-row` ground, inset this far from
  * the bottom of its {@link ROW_H} slot, so the field reads as a stack of
@@ -103,10 +109,14 @@ export const CLASS_GAP = 10;
 export const CLASS_BAND_H = 30;
 
 /**
- * Space between a class band and the first row of its group. Small, but it is
- * what separates "this heads the group" from "this is the group's first entry".
+ * Space between a class band and the first row of its group — clear, not
+ * paper: the band and the rows are separate blocks (see `LayoutBlock`), so
+ * over live footage the game shows here. Small, but it is what separates
+ * "this heads the group" from "this is the group's first entry". 6 rather
+ * than the 4 it was as a seam of paper, so the footage in it reads as a gap
+ * rather than a hairline.
  */
-export const BAND_GAP = 4;
+export const BAND_GAP = 6;
 
 /**
  * Height of the marker where a capped class group skips part of its order

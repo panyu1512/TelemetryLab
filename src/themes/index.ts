@@ -244,8 +244,12 @@ export function applyTheme(
   // 4 px edge now do that — so the paper can come up far enough for those
   // blocks to read *as* blocks rather than as light in a void. It is still the
   // darkest surface in the app by a wide margin.
+  //
+  // 0.9 rather than 0.82 over footage: Standings and Relative now lay this
+  // paper per block and leave the gaps between blocks clear, so the game is
+  // already in view around them and the blocks themselves can be black.
   const timingBg = overlay
-    ? "rgb(0 0 0 / 0.82)"
+    ? "rgb(0 0 0 / 0.9)"
     : `color-mix(in oklab, ${c.bg} 68%, #000)`;
 
   el.style.setProperty("--color-bg", bg);
