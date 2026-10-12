@@ -28,6 +28,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   separate black panels with the game visible in the gaps between them, instead of one solid black slab behind the
   whole table. The rows themselves are on black, a little darker than before
   over the game.
+- **No more black lines around rows.** On Standings and Relative the rows now
+  sit straight on the black panel, so there is no thin black border between
+  or around them; each class reads as one solid black panel.
 
 ## [1.19.0] - 2026-10-11
 

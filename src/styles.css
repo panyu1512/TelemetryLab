@@ -860,6 +860,16 @@ html.overlay-mode .timing-surface.timing-blocks,
 }
 
 /*
+ * Inside those blocks the rows sit straight on the black: no white lift for a
+ * strip, so no seam of darker paper between rows and no frame of it around
+ * the block — a class reads as one black panel. The class edge and fill, the
+ * player's `primary` ground and the fills still mark what they mark.
+ */
+.timing-blocks {
+  --color-timing-row: transparent;
+}
+
+/*
  * Blur all widget-level backgrounds (react-grid-layout items, and the card of
  * a popped-out single-widget window) so the overlay reads as frosted glass
  * above the game.

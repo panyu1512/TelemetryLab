@@ -479,7 +479,8 @@ when the § Session header is on. Every rule below is downstream of
 the fact that a header band and a row cost the same height.
 
 1. **No vertical rules, no row separators — rows are strips, and paper
-   separates them.** Every row sits on the same `--color-timing-row` ground
+   separates them.** (On Standings and Relative the strips are now cleared
+   to the paper itself; see rule 9.) Every row sits on the same `--color-timing-row` ground
    with `ROW_GAP` of paper under it, so the field reads as a stack of strips,
    each opening on its class edge. At 32 px a drawn rule costs more attention
    than it returns; a 3 px seam of the darker paper does the same separating
@@ -708,8 +709,12 @@ the fact that a header band and a row cost the same height.
    **On these two tables the paper is laid per block, and the space between
    blocks is clear.** The session header is one block, each class band
    another and each class's rows another (`.timing-paper` under a
-   `.timing-blocks` surface); rows stay on black inside their block, with the
-   usual `ROW_GAP` seams of paper between them, but the `CLASS_GAP` between
+   `.timing-blocks` surface). Inside a block the rows sit **straight on the
+   black** — `--color-timing-row` is cleared there, so no strip is lifted
+   off the paper and no `ROW_GAP` seam or frame of darker paper shows: the
+   owner read those seams as a black border round every row. The class edge
+   and fill still open each row, and the player's `primary` ground still
+   marks theirs. Rule 1's strips hold on every other surface. The `CLASS_GAP` between
    two class groups, the same gap between the header and the field, and the
    `BAND_GAP` between a band and its rows show the game through. The owner asked
    for it: a single slab of black the size of the whole field hid more of the
