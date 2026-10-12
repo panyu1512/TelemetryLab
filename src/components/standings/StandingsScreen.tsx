@@ -19,10 +19,13 @@ import { fitScale, scaleBox, unscaled } from "../../lib/tableScale";
 import { CLASS_RAMP, classColorFor } from "../../lib/classColors";
 import { StandingsRow } from "./StandingsRow";
 import { useStandingsLayout } from "./useStandingsLayout";
-import { SessionStrip, STRIP_H } from "../timing/SessionStrip";
+import { SESSION_HEADER_H, SessionStrip } from "../timing/SessionStrip";
 import { ClassBand } from "./ClassBand";
 
-/** Paper above the first band/row, inside the scaled box. */
+/**
+ * Paper above the first band/row, inside the scaled box — and so the gap
+ * between the session header and the field when the header is on.
+ */
 const FIELD_TOP = 6;
 /** Paper below the last row, inside the scaled box. */
 const FIELD_BOTTOM = 8;
@@ -39,9 +42,9 @@ const FIT_SLACK = 2;
  * The screen is **rows and a readout, and nothing else**: no title bar, no
  * controls, nothing that can be aimed at. It is read at a glance while the user
  * is driving, so every pixel goes to the field — including the optional session
- * strip above it, which is a readout the driver cannot interact with (see
+ * header above it, which is a readout the driver cannot interact with (see
  * `design.md` § Dense tabular overlays, rule 7). Everything *configurable* about
- * the screen, the strip included, lives in the Overlay Manager.
+ * the screen, the header included, lives in the Overlay Manager.
  *
  * That also means no column-header band — the labels print inside each class
  * leader's row (`design.md` § Dense tabular overlays, rule 3). Class groups do
@@ -75,7 +78,7 @@ const FIT_SLACK = 2;
  * ordered here rather than by the bridge, the position column prints that
  * ranking, and the columns that describe a race — gap, interval, positions
  * gained — are dropped rather than left to report distances nobody is racing.
- * No new chrome announces the switch: the session strip already names the
+ * No new chrome announces the switch: the session header already names the
  * session, and a timesheet whose fastest-lap cell is always its first row says
  * what it is without a label.
  */
@@ -125,7 +128,10 @@ export function StandingsScreen() {
   // full size is the same layout at a quarter.
   const naturalWidth = tableMinWidth(meta.sectorCount, isVisible);
   const naturalHeight =
-    (showSessionStrip ? STRIP_H : 0) + FIELD_TOP + totalHeight + FIELD_BOTTOM;
+    (showSessionStrip ? SESSION_HEADER_H : 0) +
+    FIELD_TOP +
+    totalHeight +
+    FIELD_BOTTOM;
   const scale = fitScale(
     viewW,
     naturalWidth,

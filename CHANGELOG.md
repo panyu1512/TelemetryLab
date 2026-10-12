@@ -7,6 +7,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.19.0] - 2026-10-11
+
+### Added
+
+- **Licence and iRating on the Relative.** Every car on the Relative can now
+  show the driver's licence, safety rating and iRating — the same pill as on
+  Standings, right after the name, so you know who you are racing as well as
+  where. The projected iRating change stays on Standings only. Two new options in Manager →
+  Relative, "Licence / SR" and "iRating", both on by default.
+
+### Changed
+
+- **A new session header on Standings and Relative.** The line above the
+  field is now a header of its own instead of looking like the first row: a
+  taller bar lit from the top, the session tag in the flag's colour with that
+  colour running along the bottom edge, the track and its layout named, and
+  each reading — lap, time left, incidents, track and air temperature,
+  strength of field and the clock — as a small label over a large number.
+  The option is now called "Session header" in the Manager.
+- **Car logos you can read.** McLaren's, Dallara's and Ford's lettering no
+  longer blurs into a white smear, and Nissan's, RAM's, Porsche's, Cadillac's
+  and Aston Martin's marks are each drawn at the weight that keeps their
+  detail. Wide logos (McLaren, Dallara, Kia, Aston Martin) are drawn larger,
+  in a slightly wider brand column.
+
 ## [1.18.0] - 2026-10-11
 
 ### Changed
@@ -531,7 +556,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.18.0...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.19.0...HEAD
+[1.19.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.18.0...v1.19.0
 [1.18.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.17.0...v1.18.0
 [1.17.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.16.0...v1.17.0
 [1.16.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.15.0...v1.16.0

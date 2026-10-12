@@ -6,10 +6,10 @@
  *
  * The screen is **rows and a readout, and nothing else**: no title bar, nothing
  * clickable. It is read at a glance while the user is driving, so every pixel
- * goes to the field — including the optional session strip above it, which is a
+ * goes to the field — including the optional session header above it, which is a
  * readout the driver cannot interact with (`design.md` § Dense tabular overlays,
- * rule 7). The window size (3–10 per side), the brand/country/tyre column
- * options and the strip itself are all set from the Overlay Manager and persisted in
+ * rule 7). The window size (3–10 per side), the brand/country/licence/
+ * iRating/tyre column options and the header itself are all set from the Overlay Manager and persisted in
  * {@link useRelativeUiStore}, which broadcasts them so an open overlay updates
  * live.
  *
@@ -71,7 +71,12 @@ import {
   lapRelation,
   lapTag,
 } from "../../lib/relativeLaps";
-import { BrandIcon, TireCell } from "../standings/cells";
+import {
+  BrandIcon,
+  IRatingCell,
+  LicenseBadge,
+  TireCell,
+} from "../standings/cells";
 import {
   CLASS_EDGE_WIDTH,
   LAP_UNDERLINE,
@@ -106,6 +111,8 @@ type RelColumnId =
   | "num"
   | "country"
   | "driver"
+  | "license"
+  | "irating"
   | "brand"
   | "tyre"
   | "gap"
@@ -125,9 +132,16 @@ const REL_COLUMNS: { id: RelColumnId; width: string; px: number }[] = [
   // width it would like, which is what the table's natural width is summed
   // from — and therefore what the scale is measured against.
   { id: "driver", width: "minmax(0, 1fr)", px: 112 },
+  // Licence + SR, then iRating: the Standings' pill, straight after the name
+  // it qualifies — who the car is before what it is and where. The iRating
+  // segment is narrower than Standings' because it carries no projected
+  // change here, only a four-digit rating.
+  { id: "license", width: "3.4rem", px: 54 },
+  { id: "irating", width: "3.2rem", px: 51 },
   // Wide enough that the widest marks sit inside the column with paper either
-  // side (see `.brand-icon`), as on Standings.
-  { id: "brand", width: "3.5rem", px: 56 },
+  // side, and a wordmark's letters print large enough to read (see
+  // `.brand-icon--wide`), as on Standings.
+  { id: "brand", width: "4rem", px: 64 },
   // Compound badge + laps on the set, beside the car it belongs to and ahead
   // of the gap: "who is this, what are they on" before "how far away".
   // Wide enough for a three-digit lap count beside the badge (an enduro
@@ -141,7 +155,8 @@ const REL_COLUMNS: { id: RelColumnId; width: string; px: number }[] = [
 type RelVisibility = (id: RelColumnId) => boolean;
 
 /**
- * The visible column set: the user's brand/country/tyre choices, plus the class
+ * The visible column set: the user's brand/country/licence/iRating/tyre
+ * choices, plus the class
  * badge whenever the field has more than one class.
  *
  * The badge is about the *field*, not the window: in a single-class session
@@ -154,21 +169,33 @@ type RelVisibility = (id: RelColumnId) => boolean;
  * be a smaller table, not a different one.
  */
 function relVisibleColumns(
-  showBrand: boolean,
-  showCountry: boolean,
-  showTyre: boolean,
+  show: {
+    brand: boolean;
+    country: boolean;
+    license: boolean;
+    irating: boolean;
+    tyre: boolean;
+  },
   multiClass: boolean
 ): RelVisibility {
-  return (id) =>
-    id === "brand"
-      ? showBrand
-      : id === "country"
-        ? showCountry
-        : id === "tyre"
-          ? showTyre
-          : id === "class"
-            ? multiClass
-            : true;
+  return (id) => {
+    switch (id) {
+      case "brand":
+        return show.brand;
+      case "country":
+        return show.country;
+      case "license":
+        return show.license;
+      case "irating":
+        return show.irating;
+      case "tyre":
+        return show.tyre;
+      case "class":
+        return multiClass;
+      default:
+        return true;
+    }
+  };
 }
 
 /** The width this column set wants: widths + 4 px gaps + the row's px-2. */
@@ -226,6 +253,8 @@ const REL_HEADER_LABEL: Record<RelColumnId, string> = {
   num: "#",
   country: "",
   driver: "Driver",
+  license: "Lic",
+  irating: "iR",
   brand: "",
   tyre: "Tyre",
   gap: "Gap",
@@ -493,6 +522,30 @@ function RowInner({
         )}
       </div>
 
+      {/* licence + SR, then iRating — the Standings' pill without the
+          projected change, one pill in two segments when both are on. Its grounds are the
+          licence's own colour and a glass lift, so lapped blue does not reach
+          it: a rating is who the driver is, not where they are. */}
+      {isOn("license") &&
+        (driver ? (
+          <LicenseBadge
+            group={driver.licenseGroup}
+            safetyRating={driver.safetyRating}
+            color={driver.licenseColor}
+            joined={isOn("irating")}
+          />
+        ) : (
+          <div />
+        ))}
+      {isOn("irating") && (
+        <IRatingCell
+          iRating={driver?.iRating ?? entry.iRating ?? 0}
+          change={0}
+          joined={isOn("license")}
+          showChange={false}
+        />
+      )}
+
       {/* car brand */}
       {isOn("brand") && (
         <div className="flex justify-center">
@@ -599,6 +652,8 @@ export function RelativeScreen() {
   const showBrand = useRelativeUiStore((s) => s.showBrand);
   const showCountry = useRelativeUiStore((s) => s.showCountry);
   const showTyre = useRelativeUiStore((s) => s.showTyre);
+  const showLicense = useRelativeUiStore((s) => s.showLicense);
+  const showIRating = useRelativeUiStore((s) => s.showIRating);
   const showSessionStrip = useRelativeUiStore((s) => s.showSessionStrip);
   const showColumnLabels = useRelativeUiStore((s) => s.showColumnLabels);
   const byLapTime = useRanksByLapTime();
@@ -617,8 +672,18 @@ export function RelativeScreen() {
 
   const multiClass = classes.length > 1;
   const isOn = useMemo(
-    () => relVisibleColumns(showBrand, showCountry, showTyre, multiClass),
-    [showBrand, showCountry, showTyre, multiClass]
+    () =>
+      relVisibleColumns(
+        {
+          brand: showBrand,
+          country: showCountry,
+          license: showLicense,
+          irating: showIRating,
+          tyre: showTyre,
+        },
+        multiClass
+      ),
+    [showBrand, showCountry, showLicense, showIRating, showTyre, multiClass]
   );
   const template = useMemo(() => relGridTemplate(isOn), [isOn]);
   const fillReach = useMemo(() => relFillReach(isOn), [isOn]);
@@ -707,10 +772,11 @@ export function RelativeScreen() {
       ref={bodyRef}
       className="overlay-card timing-surface font-timing @container flex h-full flex-col overflow-hidden rounded-card border border-border/60"
     >
-      {/* Inset by the field's own `p-1`, so the strip and the row strips
-          under it share one left and right edge. */}
+      {/* Inset by the field's own `p-1`, so the header and the row strips
+          under it share one left and right edge; `pb-0.5` and the field's
+          `p-1` leave the same 6 px under it as Standings' `FIELD_TOP`. */}
       {showSessionStrip && !isEmpty && (
-        <div className="px-1 pt-1" style={scaleBox(scale)}>
+        <div className="px-1 pt-1 pb-0.5" style={scaleBox(scale)}>
           <SessionStrip width={innerWidth} />
         </div>
       )}

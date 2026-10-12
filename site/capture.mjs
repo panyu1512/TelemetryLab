@@ -76,7 +76,7 @@ const PAST_A_LAP_MS = 40_000;
  * margin.
  *
  * The boundaries at these widths, from the live app: the standings field runs
- * strip 26 · [band 30 + gap 4 + 6 rows] · CLASS_GAP 10 · [band 30 + gap 4 +
+ * header 42 · [band 30 + gap 4 + 6 rows] · CLASS_GAP 10 · [band 30 + gap 4 +
  * 3 rows] — the other class is capped at three cars by default — with each
  * row a 29 px strip in a 32 px slot, and the last row's strip ending at 404.
  *
@@ -114,18 +114,20 @@ const SHOTS = [
   // shortest frame that keeps it width-limited (one pixel of slack on top).
   // Down from 306 when the other class was capped at three cars by default,
   // from 272 when the brand column widened for 1.16, and from 269 when the
-  // tyre column came back for 1.17 and the table drew a step smaller.
-  { name: "standings-compact", route: "?overlay=standings", w: 620, h: 256 },
-  // 428 = the whole two-class field at full size (width-limited from 426;
-  // re-measured with the tyre column back for 1.17, still full size).
+  // tyre column came back for 1.17 and the table drew a step smaller. Up to
+  // 263 (width-limited from 262) for 1.19, when the session strip became a
+  // 42 px header and the brand column widened to 4rem.
+  { name: "standings-compact", route: "?overlay=standings", w: 620, h: 263 },
+  // 444 = the whole two-class field at full size (width-limited from 442;
+  // re-measured for 1.19's 42 px session header, up from 428).
   // This capture is the page's proof that the table groups by class; at 420
   // an older layout cropped the GT4 group mid-row.
-  { name: "standings", route: "?overlay=standings", w: 1180, h: 428 },
-  // 384 fits five cars ahead, the player and four behind, all whole: the
-  // tenth row's strip ends at 377 at this width's ~0.88 scale. Down from 416
-  // once the tyre column joined the row and the table drew a step smaller,
-  // and from 394 when the brand and tyre columns widened for 1.16.
-  { name: "relative", route: "?overlay=relative", w: 560, h: 384 },
+  { name: "standings", route: "?overlay=standings", w: 1180, h: 444 },
+  // 420 fits five cars ahead, the player and four behind, all whole: the
+  // tenth row's strip ends at 413 at this width's ~0.93 scale. Widened from
+  // 560 for 1.19, when licence and iRating joined the row, so the table is
+  // not shrunk by a fifth to make room for them.
+  { name: "relative", route: "?overlay=relative", w: 700, h: 420 },
   { name: "dashboard", route: "?overlay=dashboard", w: 1100, h: 620 },
   { name: "manager", route: "", w: 1400, h: 900, wait: PAST_A_LAP_MS },
   // Tall enough for the pit-strategies card, which stopped being collapsed and

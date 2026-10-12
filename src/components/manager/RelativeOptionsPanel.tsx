@@ -1,6 +1,7 @@
 /**
  * Options for the relative overlay — car brand icons, driver country flags,
- * tyre compounds, the session strip, column labels and the window size.
+ * licence and iRating, tyre compounds, the session header, column labels and
+ * the window size.
  * Writes to {@link useRelativeUiStore}, which persists and broadcasts over the
  * window bus, so an open relative overlay window updates live.
  */
@@ -20,6 +21,10 @@ export function RelativeOptionsPanel() {
   const setShowCountry = useRelativeUiStore((s) => s.setShowCountry);
   const showTyre = useRelativeUiStore((s) => s.showTyre);
   const setShowTyre = useRelativeUiStore((s) => s.setShowTyre);
+  const showLicense = useRelativeUiStore((s) => s.showLicense);
+  const setShowLicense = useRelativeUiStore((s) => s.setShowLicense);
+  const showIRating = useRelativeUiStore((s) => s.showIRating);
+  const setShowIRating = useRelativeUiStore((s) => s.setShowIRating);
   const setWindowSize = useRelativeUiStore((s) => s.setWindowSize);
   const showSessionStrip = useRelativeUiStore((s) => s.showSessionStrip);
   const setShowSessionStrip = useRelativeUiStore((s) => s.setShowSessionStrip);
@@ -41,14 +46,26 @@ export function RelativeOptionsPanel() {
         onChange={setShowCountry}
       />
       <OptionRow
+        label="Licence / SR"
+        description="Each driver's licence class and safety rating, in the licence's colour."
+        checked={showLicense}
+        onChange={setShowLicense}
+      />
+      <OptionRow
+        label="iRating"
+        description="Each driver's iRating."
+        checked={showIRating}
+        onChange={setShowIRating}
+      />
+      <OptionRow
         label="Tyre compound"
         description="Dry (D) or wet (W) tyres, and laps on the set."
         checked={showTyre}
         onChange={setShowTyre}
       />
       <OptionRow
-        label="Session strip"
-        description="Lap, time left, incidents, temperatures, SoF and the clock, above the field."
+        label="Session header"
+        description="Session, track, lap, time left, incidents, temperatures, SoF and the clock, above the field."
         checked={showSessionStrip}
         onChange={setShowSessionStrip}
       />

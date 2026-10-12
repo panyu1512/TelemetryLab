@@ -23,6 +23,17 @@ export interface RelativeUiState {
    * is a question about neighbours, which is what this screen is for.
    */
   showTyre: boolean;
+  /**
+   * Show each driver's licence and safety rating — the left segment of the
+   * Standings' licence / iRating pill.
+   */
+  showLicense: boolean;
+  /**
+   * Show each driver's iRating — the pill's right segment, without the
+   * projected change Standings carries. Who you are racing, not only where:
+   * a 5k driver alongside is a different fight from a 1k one.
+   */
+  showIRating: boolean;
   /** Cars shown per side (ahead/behind). */
   windowSize: number;
   /**
@@ -39,6 +50,8 @@ export interface RelativeUiState {
   setShowBrand: (v: boolean) => void;
   setShowCountry: (v: boolean) => void;
   setShowTyre: (v: boolean) => void;
+  setShowLicense: (v: boolean) => void;
+  setShowIRating: (v: boolean) => void;
   setWindowSize: (n: number) => void;
   setShowSessionStrip: (v: boolean) => void;
   setShowColumnLabels: (v: boolean) => void;
@@ -50,6 +63,8 @@ export interface Persisted {
   showBrand: boolean;
   showCountry: boolean;
   showTyre: boolean;
+  showLicense: boolean;
+  showIRating: boolean;
   windowSize: number;
   showSessionStrip: boolean;
   showColumnLabels: boolean;
@@ -59,6 +74,8 @@ const DEFAULTS: Persisted = {
   showBrand: true,
   showCountry: true,
   showTyre: true,
+  showLicense: true,
+  showIRating: true,
   windowSize: 5,
   showSessionStrip: true,
   showColumnLabels: false,
@@ -100,6 +117,8 @@ export const useRelativeUiStore = create<RelativeUiState>((set, get) => {
       showBrand,
       showCountry,
       showTyre,
+      showLicense,
+      showIRating,
       windowSize,
       showSessionStrip,
       showColumnLabels,
@@ -108,6 +127,8 @@ export const useRelativeUiStore = create<RelativeUiState>((set, get) => {
       showBrand,
       showCountry,
       showTyre,
+      showLicense,
+      showIRating,
       windowSize,
       showSessionStrip,
       showColumnLabels,
@@ -127,6 +148,14 @@ export const useRelativeUiStore = create<RelativeUiState>((set, get) => {
     },
     setShowTyre: (showTyre) => {
       set({ showTyre });
+      save();
+    },
+    setShowLicense: (showLicense) => {
+      set({ showLicense });
+      save();
+    },
+    setShowIRating: (showIRating) => {
+      set({ showIRating });
       save();
     },
     setWindowSize: (n) => {
@@ -154,6 +183,8 @@ subscribe("relative-ui:changed", (remote) => {
       showBrand: remote.showBrand ?? DEFAULTS.showBrand,
       showCountry: remote.showCountry ?? DEFAULTS.showCountry,
       showTyre: remote.showTyre ?? DEFAULTS.showTyre,
+      showLicense: remote.showLicense ?? DEFAULTS.showLicense,
+      showIRating: remote.showIRating ?? DEFAULTS.showIRating,
       windowSize: clampWindow(remote.windowSize ?? DEFAULTS.windowSize),
       showSessionStrip:
         remote.showSessionStrip ?? DEFAULTS.showSessionStrip,
