@@ -989,6 +989,26 @@ the fact that a header band and a row cost the same height.
     reduced motion there is no slide and no sweep; the arrival is the row
     appearing, and the improvement's glow shows for the hold and goes.
 
+18. **Who is on the radio is a mark after their name.** iRacing reports one
+    car keying the radio at a time (`RadioTransmitCarIdx`, carried on the
+    row as `isTransmitting`). While it does, Standings puts a radio mark
+    straight after that driver's name, in the name's own `text` ink, and
+    the mark breathes — opacity only — until the mic is released.
+
+    - **After the name, not in a column.** It is a fact about the driver,
+      read in the same glance as who they are, and it is there a few
+      seconds a minute; a column for it would be empty almost always. The
+      name truncates before the mark does.
+    - **Ink, not a status colour.** Talking is not good, cautionary or
+      critical (§ Theme), and `primary`, the one informational hue, is
+      already the player's own row's ground — a mark in it would vanish
+      there.
+    - **Not the state column.** That column holds the pit and off-track
+      marks, which are about the car; a driver can be on the radio in the
+      pit lane, and one would hide the other.
+
+    Under reduced motion the mark holds still at full strength.
+
 ### The class band
 
 One line opening each class group on Standings:

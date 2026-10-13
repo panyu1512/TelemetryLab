@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **See who is talking.** The Standings table now shows a radio mark after a
+  driver's name while they are transmitting on the radio, so you can tell who
+  is speaking without guessing from the voice. It pulses for as long as they
+  hold the mic and disappears when they let go (it holds still if your system
+  asks for reduced motion). Needs the updated bridge; with an older one the
+  table simply never shows it.
+
 ## [1.22.0] - 2026-10-12
 
 ### Added

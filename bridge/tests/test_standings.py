@@ -25,6 +25,7 @@ def _timing(
     surface=3,
     pit=False,
     tire=0,
+    talking=False,
 ):
     return CarTiming(
         car_idx=car_idx,
@@ -44,6 +45,7 @@ def _timing(
         ],
         timestamp=0,
         tire_compound=tire,
+        is_transmitting=talking,
     )
 
 
@@ -157,6 +159,13 @@ class TestStandingsEngine:
         snap = StandingsEngine().compute(session, _drivers_by_idx(session), timings, 0)
         assert snap.entries[0].is_player is True
         assert snap.entries[1].is_player is False
+
+    def test_radio_transmission_passed_through(self):
+        session = _session()
+        timings = {0: _timing(0, position=1), 1: _timing(1, position=2, talking=True)}
+        snap = StandingsEngine().compute(session, _drivers_by_idx(session), timings, 0)
+        assert [e.is_transmitting for e in snap.entries] == [False, True]
+        assert snap.to_dict()["entries"][1]["isTransmitting"] is True
 
     def test_position_gain_since_start(self):
         session = _session()

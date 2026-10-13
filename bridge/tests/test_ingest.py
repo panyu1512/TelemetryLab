@@ -114,6 +114,24 @@ class TestIngestCarTimings:
         )
         assert out[1].delta_to_player is None
 
+    def test_radio_transmitter_flagged(self):
+        out = ingest_car_timings(
+            _arrays(RadioTransmitCarIdx=1),
+            timestamp=0,
+            player_car_idx=0,
+            est_lap_time=90.0,
+            include=[0, 1, 2],
+        )
+        assert [out[i].is_transmitting for i in range(3)] == [False, True, False]
+
+    def test_nobody_transmitting(self):
+        # iRacing reports -1 when the radio is quiet; a missing var reads the same.
+        for arrays in (_arrays(RadioTransmitCarIdx=-1), _arrays()):
+            out = ingest_car_timings(
+                arrays, timestamp=0, player_car_idx=0, est_lap_time=90.0, include=[0, 1, 2]
+            )
+            assert not any(t.is_transmitting for t in out.values())
+
     def test_short_array_yields_none_not_crash(self):
         # Only two cars of data, but three requested — index 2 reads as None.
         out = ingest_car_timings(
@@ -140,5 +158,6 @@ class TestIngestCarTimings:
             "CarIdxLap",
             "CarIdxEstTime",
             "CarIdxTireCompound",
+            "RadioTransmitCarIdx",
         ):
             assert var in CAR_IDX_VARS

@@ -283,6 +283,7 @@ class CarTiming:
     track_surface_label: str
     timestamp: int  # server ms when sampled
     tire_compound: int | None = None  # CarIdxTireCompound (series-specific int)
+    is_transmitting: bool = False  # RadioTransmitCarIdx == this car
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -301,6 +302,7 @@ class CarTiming:
             "trackSurfaceLabel": self.track_surface_label,
             "timestamp": self.timestamp,
             "tireCompound": self.tire_compound,
+            "isTransmitting": self.is_transmitting,
         }
 
 
@@ -370,6 +372,9 @@ class StandingsEntry:
     tire_compound: int | None = None  # direct: CarIdxTireCompound (series-specific)
     tire_laps: int = 0  # derived: laps on the current tyre set
 
+    # --- radio ---------------------------------------------------------------
+    is_transmitting: bool = False  # direct: RadioTransmitCarIdx is this car
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "carIdx": self.car_idx,
@@ -408,6 +413,7 @@ class StandingsEntry:
             "isLapped": self.is_lapped,
             "tireCompound": self.tire_compound,
             "tireLaps": self.tire_laps,
+            "isTransmitting": self.is_transmitting,
         }
 
 

@@ -721,6 +721,25 @@ a {
 }
 
 /*
+ * On the radio (§ Dense tabular overlays, rule 18): the mark after a talking
+ * driver's name breathes for as long as they hold the mic. Opacity only; under
+ * reduced motion it holds still at full strength.
+ */
+.radio-live {
+  animation: radio-live 1.2s var(--ease-in-out) infinite;
+}
+@keyframes radio-live {
+  50% {
+    opacity: 0.45;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .radio-live {
+    animation: none;
+  }
+}
+
+/*
  * Qualifying's two row events (§ Dense tabular overlays, rule 17).
  *
  * **Arrival** — a car setting its first time joins the board: the strip
