@@ -354,7 +354,7 @@ The bridge multiplexes several **channels** over the single WebSocket, each in a
 | Channel     | Cadence              | Payload                                                              |
 | ----------- | -------------------- | -------------------------------------------------------------------- |
 | `telemetry` | ~60 Hz               | Player car only: speed/rpm/gear, inputs, tyres, current lap.         |
-| `standings` | ~5–10 Hz (on change) | Computed field order: positions, gaps, per-car timing, pit state.    |
+| `standings` | ~5–10 Hz (on change) | Computed field order: positions, gaps, per-car timing, pit state, who is on the radio. |
 | `session`   | on change / ~1 Hz    | Driver roster, session/track/weather metadata, flags, SOF.           |
 | `bridge`    | on change            | `{ iracingActive }` — replaces the old `{connected:false}` heartbeat. |
 | `coaching`  | once per lap         | The last lap against your reference, corner by corner: loss and cause. |

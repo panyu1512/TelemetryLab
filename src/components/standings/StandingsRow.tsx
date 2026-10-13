@@ -1,6 +1,6 @@
 import { memo, useState } from "react";
 import type { CSSProperties } from "react";
-import { Wrench, AlertTriangle, Radio } from "lucide-react";
+import { Wrench, AlertTriangle } from "lucide-react";
 import { useStandingsRow } from "../../stores/useStandingsStore";
 import { useDriver } from "../../stores/useSessionStore";
 import {
@@ -31,6 +31,7 @@ import {
   LicenseBadge,
   PILL_H,
   PosChange,
+  RadioMark,
   SectorCell,
   TireCell,
 } from "./cells";
@@ -311,17 +312,10 @@ function StandingsRowInner({
             {formatDriverName(driver?.userName) || `Car ${carIdx}`}
           </span>
           {/* On the radio: a mark straight after the name, in the name's own
-              ink, breathing while the driver keys the mic. Ink rather than a
-              status colour — talking is neither good nor bad — and it never
-              truncates, so a long name gives way to it (rule 18). */}
-          {row?.isTransmitting && (
-            <Radio
-              className="radio-live size-4 shrink-0 text-text"
-              aria-label="On the radio"
-            >
-              <title>On the radio</title>
-            </Radio>
-          )}
+              ink, sending out waves while the driver keys the mic. Ink rather
+              than a status colour — talking is neither good nor bad — and it
+              never truncates, so a long name gives way to it (rule 18). */}
+          {row?.isTransmitting && <RadioMark size={16} />}
         </div>
 
         {/* licence + SR, then iRating + projected change — one pill in two

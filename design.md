@@ -993,7 +993,13 @@ the fact that a header band and a row cost the same height.
     car keying the radio at a time (`RadioTransmitCarIdx`, carried on the
     row as `isTransmitting`). While it does, Standings puts a radio mark
     straight after that driver's name, in the name's own `text` ink, and
-    the mark breathes — opacity only — until the mic is released.
+    the mark transmits until the mic is released: it pops in, its near arcs
+    light and then its far ones, so the signal travels out from the mast,
+    and a ring ripples away behind it (`RadioMark`, `.radio-live`). A mark
+    that only faded in place was too quiet to catch from the corner of the
+    eye, which is the only way this table is read mid-corner; this is the
+    same exception rule 16 makes for a change of place. Opacity and
+    transforms only, all on one 1.2 s beat.
 
     - **After the name, not in a column.** It is a fact about the driver,
       read in the same glance as who they are, and it is there a few
@@ -1007,7 +1013,8 @@ the fact that a header band and a row cost the same height.
       marks, which are about the car; a driver can be on the radio in the
       pit lane, and one would hide the other.
 
-    Under reduced motion the mark holds still at full strength.
+    Under reduced motion none of it runs: the mark is a still,
+    full-strength glyph with no ripple.
 
 ### The class band
 

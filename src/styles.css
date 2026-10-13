@@ -721,21 +721,69 @@ a {
 }
 
 /*
- * On the radio (§ Dense tabular overlays, rule 18): the mark after a talking
- * driver's name breathes for as long as they hold the mic. Opacity only; under
- * reduced motion it holds still at full strength.
+ * On the radio (§ Dense tabular overlays, rule 18): `RadioMark` in cells.tsx.
+ *
+ * Three movements, all on one 1.2 s beat while the mic is open:
+ * - the mark pops in from 60 % when the driver keys up;
+ * - the near pair of arcs lights, then the far pair a beat later, so the
+ *   signal travels *out* from the mast instead of the whole glyph blinking;
+ * - a ring ripples out behind it and fades, which is what catches the eye
+ *   from the corner of the screen.
+ * Opacity and transforms only. Under reduced motion all of it stops and the
+ * mark is a plain, full-strength glyph.
  */
 .radio-live {
-  animation: radio-live 1.2s var(--ease-in-out) infinite;
+  color: var(--color-text);
+  animation: radio-live-in var(--dur-mid) var(--ease-out) both;
 }
-@keyframes radio-live {
-  50% {
-    opacity: 0.45;
+.radio-live__near,
+.radio-live__far {
+  animation: radio-live-wave 1.2s var(--ease-in-out) infinite;
+}
+.radio-live__far {
+  animation-delay: 0.2s;
+}
+.radio-live__ripple {
+  position: absolute;
+  inset: 0;
+  border-radius: 9999px;
+  border: 1.5px solid currentColor;
+  opacity: 0;
+  animation: radio-live-ripple 1.2s var(--ease-out) infinite;
+}
+@keyframes radio-live-in {
+  from {
+    opacity: 0;
+    transform: scale(0.6);
+  }
+}
+@keyframes radio-live-wave {
+  0%,
+  100% {
+    opacity: 0.25;
+  }
+  35% {
+    opacity: 1;
+  }
+}
+@keyframes radio-live-ripple {
+  from {
+    opacity: 0.7;
+    transform: scale(0.5);
+  }
+  to {
+    opacity: 0;
+    transform: scale(1.9);
   }
 }
 @media (prefers-reduced-motion: reduce) {
-  .radio-live {
+  .radio-live,
+  .radio-live__near,
+  .radio-live__far {
     animation: none;
+  }
+  .radio-live__ripple {
+    display: none;
   }
 }
 
