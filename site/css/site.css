@@ -296,7 +296,7 @@ a {
        the dock. The scope has to cover both. */
     :root {
       timeline-scope: --sec-standings, --sec-relative, --sec-fuel,
-        --sec-manager, --sec-spec, --sec-needs;
+        --sec-coach, --sec-manager, --sec-spec, --sec-needs;
     }
 
     #standings {
@@ -307,6 +307,9 @@ a {
     }
     #fuel {
       view-timeline-name: --sec-fuel;
+    }
+    #coach {
+      view-timeline-name: --sec-coach;
     }
     #manager {
       view-timeline-name: --sec-manager;
@@ -335,12 +338,15 @@ a {
       animation-timeline: --sec-fuel;
     }
     .readout__field:nth-child(4) {
-      animation-timeline: --sec-manager;
+      animation-timeline: --sec-coach;
     }
     .readout__field:nth-child(5) {
-      animation-timeline: --sec-spec;
+      animation-timeline: --sec-manager;
     }
     .readout__field:nth-child(6) {
+      animation-timeline: --sec-spec;
+    }
+    .readout__field:nth-child(7) {
       animation-timeline: --sec-needs;
     }
   }

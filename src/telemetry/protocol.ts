@@ -9,6 +9,7 @@
 
 import type {
   BridgeStatus,
+  CoachingPayload,
   PlayerTelemetry,
   SessionInfo,
   StandingsPayload,
@@ -21,6 +22,7 @@ export const Channel = {
   Session: "session",
   Standings: "standings",
   Bridge: "bridge",
+  Coaching: "coaching",
 } as const;
 
 export type ChannelName = (typeof Channel)[keyof typeof Channel];
@@ -36,6 +38,7 @@ export interface ChannelPayloadMap {
   [Channel.Session]: SessionInfo;
   [Channel.Standings]: StandingsPayload;
   [Channel.Bridge]: BridgeStatus;
+  [Channel.Coaching]: CoachingPayload;
 }
 
 /** The payload type carried by a given channel. */

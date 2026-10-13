@@ -9,6 +9,12 @@ built entirely on macOS/Linux.
     pip install websockets
     python bridge/mock_bridge.py
 
+The player's own car is driven by :mod:`telemetrylab.mocktrack` — a lap of Spa
+with real braking zones and a driver who makes known mistakes — so the coach
+overlay has laps to analyse. It joins near the line: the first lap boundary is
+about 14 s in, the coach sets its reference one lap later and analyses every
+lap after that.
+
 Environment knobs:
   MOCK_CARS=20            number of cars in the field
   MOCK_MULTICLASS=1       split the field into GT3 + GT4 (0 = single class)
@@ -27,6 +33,7 @@ from typing import Any
 from websockets.asyncio.server import serve
 
 from telemetrylab import BridgeService
+from telemetrylab.mocktrack import CORNERS, GEAR_STEPS, V_MAX, MockDriver
 
 HOST = "0.0.0.0"
 PORT = 8765
@@ -128,13 +135,25 @@ class MockCar:
         self.phase = rng.uniform(0.0, 0.4)  # grid stagger (fraction of a lap)
         self.wobble = rng.uniform(0.3, 1.2)  # lap-time variation amplitude
         self.pit_at = rng.uniform(0.35, 0.85) if rng.random() < 0.25 else None
+        # The player's car is driven lap by lap on the mock track instead.
+        self.driver: MockDriver | None = None
 
     # --- dynamics -----------------------------------------------------------
     def lap_time(self, t: float) -> float:
+        if self.driver is not None:
+            return self.driver.last_lap_time(t) or self.pace
         return self.pace + self.wobble * math.sin(t * 0.03 + self.idx)
+
+    def best_lap_time(self, t: float) -> float:
+        if self.driver is not None:
+            return self.driver.best_lap_time(t) or self.pace
+        return self.pace - 0.8
 
     def progress(self, t: float) -> float:
         """Total laps completed (float): integer part = lap, frac = lapDistPct."""
+        if self.driver is not None:
+            s = self.driver.state(t)
+            return s["lap"] + s["pct"]
         return self.phase + t / self.pace
 
     def driver_dict(self) -> dict[str, Any]:
@@ -178,6 +197,8 @@ class MockField:
             klass = CLASS_GT3 if (not MULTICLASS or idx % 2 == 0) else CLASS_GT4
             self.cars.append(MockCar(idx, rng, klass))
         self.player = self.cars[0]
+        self.player.driver = MockDriver()
+        self.player.pit_at = None
 
     # --- ordering -----------------------------------------------------------
     def _ordered(self, t: float) -> list[MockCar]:
@@ -225,7 +246,7 @@ class MockField:
             arr["CarIdxLap"][c.idx] = lap
             arr["CarIdxLapDistPct"][c.idx] = round(pct, 4)
             arr["CarIdxLastLapTime"][c.idx] = round(c.lap_time(t), 3)
-            arr["CarIdxBestLapTime"][c.idx] = round(c.pace - 0.8, 3)
+            arr["CarIdxBestLapTime"][c.idx] = round(c.best_lap_time(t), 3)
             arr["CarIdxEstTime"][c.idx] = round(pct * c.pace, 3)
             arr["CarIdxF2Time"][c.idx] = round(max(0.0, gap), 3)
             arr["CarIdxOnPitRoad"][c.idx] = on_pit
@@ -287,24 +308,34 @@ class MockField:
 
     def player_frame(self, t: float) -> dict[str, Any]:
         c = self.player
-        prog = c.progress(t)
-        pct = prog - int(prog)
-        throttle = (math.sin(t * 0.8) + 1.0) / 2.0
-        braking = max(0.0, math.sin(t * 0.8 + math.pi)) * (1.0 if throttle < 0.3 else 0.0)
-        speed_kmh = 80.0 + 160.0 * throttle
-        rpm = 4000.0 + 3600.0 * throttle
-        steer = 0.6 * math.sin(t * 0.6)
+        assert c.driver is not None
+        s = c.driver.state(t)
+        lap = int(s["lap"])
+        pct = s["pct"] % 1.0
+        speed_kmh = s["speed"]
+        throttle = s["throttle"]
+        braking = s["brake"]
+        gear = int(s["gear"])
+        # Revs from where the speed sits inside its gear's band.
+        lo = GEAR_STEPS[gear - 1]
+        hi = GEAR_STEPS[gear] if gear < len(GEAR_STEPS) else V_MAX + 20.0
+        rpm = 3600.0 + 4000.0 * max(0.0, min(1.0, (speed_kmh - lo) / max(1.0, hi - lo)))
+        # Steering from the nearest apex: hardest at the apex, straight between.
+        gaps = [min(abs(pct - k.apex_pct), 1 - abs(pct - k.apex_pct)) for k in CORNERS]
+        near = gaps.index(min(gaps))
+        steer = 0.5 * max(0.0, 1.0 - gaps[near] / 0.02) * _STEER_DIR[near]
         # Only fed in below a crawl, the way a clutch actually gets used on
         # track. This field never drops that slow, so the bar stays at rest —
         # which is the honest shape for it.
         clutch_pedal = max(0.0, min(1.0, (70.0 - speed_kmh) / 28.0))
         fuel_pct = max(0.05, 1.0 - (t % (c.pace * 20)) / (c.pace * 20))
+        off, incidents = _off_track(lap, pct)
         return {
             "sessionTime": round(t, 3),
             "speed": round(speed_kmh / 3.6, 3),
             "speedKmh": round(speed_kmh, 1),
             "rpm": round(rpm),
-            "gear": max(1, min(6, int(1 + throttle * 5))),
+            "gear": gear,
             "throttle": round(throttle, 3),
             "brake": round(braking, 3),
             # `Clutch` runs 0=disengaged to 1=fully engaged, so a foot off the
@@ -315,16 +346,18 @@ class MockField:
             "steeringDeg": round(math.degrees(steer), 1),
             "fuelLevel": round(TANK_CAPACITY * fuel_pct, 2),
             "fuelLevelPct": round(fuel_pct, 3),
-            "lapCurrentLapTime": round(pct * c.pace, 3),
-            "lapBestLapTime": round(c.pace - 0.8, 3),
+            "lapCurrentLapTime": round(s["lap_time_so_far"], 3),
+            "lapBestLapTime": round(c.best_lap_time(t), 3),
             "lapLastLapTime": round(c.lap_time(t), 3),
-            "lap": int(prog),
-            "lapDistPct": round(pct, 4),
+            "lap": lap,
+            "lapDistPct": round(pct, 5),
             "playerCarPosition": None,  # standings channel is authoritative
             "playerCarClassPosition": None,
-            "latAccel": round(9.0 * math.sin(t * 0.6), 2),
+            "latAccel": round(9.0 * steer, 2),
             "lonAccel": round(6.0 * (throttle - braking), 2),
             "onPitRoad": False,
+            "trackSurface": 0 if off else 3,
+            "incidentCount": incidents,
             "airTemp": 22.0,
             "trackTemp": round(30.0 + 2.0 * math.sin(t * 0.01), 1),
             "tyres": {
@@ -342,6 +375,24 @@ class MockField:
                 )
             },
         }
+
+
+#: Which way each mock corner turns (+1 right, −1 left), as in the app's mock.
+_STEER_DIR = (1, 1, -1, -1, 1, -1)
+
+#: Every ninth lap the mock driver runs wide at Pouhon: the lap is still
+#: compared, but an off-track can never become the coach's reference.
+OFF_TRACK_EVERY = 9
+OFF_TRACK_AT = (0.552, 0.556)
+
+
+def _off_track(lap: int, pct: float) -> tuple[bool, int]:
+    """Whether the player is off track now, and their incident count so far."""
+    passed = lap // OFF_TRACK_EVERY + (
+        1 if lap % OFF_TRACK_EVERY == OFF_TRACK_EVERY - 1 and pct >= OFF_TRACK_AT[0] else 0
+    )
+    off = lap % OFF_TRACK_EVERY == OFF_TRACK_EVERY - 1 and OFF_TRACK_AT[0] <= pct < OFF_TRACK_AT[1]
+    return off, passed
 
 
 class MockSource:

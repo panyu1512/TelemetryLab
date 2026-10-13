@@ -1105,6 +1105,40 @@ the fuel panel should not have to re-learn where the numbers are.
   `primary` ground and ring — the same "selection" statement — rather than a
   border style of its own.
 
+### The Coach in the same language
+
+The Coach screen (`components/coach/CoachScreen.tsx`) is drawn from the Fuel
+panel's parts and obeys rule 7 like it: nothing on it can be aimed at, and its
+two preferences — the smallest loss worth a tip, and how many tips — live in
+the Manager (`useCoachUiStore`), applied at render time by `lib/coaching.ts`.
+
+- **One loud block.** The first tip sits on its grade's `color-mix`ed ground,
+  exactly like the Fuel verdict; further tips take the plain section tone. Two
+  tinted blocks stacked read as two alarms of equal weight, and they are not —
+  the list is ranked.
+- **Status colour only, in the Standings' sector grammar.** Gained is
+  `accent`, lost is `warning`, lost a lot is `danger` (three tips' worth, never
+  under 0.25 s). The first reference lap is `primary` — information, not a
+  verdict. No corner is ever drawn in class colour: § Two colour systems.
+- **The wording is the product.** A tip says the cause *and* its number —
+  "Braked 14 m early", not "Braking" — because a cause without a size is not
+  something a driver can change on the next lap. The supporting line holds at
+  most three numbers, and never repeats the headline's.
+- **Habits, not one-offs.** "4 of the last 6 laps" appears only for a cause
+  repeated at least twice. A single mistake is noise the driver already felt.
+- **The arithmetic closes on screen.** The corner list ends in a `Lap` row equal
+  to the sum of the rows above it, because the bridge's segments partition the
+  lap. A coach whose corner losses do not add up to the lap is a coach nobody
+  trusts with the next one.
+- **The strip's Δ steps aside on a new best.** When the last lap becomes the
+  reference, `REF` and `LAST` are the same time and a delta beside them reads
+  as a bug; the headline carries it instead.
+- **It moves once per lap.** The headline fades up (`.coach-in`, 320 ms, off
+  under reduced motion) when a new analysis lands at the line, and holds still
+  until the next one — the one moment the driver might glance across for it.
+- **Traffic is not a tip.** A corner the bridge marks as traffic shows in the
+  list with its loss and a `Traffic` tag, and never becomes advice.
+
 ### Deliberately not adopted
 
 Two things the reference does that this system rejects, recorded so a future
@@ -1530,3 +1564,11 @@ marks entry in § Deliberately not adopted with it.
   the session header. If a user ever runs the band without the header and misses
   them, the answer is to let the *strip* pin rather than to duplicate it per
   class.
+- **The coach forgets its reference when the bridge restarts.** The reference
+  lap and the corner map live in the bridge's memory, keyed by track, layout
+  and car, so a new session on the same car and track starts from a fresh
+  reference. Persisting the best clean lap per key to disk, and accepting an
+  imported `.ibt` lap (pyirsdk's `IBT` reader) as the reference, are the two
+  natural next steps. Corners are numbered `T1…Tn` in the order the coach
+  found them, not by the track's official turn numbers — a per-track name
+  map would fix that.

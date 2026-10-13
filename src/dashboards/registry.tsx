@@ -8,6 +8,7 @@ import {
   Flag,
   ListOrdered,
   Users,
+  GraduationCap,
   type LucideIcon,
 } from "lucide-react";
 import type { TelemetryData } from "../hooks/useTelemetry";
@@ -20,6 +21,7 @@ import { PositionWidget } from "../components/widgets/PositionWidget";
 import { StandingsScreen } from "../components/standings/StandingsScreen";
 import { RelativeScreen } from "../components/relative/RelativeScreen";
 import { FuelStrategyScreen } from "../components/fuel/FuelStrategyScreen";
+import { CoachScreen } from "../components/coach/CoachScreen";
 
 /** Relative footprint of a widget on the 12-column dashboard grid. */
 export type WidgetSize = "sm" | "md" | "lg" | "xl";
@@ -144,6 +146,15 @@ export const DASHBOARDS: DashboardDef[] = [
     milestone: "v0.8.0",
     widgets: [],
     Screen: FuelStrategyScreen,
+  },
+  {
+    id: "coach",
+    label: "Coach",
+    icon: GraduationCap,
+    available: true,
+    milestone: "v1.22.0",
+    widgets: [],
+    Screen: CoachScreen,
   },
 ];
 

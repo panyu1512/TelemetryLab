@@ -6,7 +6,7 @@
     <title>TelemetryLab — timing and telemetry overlays for iRacing</title>
     <meta
       name="description"
-      content="Multi-class timing, relative, fuel and telemetry overlays for iRacing. Each screen is its own window over the game, read at a glance. Free, open source, Windows."
+      content="Multi-class timing, relative, fuel, corner-by-corner coaching and telemetry overlays for iRacing. Each screen is its own window over the game, read at a glance. Free, open source, Windows."
     />
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta name="theme-color" content="#12161d" />
@@ -23,7 +23,7 @@
     <meta property="og:title" content="TelemetryLab — read the field without looking" />
     <meta
       property="og:description"
-      content="Multi-class standings, an on-track relative, fuel strategy and a driving cluster. Each one its own window over iRacing."
+      content="Multi-class standings, an on-track relative, fuel strategy, a corner-by-corner coach and a driving cluster. Each one its own window over iRacing."
     />
     <meta property="og:image" content="https://telemetrylab.app/assets/standings.png" />
     <meta property="og:image:width" content="2360" />
@@ -36,7 +36,7 @@
     <meta name="twitter:title" content="TelemetryLab — read the field without looking" />
     <meta
       name="twitter:description"
-      content="Multi-class standings, an on-track relative, fuel strategy and a driving cluster. Each one its own window over iRacing."
+      content="Multi-class standings, an on-track relative, fuel strategy, a corner-by-corner coach and a driving cluster. Each one its own window over iRacing."
     />
     <meta name="twitter:image" content="https://telemetrylab.app/assets/standings.png" />
     <meta
@@ -56,11 +56,11 @@
         "@type": "SoftwareApplication",
         "name": "TelemetryLab",
         "url": "https://telemetrylab.app/",
-        "description": "Multi-class timing, relative, fuel and telemetry overlays for iRacing. Each screen is its own window over the game, read at a glance.",
+        "description": "Multi-class timing, relative, fuel, corner-by-corner coaching and telemetry overlays for iRacing. Each screen is its own window over the game, read at a glance.",
         "applicationCategory": "UtilitiesApplication",
         "applicationSubCategory": "Sim racing overlay",
         "operatingSystem": "Windows",
-        "softwareVersion": "1.7.0",
+        "softwareVersion": "1.22.0",
         "isAccessibleForFree": true,
         "license": "https://opensource.org/licenses/MIT",
         "offers": {
@@ -79,6 +79,7 @@
           "https://telemetrylab.app/assets/standings.png",
           "https://telemetrylab.app/assets/relative.png",
           "https://telemetrylab.app/assets/fuel.png",
+          "https://telemetrylab.app/assets/coach.png",
           "https://telemetrylab.app/assets/manager.png"
         ]
       }
@@ -228,6 +229,9 @@
           <a class="readout__field" href="#fuel">
             Fuel
           </a>
+          <a class="readout__field" href="#coach">
+            Coach
+          </a>
           <a class="readout__field" href="#manager">
             Manager
           </a>
@@ -255,15 +259,16 @@
                  checkable on this page. -->
             <div class="band band--hero">
               <span class="band__chip">TelemetryLab</span>
-              <span class="band__field"><span class="band__k">OVERLAYS</span><b class="band__v">4</b></span>
+              <span class="band__field"><span class="band__k">OVERLAYS</span><b class="band__v">5</b></span>
               <span class="band__field"><span class="band__k">OS</span><b class="band__v">Windows</b></span>
               <span class="band__field"><span class="band__k">PRICE</span><b class="band__v">free</b></span>
             </div>
             <h1>Read the field without looking.</h1>
             <p class="hero__lede">
               TelemetryLab is a timing and telemetry overlay for iRacing.
-              Multi-class standings, an on-track relative, fuel strategy and a
-              driving cluster — each one its own window, sitting over the game.
+              Multi-class standings, an on-track relative, fuel strategy, a
+              corner-by-corner coach and a driving cluster — each one its own
+              window, sitting over the game.
             </p>
             <div class="hero__actions">
               <!-- Straight at the file. `releases/latest/download/<name>`
@@ -478,10 +483,55 @@
           </figure>
         </section>
 
-        <section id="manager" class="row row--flip">
+        <section id="coach" class="row row--flip">
+          <div class="band">
+            <span class="band__chip">Coach</span>
+            <span class="band__field"><span class="band__k">COMPARED</span><b class="band__v">every lap</b></span>
+            <span class="band__field"><span class="band__k">AGAINST</span><b class="band__v">your best</b></span>
+            <span class="band__field"><span class="band__k">RUNS</span><b class="band__v">locally</b></span>
+          </div>
+          <div class="row__copy">
+            <h2>Where the lap went, corner by corner.</h2>
+            <p class="row__body">
+              Every lap you complete is lined up against your quickest clean
+              lap, metre by metre, and split into corners. The coach says the
+              one or two that cost you most, and why — braked early, rolled in
+              off the pedals, over-slowed the apex, late on the throttle — with
+              the number that says how much. When the same mistake keeps
+              coming back, it says that too.
+            </p>
+            <ul class="reads">
+              <li>Time lost or gained in every corner, adding up to the lap delta</li>
+              <li>A cause for each: braking point, coasting, apex and exit speed, throttle pick-up</li>
+              <li>Pit laps and resets are never compared; an off-track lap never becomes your reference</li>
+              <li>Corners driven in traffic are marked as traffic, not blamed on you</li>
+            </ul>
+          </div>
+          <figure class="shot">
+            <img
+              src="assets/coach.png"
+              width="1240"
+              height="808"
+              loading="lazy"
+              alt="The coach overlay, under a strip naming the track with the
+                   reference lap at 2:18.607, the last lap at 2:20.128 and a
+                   delta of plus 1.521. The headline tip, on a red ground, reads
+                   T4, 'Coasted 153 m off both pedals', plus 0.52 seconds, with
+                   the apex and exit 2 km/h slower and '3 of the last 6 laps'. A
+                   second tip reads T3, 'Braked 25 m early', plus 0.41 seconds,
+                   entry 30 km/h slower, '5 of the last 6 laps'. Below, a strip
+                   of the lap coloured amber and red by where time went, and a
+                   list of all six corners as bars from a centre line — T2 too
+                   hot, T3 early brake and T4 coasting in red — ending in a lap
+                   row of plus 1.52 seconds against the reference."
+            />
+          </figure>
+        </section>
+
+        <section id="manager" class="row">
           <div class="band">
             <span class="band__chip">Manager</span>
-            <span class="band__field"><span class="band__k">OVERLAYS</span><b class="band__v">4</b></span>
+            <span class="band__field"><span class="band__k">OVERLAYS</span><b class="band__v">5</b></span>
             <span class="band__field"><span class="band__k">WIDGETS</span><b class="band__v">6</b></span>
             <span class="band__field"><span class="band__k">THEMES</span><b class="band__v">4</b></span>
           </div>
@@ -506,10 +556,11 @@
               height="1800"
               loading="lazy"
               alt="The Overlay Manager: a left rail listing Dashboard, Standings,
-                   Relative and Fuel Calc, a column of widget and appearance
-                   settings in the middle, and a live scaled preview of the
-                   dashboard overlay on the right — its speed gauge reading 204
-                   km/h in fifth, and a throttle and brake trace below it."
+                   Relative, Fuel Calc and Coach, a column of widget and
+                   appearance settings in the middle, and a live scaled preview
+                   of the dashboard overlay on the right — its speed gauge
+                   reading 187 km/h in fifth, and a throttle and brake trace
+                   below it."
             />
           </figure>
         </section>

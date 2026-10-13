@@ -7,6 +7,34 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.22.0] - 2026-10-12
+
+### Added
+
+- **A coach that tells you where the lap went.** A new **Coach** overlay
+  lines every lap you complete up against your quickest clean lap and splits
+  it into corners. It names the one or two corners that cost you most, and
+  why — "Braked 14 m early", "Coasted 120 m off both pedals", "Over-slowed —
+  apex 8 km/h slower", "Back on the throttle 30 m later" — with the time each
+  one cost. When the same mistake keeps coming back it says so ("4 of the
+  last 6 laps"). Underneath, a strip of the lap shows where time went, and a
+  list of every corner shows what it gained or lost; the corners always add
+  up to the lap's difference from your reference. A quicker clean lap
+  becomes your new reference, and the coach shows where you found the time.
+  Laps through the pit lane or with a reset are not compared, an off-track
+  lap is compared but never becomes your reference, and a corner driven
+  behind or alongside another car is marked as traffic instead of being
+  blamed on you. Manager → Coach sets the smallest loss worth a tip, how many
+  tips to show, and whether the lap strip and corner list are shown.
+  Everything runs on your PC in the bridge. The reference is kept until you
+  change car or track or the bridge restarts. Corners are numbered T1, T2, …
+  in the order the coach finds them, not by the track's official turn
+  numbers.
+- **The mock bridge drives a real lap.** The Python mock now drives your car
+  round a synthetic lap of Spa with real braking zones and a driver who makes
+  known mistakes — and runs wide every ninth lap — so the Coach works end to
+  end without iRacing.
+
 ## [1.21.0] - 2026-10-12
 
 ### Changed
@@ -592,7 +620,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.21.0...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.22.0...HEAD
+[1.22.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.21.0...v1.22.0
 [1.21.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.20.0...v1.21.0
 [1.20.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.19.0...v1.20.0
 [1.19.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.18.0...v1.19.0

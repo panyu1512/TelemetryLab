@@ -13,6 +13,8 @@ Cadences (see the milestone's "update strategy"):
 - telemetry  ~60 Hz  — player car only; ephemeral, never cached.
 - standings  ~10 Hz  — computed field order; published only when it changes.
 - session     ~1 Hz  — roster + rules + weather; published only on change.
+- coaching   per lap — the coach reads every telemetry frame and publishes
+  once each time the player completes a lap (and once per new track/car).
 
 Why these numbers: telemetry drives needles/animations that must feel
 continuous, so it rides the sim's own 60 Hz. Standings move visibly but not
@@ -26,8 +28,11 @@ from __future__ import annotations
 import asyncio
 from typing import Any, Protocol
 
+from .coaching import Coach
+from .coaching.traffic import traffic_near
 from .events import ConnectionChanged, Event, EventBus
 from .ingest import ingest_car_timings
+from .models import SessionInfo
 from .protocol import Channel, now_ms
 from .publisher import ChannelPublisher
 from .repositories import CarRepository, SessionRepository
@@ -61,6 +66,7 @@ class BridgeService:
         self._session_repo = SessionRepository(self._bus)
         self._car_repo = CarRepository(self._session_repo)
         self._publisher = ChannelPublisher()
+        self._coach = Coach()
         self._active = False
         self._bus.on_any(self._log_event)
 
@@ -82,7 +88,12 @@ class BridgeService:
             # Drop stale world so a fresh client doesn't inherit an old roster.
             self._session_repo = SessionRepository(self._bus)
             self._car_repo = CarRepository(self._session_repo)
+            self._coach.reset()
         await self._publisher.publish(Channel.BRIDGE, {"iracingActive": active})
+        if not active:
+            # Overwrite the cached analysis, or a client connecting after the
+            # disconnect would be replayed the old session's last lap.
+            await self._publisher.publish(Channel.COACHING, self._coach.snapshot().to_dict())
 
     # --- loops --------------------------------------------------------------
     async def _session_loop(self) -> None:
@@ -131,7 +142,22 @@ class BridgeService:
             frame = self._source.read_player_frame()
             if frame is not None:
                 await self._publisher.publish(Channel.TELEMETRY, frame)
+                await self._coach_frame(frame)
             await asyncio.sleep(1.0 / TELEMETRY_HZ)
+
+    async def _coach_frame(self, frame: dict[str, Any]) -> None:
+        """Feed the coach one frame; publish when it has something new."""
+        session = self._session_repo.current
+        if session is None:
+            return
+        key, length_m = coach_context(session, self._session_repo.drivers_by_idx)
+        if self._coach.set_track(key, length_m):
+            # A new track or car: tell the overlay it is starting over.
+            await self._publisher.publish(Channel.COACHING, self._coach.snapshot().to_dict())
+        traffic = traffic_near(session.driver_car_idx, self._car_repo.timings, length_m)
+        snap = self._coach.feed(frame, traffic)
+        if snap is not None:
+            await self._publisher.publish(Channel.COACHING, snap.to_dict())
 
     async def run(self) -> None:
         """Run all channel loops until cancelled."""
@@ -140,3 +166,17 @@ class BridgeService:
             self._standings_loop(),
             self._telemetry_loop(),
         )
+
+
+def coach_context(session: SessionInfo, drivers_by_idx: dict[int, Any]) -> tuple[str, float | None]:
+    """The coach's context key — track, layout and the player's car — and length.
+
+    A reference lap only means something for the same car on the same layout,
+    so a change to any of the three starts the coach over.
+    """
+    driver = drivers_by_idx.get(session.driver_car_idx)
+    car = getattr(driver, "car_path", "") or ""
+    track = session.track
+    key = f"{track.track_id}|{track.config}|{car}"
+    length_m = track.length_km * 1000.0 if track.length_km else None
+    return key, length_m

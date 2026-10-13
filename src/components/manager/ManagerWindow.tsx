@@ -31,6 +31,7 @@ import { PreviewCanvas } from "./PreviewCanvas";
 import { StandingsColumnsPanel } from "./StandingsColumnsPanel";
 import { StandingsViewPanel } from "./StandingsViewPanel";
 import { RelativeOptionsPanel } from "./RelativeOptionsPanel";
+import { CoachOptionsPanel } from "./CoachOptionsPanel";
 import { GlobalSettingsPanel } from "./GlobalSettingsPanel";
 import { DebugPanel } from "./DebugPanel";
 import { Button, IconButton, ToggleSwitch } from "../ui/controls";
@@ -264,6 +265,15 @@ function OverlayConfigSections({ overlayId }: { overlayId: string }) {
         </ConfigSection>
       )}
 
+      {overlayId === "coach" && (
+        <ConfigSection
+          title="Coaching"
+          description="Which corners become tips, and what sits under them."
+        >
+          <CoachOptionsPanel />
+        </ConfigSection>
+      )}
+
       <ConfigSection
         title="Appearance"
         description="Theme, saturation, brightness and opacity for this overlay."
@@ -288,7 +298,7 @@ function OverlayConfigSections({ overlayId }: { overlayId: string }) {
   );
 }
 
-/** Open/close action for a single-window overlay (standings/relative/fuel). */
+/** Open/close action for a single-window overlay (standings/relative/fuel/coach). */
 function OverlayWindowAction({
   overlayId,
   label,

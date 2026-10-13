@@ -136,6 +136,14 @@ const SHOTS = [
   // section grammar and the fuel-save card spans both columns, so the last
   // card now ends at 403.
   { name: "fuel", route: "?overlay=fuel", w: 620, h: 412, wait: PAST_A_LAP_MS },
+  // The coach after the first lap the feed completes: lap 13 is already done
+  // when the page opens (and was a new best), lap 14 lands ~20 s in, and its
+  // analysis holds until ~47 s. 30 s sits in the middle of that window, so the
+  // frame shows tips rather than the new-best banner. Height measured to the
+  // corner list's `Lap` row plus the panel's padding — re-measure if the
+  // screen's sections change, and re-read the coach alt text in `index.html`:
+  // the tips it quotes come off this lap.
+  { name: "coach", route: "?overlay=coach", w: 620, h: 404, wait: 30_000 },
 ];
 
 fs.mkdirSync(OUT, { recursive: true });

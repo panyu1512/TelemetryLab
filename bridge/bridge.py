@@ -148,6 +148,11 @@ class IrsdkSource:
             "latAccel": self._get("LatAccel"),
             "lonAccel": self._get("LonAccel"),
             "onPitRoad": self._get("OnPitRoad"),
+            # Read by the coach to decide whether a lap is clean enough to be a
+            # reference: irsdk_TrkLoc (0 off track, 1 pit stall, 2 approaching
+            # pits, 3 on track) and the player's own incident count.
+            "trackSurface": self._get("PlayerTrackSurface"),
+            "incidentCount": self._get("PlayerCarMyIncidentCount"),
             "airTemp": self._get("AirTemp"),
             "trackTemp": self._get("TrackTemp"),
             "tyres": {
