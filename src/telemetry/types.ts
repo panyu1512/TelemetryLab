@@ -233,6 +233,8 @@ export interface CarTiming {
   trackSurface: number | null;
   trackSurfaceLabel: string;
   timestamp: number;
+  /** This car is keying the radio right now (`RadioTransmitCarIdx`). */
+  isTransmitting?: boolean;
 }
 
 /**
@@ -324,6 +326,12 @@ export interface StandingsEntry {
   tireCompound: number | null;
   /** Laps on the current tyre set (derived: counts from last pit-stall exit). */
   tireLaps: number;
+
+  /**
+   * This car is keying the radio right now (iRacing's `RadioTransmitCarIdx`).
+   * Optional so an older bridge, which never sends it, reads as nobody talking.
+   */
+  isTransmitting?: boolean;
 }
 
 /** Per-class grouping metadata for the multi-class timing screen. */

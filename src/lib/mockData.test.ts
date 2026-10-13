@@ -216,6 +216,19 @@ describe("mockStandings — a field that has raced", () => {
     expect(p.entries.every((e) => e.tireLaps! < 20)).toBe(true);
   });
 
+  it("puts one driver at a time on the radio, and sometimes nobody", () => {
+    const talking = Array.from(
+      { length: 200 },
+      (_, i) =>
+        mockStandings(MOCK_START_OFFSET_S + i).entries.filter(
+          (e) => e.isTransmitting
+        ).length
+    );
+    expect(talking.every((n) => n <= 1)).toBe(true);
+    expect(talking).toContain(0);
+    expect(talking).toContain(1);
+  });
+
   it("moves someone on the position-change column", () => {
     // Deterministic in t, so sample a lap's worth and require some movement.
     const moved = Array.from({ length: 60 }, (_, i) =>

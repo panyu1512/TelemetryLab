@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.23.0] - 2026-10-13
+
+### Added
+
+- **See who is talking.** The Standings table now shows a radio mark after a
+  driver's name while they are transmitting on the radio, so you can tell who
+  is speaking without guessing from the voice. While they hold the mic, radio
+  waves pulse out from the mark and a ring ripples away behind it, so it
+  catches your eye from the corner of the screen; it disappears when they let
+  go (and holds still if your system asks for reduced motion). Needs the
+  updated bridge; with an older one the table simply never shows it.
+
 ## [1.22.0] - 2026-10-12
 
 ### Added
@@ -620,7 +632,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.22.0...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.23.0...HEAD
+[1.23.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.22.0...v1.23.0
 [1.22.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.21.0...v1.22.0
 [1.21.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.20.0...v1.21.0
 [1.20.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.19.0...v1.20.0

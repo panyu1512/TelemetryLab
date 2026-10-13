@@ -219,7 +219,7 @@ class MockField:
         leader = order[0]
         leader_prog = leader.progress(t)
 
-        arr: dict[str, list[Any]] = {
+        arr: dict[str, Any] = {
             k: [None] * n
             for k in (
                 "CarIdxPosition",
@@ -253,6 +253,12 @@ class MockField:
             arr["CarIdxTrackSurface"][c.idx] = 1 if on_pit else 3
             # Alternate compound every ~20 laps to exercise the tyre column.
             arr["CarIdxTireCompound"][c.idx] = (lap // 20) % 2
+        # Someone keys the radio for 4 s in every 15, a different car each
+        # time, so the standings' radio mark has something to show.
+        window = int(t // 15)
+        arr["RadioTransmitCarIdx"] = (
+            self.cars[(window * 5) % len(self.cars)].idx if t % 15 < 4 else -1
+        )
         return arr
 
     def session_raw(self, t: float, active_state: int, flags: int) -> dict[str, Any]:

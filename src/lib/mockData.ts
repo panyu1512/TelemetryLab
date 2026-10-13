@@ -981,6 +981,14 @@ export function mockStandings(
     const garaged = inGarage(car.idx);
     const onPitRoad = !garaged && car.idx === (rotation * 5) % MOCK_FIELD_SIZE;
     const isOffTrack = !garaged && car.idx === (rotation * 7 + 3) % MOCK_FIELD_SIZE;
+    // And someone on the radio for 3 s in every 10 — wall-clock seconds, so
+    // scaled out of mock time — a different car each time.
+    const radioPeriod = 10 * MOCK_TIME_SCALE;
+    const radioWindow = Math.floor(t / radioPeriod);
+    const isTransmitting =
+      !garaged &&
+      t % radioPeriod < 3 * MOCK_TIME_SCALE &&
+      car.idx === (radioWindow * 3 + 1) % MOCK_FIELD_SIZE;
 
     return {
       carIdx: car.idx,
@@ -1029,6 +1037,7 @@ export function mockStandings(
       // Laps on the *set*, not laps in the race — they reset at a stop, and a
       // set age that only ever climbed made the cell read as a lap counter.
       tireLaps: lap % STINT_LAPS,
+      isTransmitting,
     };
   });
 

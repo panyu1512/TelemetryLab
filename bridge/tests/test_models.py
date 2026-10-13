@@ -81,12 +81,14 @@ class TestCarTiming:
             track_surface_label="on_track",
             timestamp=999,
             tire_compound=1,
+            is_transmitting=True,
         )
         wire = t.to_dict()
         assert wire["carIdx"] == 5
         assert wire["deltaToPlayer"] == -0.5
         assert wire["trackSurfaceLabel"] == "on_track"
         assert wire["tireCompound"] == 1
+        assert wire["isTransmitting"] is True
         assert not any("_" in k for k in wire)
 
 

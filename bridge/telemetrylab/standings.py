@@ -18,7 +18,8 @@ Everything a row shows is one of:
 
 * **Direct from iRacing** — ``position``, ``classPosition``, ``lap``,
   ``lapDistPct``, ``lastLapTime``, ``bestLapTime``, ``onPitRoad``,
-  ``trackSurface``. We pass these through untouched.
+  ``trackSurface``, and whether the car is on the radio (``RadioTransmitCarIdx``).
+  We pass these through untouched.
 * **Derived here** — gap/interval (from ``F2Time``/lap deltas), interval-to-player
   (from ``EstTime``), estimated catch time, position change, projected iRating,
   and *all* sector splits/deltas (iRacing gives no per-opponent sector times).
@@ -339,6 +340,7 @@ class StandingsEngine:
                     is_lapped=gap_is_laps,
                     tire_compound=t.tire_compound,
                     tire_laps=tire_laps_by_idx.get(t.car_idx, 0),
+                    is_transmitting=t.is_transmitting,
                 )
             )
             prev_row = t

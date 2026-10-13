@@ -31,6 +31,7 @@ import {
   LicenseBadge,
   PILL_H,
   PosChange,
+  RadioMark,
   SectorCell,
   TireCell,
 } from "./cells";
@@ -306,10 +307,15 @@ function StandingsRowInner({
             actually recognised by, plus ~12 % width in the one column allowed
             to truncate. Normalising the member's own casing gives the column
             its single voice without either cost. */}
-        <div className="flex min-w-0 items-center">
+        <div className="flex min-w-0 items-center gap-1">
           <span className="truncate text-[13px] font-bold tracking-[0.01em] text-text">
             {formatDriverName(driver?.userName) || `Car ${carIdx}`}
           </span>
+          {/* On the radio: a mark straight after the name, in the name's own
+              ink, sending out waves while the driver keys the mic. Ink rather
+              than a status colour — talking is neither good nor bad — and it
+              never truncates, so a long name gives way to it (rule 18). */}
+          {row?.isTransmitting && <RadioMark size={16} />}
         </div>
 
         {/* licence + SR, then iRating + projected change — one pill in two

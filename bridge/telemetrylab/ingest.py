@@ -28,6 +28,9 @@ CAR_IDX_VARS = (
     "CarIdxOnPitRoad",
     "CarIdxTrackSurface",
     "CarIdxTireCompound",
+    # Not an array: the one carIdx keying the radio right now, -1 when nobody
+    # is. It rides the same read so the standings row can say who is talking.
+    "RadioTransmitCarIdx",
 )
 
 
@@ -93,6 +96,7 @@ def ingest_car_timings(
     est_arr = arrays.get("CarIdxEstTime")
 
     player_est = _at_float(_at(est_arr, player_car_idx))
+    talking = _at_int(arrays.get("RadioTransmitCarIdx"))
 
     out: dict[int, CarTiming] = {}
     for idx in include:
@@ -123,5 +127,6 @@ def ingest_car_timings(
             track_surface_label=track_surface(surface),
             timestamp=timestamp,
             tire_compound=_at_int(_at(arrays.get("CarIdxTireCompound"), idx)),
+            is_transmitting=talking is not None and talking == idx,
         )
     return out
