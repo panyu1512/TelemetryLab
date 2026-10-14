@@ -415,6 +415,18 @@ the nav and title bar inline the two paths so they can take `currentColor`.
   (`PanelHeader`) — the same strip in the dashboard grid, in its own window
   and in the Manager's preview — which yields its height to the data on a card
   under 96 px tall. Its two actions sit in that header, shown on hover.
+  **One exception: a `bare` widget** (`WidgetDef.bare`, the Radar today) has
+  no panel, no paper and no header in its own window or in the preview — only
+  its marks. It is the one widget whose whole job is to cover as little of
+  the game as it can; on the dashboard grid its header is still the grab
+  strip and the home of its buttons, and shows on hover only.
+- **A widget window obeys its dashboard.** A widget popped into its own
+  window is configured under the Dashboard in the Manager, so it takes the
+  Dashboard's Enabled switch, theme, saturation / brightness / opacity and
+  "Hide when" rules exactly as an overlay window takes its own — plus its own
+  toggle in the Widgets list. One pure module (`lib/overlayVisibility.ts`)
+  decides for both kinds of window; widget windows used to skip it, which is
+  how those controls came to change the preview and nothing over the game.
 - **No *app* surface uses enrichment.** No hero imagery, no illustration, no
   decorative background — the `.bg-blueprint` dot grid the Manager carried
   through 1.24 is gone with the rest of the decoration. Function carries every
@@ -1183,48 +1195,71 @@ the Manager (`useCoachUiStore`), applied at render time by `lib/coaching.ts`.
   until the next one — the one moment the driver might glance across for it.
 - **Traffic is not a tip.** A corner the bridge marks as traffic shows in the
   list with its loss and a `Traffic` tag, and never becomes advice.
+- **The session best is the field's number, in the field's colour.** Beside
+  `REF` and `LAST` the strip carries `BEST` — the fastest clean lap anyone in
+  the player's class has set — in `sector-purple`, the colour every
+  overall-best lap wears on Standings. In a one-class session that is the
+  whole field; a GT4 is never held against an LMP2, whose lap loses time in
+  every corner for reasons no driver can fix. It moves the moment someone sets
+  a new one, not at the player's line.
+- **Against the session best, time only.** The `Session best` section is the
+  corner list's grammar — diverging bar, time, a `Lap` row that sums the rows
+  — with the cause column left empty: the bridge times other cars from lap
+  distance (`coaching/field.py`) and has nobody's pedals but the player's.
+  Causes stay with the coach's own reference, which it can measure. The
+  section's header names whose lap it was and its time, because "you lost
+  0.4 s at Pouhon" means nothing until you know to whom.
+- **Compared first, kept after — both references.** A lap that beats the
+  session best is held against the old one before it becomes the new one,
+  exactly like the coach's own reference, so a new best still shows where it
+  came from. The player's own clean laps count; theirs is a session best like
+  anyone's.
 
 ### The Radar
 
 The Radar widget (`components/widgets/RadarWidget.tsx`) is for the driver with
 one screen: the car in the blind spot is a voice from the spotter, and the
-widget puts it on a map. It is a widget, not an overlay with a manager page —
-it has nothing to configure.
+widget puts it where it is. It is a widget, not an overlay with a manager page
+— it has nothing to configure.
 
-- **The spotter is the authority; the map is ours.** iRacing's `CarLeftRight`
-  decides whether a side is lit, every frame, whether or not the bridge managed
-  to place a car there. The bridge (`telemetrylab/radar.py`) only adds *which*
-  car and how far along you it is, from lap distance. A lit side with no car
-  on it is the honest picture of the sim saying "car left" for a car whose lap
-  distance we cannot match; a car drawn on an unlit side would be a lie.
-- **One assumption, written down.** iRacing publishes no lateral position, so
-  a car alongside sits one lane over (`LANE_M`, 2.5 m centre to centre) or two
-  when the spotter calls two cars on that side. The gap along the track is
-  measured. The angle is therefore exact in the direction that matters — how
-  far up your door the other car is — and an estimate across. The README and
-  the changelog say so in the same words.
-- **One unit on both axes.** The drawing is in metres with the same scale
-  vertically and horizontally, so the angle a car sits at on screen is the
-  angle printed under it. Stretching the track axis to fill a tall window
-  would make the picture and the number disagree.
-- **The angle is a bearing from your nose, 0–180, side said separately.**
-  90° is door to door; 150° is a nose at your rear wheel. That is how a
-  spotter talks ("left, rear quarter"), and it means the same number reads
-  the same on either side.
-- **A car whose side is unknown is drawn in your lane.** A car ahead or behind
-  that the spotter has not called alongside has no side the sim will vouch
-  for. Drawing it in line with you, in the neutral traffic tone, is the one
-  position nothing has contradicted.
-- **Status colour only.** Alongside is `danger` — a car you can touch is the
-  critical state — and so are the lit sides and the angles. Your car is
-  `primary`, "this is you" as on the timing surfaces. Traffic is the tertiary
-  chart neutral, the guides the dotted chart grid. No class colour: § Two
-  colour systems; the question here is *where*, never *who*.
-- **The call reads first, on its own line.** `LEFT`, `2 RIGHT`, `BOTH SIDES`
-  — the spotter's words, on top, because it is the one thing read at a glance
-  and `BOTH SIDES` needs the width. The two side readouts under the map carry
-  each side's inside car: its angle, and its gap in words ("3.1 m behind").
-- **No easing.** The cars ride the 60 Hz telemetry frame and are drawn where
+**Rewritten as lines.** The first version (1.24) drew a map: your car in the
+middle, a car alongside one lane over, a dashed bearing and a printed angle
+("120°"), on a panel with a header and a call word above it. Drivers could not
+read the overtaking car off it. The angle mixed a measured number (how far up
+your door the car is) with an assumed one (how far across), so it moved when
+the car moved along you and never when it moved across; and a car closing from
+behind sat in your own lane until the spotter called it, then jumped sideways.
+A picture with that much invented in it, under that much chrome, was the
+wrong shape for a glance in a braking zone.
+
+- **Two lines and nothing else.** One down each edge of the window; no panel,
+  no paper, no header, no words, no numbers (`WidgetDef.bare`). The window is
+  the stretch of track beside your car — `LINE_M` (8 m) ahead at the top, as
+  far behind at the bottom — so sized to sit either side of your car on
+  screen, the lines are the edges of your own field of view.
+- **Only what is measured is drawn.** A car alongside lights the part of the
+  line it covers along the track: its gap is lap distance × track length,
+  exact, and its length is a car's. As it comes past, its mark slides up the
+  line exactly as it slides up your door. Nothing lateral is drawn because
+  iRacing publishes nothing lateral — the old lane offset and angle are gone
+  with the assumption under them.
+- **Your car is the reference on the line.** The stretch of each line level
+  with your own car is a little stronger than the rest, so "on my rear wheel"
+  and "past my nose" read without a scale.
+- **The spotter is the authority; the position is ours.** iRacing's
+  `CarLeftRight` decides whether a side is lit, every frame. The bridge
+  (`telemetrylab/radar.py`) only adds where along you the car is. A side the
+  spotter calls with no car the bridge could match lights your own car's
+  stretch, dimmer — the sim said alongside, not where; a car on a side the
+  spotter has not called is never drawn.
+- **Two cars, two lines.** The second car on a side lights a second line
+  outside the first, in the order the bridge keeps them (the car that was
+  next to you stays next to you).
+- **Status colour only.** A car overlapping you is `danger`; one the spotter
+  still calls but clear by a nose is `warning`. The rails are the chart axis
+  tone, your stretch the tertiary neutral. A 1 px dark edge keeps a lit line
+  readable over a red car or a sunlit kerb.
+- **No easing.** The marks ride the 60 Hz telemetry frame and are drawn where
   they are. A glide would put a car behind where it actually is, which is the
   one error this widget cannot afford.
 
