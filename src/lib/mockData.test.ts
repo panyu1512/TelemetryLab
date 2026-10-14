@@ -11,6 +11,7 @@ import {
   MOCK_COACH_CORNERS,
   mockCoaching,
   mockPlayerTelemetry,
+  mockRadar,
   mockSession,
   mockStandings,
 } from "./mockData";
@@ -469,5 +470,44 @@ describe("mockCoaching", () => {
     }
     expect(sawOff).toBe(true);
     expect(mockPlayerTelemetry(10 * pace).incidentCount).toBeGreaterThan(0);
+  });
+});
+
+describe("mockRadar", () => {
+  // Five minutes of wall clock, sampled every 0.1 s of it (the feed runs 5×).
+  const frames = Array.from({ length: 3000 }, (_, i) =>
+    mockRadar(MOCK_START_OFFSET_S + i * 0.5),
+  );
+
+  it("sweeps through every call the widget draws", () => {
+    const states = new Set(frames.map((f) => f.state));
+    for (const s of ["clear", "car_left", "car_right", "car_left_right"]) {
+      expect(states).toContain(s);
+    }
+  });
+
+  it("places exactly the cars the spotter counts, on the side it calls", () => {
+    for (const f of frames) {
+      const left = f.cars.filter((c) => c.side === "left");
+      const right = f.cars.filter((c) => c.side === "right");
+      expect(left.length).toBe(f.left);
+      expect(right.length).toBe(f.right);
+      for (const c of [...left, ...right]) expect(Math.abs(c.gapM)).toBeLessThanOrEqual(4.8);
+    }
+  });
+
+  it("moves the cars smoothly — no car jumps between frames", () => {
+    for (let i = 1; i < frames.length; i++) {
+      for (const c of frames[i].cars) {
+        const before = frames[i - 1].cars.find((p) => p.carIdx === c.carIdx);
+        if (before) expect(Math.abs(c.gapM - before.gapM)).toBeLessThan(1);
+      }
+    }
+  });
+
+  it("rides on the player frame", () => {
+    const f = mockPlayerTelemetry(MOCK_START_OFFSET_S);
+    expect(f.radar).toEqual(mockRadar(MOCK_START_OFFSET_S));
+    expect(f.carLeftRight).toBe(f.radar?.carLeftRight);
   });
 });

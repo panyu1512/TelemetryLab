@@ -153,6 +153,10 @@ class IrsdkSource:
             # pits, 3 on track) and the player's own incident count.
             "trackSurface": self._get("PlayerTrackSurface"),
             "incidentCount": self._get("PlayerCarMyIncidentCount"),
+            # The sim's spotter (irsdk_CarLeftRight): how many cars are
+            # alongside on each side. The service places them on the radar
+            # with the CarIdx lap distances read below.
+            "carLeftRight": self._get("CarLeftRight"),
             "airTemp": self._get("AirTemp"),
             "trackTemp": self._get("TrackTemp"),
             "tyres": {

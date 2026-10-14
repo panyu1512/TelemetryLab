@@ -89,6 +89,15 @@ Every lap you complete is lined up against your quickest clean lap, metre by met
 </details>
 
 <details>
+<summary><b>A radar for when there is no side screen</b></summary>
+
+<br>
+
+On a single monitor the car in your blind spot is a voice, not a picture. The **Radar** widget draws it: your car in the middle, the spotter's side lit red, and each car alongside placed where it is — how many metres ahead or behind, and the angle it sits at from your nose (90° is door to door, 150° is a nose at your rear wheel). Cars closing from behind or ahead show up before they are alongside. iRacing's own spotter (`CarLeftRight`) decides whether a side is occupied; the bridge only adds where along you the car is, from every car's lap distance. iRacing publishes no lateral position, so a car alongside is drawn one lane over (two, when the spotter calls two cars on that side) — the gap is measured, the lane is assumed.
+
+</details>
+
+<details>
 <summary><b>Configuration with an instant live preview</b></summary>
 
 <br>
@@ -293,7 +302,7 @@ On Windows the real bridge talks to iRacing; on macOS and Linux a mock bridge ge
 │   ├── telemetry/            # Wire protocol, typed models, WS connection
 │   │   └── protocol.test.ts  # Wire-envelope parser specs
 │   ├── stores/               # Zustand stores (session/telemetry/standings/bridge)
-│   ├── lib/                  # Pure helpers (format/scales/fuelStrategy/coaching) + *.test.ts
+│   ├── lib/                  # Pure helpers (format/scales/fuelStrategy/coaching/radar) + *.test.ts
 │   ├── hooks/
 │   │   ├── useBridge.ts      # Owns the WS connection; feeds the stores
 │   │   └── useTelemetry.ts   # Single-car compatibility selector
@@ -309,6 +318,7 @@ On Windows the real bridge talks to iRacing; on macOS and Linux a mock bridge ge
 ├── bridge/                   # Python sidecar
 │   ├── telemetrylab/         # Shared core: protocol, models, repos, service
 │   │   ├── coaching/         # Lap recorder, corner detection, per-corner causes
+│   │   ├── radar.py          # Places the spotter's call: who is alongside, where
 │   │   └── mocktrack.py      # Synthetic Spa lap with known mistakes (mock + tests)
 │   ├── tests/                # pytest suite (unit + service integration)
 │   ├── bridge.py             # Real bridge source (Windows, pyirsdk)
@@ -353,7 +363,7 @@ The bridge multiplexes several **channels** over the single WebSocket, each in a
 
 | Channel     | Cadence              | Payload                                                              |
 | ----------- | -------------------- | -------------------------------------------------------------------- |
-| `telemetry` | ~60 Hz               | Player car only: speed/rpm/gear, inputs, tyres, current lap.         |
+| `telemetry` | ~60 Hz               | Player car only: speed/rpm/gear, inputs, tyres, current lap, radar.  |
 | `standings` | ~5–10 Hz (on change) | Computed field order: positions, gaps, per-car timing, pit state, who is on the radio. |
 | `session`   | on change / ~1 Hz    | Driver roster, session/track/weather metadata, flags, SOF.           |
 | `bridge`    | on change            | `{ iracingActive }` — replaces the old `{connected:false}` heartbeat. |

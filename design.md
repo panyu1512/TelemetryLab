@@ -1166,6 +1166,50 @@ the Manager (`useCoachUiStore`), applied at render time by `lib/coaching.ts`.
 - **Traffic is not a tip.** A corner the bridge marks as traffic shows in the
   list with its loss and a `Traffic` tag, and never becomes advice.
 
+### The Radar
+
+The Radar widget (`components/widgets/RadarWidget.tsx`) is for the driver with
+one screen: the car in the blind spot is a voice from the spotter, and the
+widget puts it on a map. It is a widget, not an overlay with a manager page —
+it has nothing to configure.
+
+- **The spotter is the authority; the map is ours.** iRacing's `CarLeftRight`
+  decides whether a side is lit, every frame, whether or not the bridge managed
+  to place a car there. The bridge (`telemetrylab/radar.py`) only adds *which*
+  car and how far along you it is, from lap distance. A lit side with no car
+  on it is the honest picture of the sim saying "car left" for a car whose lap
+  distance we cannot match; a car drawn on an unlit side would be a lie.
+- **One assumption, written down.** iRacing publishes no lateral position, so
+  a car alongside sits one lane over (`LANE_M`, 2.5 m centre to centre) or two
+  when the spotter calls two cars on that side. The gap along the track is
+  measured. The angle is therefore exact in the direction that matters — how
+  far up your door the other car is — and an estimate across. The README and
+  the changelog say so in the same words.
+- **One unit on both axes.** The drawing is in metres with the same scale
+  vertically and horizontally, so the angle a car sits at on screen is the
+  angle printed under it. Stretching the track axis to fill a tall window
+  would make the picture and the number disagree.
+- **The angle is a bearing from your nose, 0–180, side said separately.**
+  90° is door to door; 150° is a nose at your rear wheel. That is how a
+  spotter talks ("left, rear quarter"), and it means the same number reads
+  the same on either side.
+- **A car whose side is unknown is drawn in your lane.** A car ahead or behind
+  that the spotter has not called alongside has no side the sim will vouch
+  for. Drawing it in line with you, in the neutral traffic tone, is the one
+  position nothing has contradicted.
+- **Status colour only.** Alongside is `danger` — a car you can touch is the
+  critical state — and so are the lit sides and the angles. Your car is
+  `primary`, "this is you" as on the timing surfaces. Traffic is white ink at
+  half strength. No class colour: § Two colour systems; the question here is
+  *where*, never *who*.
+- **The call reads first, on its own line.** `LEFT`, `2 RIGHT`, `BOTH SIDES`
+  — the spotter's words, on top, because it is the one thing read at a glance
+  and `BOTH SIDES` needs the width. The two side readouts under the map carry
+  each side's inside car: its angle, and its gap in words ("3.1 m behind").
+- **No easing.** The cars ride the 60 Hz telemetry frame and are drawn where
+  they are. A glide would put a car behind where it actually is, which is the
+  one error this widget cannot afford.
+
 ### Deliberately not adopted
 
 Two things the reference does that this system rejects, recorded so a future
