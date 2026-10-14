@@ -188,7 +188,7 @@ function OverlayControlHead({ overlayId }: { overlayId: string }) {
             {dashboard.label}
           </h1>
           {/* The status line is mono: it reports machine state, not prose. */}
-          <p className="tnum mt-0.5 font-mono text-[11px] tracking-tight">
+          <p className="tnum mt-0.5 font-mono text-small tracking-tight">
             <span className={settings.enabled ? "text-muted" : "text-faint"}>
               {settings.enabled ? "enabled" : "disabled"}
             </span>
@@ -412,15 +412,13 @@ function WidgetRow({ widget }: { widget: WidgetDef }) {
             {widget.title}
           </span>
           {open && (
-            <span className="shear mx-0.5 whitespace-nowrap rounded-ctl bg-primary/15 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.12em] text-primary">
-              <span className="gap-1">
-                <span aria-hidden className="size-1 rounded-full bg-primary" />
-                Open
-              </span>
+            <span className="label-caps inline-flex items-center gap-1 whitespace-nowrap rounded-ctl border border-primary/40 px-1.5 py-0.5 text-primary">
+              <span aria-hidden className="live-dot" />
+              Open
             </span>
           )}
         </div>
-        <div className="mt-0.5 truncate text-[11px] text-faint">
+        <div className="mt-0.5 truncate text-small text-faint">
           {widget.description}
         </div>
       </div>
@@ -436,13 +434,11 @@ function WidgetRow({ widget }: { widget: WidgetDef }) {
 /**
  * A tuning section.
  *
- * The legend is a solid block set on the mark's shear before the heading,
- * rather than a rule running out of it and fading. Both beat a full-width
- * border above every block — that reads as a stack of identical bands — but a
- * rule is a divider *between* things where a block is a marker *on* one, and
- * what this needs to say is "a new group starts here", not "the last one
- * ended". It is also the same cut the CTAs and chips take, so the chrome
- * speaks one language rather than two.
+ * The legend is a 2 px accent bar set before the heading, rather than a rule
+ * running out of it. Both beat a full-width border above every block — that
+ * reads as a stack of identical bands — but a rule is a divider *between*
+ * things where a bar is a marker *on* one, and what this needs to say is "a
+ * new group starts here", not "the last one ended".
  */
 function ConfigSection({
   title,
@@ -458,7 +454,7 @@ function ConfigSection({
       <div className="mb-4">
         <div className="flex items-center gap-2.5">
           <span className="section-block" aria-hidden />
-          <h2 className="whitespace-nowrap text-[13px] font-bold uppercase tracking-[0.06em] text-text">
+          <h2 className="whitespace-nowrap text-name font-semibold uppercase tracking-caps text-text">
             {title}
           </h2>
         </div>
@@ -489,12 +485,12 @@ function EnableToggle({
       role="switch"
       aria-checked={enabled}
       onClick={() => onChange(!enabled)}
-      className="shear mx-1 whitespace-nowrap rounded-ctl border border-border bg-surface-2 px-2.5 py-1.5 transition-colors hover:border-border-strong active:brightness-95"
+      className="inline-flex items-center whitespace-nowrap rounded-ctl border border-border bg-surface-2 px-2.5 py-1.5 transition-colors hover:border-border-strong active:brightness-95"
     >
-      <span className="gap-2">
+      <span className="inline-flex items-center gap-2">
         <span
           className={[
-            "text-[11px] font-bold uppercase tracking-[0.06em]",
+            "text-small font-semibold uppercase tracking-caps",
             enabled ? "text-text" : "text-faint",
           ].join(" ")}
         >
@@ -514,7 +510,7 @@ function EnableToggle({
         >
           <span
             className={[
-              "absolute top-0.5 size-3 rounded-full bg-text shadow-sm transition-[left]",
+              "absolute top-0.5 size-3 rounded-full bg-text transition-[left]",
               enabled ? "left-[14px]" : "left-0.5",
             ].join(" ")}
           />
@@ -529,7 +525,7 @@ function EnableToggle({
 function ManagerHeader() {
   return (
     <header className="flex h-12 flex-none items-center gap-4 border-b border-border px-4">
-      <span className="text-[13px] font-bold uppercase tracking-[0.06em] text-text">
+      <span className="text-name font-semibold uppercase tracking-caps text-text">
         Overlay Manager
       </span>
 
@@ -603,10 +599,10 @@ function ProfileSelector() {
         onClick={() => setOpen((o) => !o)}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="shear mr-1 whitespace-nowrap rounded-ctl border border-border bg-surface-2 px-3 py-1.5 text-xs transition-colors hover:border-border-strong active:brightness-95"
+        className="inline-flex items-center whitespace-nowrap rounded-ctl border border-border bg-surface-2 px-3 py-1.5 text-xs transition-colors hover:border-border-strong active:brightness-95"
       >
-        <span className="gap-2">
-          <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-faint">
+        <span className="inline-flex items-center gap-2">
+          <span className="label-caps">
             Profile
           </span>
           <span className="max-w-32 truncate font-medium text-text">
@@ -755,7 +751,7 @@ function Sidebar({
     <aside className="flex w-56 flex-none flex-col border-r border-border">
       {/* Overlay catalog */}
       <div className="flex-1 overflow-y-auto p-3">
-        <p className="mb-2 px-2 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-faint">
+        <p className="mb-2 px-2 label-caps">
           Overlays
         </p>
         <div className="space-y-0.5">
@@ -934,11 +930,11 @@ function ManagerFooter() {
 
   return (
     <footer className="flex h-8 flex-none items-center gap-2 border-t border-border bg-surface px-4">
-      <span aria-hidden className="inline-block size-1.5 shrink-0 rounded-full bg-primary" />
-      <span className="truncate font-mono text-[11px] tracking-tight text-faint">
+      <span aria-hidden className="live-dot text-primary" />
+      <span className="truncate font-mono text-small tracking-tight text-faint">
         preview · mock data
       </span>
-      <span className="tnum ml-auto shrink-0 font-mono text-[11px] text-faint">
+      <span className="tnum ml-auto shrink-0 font-mono text-small text-faint">
         {enabledCount}/{DASHBOARDS.length} enabled
         <span className="mx-1.5 text-border-strong">·</span>
         {openCount === 0

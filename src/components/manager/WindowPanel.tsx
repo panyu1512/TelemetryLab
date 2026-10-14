@@ -43,7 +43,7 @@ export function WindowPanel({ overlayId }: WindowPanelProps) {
         <div className="min-w-0 flex-1">
           <div className="text-xs font-medium text-text">Lock window</div>
           <div
-            className="mt-0.5 text-[11px]"
+            className="mt-0.5 text-small"
             style={{
               color: locked ? "var(--color-primary)" : "var(--color-faint)",
             }}
@@ -67,7 +67,7 @@ export function WindowPanel({ overlayId }: WindowPanelProps) {
             <Readout label="H" value={`${bounds.height}`} unit="px" />
           </div>
         ) : (
-          <div className="rounded-card border border-border bg-surface px-3 py-2.5 text-[11px] text-faint">
+          <div className="rounded-card border border-border bg-surface px-3 py-2.5 text-small text-faint">
             Not saved yet — open the window and move or resize it once.
           </div>
         )}

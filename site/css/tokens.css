@@ -1,9 +1,7 @@
-/* Hallmark · genre: modern-minimal · macrostructure: Split Studio
- * design-system: design.md (locked) · surface: marketing
- * theme: the locked system — NOT a catalog rotation. design.md inverts the
- * diversification rule: surfaces must share the system, so this file mirrors
- * the app's Carbon values verbatim rather than picking a new palette.
- * paper oklch(19% 0.0094 256) dark · display grotesk-sans (Inter) · accent cool (254°)
+/* design-system: design.md · surface: marketing
+ * mirrors the app's Carbon values — the system is shared, not re-picked per
+ * surface. paper oklch(17.5% 0.009 255) graphite · sans Inter · mono
+ * JetBrains Mono · one accent (cyan 226°)
  * nav: N9 edge-aligned · footer: Ft5 statement · enrichment: real product captures
  */
 
@@ -28,41 +26,43 @@
 :root {
   /* ── Colour — mirrored from the locked system, meanings unchanged ───────── */
 
-  /* Paper / surfaces. Elevation reads through lightness, never glow. */
-  --color-bg: oklch(19% 0.0094 256);
-  --color-surface: oklch(23.4% 0.0131 258);
-  --color-surface-2: oklch(26.3% 0.0167 260);
-  --color-border: oklch(31.5% 0.0182 258);
-  --color-border-strong: oklch(37.6% 0.0217 256);
+  /* Paper / surfaces: graphite with a blue-black cast, three close levels
+     and two hairline tones. Elevation reads through lightness, never glow. */
+  --color-bg: oklch(17.5% 0.009 255);
+  --color-surface: oklch(20.5% 0.01 255);
+  --color-surface-2: oklch(23.5% 0.011 255);
+  --color-border: oklch(29% 0.012 255);
+  --color-border-strong: oklch(36% 0.013 255);
 
-  /* The timing surfaces' own near-black paper. On the site it grounds every
-     product capture, so a screenshot sits on the same paper it was shot on
-     instead of floating on a lighter card. */
-  --color-timing-bg: color-mix(in oklab, oklch(19% 0.0094 256) 30%, #000);
+  /* The overlay panels' own paper. On the site it grounds every product
+     capture, so a screenshot sits on the same paper it was shot on instead of
+     floating on a lighter card. */
+  --color-timing-bg: color-mix(in oklab, oklch(17.5% 0.009 255) 86%, #000);
 
-  /* Ink — three steps. `faint` is pinned at L 62%, the floor that clears
-     4.5:1 against `surface`. */
-  --color-text: oklch(100% 0 0);
-  --color-muted: oklch(81.1% 0.0166 254);
-  --color-faint: oklch(62% 0.021 256);
+  /* Ink — light grey for data, mid grey for labels, a lower grey for anything
+     tertiary. Never pure white. `faint` clears 4.5:1 against `surface`. */
+  --color-text: oklch(91% 0.005 255);
+  --color-muted: oklch(72% 0.012 255);
+  --color-faint: oklch(60% 0.012 255);
 
-  /* Status — one colour, one meaning. Unchanged from the app. */
-  --color-accent: oklch(77.4% 0.181 154); /* positive */
-  --color-accent-dim: oklch(64.6% 0.1526 155);
-  --color-danger: oklch(66.5% 0.195 26); /* critical */
-  --color-warning: oklch(80.7% 0.1472 81); /* caution */
-  --color-primary: oklch(68.6% 0.1569 254); /* interactive / informational */
-  --color-primary-dim: oklch(58.5% 0.1568 255);
-  --color-sector-purple: oklch(69.4% 0.1763 301); /* overall best */
+  /* The one accent — focus, selection, the current section — and the
+     semantic colours, each with one meaning. Unchanged from the app. */
+  --color-primary: oklch(79% 0.09 226); /* THE accent */
+  --color-primary-dim: oklch(68% 0.085 226);
+  --color-accent: oklch(75% 0.125 152); /* gain */
+  --color-accent-dim: oklch(64% 0.11 152);
+  --color-danger: oklch(67% 0.16 22); /* loss */
+  --color-warning: oklch(84% 0.12 90); /* caution */
+  --color-sector-purple: oklch(70% 0.13 305); /* overall best */
 
   /* The only ink allowed on a filled status colour. Every accent here is light
-     and every paper dark, so white-on-accent measures 2.2–2.9:1; this reads at
-     6.5–8.7:1. */
-  --color-on-accent: oklch(19% 0.0094 256);
+     and every paper dark, so white on a fill lands near 2.5:1; this reads at
+     6–12:1. */
+  --color-on-accent: oklch(15% 0.008 255);
 
   /* Focus ring. Its own token so a theme can move it without moving
-     `primary`. Must clear 3:1 against both `bg` and `surface`. */
-  --color-focus: oklch(68.6% 0.1569 254);
+     `primary`. Clears 3:1 against both `bg` and `surface`. */
+  --color-focus: oklch(79% 0.09 226);
 
   /* ── Typography ─────────────────────────────────────────────────────────── */
 
@@ -124,19 +124,21 @@
   --page-max: 84rem;
 
   /* ── Rules, radii, elevation ────────────────────────────────────────────── */
+  /* The app's geometry: rectangular, with just enough radius to stop a 1 px
+     edge stair-stepping. A page selling an instrument is cut like one. */
   --rule-hair: 1px;
-  --radius-ctl: 6px;
-  --radius-card: 10px;
-  --radius-panel: 12px;
-  --shadow-raise: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 12px rgb(0 0 0 / 0.25);
+  --radius-ctl: 2px;
+  --radius-card: 3px;
+  --radius-panel: 4px;
+  --shadow-raise: 0 1px 0 rgb(0 0 0 / 0.35);
 
-  /* ── Motion — the app's three easings and three durations verbatim ──────── */
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
-  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  /* ── Motion — the app's easings and durations verbatim ──────────────────── */
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-in: cubic-bezier(0.5, 0, 0.75, 0);
+  --ease-in-out: cubic-bezier(0.45, 0, 0.25, 1);
   --dur-instant: 80ms;
-  --dur-short: 140ms;
-  --dur-mid: 220ms;
+  --dur-short: 120ms;
+  --dur-mid: 180ms;
 }
 
 /*
@@ -162,9 +164,10 @@
  *    near-white here rather than near-black. The rule is unchanged; the value
  *    it resolves to is the other end of the scale.
  *
- *  Measured, not guessed. Against light paper: text 16.6:1, muted 7.5:1, faint
- *  5.3:1 (4.9:1 on `surface`), `primary` as a link 5.8:1, `on-accent` on a
- *  filled `primary` 5.9:1 and on `accent` 5.8:1, ink on `warning` 7.9:1.
+ *  Measured, not guessed (WCAG, sRGB, against the light `bg`): text 15.6:1,
+ *  muted 7.0:1, faint 5.0:1, `primary` as a link 5.5:1, accent 5.6:1, danger
+ *  5.9:1, warning 4.6:1, sector-purple 6.4:1; `on-accent` on a filled
+ *  `primary` 6.0:1 and on `accent` 6.0:1.
  *
  *  Declared twice on purpose. The media-query copy is what a browser with
  *  JavaScript off gets, so the page still follows the OS; the attribute copy is
@@ -181,56 +184,55 @@
        document rather than as an instrument.
 
        Measured against this paper (WCAG, sRGB): text 15.6:1 · muted 7.0:1 ·
-       faint 5.0:1 · accent 5.4:1 · danger 6.0:1 · warning 4.6:1 ·
-       primary 5.4:1 · sector-purple 6.5:1. `warning` was 4.17:1 before this
-       pass — below the 4.5 floor on the old paper too — and moved from L 58%
-       to L 54% to clear it. Only lightness moved; no meaning did. */
-    --color-bg: oklch(96.4% 0.0035 256);
-    --color-surface: oklch(98.4% 0.0022 258);
-    --color-surface-2: oklch(93% 0.0065 260);
-    --color-border: oklch(86% 0.008 258);
-    --color-border-strong: oklch(76% 0.012 256);
+       faint 5.0:1 · accent 5.6:1 · danger 5.9:1 · warning 4.6:1 ·
+       primary 5.5:1 · sector-purple 6.4:1. Only lightness moves between the
+       two papers; no meaning does. */
+    --color-bg: oklch(96.4% 0.0035 255);
+    --color-surface: oklch(98.4% 0.0022 255);
+    --color-surface-2: oklch(93% 0.006 255);
+    --color-border: oklch(86% 0.007 255);
+    --color-border-strong: oklch(76% 0.01 255);
 
-    --color-text: oklch(22% 0.014 256);
-    --color-muted: oklch(44% 0.018 254);
-    --color-faint: oklch(52% 0.02 256);
+    --color-text: oklch(22% 0.012 255);
+    --color-muted: oklch(44% 0.014 255);
+    --color-faint: oklch(52% 0.014 255);
 
-    --color-accent: oklch(48% 0.14 154);
-    --color-accent-dim: oklch(42% 0.13 155);
-    --color-danger: oklch(50% 0.19 26);
-    --color-warning: oklch(54% 0.135 81);
-    --color-primary: oklch(50% 0.17 254);
-    --color-primary-dim: oklch(42% 0.16 255);
-    --color-sector-purple: oklch(48% 0.19 301);
+    --color-accent: oklch(48% 0.12 152);
+    --color-accent-dim: oklch(42% 0.11 152);
+    --color-danger: oklch(50% 0.17 22);
+    --color-warning: oklch(54% 0.115 90);
+    --color-primary: oklch(49% 0.09 226);
+    --color-primary-dim: oklch(42% 0.085 226);
+    --color-sector-purple: oklch(48% 0.16 305);
 
     --color-on-accent: oklch(99% 0 0);
-    --color-focus: oklch(50% 0.17 254);
+    --color-focus: oklch(49% 0.09 226);
 
-    --shadow-raise: 0 1px 2px rgb(15 20 28 / 0.08), 0 4px 12px rgb(15 20 28 / 0.08);
+    --shadow-raise: 0 1px 0 rgb(15 20 28 / 0.08);
   }
 }
 
 :root[data-theme="light"] {
-  --color-bg: oklch(96.4% 0.0035 256);
-  --color-surface: oklch(98.4% 0.0022 258);
-  --color-surface-2: oklch(93% 0.0065 260);
-  --color-border: oklch(86% 0.008 258);
-  --color-border-strong: oklch(76% 0.012 256);
+  --color-bg: oklch(96.4% 0.0035 255);
+  --color-surface: oklch(98.4% 0.0022 255);
+  --color-surface-2: oklch(93% 0.006 255);
+  --color-border: oklch(86% 0.007 255);
+  --color-border-strong: oklch(76% 0.01 255);
 
-  --color-text: oklch(22% 0.014 256);
-  --color-muted: oklch(44% 0.018 254);
-  --color-faint: oklch(52% 0.02 256);
+  --color-text: oklch(22% 0.012 255);
+  --color-muted: oklch(44% 0.014 255);
+  --color-faint: oklch(52% 0.014 255);
 
-  --color-accent: oklch(48% 0.14 154);
-  --color-accent-dim: oklch(42% 0.13 155);
-  --color-danger: oklch(50% 0.19 26);
-  --color-warning: oklch(54% 0.135 81);
-  --color-primary: oklch(50% 0.17 254);
-  --color-primary-dim: oklch(42% 0.16 255);
-  --color-sector-purple: oklch(48% 0.19 301);
+  --color-accent: oklch(48% 0.12 152);
+  --color-accent-dim: oklch(42% 0.11 152);
+  --color-danger: oklch(50% 0.17 22);
+  --color-warning: oklch(54% 0.115 90);
+  --color-primary: oklch(49% 0.09 226);
+  --color-primary-dim: oklch(42% 0.085 226);
+  --color-sector-purple: oklch(48% 0.16 305);
 
   --color-on-accent: oklch(99% 0 0);
-  --color-focus: oklch(50% 0.17 254);
+  --color-focus: oklch(49% 0.09 226);
 
-  --shadow-raise: 0 1px 2px rgb(15 20 28 / 0.08), 0 4px 12px rgb(15 20 28 / 0.08);
+  --shadow-raise: 0 1px 0 rgb(15 20 28 / 0.08);
 }

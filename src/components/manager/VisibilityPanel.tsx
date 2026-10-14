@@ -122,12 +122,12 @@ function VisibilityRule({
         <span className="flex items-center gap-2">
           <span className="text-xs font-medium text-text">{label}</span>
           {currentlyActive && (
-            <span className="whitespace-nowrap rounded-ctl bg-warning/15 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.12em] text-warning">
+            <span className="label-caps whitespace-nowrap rounded-ctl border border-warning/40 px-1.5 py-0.5 text-warning">
               Active now
             </span>
           )}
         </span>
-        <span className="mt-0.5 block text-[11px] leading-relaxed text-faint">
+        <span className="mt-0.5 block text-small leading-relaxed text-faint">
           {description}
         </span>
       </span>
@@ -151,7 +151,7 @@ function Row({
 }) {
   return (
     <div className="flex items-start gap-2">
-      <span className="w-14 shrink-0 font-mono text-[10px] uppercase tracking-[0.12em] text-faint">
+      <span className="w-14 shrink-0 label-caps">
         {label}
       </span>
       <span className="text-muted">{value}</span>
@@ -161,7 +161,7 @@ function Row({
 
 function FlagBadge({ flag }: { flag: string }) {
   return (
-    <span className="whitespace-nowrap rounded-ctl bg-surface-2 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.12em] text-muted">
+    <span className="whitespace-nowrap rounded-ctl bg-surface-2 px-1.5 py-0.5 label-caps text-muted">
       {flag.replace(/_/g, " ")}
     </span>
   );
@@ -188,15 +188,13 @@ function VisibilityStatus({ overlayId }: { overlayId: string }) {
     <div
       className={[
         "flex items-center gap-2 rounded-card border px-3 py-2 text-xs font-medium",
-        wouldHide
-          ? "border-warning/30 bg-warning/10 text-warning"
-          : "border-accent/25 bg-accent/5 text-accent",
+        "border-border bg-surface text-muted",
       ].join(" ")}
     >
       <span
-        className="inline-block size-1.5 rounded-full"
+        className="live-dot"
         style={{
-          background: wouldHide ? "var(--color-warning)" : "var(--color-accent)",
+          color: wouldHide ? "var(--color-warning)" : "var(--color-accent)",
         }}
       />
       {wouldHide

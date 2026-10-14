@@ -81,7 +81,7 @@ export function RelativeOptionsPanel() {
           <span className="block text-xs font-medium text-text">
             Cars per side
           </span>
-          <span className="block text-[11px] text-faint">
+          <span className="block text-small text-faint">
             How many cars to show ahead and behind you.
           </span>
         </div>
@@ -117,7 +117,7 @@ function OptionRow({
     <label className="flex cursor-pointer items-center gap-3 rounded-card border border-border bg-surface px-3 py-2.5 transition-colors hover:border-border-strong">
       <div className="min-w-0 flex-1">
         <span className="block text-xs font-medium text-text">{label}</span>
-        <span className="block text-[11px] text-faint">{description}</span>
+        <span className="block text-small text-faint">{description}</span>
       </div>
       <ToggleSwitch checked={checked} onChange={onChange} />
     </label>

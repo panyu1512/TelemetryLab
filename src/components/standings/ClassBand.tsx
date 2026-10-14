@@ -3,12 +3,7 @@ import type { ClassStanding } from "../../telemetry/types";
 import { lapTime, rating } from "../../lib/format";
 import { RacingHelmet } from "../ui/RacingHelmet";
 import { StripField } from "../timing/SessionStrip";
-import {
-  CLASS_NAME_OUTLINE,
-  CLASS_NAME_OUTLINE_PX,
-  classFill,
-} from "../../lib/classFill";
-import { CLASS_EDGE_WIDTH, STANDINGS_FILL_REACH } from "./constants";
+import { CLASS_EDGE_WIDTH } from "./constants";
 
 /**
  * The band that opens a class group.
@@ -60,35 +55,23 @@ function ClassBandInner({
 
   return (
     <div
-      className="bg-timing-row flex h-full items-center gap-3 overflow-hidden pr-2"
+      className="flex h-full items-center gap-3 overflow-hidden bg-panel-header pr-2"
       style={{
-        // The band's leading edge is the row's — the same device, so it takes
-        // the same width and holds the same drawn size as the table scales
-        // (§ Two colour systems, rule 2), and the band's edge and the rows'
-        // make one spine of class colour down the group.
+        // The band's leading edge is the row's — the same 3 px class bar, held
+        // at the same drawn size as the table scales (§ Two colour systems,
+        // rule 2), so the band's bar and the rows' make one line of class
+        // colour down the group. It is the only class colour on the band.
         borderLeftWidth: CLASS_EDGE_WIDTH,
         borderLeftStyle: "solid",
         borderLeftColor: color,
-        // The rows' class fill, to the same reach: the class name sits on it
-        // exactly where the positions under it do.
-        backgroundImage: classFill(color, STANDINGS_FILL_REACH),
       }}
     >
-      {/* The class name, in the rows' own bold sans at their 13 px: a heading
-          set smaller than the names under it is a heading nobody reads first.
-          Its `ml-1` matches the row's `px-1` and its minimum width is the
-          position column's, so `GT3` sits centred over the column of
-          positions it heads. */}
-      <span
-        className="class-name-ink ml-1 min-w-[2.1rem] shrink-0 text-center text-[13px] font-bold uppercase leading-none tracking-[0.02em]"
-        // In its class colour, straight on the class fill, with a dark outline
-        // under the glyphs for the edge its own colour cannot give it
-        // (§ Dense tabular overlays, rule 11).
-        style={{
-          color,
-          WebkitTextStroke: `${CLASS_NAME_OUTLINE_PX}px ${CLASS_NAME_OUTLINE}`,
-        }}
-      >
+      {/* The class name: a header label, in the data grey, set in caps at the
+          names' size so it reads before them. Its `ml-1` matches the row's
+          `px-1` and its minimum width is the position column's, so `GT3`
+          sits centred over the column of positions it heads. Neutral ink —
+          the bar beside it carries the class colour. */}
+      <span className="ml-1 min-w-[2.1rem] shrink-0 text-center text-name font-semibold uppercase leading-none tracking-caps text-text">
         {shortName || "—"}
       </span>
 

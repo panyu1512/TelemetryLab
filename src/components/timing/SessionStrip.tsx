@@ -17,10 +17,10 @@
  * **It is a different row from the ones under it, and is drawn to look like
  * one** (§ The session header). It used to be a strip on the rows' own
  * ground, one line of label/value pairs at the rows' height, and so it read as
- * the table's first row rather than as what heads it. Now it is taller, on a
- * lit ground of its own with the active flag's colour running along its foot,
- * and each field is a stack — a small caps label over a large value — so the
- * numbers in it read as instruments, not cells.
+ * the table's first row rather than as what heads it. Now it is taller, a
+ * flat header panel of its own, and each field is a stack — a small caps
+ * label over a mono value — so the numbers in it read as instruments, not
+ * cells. The active flag fills the session tag and nothing else.
  *
  * Fields drop right-to-left as the overlay narrows, in {@link FIELDS} order, the
  * same way the table itself scales to its window (`lib/tableScale`).
@@ -118,26 +118,17 @@ export function SessionStrip({ width }: SessionStripProps) {
   };
   const labelOf = (id: FieldId) => FIELDS.find((x) => x.id === id)!.label;
 
-  // The flag's colour, or a neutral when no flag the header shows is flying.
-  const tone = flag?.color ?? "rgb(255 255 255 / 0.35)";
-
   return (
     <div
       className="session-header timing-block relative flex shrink-0 items-center gap-x-4 overflow-hidden pl-2 pr-3"
-      style={{
-        height: SESSION_HEADER_H,
-        // The flag's colour along the foot of the header, strongest under the
-        // session tag and fading out across the readout — the header's own
-        // version of the class edge each row opens on.
-        ["--header-tone" as string]: tone,
-      }}
+      style={{ height: SESSION_HEADER_H }}
     >
       {/* Session tag, with the active flag as its ground. Flag state is the one
           thing on the header that can change what the driver does *next*, so it
           is the one thing allowed a fill — and filled ink is `on-accent`
           (§ Theme, rule 1), never white on a light accent. */}
       <span
-        className="session-tag shrink-0 rounded-sm px-2.5 text-[13px] font-bold uppercase leading-[26px] tracking-[0.08em]"
+        className="session-tag shrink-0 rounded-ctl px-2 text-small font-semibold uppercase leading-[22px] tracking-caps"
         style={
           flag
             ? { background: flag.color, color: "var(--color-on-accent)" }
@@ -155,14 +146,12 @@ export function SessionStrip({ width }: SessionStripProps) {
           one that gives way: it takes the slack, truncates, and is the first
           to drop as the overlay narrows. */}
       {shows("track") && session.track.name ? (
-        <div className="flex min-w-0 flex-1 flex-col justify-center gap-[4px]">
-          <span className="truncate text-[13px] font-bold leading-none text-text">
+        <div className="flex min-w-0 flex-1 flex-col justify-center gap-[5px]">
+          <span className="truncate text-name font-medium leading-none text-text">
             {session.track.name}
           </span>
           {session.track.config && (
-            <span className="truncate text-[9px] font-bold uppercase leading-none tracking-[0.12em] text-muted">
-              {session.track.config}
-            </span>
+            <span className="label-caps truncate">{session.track.config}</span>
           )}
         </div>
       ) : (
@@ -180,7 +169,7 @@ export function SessionStrip({ width }: SessionStripProps) {
         >
           {distance.lap}
           {distance.total != null && (
-            <span className="text-[12px] text-muted">/{distance.total}</span>
+            <span className="text-small text-faint">/{distance.total}</span>
           )}
         </HeaderField>
       )}
@@ -230,7 +219,7 @@ export function SessionStrip({ width }: SessionStripProps) {
 }
 
 /**
- * One header field: a small caps label over a large bold value. The header's
+ * One header field: a small caps label over a mono value. The header's
  * own voice — taller than {@link StripField}, which the class band and the
  * Fuel & Strategy strip keep, because a row of label/value pairs at a row's
  * height is what made the old header read as a row.
@@ -248,14 +237,12 @@ function HeaderField({
 }) {
   return (
     <div
-      className="flex shrink-0 flex-col justify-center gap-[4px]"
+      className="flex shrink-0 flex-col justify-center gap-[5px]"
       title={title}
     >
-      <span className="text-[9px] font-bold uppercase leading-none tracking-[0.14em] text-muted">
-        {label}
-      </span>
+      <span className="label-caps">{label}</span>
       <span
-        className="tnum text-[16px] font-bold leading-none"
+        className="tnum text-readout font-medium leading-none"
         style={{ color: color ?? "var(--color-text)" }}
       >
         {children}
@@ -269,14 +256,11 @@ function HeaderField({
  * readout line on a timing surface (the class band, the Fuel & Strategy strip)
  * speaks it rather than approximating it.
  *
- * It has two voices. **`sans`** is the Standings and Relative strips' and the
- * class band's: both halves in the rows' own bold sans, the label in `muted`
- * caps, the value in full `text`, so a strip scans as a row of numbers with
- * their names attached and reads as the same kind of text as the rows it
- * heads. **`mono`**, the default, is the instrument voice the Fuel & Strategy
- * panel is set in throughout — a mono micro-label in `faint` against a bold
- * mono value — kept there so that panel's strip and its section legends stay
- * one voice.
+ * Every label in the system is the same voice — sans, small, uppercase,
+ * tracked, grey — and every value the mono. The two `voice`s now differ only
+ * in alignment: **`sans`** (the class band) centres the pair on the row,
+ * **`mono`** (the default; Fuel & Strategy, Coach) sets them on a shared
+ * baseline.
  */
 export function StripField({
   label,
@@ -313,17 +297,13 @@ export function StripField({
       title={title}
     >
       <span
-        className={
-          sans
-            ? "text-[11px] font-bold uppercase leading-none tracking-[0.02em] text-muted"
-            : "font-mono text-[9px] font-semibold uppercase leading-none tracking-[0.14em] text-faint"
-        }
-        style={isGlyph ? { color: "var(--color-text)" } : undefined}
+        className="label-caps"
+        style={isGlyph ? { color: "var(--color-muted)" } : undefined}
       >
         {label}
       </span>
       <span
-        className={`tnum text-[12px] font-bold leading-none ${sans ? "" : "font-mono"}`}
+        className="tnum text-cell font-medium leading-none"
         style={
           fill
             ? {

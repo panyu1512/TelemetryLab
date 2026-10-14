@@ -1,154 +1,180 @@
-/* Hallmark · genre: modern-minimal · macrostructure: Workbench
- * design-system: design.md · designed-as-app
- * theme: custom (tuned) · vibe: "pit wall — hard edges, solid blocks, 13.5° shear"
- * paper oklch(16% 0.01 256) dark · display grotesk-sans (Inter) · accent cool (254°)
- * nav: N3 side-rail · footer: Ft2 inline · enrichment: none (typography only)
- * pre-emit critique: P5 H4 E5 S5 R5 V4
+/* design-system: design.md · direction: race-engineer telemetry
+ * paper oklch(17.5% 0.009 255) graphite · sans Inter · mono JetBrains Mono
+ * one accent (cyan 226°) · semantic green / red / yellow · class ramp ×5
  */
 
 @import "tailwindcss";
 
 /*
  * ═══════════════════════════════════════════════════════════════════════════
- *  TelemetryLab Design System
+ *  TelemetryLab Design System — race-engineer telemetry
  *
- *  A restrained, motorsport-grade token set. Every color carries meaning:
+ *  Near-monochrome graphite, one accent, and colour only where it means
+ *  something. Read it the way a pit-wall screen is read: the data is light
+ *  grey, its name is mid grey, and anything in colour is telling you a fact.
  *
- *    accent  (green)  → positive: personal best, faster, on-target, healthy
- *    danger  (red)    → critical: slower, overheating, out of fuel
+ *    primary (cyan)   → THE accent: focus, selection, active, "this is you",
+ *                       the primary channel on a chart
+ *    accent  (green)  → gain: personal best, faster, healthy
+ *    danger  (red)    → loss: slower, overheating, out of fuel
  *    warning (yellow) → caution: pit soon, yellow flag, worn tyres
- *    primary (blue)   → interactive & informational: selection, focus, links
- *    purple           → special telemetry: overall-best laps/sectors
+ *    purple           → overall-best lap / sector (the timing convention)
+ *    class-1…5        → car class, multiclass sessions only (see below)
  *
- *  Neutrals are cool graphite (blue-tinted) so panels sit naturally over
- *  iRacing footage instead of reading as warm gray boxes.
+ *  Token names are unchanged from the earlier system — `accent` still means
+ *  "positive" and `primary` still means "interactive" — so every call site
+ *  keeps its meaning and only the values moved.
  *
- *  Colors are OKLCH: perceptually uniform, so lifting a token's lightness to
- *  hit a contrast target doesn't drag its hue, and the four runtime themes in
- *  `themes/index.ts` stay comparable channel-by-channel.
- *
- *  Declared in Tailwind's `@theme` so every token also generates a utility
- *  (e.g. `--color-primary` → `bg-primary`, `text-primary`) while remaining
- *  available as a raw CSS variable (`var(--color-primary)`).
+ *  Colours are OKLCH so a token can be lifted to a contrast target without
+ *  dragging its hue, and the four runtime themes in `themes/index.ts` stay
+ *  comparable channel by channel. Declared in Tailwind's `@theme`, so every
+ *  token is both a utility (`bg-primary`) and a variable (`var(--color-…)`).
  * ═══════════════════════════════════════════════════════════════════════════
  */
 @theme {
-  /* Base neutrals. Deepened a step from the graphite set: this surface now
-     carries solid colour blocks rather than tinted ones, and a block only reads
-     as a block against a ground darker than itself. `border-strong` moves the
-     other way — with radii at 2 px the 1 px edge is what draws a control's
-     shape, so it has to be visible on its own. */
-  --color-bg: oklch(16% 0.01 256);
-  --color-surface: oklch(20% 0.013 258);
-  --color-surface-2: oklch(24.5% 0.017 260);
-  --color-border: oklch(30% 0.018 258);
-  --color-border-strong: oklch(40% 0.022 256);
+  /* --- neutrals ---------------------------------------------------------- */
+  /* Graphite with a blue-black cast, never pure black. Three surface levels
+     a few points apart — the eye reads them as one material at three heights
+     — and two hairline tones. Carbon's values; `applyTheme` overrides them. */
+  --color-bg: oklch(17.5% 0.009 255);
+  --color-surface: oklch(20.5% 0.01 255);
+  --color-surface-2: oklch(23.5% 0.011 255);
+  --color-border: oklch(29% 0.012 255);
+  --color-border-strong: oklch(36% 0.013 255);
 
-  /* Typography colors. `faint` sits at L 62% — the floor that clears 4.5:1
-     against `surface`, since it carries 10–11 px labels on cards. */
-  --color-text: oklch(100% 0 0);
-  --color-muted: oklch(80% 0.017 254); /* secondary text */
-  --color-faint: oklch(62% 0.021 256); /* disabled / tertiary text */
+  /* --- ink --------------------------------------------------------------- */
+  /* Light grey for data, mid grey for labels, a lower grey for anything
+     tertiary. Nothing is pure white: at full-screen scale white glares, and
+     hierarchy here comes from size and weight, not from brightness.
+     `faint` is held where it still clears 4.5:1 on `surface`. */
+  --color-text: oklch(91% 0.005 255);
+  --color-muted: oklch(72% 0.012 255);
+  --color-faint: oklch(60% 0.012 255);
 
-  /* The ground the dense timing surfaces paint on.
-   *
-   * Standings and Relative are read in peripheral vision at speed, so they get
-   * a darker paper than the rest of the app: near-black, still carrying the
-   * theme's hue, so bold white type sits on the highest-contrast ground the
-   * palette can give it. `applyTheme` recomputes it per theme (and drops it to
-   * a translucent black over live footage); this literal is the Carbon value,
-   * so the surface is right before any theme is applied. */
-  --color-timing-bg: color-mix(in oklab, oklch(16% 0.01 256) 68%, #000);
+  /* The overlay panels' ground (Standings, Relative, Fuel & Strategy, Coach,
+     every widget): a step under `bg`, so a panel over live footage carries
+     the darkest graphite the palette has. Recomputed per theme by
+     `applyTheme`, and made translucent over the game. */
+  --color-timing-bg: color-mix(in oklab, oklch(17.5% 0.009 255) 86%, #000);
 
-  /* Status accents — never decorative */
-  --color-accent: oklch(77.4% 0.181 154); /* positive */
-  --color-accent-dim: oklch(64.6% 0.1526 155);
-  --color-danger: oklch(66.5% 0.195 26); /* critical */
-  --color-warning: oklch(80.7% 0.1472 81); /* caution */
-  --color-primary: oklch(68.6% 0.1569 254); /* interactive / informational */
-  --color-primary-dim: oklch(58.5% 0.1568 255);
-  --color-sector-purple: oklch(69.4% 0.1763 301); /* overall best */
+  /* A row's lift off that ground, and the 1 px rule between rows. White
+     alphas rather than mixed colours, so they lift whatever paper is under
+     them — every theme's, and the translucent paper over live footage. */
+  --color-timing-row: rgb(255 255 255 / 0.025);
+  --color-divider: rgb(255 255 255 / 0.055);
+  /* A section inside a panel (Fuel & Strategy, Coach): one step of lift. */
+  --color-section: rgb(255 255 255 / 0.03);
+  /* A panel's header strip: the channel name, and its value on the right. */
+  --color-panel-header: rgb(255 255 255 / 0.035);
 
-  /* Lapped traffic: ink on a Relative row whose car is a lap or more behind
-     the player. Blue because that is the sim's own convention — the blue flag,
-     and the blue names in iRacing's relative box — so it is learned before the
-     overlay is ever opened. Deliberately NOT themed and NOT an alias of
-     `primary`: Endurance's primary is copper, and "lapped" must not change
-     colour with the theme. It is ink only; "this is you" stays `primary` as
-     the row's ground, and a lapped car is never your own row. */
-  --color-lapped: oklch(72% 0.15 245);
+  /* --- the one accent, and the semantic colours ---------------------------- */
+  --color-primary: oklch(79% 0.09 226); /* THE accent — focus, selection */
+  --color-primary-dim: oklch(68% 0.085 226);
+  --color-focus: oklch(79% 0.09 226);
+  --color-accent: oklch(75% 0.125 152); /* gain / best */
+  --color-accent-dim: oklch(64% 0.11 152);
+  --color-danger: oklch(67% 0.16 22); /* loss / critical */
+  --color-warning: oklch(84% 0.12 90); /* caution */
+  --color-sector-purple: oklch(70% 0.13 305); /* overall best */
 
-  /* A wet-weather tyre: the ring and `W` of the Relative's compound badge.
-     Blue because that is the colour a wet tyre has worn on every TV graphic
-     and tyre wall a driver has ever seen. Like `lapped`, NOT themed — a wet
-     tyre must not turn copper in Endurance — and deeper and more saturated
-     than `lapped`, so a blue badge on a lapped row still reads as a badge. */
-  --color-tyre-wet: oklch(64% 0.19 256);
+  /* Ink on any filled status colour. Every accent is light and every paper
+     dark, so white on a fill lands near 2.5:1; this reads 6–12:1. */
+  --color-on-accent: oklch(15% 0.008 255);
 
-  /* The ground every timing row sits on: a lift off `timing-bg`, so each row
-     reads as its own strip with paper showing between them. A white alpha
-     rather than a mixed colour, so it lifts whatever paper is under it — every
-     theme's, and the translucent black the paper becomes over live footage. */
-  --color-timing-row: rgb(255 255 255 / 0.07);
+  /* Lapped traffic on the Relative: the sim's own blue-flag blue, fixed and
+     unthemed so it never follows a theme's accent. Ink only. */
+  --color-lapped: oklch(72% 0.12 245);
 
-  /* The text color to use on top of ANY filled status color. Every accent in
-     this system is light and every paper is dark, so white-on-accent lands at
-     2.2–2.9:1 — far under 4.5:1. Dark ink on the fill reads at 6.5–8.7:1. */
-  --color-on-accent: oklch(14% 0.008 256);
+  /* A wet tyre: the `W` badge. Blue because that is what a wet tyre wears on
+     every timing graphic; fixed, unthemed, deeper than `lapped`. */
+  --color-tyre-wet: oklch(64% 0.15 256);
 
-  /* The focus ring. A dedicated token rather than an alias of `primary`, so a
-     theme whose interactive hue collides with `warning` can move one without
-     moving the other. Must clear 3:1 against both `bg` and `surface`. */
-  --color-focus: oklch(68.6% 0.1569 254);
+  /* --- car class (multiclass sessions only) ------------------------------- */
+  /* The one exception to "no decorative colour": in a multiclass race the
+     class is functional, and has to be found at a glance. Five hues, a step
+     desaturated for the dark ground, each clear of the accent, the semantic
+     colours and lapped blue by more than 25°, and ordered so neighbouring
+     groups down the screen sit more than 100° apart. Carried as a thin bar
+     on the row's left, a small tag, and a chart line — never a row's ground,
+     a panel's background, or a block of text. Single-class sessions show
+     none of it. `lib/classColors.ts` carries the same five values for the
+     components that draw them inline; a test holds the two together. */
+  --color-class-1: #52bfb8; /* teal    189° */
+  --color-class-2: #e4965b; /* orange   57° */
+  --color-class-3: #9394e7; /* violet  282° */
+  --color-class-4: #b2ca6f; /* lime    121° */
+  --color-class-5: #d387c2; /* pink    335° */
 
-  /* Typography. Two faces: Inter carries display *and* body (a single-family
-     system), and mono is the third voice — reserved for measured values,
-     coordinates, counts and status readouts, never for prose. */
+  /* --- charts ------------------------------------------------------------- */
+  /* A reduced palette: the primary channel in the accent, everything else in
+     neutrals, the reference lap in grey. Grid and axes are hairlines. */
+  --color-chart-primary: var(--color-primary);
+  --color-chart-secondary: oklch(80% 0.008 255);
+  --color-chart-tertiary: oklch(58% 0.01 255);
+  --color-chart-reference: oklch(62% 0.008 255);
+  --color-chart-grid: rgb(255 255 255 / 0.1);
+  --color-chart-axis: rgb(255 255 255 / 0.2);
+  --color-chart-track: rgb(255 255 255 / 0.06);
+
+  /* --- type --------------------------------------------------------------- */
+  /* Two faces. Inter carries every word; JetBrains Mono carries every number
+     (`.tnum`), with tabular figures so a ticking value never jitters. */
   --font-sans: "Inter Variable", Inter, "SF Pro Display", -apple-system,
     "Segoe UI", system-ui, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
-    "Liberation Mono", monospace;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace,
+    SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  /* The overlays' text face — the same Inter, named for the surfaces that use
+     it, so a future split costs one line. */
+  --font-timing: "Inter Variable", Inter, system-ui, sans-serif;
 
-  /* The timing tables' face — Standings and Relative, nothing else. Saira:
-     squared, technical forms that read as motorsport, true tabular figures
-     (so a column of lap times never jitters), and an x-height close to
-     Inter's, so the sizes these tables were tuned at still hold. Bundled
-     (`@fontsource-variable/saira`), never fetched: the app runs offline. */
-  --font-timing: "Saira Variable", "Inter Variable", Inter, system-ui,
-    sans-serif;
+  /* A type scale by role, in px-exact rems. Labels are the smallest; a unit
+     is one step under its value; hierarchy is carried by these sizes and by
+     weight, not by colour. */
+  --text-colhead: 0.5rem; /* 8  — in-row column labels (a 10 px slice) */
+  --text-label: 0.5625rem; /* 9  — uppercase channel labels */
+  --text-micro: 0.625rem; /* 10 — tags, units on dense rows */
+  --text-small: 0.6875rem; /* 11 — secondary data, captions */
+  --text-cell: 0.75rem; /* 12 — table values */
+  --text-name: 0.8125rem; /* 13 — names, primary row text */
+  --text-emph: 0.875rem; /* 14 — positions, panel titles */
+  --text-title: 0.9375rem; /* 15 — verdict lines */
+  --text-readout: 1rem; /* 16 — header readouts */
+  --text-readout-lg: 1.125rem; /* 18 — panel metrics */
 
-  /* Radius scale — near-square throughout. A pit-wall graphic is cut, not
-     moulded: the corner is where that reads first, and 2 px is enough to stop
-     a 1 px border pixel-stepping without softening the shape. */
+  --tracking-label: 0.12em;
+  --tracking-caps: 0.06em;
+
+  /* --- geometry ------------------------------------------------------------ */
+  /* Rectangular, with just enough radius to stop a 1 px edge stair-stepping. */
   --radius-ctl: 2px;
-  --radius-card: 2px;
-  --radius-panel: 2px;
+  --radius-card: 3px;
+  --radius-panel: 3px;
 
-  /* Elevation. On dark surfaces height reads through *lightness*, not glow —
-     these shadows only anchor a floating layer, they never halo it. Tightened
-     a step: a hard-edged panel that casts a soft, wide shadow reads as two
-     different materials at once. */
-  --shadow-raise: 0 1px 0 rgb(0 0 0 / 0.4), 0 2px 6px rgb(0 0 0 / 0.3);
-  --shadow-float: 0 2px 0 rgb(0 0 0 / 0.45), 0 8px 20px rgb(0 0 0 / 0.45);
+  /* Elevation reads through lightness and a hairline, not glow. Only a
+     floating layer (a menu, a dragged widget) casts anything, and it is
+     neutral and tight. */
+  --shadow-raise: 0 1px 0 rgb(0 0 0 / 0.35);
+  --shadow-float: 0 4px 12px rgb(0 0 0 / 0.4);
 
-  /* Motion. Three named easings and three durations — no bare `ease`, no
-     overshoot on UI state. Overriding Tailwind's transition defaults means
-     every existing `transition-colors` in the app inherits the curve without
-     restating it at each call site. */
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
-  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  /* --- motion -------------------------------------------------------------- */
+  /* Short and ease-out. No overshoot, no bounce, nothing over 200 ms on UI
+     state. Overriding Tailwind's defaults means every bare `transition-colors`
+     inherits the curve and the duration. */
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-in: cubic-bezier(0.5, 0, 0.75, 0);
+  --ease-in-out: cubic-bezier(0.45, 0, 0.25, 1);
   --dur-instant: 80ms;
-  --dur-short: 140ms;
-  --dur-mid: 220ms;
+  --dur-short: 120ms;
+  --dur-mid: 180ms;
+  --dur-long: 200ms;
   --default-transition-timing-function: var(--ease-out);
   --default-transition-duration: var(--dur-short);
 }
 
 /*
- * Short aliases kept for the names referenced throughout the roadmap / older
- * code (`var(--accent)`, `var(--bg)`…). They point at the canonical `@theme`
- * tokens so there is still exactly one place to change a value.
+ * Short aliases kept for older call sites (`var(--accent)`, `var(--bg)`…), and
+ * the class tokens under the names the brief gave them. All point at the
+ * canonical `@theme` tokens, so there is still one place to change a value.
  */
 :root {
   --bg: var(--color-bg);
@@ -162,12 +188,15 @@
   --warning: var(--color-warning);
   --focus: var(--color-focus);
 
-  /* The brand mark's shear, promoted to a system device. Every free terminal
-     on the TL monogram is cut on this diagonal; `.shear` puts the same cut on
-     chips, blocks and CTAs so the chrome speaks the mark's language instead of
-     merely sitting next to it. One angle, declared once — a second value would
-     read as a mistake rather than as a system. */
-  --shear: -13.5deg;
+  --class-1: var(--color-class-1);
+  --class-2: var(--color-class-2);
+  --class-3: var(--color-class-3);
+  --class-4: var(--color-class-4);
+  --class-5: var(--color-class-5);
+
+  /* Chart strokes, in screen px (`vector-effect: non-scaling-stroke`). */
+  --chart-line: 1.25px;
+  --chart-line-thin: 1px;
 
   color-scheme: dark;
   font-family: var(--font-sans);
@@ -195,22 +224,47 @@ a {
   color: var(--color-primary);
 }
 
-/* Tabular numerals everywhere data is shown — values never jitter as they
-   tick, and columns of times stay optically aligned. */
+/*
+ * Every number on screen. Monospace with tabular figures, so a column of lap
+ * times lines up digit for digit and a ticking value never shifts its
+ * neighbours. Applied wherever data is shown — the class is the contract, so
+ * a value that forgets it is visibly in the wrong voice.
+ */
 .tnum {
-  font-variant-numeric: tabular-nums;
-  font-feature-settings: "tnum", "cv05";
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums slashed-zero;
+  font-feature-settings: "tnum", "zero";
+  letter-spacing: -0.01em;
 }
 
 /*
- * Consistent focus treatment for keyboard navigation.
- *
- * The 2 px offset puts the ring on the page background rather than against the
- * control's own fill, so it stays legible even on a `primary`-filled button
- * (where a `primary` ring would otherwise vanish into the fill).
- *
- * Never transitioned: a ring that fades in leaves keyboard users with no
- * indicator for the length of the transition.
+ * The channel label: small, uppercase, tracked, in the label grey. One
+ * utility so every label on every surface is the same voice.
+ */
+@utility label-caps {
+  font-family: var(--font-sans);
+  font-size: var(--text-label);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* A unit beside its value: smaller, dimmer, never competing with the number. */
+@utility unit {
+  font-family: var(--font-sans);
+  font-size: 0.72em;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-faint);
+}
+
+/*
+ * Keyboard focus: an outline at 2 px offset, so it lands on the page rather
+ * than on the control's own fill. Never transitioned — it is there on the
+ * frame the key lands.
  */
 :focus-visible {
   outline: 2px solid var(--color-focus);
@@ -218,7 +272,7 @@ a {
   border-radius: inherit;
 }
 
-/* Thin, unobtrusive scrollbars for the dark UI. */
+/* Thin scrollbars on the hairline tone. */
 * {
   scrollbar-width: thin;
   scrollbar-color: var(--color-border-strong) transparent;
@@ -229,13 +283,13 @@ a {
 }
 *::-webkit-scrollbar-thumb {
   background: var(--color-border-strong);
-  border-radius: 4px;
+  border-radius: var(--radius-ctl);
 }
 
 @keyframes overlay-in {
   from {
     opacity: 0;
-    transform: translateY(8px);
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
@@ -243,14 +297,11 @@ a {
   }
 }
 
-/*
- * Overlay Manager entrance animation: a quiet fade with a subtle rise (no
- * scale, so the edges of the full-bleed page never reveal what's behind it).
- */
+/* Overlay Manager entrance: a short fade with a 4 px rise. */
 @keyframes manager-in {
   from {
     opacity: 0;
-    transform: translateY(6px);
+    transform: translateY(4px);
   }
   to {
     opacity: 1;
@@ -258,11 +309,7 @@ a {
   }
 }
 
-/*
- * Smooth color transitions when switching themes via JS-injected CSS variables.
- * Applied to the root so all children inherit it without individual overrides.
- * Scoped to color properties only to avoid animating layout changes.
- */
+/* Theme switches cross-fade the colour properties only — never layout. */
 :root {
   transition:
     background-color var(--dur-mid) var(--ease-out),
@@ -272,8 +319,8 @@ a {
 
 /*
  * Reduced motion: spatial movement collapses to a short opacity crossfade.
- * Color transitions survive — they carry state, not decoration — but nothing
- * translates, and nothing takes longer than 150 ms.
+ * Colour transitions survive — they carry state — but nothing translates,
+ * and nothing takes longer than 150 ms.
  */
 @media (prefers-reduced-motion: reduce) {
   *,
@@ -287,104 +334,107 @@ a {
     --dur-instant: 0ms;
     --dur-short: 0ms;
     --dur-mid: 150ms;
+    --dur-long: 150ms;
   }
 }
 
-/* --- signature details ----------------------------------------------------- */
+/* --- system details -------------------------------------------------------- */
 
 /*
- * Shear pair. The outer element takes the cut; the single child takes it back,
- * so the *box* is a parallelogram and the type inside stays upright — a sheared
- * letterform is a different typeface, not a graphic device.
- *
- * The child must be the only child, and it becomes an inline-flex box: two
- * siblings would each need their own counter-transform, and an inline child
- * cannot carry one at all.
- *
- * Hit areas follow the transform, which is what you want — the pointer target
- * matches the painted shape. What it does *not* do is grow the layout box, so
- * anything sheared needs ~0.24 × its own height of horizontal breathing room
- * (the tangent of 13.5°) or its corners will graze a neighbour.
- */
-.shear {
-  transform: skewX(var(--shear));
-}
-.shear > * {
-  display: inline-flex;
-  align-items: center;
-  transform: skewX(calc(-1 * var(--shear)));
-}
-
-/*
- * The section legend: a solid block on the shear, set before the heading. It
- * replaces the hairline that used to run out of the title and fade — a rule
- * that reads as a divider between things, where this reads as a marker on one
- * thing. Sized to the cap height of the 13 px heading beside it.
+ * The section marker on the Manager: a 2 px accent bar at the cap height of
+ * the heading beside it. Square — the brand's 13.5° shear stays on the mark
+ * itself and no longer cuts the chrome.
  */
 .section-block {
-  width: 4px;
-  height: 14px;
+  width: 2px;
+  height: 12px;
   flex: none;
   background: var(--color-primary);
-  transform: skewX(var(--shear));
 }
 
 /*
- * Blueprint dot grid: an ultra-subtle technical texture for the manager's
- * chrome (never for overlays over the game). Sits under panels and cards.
+ * A live state: a small dot with a slow, shallow pulse. It breathes rather
+ * than blinks — opacity only, never below half — so it says "this is
+ * current" without pulling the eye.
  */
-.bg-blueprint {
-  background-image: radial-gradient(
-    rgb(255 255 255 / 0.032) 1px,
-    transparent 1px
-  );
-  background-size: 22px 22px;
+.live-dot {
+  display: inline-block;
+  flex: none;
+  width: 6px;
+  height: 6px;
+  border-radius: 9999px;
+  background: currentColor;
+  animation: live-pulse 2.4s var(--ease-in-out) infinite;
+}
+@keyframes live-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.45;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .live-dot {
+    animation: none;
+  }
 }
 
 /*
- * Framed cards are drawn by their edge, not by a highlight.
- *
- * This used to be a glass top-light — an inset white hairline that made the
- * surface read as machined glass. Glass is the wrong material now: the panel is
- * a cut plate, so the edge does the work, and a highlight riding on top of a
- * 1 px border only muddies which of the two is the boundary. Kept as a rule
- * rather than folded into the border utility because the overlay-mode block
- * below has to be able to take it off again over live footage.
+ * A framed panel is drawn by its 1 px edge, not by a highlight or a shadow.
+ * Kept as a rule (not a border utility) so overlay mode can take it off again
+ * over live footage.
  */
 .overlay-card {
-  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+  box-shadow: inset 0 0 0 1px var(--color-border);
 }
 
-/* --- standings / timing screen ------------------------------------------- */
+/* Hover on a widget panel: the edge steps up one tone. No glow. */
+.widget-card:hover {
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
+}
+.overlay-card {
+  transition: box-shadow var(--dur-short) var(--ease-out);
+}
 
 /*
- * The overlay surfaces paint on their own near-black paper rather than the
- * app's `surface` graphite: Standings, Relative, Fuel & Strategy, and every
- * dashboard widget. These are the screens read in peripheral vision at
- * 200 km/h, and bold white type wants the darkest ground the palette can give
- * it. See `--color-timing-bg`.
+ * A panel's header: the channel name on the left, small and uppercase, and —
+ * where there is one — the live value or the panel's actions on the right.
+ * One hairline under it. Dense, and the same on every panel.
+ */
+.panel-header {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 0.5rem;
+  height: 1.375rem;
+  padding-inline: 0.5rem;
+  background: var(--color-panel-header);
+  box-shadow: inset 0 -1px 0 var(--color-divider);
+}
+
+/* --- overlay surfaces -------------------------------------------------------- */
+
+/*
+ * The overlay surfaces paint on their own graphite paper rather than the
+ * app's `surface`: Standings, Relative, Fuel & Strategy, Coach and every
+ * dashboard widget — the screens read in peripheral vision at speed.
  *
- * It began as the two dense tables' own paper — they were the only surfaces
- * whose type ran a step larger and a weight heavier. Extending it to the fuel
- * screen and the widgets is what makes a dashboard read as one instrument
- * instead of graphite cards sitting next to a black table.
- *
- * The type goes with the paper. Every surface on it is set in Saira
- * (`--font-timing`), its mono micro-labels included — `--font-mono` is
- * pointed at the same face inside it — and nothing on it is lighter than
- * semibold: unclassed text is 600, and the normal / medium / semibold
- * utilities resolve to 600 / 700 / 700. One face and one weight band across
- * Standings, Relative, Fuel & Strategy and every widget, so the overlays read
- * as one set; the Manager, which is not read at speed, keeps Inter.
+ * Words are Inter and numbers are mono (`.tnum`). Weights are held in a
+ * narrow, technical band: the normal/medium/semibold/bold utilities resolve to
+ * 450/500/600/600 here, so a value is never heavier than it needs to be and a
+ * name never lighter than it can be read at over footage.
  */
 .timing-surface {
   background: var(--color-timing-bg);
   font-family: var(--font-timing);
-  --font-mono: var(--font-timing);
-  font-weight: 600;
-  --font-weight-normal: 600;
-  --font-weight-medium: 700;
-  --font-weight-semibold: 700;
+  font-weight: 450;
+  --font-weight-normal: 450;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 600;
+  --font-weight-black: 700;
 }
 
 /* One block of that paper, where a surface lays it per block rather than
@@ -394,95 +444,62 @@ a {
 }
 
 /*
- * The corners of each block on Standings and Relative — the session header,
- * a class band, a class's rows. Rounded well past the 2 px the rest of the
- * system cuts its corners at: the owner asked for it, and with the game
- * showing between them the blocks read as panels laid over the footage, not
- * as cells of one card. Drawn inside the table's `zoom`, so it scales with
- * the rows. Whatever is drawn in a block is clipped to it (`overflow:
- * hidden` on the block), so the class colour and the player's ground round
- * off with the paper.
+ * Each block on Standings and Relative — the session header, a class band, a
+ * class's rows: a rectangular panel with the system radius and a 1 px edge.
+ * The edge is an outline, not a border, so it is painted over the rows and
+ * the class bar inside (which the block clips) and costs no layout.
  */
 .timing-block {
-  border-radius: 8px;
+  border-radius: var(--radius-panel);
+  outline: 1px solid var(--color-border);
+  outline-offset: -1px;
 }
 
-/*
- * The session strip's baseline: a hairline under the readout, so the strip
- * reads as the table's masthead rather than as a first row. This is *not* the
- * row separator rule 1 bans — it separates the strip from the field, which is
- * exactly the boundary that needs to be unambiguous.
- */
+/* A readout strip's baseline: one hairline separating it from what it heads. */
 .timing-strip {
-  box-shadow: inset 0 -1px 0 rgb(255 255 255 / 0.08);
+  background: var(--color-panel-header);
+  box-shadow: inset 0 -1px 0 var(--color-divider);
+}
+
+/* A row on the dense tables: one hairline under it. */
+.timing-row-rule {
+  box-shadow: inset 0 -1px 0 var(--color-divider);
 }
 
 /*
- * The session header on Standings and Relative (§ The session header). Its
- * own row, not one of the field's: a ground lit from the top — lighter than a
- * row strip where it starts, so it never reads as the first of them — the
- * pill's one-pixel highlight along its top edge, and the active flag's colour
- * (`--header-tone`, set inline) along its foot, strongest under the session
- * tag and gone by two thirds of the way across.
+ * The session header on Standings and Relative: a header strip, flat, on its
+ * own paper. The active flag fills the session tag and nothing else — no
+ * glow, no gradient along the foot, no sheen.
  */
 .session-header {
-  /* On its own paper: the tables that carry it leave the space around it
-   * clear (`.timing-blocks`), so the lit ground needs black under it. */
-  background:
-    linear-gradient(180deg, rgb(255 255 255 / 0.13), rgb(255 255 255 / 0.05)),
-    var(--color-timing-bg);
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.14),
-    0 2px 6px rgb(0 0 0 / 0.35);
-}
-.session-header::after {
-  content: "";
-  position: absolute;
-  inset: auto 0 0 0;
-  height: 2px;
-  background: linear-gradient(
-    90deg,
-    var(--header-tone),
-    color-mix(in oklab, var(--header-tone) 35%, transparent) 30%,
-    transparent 70%
+  background: var(--color-timing-bg);
+  background-image: linear-gradient(
+    var(--color-panel-header),
+    var(--color-panel-header)
   );
-  pointer-events: none;
 }
-
-/* The session tag's fill glows a little into the header around it, so the
- * one filled thing on the header is unmistakably the flag. No flag: an
- * outline instead of a fill, so the tag still reads as a tag. */
 .session-tag[data-flag] {
-  box-shadow:
-    inset 0 1px 0 rgb(255 255 255 / 0.35),
-    0 0 10px color-mix(in oklab, var(--header-tone) 45%, transparent);
   text-shadow: none;
 }
 .session-tag:not([data-flag]) {
-  box-shadow: inset 0 0 0 1.5px rgb(255 255 255 / 0.35);
+  box-shadow: inset 0 0 0 1px var(--color-border-strong);
 }
 
-/* The one rule on the header: between the session's readout and the clock,
- * which is the driver's time rather than the race's. */
+/* The one rule on the header: before the clock, which is the driver's time
+ * rather than the race's. */
 .session-header-rule {
   align-self: stretch;
   width: 1px;
   margin-block: 9px;
-  background: rgb(255 255 255 / 0.12);
+  background: var(--color-divider);
   flex-shrink: 0;
 }
 
 /* Brand icon: the SVG child fills the container height and auto-sizes its
  * width from the viewBox aspect ratio, up to a cap. Every viewBox is cropped to
- * the mark's own ink, so height here is drawing rather than padding; the cap is
- * what keeps a wide wordmark (Dallara is 5.6:1) from running over its neighbour
- * — it fits to the cap and centres itself instead. The cap leaves 6 px of the
- * 64 px brand column either side, so even the widest mark has paper between it
- * and the number and flag beside it.
- *
- * `overflow: visible` because of the stroke below: it reaches half its width
- * past the ink the viewBox is cropped to, and an SVG clips to its viewBox by
- * default. */
+ * the mark's own ink; the cap keeps a wide wordmark from running over its
+ * neighbour. `overflow: visible` because the stroke below reaches half its
+ * width past the ink. */
 .brand-icon > svg {
   height: 100%;
   width: auto;
@@ -491,65 +508,74 @@ a {
   overflow: visible;
 }
 
-/* A heavier mark. Every brand icon is filled shapes in `currentColor`, cut for
- * print, where a hairline survives — at 21–24 px on a dark strip, Mercedes'
- * star, BMW's ring and the Aston Martin wings thinned to nothing in peripheral
- * vision. Outlining every shape in its own fill thickens the whole mark by the
- * same amount. `non-scaling-stroke` makes that amount screen pixels rather
- * than viewBox units, so it is the same weight on every mark whatever its
- * viewBox's scale (they run from 24 to 360 units tall).
- *
- * Marks with lettering or cut-out detail set a lighter `--mark-stroke` of their
- * own (`MARK_STROKE` in cells.tsx) — the full weight closes the counters of
- * letters a few pixels tall. */
+/* A heavier mark: every brand icon is outlined in its own ink, in screen px,
+ * so marks cut for print (Mercedes' star, BMW's ring) hold up at row size.
+ * Marks with lettering set a lighter `--mark-stroke` (`MARK_STROKE`). */
 .brand-icon > svg :is(path, circle, ellipse, rect, polygon) {
   stroke: currentColor;
-  stroke-width: var(--mark-stroke, 0.9px);
+  stroke-width: var(--mark-stroke, 0.6px);
   stroke-linejoin: round;
   vector-effect: non-scaling-stroke;
 }
 
-/* Wide marks — a wordmark, Aston Martin's wings — are capped by their width,
- * not their height, so the cap is what sets how large their letters print.
- * They take the whole column less 2 px either side. */
+/* Wide marks — a wordmark, Aston Martin's wings — are capped by width. */
 .brand-icon--wide > svg {
   max-width: 60px;
 }
 
-/* Ink on the class fill (`lib/classFill`): white, which the fill's profile is
- * measured to carry, with a tight shadow to lift it off the fill where the
- * fill is at its strongest. */
+/* Ink over a class-coloured ground. Kept for the helpers that reference it;
+ * no surface draws class colour under text any more. */
 .class-fill-ink {
-  text-shadow: 0 1px 2px rgb(0 0 0 / 0.45);
+  text-shadow: none;
 }
-
-/* A class's name in its class colour, straight on the class fill: an outline
- * painted *under* the glyphs gives each letter the edge its own colour cannot
- * (`CLASS_NAME_OUTLINE` in lib/classFill, where its contrast is tested; the
- * stroke itself is set inline from there). */
 .class-name-ink {
   paint-order: stroke fill;
 }
 
-/* A freshly completed sector fades up as its colored value/delta lands. Keyed
- * remount in SectorCell replays this only when the split actually changes. */
+/*
+ * The class tag: the class's short name, small, in neutral ink, opened by a
+ * 2 px bar in the class colour — the row's own class bar at tag scale. The
+ * colour is the bar's only; the letters stay grey.
+ */
+.class-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  height: 14px;
+  padding: 0 4px 0 0;
+  border-radius: var(--radius-ctl);
+  background: rgb(255 255 255 / 0.04);
+  color: var(--color-muted);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  line-height: 1;
+  text-transform: uppercase;
+  white-space: nowrap;
+  overflow: hidden;
+}
+.class-tag::before {
+  content: "";
+  align-self: stretch;
+  width: 2px;
+  flex: none;
+  background: var(--class-color, var(--color-border-strong));
+}
+
+/* A freshly completed sector fades up as its value lands — short, no travel. */
 @keyframes sector-pop {
   from {
-    opacity: 0.3;
-    transform: translateY(-1px);
+    opacity: 0.35;
   }
   to {
     opacity: 1;
-    transform: translateY(0);
   }
 }
 .sec-cell {
-  animation: sector-pop 260ms ease-out;
+  animation: sector-pop var(--dur-long) var(--ease-out);
 }
 
-/* The coach's verdict fades up once per analysed lap (keyed on the lap). It is
- * the one moment the driver might glance across for it; after that it holds
- * still until the next line crossing. */
+/* The coach's verdict fades up once per analysed lap, then holds still. */
 @keyframes coach-in {
   from {
     opacity: 0;
@@ -561,7 +587,7 @@ a {
   }
 }
 .coach-in {
-  animation: coach-in 320ms ease-out;
+  animation: coach-in var(--dur-long) var(--ease-out);
 }
 @media (prefers-reduced-motion: reduce) {
   .coach-in {
@@ -569,19 +595,17 @@ a {
   }
 }
 
-/* A new overall-fastest lap flashes purple once (keyed on the lap time). */
+/* A new overall-fastest lap: one brief lift in brightness — no glow. */
 @keyframes lap-flash {
   0% {
-    text-shadow: 0 0 12px var(--color-sector-purple);
-    filter: brightness(1.6);
+    filter: brightness(1.35);
   }
   100% {
-    text-shadow: none;
     filter: brightness(1);
   }
 }
 .sec-flash {
-  animation: lap-flash 900ms ease-out;
+  animation: lap-flash 600ms var(--ease-out);
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -593,13 +617,8 @@ a {
 
 /*
  * Timing-table row glide. Rows are positioned by `translateY`, so a change of
- * running order slides a row to its new slot instead of teleporting it.
- *
- * This lives in CSS rather than an inline style for two reasons: it has to sit
- * on the token scale (`--dur-mid`/`--ease-out`, not a bespoke 320 ms curve), and
- * a row travelling across the table is *spatial* motion, which § Motion collapses
- * outright under reduced motion rather than merely shortening. The row still
- * lands at the right offset — it just stops animating on the way.
+ * running order slides a row to its new slot. On the token scale, and off
+ * entirely under reduced motion — the row still lands at the right offset.
  */
 .row-glide {
   transition: transform var(--dur-mid) var(--ease-out);
@@ -613,20 +632,10 @@ a {
 
 /*
  * The position flash (`lib/positionFlash`): a chip on a status fill, `▲ 3` or
- * `▼ 4`, laid over the position for `--pos-flash-ms`.
- *
- * It arrives with the row's glide and leaves as a dissolve, on the token
- * scale. Its number sits `--pos-flash-shift` right of where the plain number
- * underneath does, to make room for the arrow — so on the way in it starts at
- * the plain number's place and slides over as the arrow rises (or drops) in,
- * and on the way out it slides home *before* the chip has faded. Both numbers
- * are the same glyphs in the same place while they show through each other,
- * and the crossfade never prints the position twice.
- *
- * Every phase is either opacity or a transform. The fade-out is an animation
- * delayed to the end of the hold rather than a keyframe percentage, so the
- * hold stays `POSITION_FLASH_MS` and the fades stay `--dur-mid` whichever of
- * the two changes.
+ * `▼ 4`, laid over the position for `--pos-flash-ms`. It fades in with the
+ * row's glide and dissolves at the end of the hold; its number slides home
+ * before the chip fades, so the crossfade never prints the position twice.
+ * Opacity and transforms only.
  */
 .pos-flash {
   position: absolute;
@@ -635,13 +644,9 @@ a {
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 4px;
+  border-radius: var(--radius-ctl);
   color: var(--color-on-accent);
-  /* The overlay's legibility shadow is for white ink over footage; under dark
-   * ink on a light fill it reads as a smudge. */
   text-shadow: none;
-  /* The pill's sheen, a touch stronger on a light fill. */
-  box-shadow: inset 0 1px 0 rgb(255 255 255 / 0.3);
   animation:
     pos-flash-in var(--dur-mid) var(--ease-out) both,
     pos-flash-out var(--dur-mid) var(--ease-in)
@@ -659,8 +664,6 @@ a {
     pos-flash-num-out var(--dur-short) var(--ease-out)
       calc(var(--pos-flash-ms) - var(--dur-mid)) forwards;
 }
-/* The arrow arrives a beat after the number starts making room for it, and
- * leaves first, so the number has somewhere to slide home to. */
 .pos-flash--up .pos-flash__mark {
   animation:
     pos-flash-rise var(--dur-mid) var(--ease-out) var(--dur-instant) both,
@@ -694,23 +697,21 @@ a {
     transform: translateX(calc(-1 * var(--pos-flash-shift)));
   }
 }
-/* The arrow arrives travelling the way the car did. */
+/* The arrow arrives travelling the way the car did — 3 px, not a leap. */
 @keyframes pos-flash-rise {
   from {
     opacity: 0;
-    transform: translateY(5px);
+    transform: translateY(3px);
   }
 }
 @keyframes pos-flash-drop {
   from {
     opacity: 0;
-    transform: translateY(-5px);
+    transform: translateY(-3px);
   }
 }
 
-/* Under reduced motion the chip simply shows for the hold and goes: no fade,
- * no slide. (The blanket rule above would otherwise run every phase in 0.01 ms
- * and leave the chip on its last frame — invisible.) */
+/* Reduced motion: the chip shows for the hold and goes. */
 @media (prefers-reduced-motion: reduce) {
   .pos-flash,
   .pos-flash__num,
@@ -721,16 +722,11 @@ a {
 }
 
 /*
- * On the radio (§ Dense tabular overlays, rule 18): `RadioMark` in cells.tsx.
- *
- * Three movements, all on one 1.2 s beat while the mic is open:
- * - the mark pops in from 60 % when the driver keys up;
- * - the near pair of arcs lights, then the far pair a beat later, so the
- *   signal travels *out* from the mast instead of the whole glyph blinking;
- * - a ring ripples out behind it and fades, which is what catches the eye
- *   from the corner of the screen.
- * Opacity and transforms only. Under reduced motion all of it stops and the
- * mark is a plain, full-strength glyph.
+ * On the radio (`RadioMark` in cells.tsx): the near arcs light, then the far
+ * ones, so the signal travels out from the mast, and a faint ring spreads
+ * behind it. Restrained: the mark fades in rather than popping, the waves
+ * never drop below a third, the ring is thin and short. Opacity and transforms
+ * only; still under reduced motion.
  */
 .radio-live {
   color: var(--color-text);
@@ -747,20 +743,20 @@ a {
   position: absolute;
   inset: 0;
   border-radius: 9999px;
-  border: 1.5px solid currentColor;
+  border: 1px solid currentColor;
   opacity: 0;
   animation: radio-live-ripple 1.2s var(--ease-out) infinite;
 }
 @keyframes radio-live-in {
   from {
     opacity: 0;
-    transform: scale(0.6);
+    transform: scale(0.9);
   }
 }
 @keyframes radio-live-wave {
   0%,
   100% {
-    opacity: 0.25;
+    opacity: 0.35;
   }
   35% {
     opacity: 1;
@@ -768,12 +764,12 @@ a {
 }
 @keyframes radio-live-ripple {
   from {
-    opacity: 0.7;
-    transform: scale(0.5);
+    opacity: 0.45;
+    transform: scale(0.6);
   }
   to {
     opacity: 0;
-    transform: scale(1.9);
+    transform: scale(1.5);
   }
 }
 @media (prefers-reduced-motion: reduce) {
@@ -790,24 +786,23 @@ a {
 /*
  * Qualifying's two row events (§ Dense tabular overlays, rule 17).
  *
- * **Arrival** — a car setting its first time joins the board: the strip
- * slides in from the left as it fades up, and a white sweep crosses it once.
- * The rows below it glide down to make room on the ordinary `.row-glide`.
+ * **Arrival** — a car setting its first time joins the board: the row fades
+ * up from a short slide, and a faint sweep crosses it once.
  *
- * **Improvement** — a car beating its own best: a sweep and a glow in the
- * lap's grade (`accent`, or `sector-purple` for the session best), the glow
- * held for `--row-fx-ms` and dissolved at the end like the position flash.
+ * **Improvement** — a car beating its own best: a sweep and a low tint in the
+ * lap's grade (`accent`, or `sector-purple` for the session best), held for
+ * `--row-fx-ms` and dissolved. A tint and a hairline — no glow.
  *
- * Both are overlays on the strip (`.row-fx`), clipped to it, never touching
- * the row's layout; every phase is opacity or a transform.
+ * Both are overlays on the row (`.row-fx`), clipped to it; opacity and
+ * transforms only.
  */
 .row-arrive {
-  animation: row-arrive 420ms var(--ease-out) both;
+  animation: row-arrive var(--dur-long) var(--ease-out) both;
 }
 @keyframes row-arrive {
   from {
     opacity: 0;
-    transform: translateX(-28px);
+    transform: translateX(-10px);
   }
 }
 
@@ -817,19 +812,19 @@ a {
   overflow: hidden;
   border-radius: inherit;
   pointer-events: none;
-  --row-fx-tone: rgb(255 255 255 / 0.3);
+  --row-fx-tone: rgb(255 255 255 / 0.16);
 }
 .row-fx--personal {
-  --row-fx-tone: color-mix(in oklab, var(--color-accent) 55%, transparent);
+  --row-fx-tone: color-mix(in oklab, var(--color-accent) 40%, transparent);
 }
 .row-fx--overall {
-  --row-fx-tone: color-mix(in oklab, var(--color-sector-purple) 65%, transparent);
+  --row-fx-tone: color-mix(in oklab, var(--color-sector-purple) 45%, transparent);
 }
 .row-fx__sweep {
   position: absolute;
   inset-block: 0;
   left: 0;
-  width: 40%;
+  width: 30%;
   background: linear-gradient(
     90deg,
     transparent,
@@ -837,33 +832,27 @@ a {
     transparent
   );
   transform: translateX(-100%);
-  animation: row-sweep 760ms var(--ease-in-out) 120ms forwards;
+  animation: row-sweep 520ms var(--ease-in-out) 60ms forwards;
 }
 .row-fx--improve .row-fx__sweep {
-  animation-duration: 900ms;
   animation-delay: 0ms;
 }
 .row-fx__glow {
   position: absolute;
   inset: 0;
-  background: linear-gradient(
-    90deg,
-    color-mix(in oklab, var(--row-fx-tone) 50%, transparent),
-    color-mix(in oklab, var(--row-fx-tone) 25%, transparent)
-  );
-  box-shadow: inset 0 0 0 1px var(--row-fx-tone);
+  background: color-mix(in oklab, var(--row-fx-tone) 45%, transparent);
+  box-shadow: inset 2px 0 0 var(--row-fx-tone);
   animation:
     pos-flash-in var(--dur-short) var(--ease-out) both,
-    pos-flash-out 600ms var(--ease-in) calc(var(--row-fx-ms) - 600ms) forwards;
+    pos-flash-out 400ms var(--ease-in) calc(var(--row-fx-ms) - 400ms) forwards;
 }
 @keyframes row-sweep {
   to {
-    transform: translateX(250%);
+    transform: translateX(340%);
   }
 }
 
-/* Reduced motion: no slide and no sweep. The arrival is the row appearing;
- * the improvement's glow shows for the hold and goes. */
+/* Reduced motion: no slide and no sweep. */
 @media (prefers-reduced-motion: reduce) {
   .row-arrive,
   .row-fx__glow {
@@ -874,14 +863,27 @@ a {
   }
 }
 
+/* The rev strip at the limiter: a shallow, quick pulse rather than a blink. */
+.redline-pulse {
+  animation: redline-pulse 360ms var(--ease-in-out) infinite alternate;
+}
+@keyframes redline-pulse {
+  to {
+    opacity: 0.55;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .redline-pulse {
+    animation: none;
+  }
+}
+
 /* --- overlay mode --------------------------------------------------------- */
 
 /*
  * When the Tauri window is transparent + always-on-top, the app shell itself
- * must be transparent so only the widget surfaces render over iRacing.
- * We cascade this by overriding the design-token custom properties — all
- * Tailwind utility classes that reference them (bg-bg, bg-surface…) pick up
- * the new values automatically without any component changes.
+ * must be transparent so only the panels render over iRacing. Done by
+ * overriding the design tokens, so every utility that reads them follows.
  */
 html.overlay-mode body,
 html.overlay-mode #root {
@@ -889,34 +891,29 @@ html.overlay-mode #root {
 }
 
 html.overlay-mode {
-  /* Opaque surfaces become semi-transparent glass in overlay mode so the game
-     (or an OBS capture) stays visible behind the overlay. The alpha is tuned
-     low enough to see through, but paired with the backdrop-blur below the
-     widgets still read clearly over asphalt, sky, grass and HDR glare. */
-  --color-bg: oklch(19% 0.0094 256 / 0.01);
-  --color-surface: oklch(23.4% 0.0131 258 / 0.66);
-  --color-surface-2: oklch(26.3% 0.0167 260 / 0.66);
-  --color-border: oklch(31.5% 0.0182 258 / 0.5);
-  --color-border-strong: oklch(37.6% 0.0217 256 / 0.5);
+  /* The frame around the panels goes translucent so the game stays visible;
+     it carries no data. No blur: panels are flat graphite, not frosted
+     glass. */
+  --color-bg: oklch(17.5% 0.009 255 / 0.01);
+  --color-surface: oklch(20.5% 0.01 255 / 0.66);
+  --color-surface-2: oklch(23.5% 0.011 255 / 0.66);
+  --color-border: oklch(29% 0.012 255 / 0.6);
+  --color-border-strong: oklch(36% 0.013 255 / 0.6);
 }
 
 /*
- * Legibility layer for live overlays: a soft text shadow separates white
- * type from bright track backgrounds (white cars, sun-lit tarmac) wherever
- * the glass surface alone isn't enough.
+ * Legibility over live footage: a tight, neutral shadow under the type, so
+ * light grey still reads over a white car or sunlit tarmac.
  */
 html.overlay-mode .overlay-card,
 .overlay-preview .overlay-card {
-  text-shadow: 0 1px 2px rgb(0 0 0 / 0.55);
+  text-shadow: 0 1px 1px rgb(0 0 0 / 0.5);
 }
 
 /*
- * Real overlay windows drop the "card" chrome — the rounded corners and the
- * solid surface fill that together read as a hard rectangle floating over the
- * live game. Only the widget/screen *content* should paint over iRacing, not a
- * boxed frame around it. Scoped to `overlay-mode`, so the Overlay Manager's
- * boxed preview and config surfaces (which never carry that class) keep their
- * framed look. The soft backdrop-blur below is retained for legibility.
+ * Real overlay windows drop the card chrome — the frame and the fill that
+ * would read as a hard rectangle floating over the game. Scoped to
+ * `overlay-mode`, so the Manager's preview keeps its framed look.
  */
 html.overlay-mode .overlay-card,
 .overlay-preview .overlay-card {
@@ -928,66 +925,40 @@ html.overlay-mode .overlay-card,
 
 /*
  * …with one exception: anything carrying `timing-surface` keeps its own paper
- * over the game. The rule above drops every overlay card to transparent glass,
- * which a white car or a sunlit kerb passing underneath turns into a surface
- * you cannot read a number off. Declared *after* the transparency rule, at
- * equal specificity, so it wins.
- *
- * That exception used to be only the two dense tables, on the grounds that a
- * gauge can afford to let a kerb through where a 30 px row of 12 px type
- * cannot. The widgets and the fuel screen now take the paper too — the same
- * legibility argument applies to a fuel figure you are reading mid-corner, and
- * a dashboard where half the cards are glass and half are paper reads as two
- * different products. What is left on glass is the frame around them, which
- * carries no data.
+ * over the game, and its 1 px edge. A number read mid-corner needs an opaque
+ * ground under it. Declared after the transparency rule, at equal
+ * specificity, so it wins.
  */
 html.overlay-mode .timing-surface,
 .overlay-preview .timing-surface {
   background: var(--color-timing-bg) !important;
+  box-shadow: inset 0 0 0 1px var(--color-border) !important;
+  border-radius: var(--radius-panel) !important;
 }
 
 /*
- * …and the two tables, Standings and Relative, go one step further: their
- * paper is laid per block rather than across the whole card. The session
- * header is one block and each class group another (`.timing-paper`), rows
- * stay on black inside them, and the gaps *between* blocks are left clear —
- * so over live footage the game shows between the header and the field and
- * between one class and the next. The card's own frame goes with the paper,
- * since there is no longer a rectangle for it to outline.
+ * …and Standings and Relative go one step further: their paper is laid per
+ * block, and the gaps between blocks are left clear, so over live footage the
+ * game shows between the header and the field and between classes. The card's
+ * own frame goes with the paper; each block carries its own edge.
  */
 .timing-surface.timing-blocks,
 html.overlay-mode .timing-surface.timing-blocks,
 .overlay-preview .timing-surface.timing-blocks {
   background: transparent !important;
   border-color: transparent !important;
+  box-shadow: none !important;
 }
 
-/*
- * Inside those blocks the rows sit straight on the black: no white lift for a
- * strip, so no seam of darker paper between rows and no frame of it around
- * the block — a class reads as one black panel. The class edge and fill, the
- * player's `primary` ground and the fills still mark what they mark.
- */
+/* Inside those blocks rows sit straight on the paper, divided by hairlines. */
 .timing-blocks {
   --color-timing-row: transparent;
 }
 
 /*
- * Blur all widget-level backgrounds (react-grid-layout items, and the card of
- * a popped-out single-widget window) so the overlay reads as frosted glass
- * above the game.
- */
-html.overlay-mode .react-grid-item > *,
-html.overlay-mode .widget-frame > .overlay-card {
-  backdrop-filter: blur(16px) saturate(1.15);
-  -webkit-backdrop-filter: blur(16px) saturate(1.15);
-}
-
-/*
- * Frameless overlay windows are invisible until they aren't: while the cursor
- * is over an (unlocked) overlay window, a hairline ring traces the window's
- * bounds and the drag chrome fades in, so the window is findable, movable and
- * resizable — and it all disappears again the moment the mouse leaves.
+ * Frameless overlay windows are invisible until hovered: while the cursor is
+ * over an unlocked overlay window, a 1 px accent edge traces the window and
+ * the drag chrome fades in, then both disappear when the mouse leaves.
  */
 html.overlay-mode:not(.overlay-locked) #root::after {
   content: "";
@@ -997,19 +968,16 @@ html.overlay-mode:not(.overlay-locked) #root::after {
   pointer-events: none;
   border: 1px solid transparent;
   border-radius: var(--radius-card);
-  transition: border-color 140ms ease;
+  transition: border-color var(--dur-short) var(--ease-out);
 }
 html.overlay-mode:not(.overlay-locked) body:hover #root::after {
-  border-color: color-mix(in srgb, var(--color-primary) 60%, transparent);
+  border-color: color-mix(in oklab, var(--color-primary) 55%, transparent);
 }
 html.overlay-mode:not(.overlay-locked) body:hover .overlay-chrome {
   opacity: 1;
 }
 
-/*
- * Overlay windows never show scrollbars — a scrollbar floating over the game
- * reads as debris. Content still scrolls (wheel/drag); only the bar is hidden.
- */
+/* Overlay windows never show scrollbars; content still scrolls. */
 html.overlay-mode * {
   scrollbar-width: none;
 }
@@ -1018,79 +986,118 @@ html.overlay-mode *::-webkit-scrollbar {
 }
 
 /*
- * Locked overlay: pointer-events guard at the CSS layer complements the OS-
- * level WS_EX_TRANSPARENT flag set via Tauri's setIgnoreCursorEvents(true).
- * The locked pill indicator in App.tsx retains pointer-events:none explicitly.
+ * Locked overlay: a pointer-events guard at the CSS layer, complementing the
+ * OS-level click-through Tauri sets.
  */
 html.overlay-locked * {
   pointer-events: none !important;
   cursor: default !important;
 }
 
-/* --- responsive widget cards ---------------------------------------------- */
+/* --- widget panels ---------------------------------------------------------- */
 
 /*
- * Widget cards adapt to the box they're given. The card queries its *frame*
- * (the react-grid-layout item in a dashboard, or the window itself for a
- * popped-out widget — both have explicit sizes, so size containment is safe):
- * padding and the header gap scale fluidly, and when the card gets too small
- * for chrome the header title yields the room to the data.
+ * Widget cards adapt to the box they are given. The card queries its frame
+ * (the grid item in a dashboard, or the window for a popped-out widget —
+ * both have explicit sizes, so size containment is safe).
  */
 .react-grid-item,
 .widget-frame {
   container-type: size;
 }
-.widget-card {
-  padding: clamp(0.45rem, 4cqmin, 0.875rem);
+.widget-card .widget-body {
+  padding: clamp(0.4rem, 3.5cqmin, 0.75rem);
 }
+/* The header yields its height to the data on a card too small for both. */
+@container (max-height: 96px) {
+  .widget-card > .panel-header {
+    display: none;
+  }
+}
+
 /*
- * A widget has no header any more — no icon, no name, no rule. What used to be
- * here was that header's margin, plus two container queries that hid the name
- * once a card got short or narrow. Those queries were the argument for cutting
- * it outright: a label the layout already drops the moment space is tight is a
- * label the surface does not need, and this one is read in peripheral vision at
- * speed where every skipped glance is a real cost.
+ * The widget type roles, sized to the card in container-query units and
+ * clamped so they never get unreadably small or absurdly large. One place for
+ * every fluid size the widgets use.
  */
+.wg-label {
+  font-family: var(--font-sans);
+  font-size: clamp(0.45rem, 5.5cqmin, 0.625rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+.wg-unit {
+  font-family: var(--font-sans);
+  font-size: clamp(0.45rem, 5.5cqmin, 0.6875rem);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-faint);
+}
+.wg-small {
+  font-size: clamp(0.5rem, 5.5cqmin, 0.75rem);
+}
+.wg-value-sm {
+  font-size: clamp(0.6rem, 8cqmin, 1.1rem);
+  line-height: 1;
+}
+.wg-value {
+  font-size: clamp(0.72rem, 12cqmin, 1.5rem);
+  line-height: 1;
+}
+.wg-value-lg {
+  font-size: clamp(0.8rem, 15cqmin, 2rem);
+  line-height: 1;
+}
+.wg-value-xl {
+  font-size: clamp(0.9rem, 19cqmin, 2.6rem);
+  line-height: 1;
+}
 
 /* --- react-grid-layout theming ------------------------------------------- */
 
-/* The drop target shown while dragging/resizing. */
+/* The drop target while dragging or resizing: an accent outline, barely
+ * filled. */
 .react-grid-item.react-grid-placeholder {
-  background: var(--color-primary);
-  opacity: 0.12;
+  background: color-mix(in oklab, var(--color-primary) 8%, transparent);
+  outline: 1px dashed color-mix(in oklab, var(--color-primary) 60%, transparent);
+  outline-offset: -1px;
+  opacity: 1;
   border-radius: var(--radius-card);
 }
 
-/* Lift the card while it's being moved. */
+/* Lift the card while it is being moved. */
 .react-grid-item.react-draggable-dragging,
 .react-grid-item.resizing {
   z-index: 20;
   box-shadow: var(--shadow-float);
 }
 
-/* Replace RGL's default corner image with a subtle themed grip. */
+/* Replace RGL's corner image with a hairline grip. */
 .react-grid-item > .react-resizable-handle {
-  inset-inline-end: 4px;
-  inset-block-end: 4px;
-  width: 14px;
-  height: 14px;
+  inset-inline-end: 3px;
+  inset-block-end: 3px;
+  width: 12px;
+  height: 12px;
   background: none;
   padding: 0;
   opacity: 0;
-  transition: opacity 120ms ease;
+  transition: opacity var(--dur-short) var(--ease-out);
 }
 .react-grid-item > .react-resizable-handle::after {
   content: "";
   position: absolute;
   right: 2px;
   bottom: 2px;
-  width: 8px;
-  height: 8px;
-  border-right: 2px solid var(--color-faint);
-  border-bottom: 2px solid var(--color-faint);
+  width: 7px;
+  height: 7px;
+  border-right: 1px solid var(--color-faint);
+  border-bottom: 1px solid var(--color-faint);
 }
-/* Widgets are always rearrangeable, so the resize grip fades in on hover of
-   the card rather than requiring a separate edit mode. */
+/* Widgets are always rearrangeable; the grip shows on hover of the card. */
 .react-grid-item:hover > .react-resizable-handle {
   opacity: 1;
 }

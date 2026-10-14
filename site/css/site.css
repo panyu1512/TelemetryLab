@@ -1,11 +1,7 @@
-/* Hallmark · genre: modern-minimal · macrostructure: Split Studio
- * design-system: design.md (locked) · surface: marketing
- * theme: the locked system (custom · "cool graphite instrument panel, signal blue")
- * paper oklch(19% 0.0094 256) dark · display grotesk-sans (Inter) · accent cool (254°)
- * nav: N9 edge-aligned · footer: Ft5 statement
+/* design-system: design.md · surface: marketing · direction: race-engineer
+ * telemetry — graphite paper, one cyan accent, sans caps for labels, mono for
+ * every figure. nav: N9 edge-aligned · footer: Ft5 statement
  * enrichment: real product captures (no illustration, no re-drawn chrome)
- * motion: 1 primitive (hover lift) — design.md § Motion, reveal pattern: none
- * pre-emit critique: P5 H5 E5 S5 R5 V4
  */
 
 @import url("tokens.css");
@@ -160,13 +156,13 @@ a {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Instrument voice — the mono micro-label
-   The one typographic device this page borrows wholesale from the product.
-   Mono, uppercase, tracked, `faint`: the quietest voice in the system.
+   Instrument voice — the channel label
+   The one typographic device this page borrows wholesale from the product:
+   sans, uppercase, tracked, small and grey. Figures beside it are mono.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .micro {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: var(--text-micro);
   font-weight: 600;
   text-transform: uppercase;
@@ -268,7 +264,7 @@ a {
 
 .readout__field {
   flex: none;
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: var(--text-micro);
   font-weight: 600;
   text-transform: uppercase;
@@ -393,9 +389,9 @@ a {
 }
 
 .band__chip {
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: var(--text-micro);
-  font-weight: 700;
+  font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   line-height: 1;
@@ -415,6 +411,7 @@ a {
 }
 
 .band__k {
+  font-family: var(--font-sans);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.14em;
@@ -422,7 +419,7 @@ a {
 }
 
 .band__v {
-  font-weight: 700;
+  font-weight: 500;
   color: var(--color-text);
   font-variant-numeric: tabular-nums;
 }
@@ -736,12 +733,11 @@ html[data-theme="dark"] .theme-toggle__moon {
   background: var(--color-timing-bg);
   padding: var(--space-3xs);
   overflow: hidden;
-  box-shadow: var(--shadow-raise);
 }
 
 .shot img {
   width: 100%;
-  border-radius: calc(var(--radius-panel) - 5px);
+  border-radius: calc(var(--radius-panel) - 2px);
 }
 
 .shot figcaption {
@@ -917,7 +913,7 @@ html[data-theme="dark"] .theme-toggle__moon {
 .spec thead th {
   padding: 0 var(--space-sm) var(--space-2xs) 0;
   border-bottom: var(--rule-hair) solid var(--color-border-strong);
-  font-family: var(--font-mono);
+  font-family: var(--font-sans);
   font-size: var(--text-micro);
   font-weight: 600;
   text-transform: uppercase;
@@ -928,7 +924,7 @@ html[data-theme="dark"] .theme-toggle__moon {
 .spec tbody th {
   font-family: var(--font-mono);
   font-size: var(--text-sm);
-  font-weight: 700;
+  font-weight: 600;
   color: var(--color-text);
   white-space: nowrap;
   padding-right: var(--space-md);
@@ -956,7 +952,7 @@ html[data-theme="dark"] .theme-toggle__moon {
    Coloured ink, never a filled cell — the fill budget belongs to the product. */
 .sw {
   font-family: var(--font-mono);
-  font-weight: 700;
+  font-weight: 600;
   white-space: nowrap;
 }
 .sw--pb {

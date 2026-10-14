@@ -93,7 +93,7 @@ export function ToggleSwitch({
     >
       <span
         className={[
-          "absolute top-0.5 rounded-full bg-text shadow-sm transition-[left]",
+          "absolute top-0.5 rounded-full bg-text transition-[left]",
           dims.knob,
           checked ? dims.on : "left-0.5",
         ].join(" ")}
@@ -157,20 +157,14 @@ type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
  * `primary` fills with the interactive hue and sets `primary-ink` on top.
  * White-on-accent measures 2.2–2.9:1 across the four themes — well under the
  * 4.5:1 floor — because every status accent in this system is a light color.
- * Dark ink on the same fill reads at 6.5–8.7:1.
+ * Dark ink on the same fill reads at 6–12:1.
  *
- * Every variant is cut on `--shear` and set in caps.
- *
- * The cut belongs to the app's *chrome* and stops at the edge of the data: the
- * title bar, the manager's chips and every CTA take it; the timing tables, the
- * widgets and anything drawn over the game do not. A driver reading a lap time
- * in peripheral vision needs the column edges vertical, and a surface where
- * half the boxes lean is a surface where nothing lines up. So the frame is cut
- * and the instruments are square.
+ * Every variant is a square-cornered rectangle set in caps. The 13.5° shear
+ * the chrome used to be cut on is retired: the app is one instrument, and an
+ * engineering tool's controls are as square as its data.
  *
  * Caps at 11 px rather than 12 px mixed case — capitals carry no descenders and
- * read a size larger than they measure, so the label keeps the row's height
- * while gaining the weight the shear asks for.
+ * read a size larger than they measure, so the label keeps the row's height.
  */
 const BUTTON_VARIANT: Record<ButtonVariant, string> = {
   primary:
@@ -224,16 +218,14 @@ export function Button({
       className={[
         // `whitespace-nowrap`: a clickable label that wraps to two lines reads
         // as a rendering fault, and breaks the row's vertical rhythm.
-        "shear whitespace-nowrap rounded-ctl px-3 py-1.5 text-[11px] font-bold uppercase tracking-[0.06em] transition-colors",
+        "inline-flex items-center whitespace-nowrap rounded-ctl px-3 py-1.5 text-small font-semibold uppercase tracking-caps transition-colors",
         inert
           ? "cursor-not-allowed border border-border bg-surface-2 text-faint"
           : BUTTON_VARIANT[variant],
         stateTone,
       ].join(" ")}
     >
-      {/* Single child, per `.shear`: the counter-transform lives on it, and two
-          siblings would each need their own. */}
-      <span className="gap-1.5">
+      <span className="inline-flex items-center gap-1.5">
         {busy ? <Spinner /> : icon}
         {children}
       </span>
@@ -262,9 +254,9 @@ export function IconButton({
   if (disabled) {
     tone = "cursor-not-allowed text-faint opacity-55";
   } else if (active) {
-    tone = "bg-primary/15 text-primary hover:bg-primary/25 active:brightness-90";
+    tone = "bg-surface-2 text-primary hover:bg-surface active:brightness-90";
   } else if (danger) {
-    tone = "text-muted hover:bg-danger/15 hover:text-danger active:brightness-95";
+    tone = "text-muted hover:bg-surface-2 hover:text-danger active:brightness-95";
   } else {
     tone = "text-muted hover:bg-surface-2 hover:text-text active:brightness-95";
   }
@@ -327,11 +319,11 @@ export function SegmentedButton({
       aria-disabled={disabled || undefined}
       disabled={disabled}
       className={[
-        "flex items-center gap-1.5 whitespace-nowrap rounded-ctl px-2 py-1 text-[11px] font-medium transition-colors",
+        "flex items-center gap-1.5 whitespace-nowrap rounded-ctl px-2 py-1 text-small font-medium transition-colors",
         disabled
           ? "cursor-not-allowed text-faint opacity-55"
           : active
-            ? "bg-surface-2 text-text shadow-sm"
+            ? "bg-surface-2 text-text"
             : "text-muted hover:text-text active:brightness-95",
       ].join(" ")}
     >
@@ -351,7 +343,7 @@ export function SegmentedButton({
  */
 export function SectionLabel({ children }: { children: ReactNode }) {
   return (
-    <p className="mb-2 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-faint">
+    <p className="mb-2 label-caps">
       {children}
     </p>
   );
@@ -372,12 +364,12 @@ export function Readout({
 }) {
   return (
     <div className="rounded-card border border-border bg-surface px-2.5 py-2">
-      <div className="font-mono text-[10px] uppercase tracking-[0.12em] text-faint">
+      <div className="label-caps">
         {label}
       </div>
       <div className="tnum mt-0.5 font-mono text-sm font-medium text-text">
         {value}
-        {unit && <span className="ml-0.5 text-[11px] text-faint">{unit}</span>}
+        {unit && <span className="ml-0.5 text-small text-faint">{unit}</span>}
       </div>
     </div>
   );
@@ -448,12 +440,12 @@ export function TextInput({
         <span className="pointer-events-none absolute inset-y-0 right-2 grid place-items-center">
           {state === "loading" && <Spinner className="size-3 text-faint" />}
           {state === "error" && (
-            <span aria-hidden className="text-[11px] text-danger">
+            <span aria-hidden className="text-small text-danger">
               !
             </span>
           )}
           {state === "success" && (
-            <span aria-hidden className="text-[11px] text-accent">
+            <span aria-hidden className="text-small text-accent">
               ✓
             </span>
           )}
@@ -465,7 +457,7 @@ export function TextInput({
           // Stable single-line height: swapping helper for error must not push
           // the rest of the panel down.
           className={[
-            "mt-1 min-h-[1lh] text-[11px]",
+            "mt-1 min-h-[1lh] text-small",
             error ? "text-danger" : "text-faint",
           ].join(" ")}
         >

@@ -28,13 +28,13 @@ export function CountryFlag({
     >
       {a2 && (
         <span
-          className={`fi fi-${a2} rounded-[2px]`}
+          className={`fi fi-${a2} rounded-[1px] opacity-85 saturate-75`}
           style={{ fontSize: 11, lineHeight: 1 }}
           aria-label={title}
         />
       )}
       {(showCode || !a2) && (
-        <span className="text-[9px] font-semibold uppercase tracking-wide text-muted">
+        <span className="text-label font-semibold uppercase tracking-label text-faint">
           {code}
         </span>
       )}

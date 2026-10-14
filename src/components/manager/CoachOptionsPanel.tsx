@@ -85,7 +85,7 @@ function RangeRow({
     <div className="flex items-center gap-3 rounded-card border border-border bg-surface px-3 py-2.5">
       <div className="min-w-0 flex-1">
         <span className="block text-xs font-medium text-text">{label}</span>
-        <span className="block text-[11px] text-faint">{description}</span>
+        <span className="block text-small text-faint">{description}</span>
       </div>
       <input
         type="range"
@@ -117,7 +117,7 @@ function OptionRow({
     <label className="flex cursor-pointer items-center gap-3 rounded-card border border-border bg-surface px-3 py-2.5 transition-colors hover:border-border-strong">
       <div className="min-w-0 flex-1">
         <span className="block text-xs font-medium text-text">{label}</span>
-        <span className="block text-[11px] text-faint">{description}</span>
+        <span className="block text-small text-faint">{description}</span>
       </div>
       <ToggleSwitch checked={checked} onChange={onChange} />
     </label>

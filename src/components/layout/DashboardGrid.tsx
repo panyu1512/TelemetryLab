@@ -148,10 +148,10 @@ function Placeholder({
   return (
     <div className="grid h-full place-items-center">
       <div className="flex max-w-sm flex-col items-center gap-3 text-center">
-        <div className="grid size-12 place-items-center rounded-card border border-border bg-surface">
+        <div className="grid size-10 place-items-center rounded-card border border-border bg-surface">
           {icon}
         </div>
-        <h2 className="text-base font-semibold text-text">{title}</h2>
+        <h2 className="text-sm font-semibold text-text">{title}</h2>
         <p className="text-sm leading-relaxed text-muted">{body}</p>
       </div>
     </div>

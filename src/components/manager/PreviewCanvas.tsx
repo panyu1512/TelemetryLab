@@ -48,6 +48,7 @@ import { useTelemetryStore } from "../../stores/useTelemetryStore";
 import type { TelemetryData } from "../../hooks/useTelemetry";
 import { useDashboardLayout } from "../../hooks/useDashboardLayout";
 import { DashboardGrid } from "../layout/DashboardGrid";
+import { PanelHeader } from "../ui/PanelHeader";
 import { applyTheme, getTheme } from "../../themes";
 
 /**
@@ -188,7 +189,7 @@ function CanvasToolbar({
 }) {
   return (
     <div className="flex flex-none flex-wrap items-center gap-2 border-b border-border bg-surface px-3 py-2">
-      <p className="mr-1 font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-faint">
+      <p className="mr-1 label-caps">
         Preview
       </p>
 
@@ -302,9 +303,9 @@ function SegBtn({
       type="button"
       onClick={onClick}
       className={[
-        "flex items-center gap-1.5 rounded-ctl px-2 py-1 text-[11px] font-medium transition-colors",
+        "flex items-center gap-1.5 rounded-ctl px-2 py-1 text-small font-medium transition-colors",
         active
-          ? "bg-surface-2 text-text shadow-sm"
+          ? "bg-surface-2 text-text"
           : "text-muted hover:text-text",
       ].join(" ")}
     >
@@ -423,7 +424,7 @@ function SingleView({
       >
         {scale > 0 && (
           <div
-            className="shadow-2xl ring-1 ring-white/5"
+            className="outline outline-1 outline-border"
             style={{ width: size.w * scale, height: size.h * scale }}
           >
             <OverlayStage
@@ -524,7 +525,7 @@ function WidgetStackView({
           </p>
         )}
         {disabledCount > 0 && (
-          <p className="mx-auto max-w-[560px] pt-4 text-center text-[11px] text-faint">
+          <p className="mx-auto max-w-[560px] pt-4 text-center text-small text-faint">
             {disabledCount} disabled widget{disabledCount === 1 ? "" : "s"} not
             shown — enable {disabledCount === 1 ? "it" : "them"} in the config
             panel to preview.
@@ -549,15 +550,15 @@ function WidgetPreviewCard({
       // renders the overlay's one true form. A preview on graphite where the
       // overlay paints near-black is a preview that lies about the thing it is
       // previewing.
-      className="overlay-card widget-card timing-surface pointer-events-none flex flex-col overflow-hidden rounded-card border border-border/60 shadow-2xl ring-1 ring-white/5"
+      className="overlay-card widget-card timing-surface pointer-events-none flex flex-col overflow-hidden rounded-card"
       style={{ height: widgetPreviewHeight(def) }}
     >
-      {/* Headerless, because the overlay is. The comment above is the reason:
-          a preview that carries a name and an icon the real widget does not is
-          a preview that lies about the thing it is previewing. The config panel
-          beside this canvas is where the widgets are listed by name. */}
+      {/* The same header the real widget carries. The comment above is the
+          reason: a preview that differs from the overlay is a preview that
+          lies about the thing it is previewing. */}
+      <PanelHeader title={def.title} />
       <div
-        className="min-h-0 flex-1 overflow-hidden"
+        className="widget-body min-h-0 flex-1 overflow-hidden"
         style={{ containerType: "size" }}
       >
         <def.Component data={data} />
@@ -662,8 +663,8 @@ function Thumbnail({
         </span>
         <span
           className={[
-            "rounded-ctl px-1.5 py-0.5 text-[9px] font-semibold uppercase tracking-wide",
-            enabled ? "bg-accent/15 text-accent" : "bg-surface-2 text-faint",
+            "label-caps rounded-ctl border px-1.5 py-0.5",
+            enabled ? "border-primary/40 text-primary" : "border-border text-faint",
           ].join(" ")}
         >
           {enabled ? "On" : "Off"}
