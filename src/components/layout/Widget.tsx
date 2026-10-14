@@ -43,7 +43,15 @@ export function Widget({ def, data, onHide }: WidgetProps) {
     // paper as Standings and Relative, so the dashboard reads as one
     // instrument. It also keeps that paper over live footage instead of
     // dropping to glass — see the exception in styles.css.
-    <section className="overlay-card widget-card timing-surface group relative flex h-full cursor-grab flex-col overflow-hidden rounded-card active:cursor-grabbing">
+    //
+    // A bare widget (the radar) keeps no paper and shows its header only on
+    // hover, where it is the grab strip and the home of the two buttons.
+    <section
+      className={[
+        "overlay-card widget-card group relative flex h-full cursor-grab flex-col overflow-hidden rounded-card active:cursor-grabbing",
+        def.bare ? "widget-bare" : "timing-surface",
+      ].join(" ")}
+    >
       <PanelHeader title={def.title}>
         <div
           className={`${WIDGET_NO_DRAG} flex items-center gap-0.5 opacity-0 transition-opacity group-hover:opacity-100 focus-within:opacity-100`}

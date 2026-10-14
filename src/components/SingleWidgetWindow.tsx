@@ -97,14 +97,20 @@ export function SingleWidgetWindow({ id }: { id: string }) {
         ].join(" ")}
         style={appearanceStyle(settings.appearance)}
       >
-        {/* Same panel as the widget in the dashboard grid — a widget popped
-            into its own window is the same widget, header included: the
-            window is frameless over the game, so the channel name is the
-            only title it has. */}
-        <section className="overlay-card widget-card timing-surface flex min-h-0 flex-1 flex-col overflow-hidden rounded-card">
-          <PanelHeader title={def.title} />
-          {body}
-        </section>
+        {def.bare ? (
+          // A bare widget is only its marks: no panel, no header, nothing
+          // painted behind them for the game to be hidden by.
+          body
+        ) : (
+          // Same panel as the widget in the dashboard grid — a widget popped
+          // into its own window is the same widget, header included: the
+          // window is frameless over the game, so the channel name is the
+          // only title it has.
+          <section className="overlay-card widget-card timing-surface flex min-h-0 flex-1 flex-col overflow-hidden rounded-card">
+            <PanelHeader title={def.title} />
+            {body}
+          </section>
+        )}
       </div>
     </div>
   );

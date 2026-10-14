@@ -539,6 +539,24 @@ function WidgetPreviewCard({
   def: WidgetDef;
   data: TelemetryData | null;
 }) {
+  if (def.bare) {
+    // A bare widget paints only its marks over the game, so that is all its
+    // preview paints over the backdrop.
+    return (
+      <div
+        className="pointer-events-none flex flex-col"
+        style={{ height: widgetPreviewHeight(def) }}
+      >
+        <div
+          className="widget-body min-h-0 flex-1 overflow-hidden"
+          style={{ containerType: "size" }}
+        >
+          <def.Component data={data} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <section
       // `timing-surface` here for the same reason rule 7 exists: the preview

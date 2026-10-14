@@ -42,6 +42,12 @@ export interface WidgetDef {
   defaultSize: WidgetSize;
   /** Optional explicit default footprint, overriding the size→{w,h} map. */
   defaultLayout?: { w: number; h: number };
+  /**
+   * Draw only the widget's own marks: no panel, no header, nothing painted
+   * behind them. For a widget whose whole point is to sit over the game with
+   * as little of it covered as possible (the radar's lines).
+   */
+  bare?: boolean;
   Component: ComponentType<WidgetBodyProps>;
 }
 
@@ -124,10 +130,11 @@ export const DASHBOARDS: DashboardDef[] = [
         id: "radar",
         title: "Radar",
         description:
-          "Cars alongside you — which side, how far up and at what angle — for when there is no side screen to see them on.",
+          "Two lines, one each side of you: a car alongside lights the stretch it covers, from your rear wheel to your nose.",
         icon: Radar,
         defaultSize: "md",
         defaultLayout: { w: 3, h: 4 },
+        bare: true,
         Component: RadarWidget,
       },
     ],

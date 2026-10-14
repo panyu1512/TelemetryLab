@@ -1016,6 +1016,20 @@ html.overlay-locked * {
 }
 
 /*
+ * A bare widget (the radar) is only its marks: on the dashboard grid its
+ * header is the grab strip and the home of its buttons, so it shows on hover
+ * and is otherwise invisible — no paper, no title over the game.
+ */
+.widget-bare > .panel-header {
+  opacity: 0;
+  transition: opacity var(--dur-short) var(--ease-out);
+}
+.widget-bare:hover > .panel-header,
+.widget-bare:focus-within > .panel-header {
+  opacity: 1;
+}
+
+/*
  * The widget type roles, sized to the card in container-query units and
  * clamped so they never get unreadably small or absurdly large. One place for
  * every fluid size the widgets use.
