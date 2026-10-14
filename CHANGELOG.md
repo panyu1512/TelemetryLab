@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A radar for single-screen drivers.** Without side monitors you cannot see
+  the car in your blind spot, only hear the spotter call it. The new **Radar**
+  widget (Dashboard → Radar, or open it in its own window) draws it: your car
+  in the middle, the side the spotter calls lit in red, and each car alongside
+  placed where it actually is — how many metres ahead or behind, and the angle
+  it sits at from your nose (90° is door to door, 150° is its nose at your rear
+  wheel). Cars closing from behind or ahead appear before they get alongside.
+  Whether a side is occupied comes straight from iRacing's own spotter; the
+  distance comes from where each car is on the lap. iRacing does not say how
+  far apart two cars are across the track, so the widget assumes the car is
+  one lane over — the angle is exact along the track and an estimate across
+  it. Needs the updated bridge; with an older one the radar stays blank.
+
 ## [1.23.0] - 2026-10-13
 
 ### Added

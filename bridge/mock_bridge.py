@@ -11,7 +11,8 @@ built entirely on macOS/Linux.
 
 The player's own car is driven by :mod:`telemetrylab.mocktrack` — a lap of Spa
 with real braking zones and a driver who makes known mistakes — so the coach
-overlay has laps to analyse. It joins near the line: the first lap boundary is
+overlay has laps to analyse. Two cars dice with the player, sweeping past on
+either side, so the radar always has someone to place. It joins near the line: the first lap boundary is
 about 14 s in, the coach sets its reference one lap later and analyses every
 lap after that.
 
@@ -43,6 +44,8 @@ MULTICLASS = (os.environ.get("MOCK_MULTICLASS", "1") or "1") != "0"
 DISCONNECT_EVERY = float(os.environ.get("MOCK_DISCONNECT_EVERY", "0") or 0)
 
 RACE_LENGTH = 3600.0  # seconds of session
+TRACK_M = 7000.0  # the mock Spa's length, as TrackLength says below
+CAR_LENGTH_M = 4.8  # a mock car overlaps the player inside this gap
 TANK_CAPACITY = 60.0  # litres
 
 # Two fictitious classes so multi-class rendering can be exercised.
@@ -137,6 +140,8 @@ class MockCar:
         self.pit_at = rng.uniform(0.35, 0.85) if rng.random() < 0.25 else None
         # The player's car is driven lap by lap on the mock track instead.
         self.driver: MockDriver | None = None
+        # A car dicing with the player instead of running its own pace.
+        self.duel: Duel | None = None
 
     # --- dynamics -----------------------------------------------------------
     def lap_time(self, t: float) -> float:
@@ -154,6 +159,8 @@ class MockCar:
         if self.driver is not None:
             s = self.driver.state(t)
             return s["lap"] + s["pct"]
+        if self.duel is not None:
+            return self.duel.target.progress(t) + self.duel.offset_m(t) / TRACK_M
         return self.phase + t / self.pace
 
     def driver_dict(self) -> dict[str, Any]:
@@ -187,6 +194,36 @@ class MockCar:
         }
 
 
+class Duel:
+    """A car that rides up and down the player's sides instead of lapping alone.
+
+    Its gap to the player swings ``±amplitude`` metres on a sine, so it sweeps
+    past alongside twice a period and never teleports. It passes on its
+    ``overtake`` side and drops back on the other — the way a real dice swaps
+    lines — and that side is what the mock spotter calls.
+    """
+
+    def __init__(
+        self, target: MockCar, amplitude: float, period: float, phase: float, overtake: str
+    ) -> None:
+        self.target = target
+        self.amplitude = amplitude
+        self.period = period
+        self.phase = phase
+        self.overtake = overtake
+
+    def _angle(self, t: float) -> float:
+        return 2 * math.pi * (t / self.period + self.phase)
+
+    def offset_m(self, t: float) -> float:
+        return self.amplitude * math.sin(self._angle(t))
+
+    def side(self, t: float) -> str:
+        gaining = math.cos(self._angle(t)) >= 0
+        other = "right" if self.overtake == "left" else "left"
+        return self.overtake if gaining else other
+
+
 class MockField:
     """The whole synthetic field: builds the roster once and animates it."""
 
@@ -199,6 +236,30 @@ class MockField:
         self.player = self.cars[0]
         self.player.driver = MockDriver()
         self.player.pit_at = None
+        # Two cars dicing with the player: one sweeps by every 48 s, the other
+        # every 70 s, so now and then both are alongside at once.
+        for idx, amplitude, period, phase, overtake in (
+            (2, 18.0, 48.0, 0.0, "left"),
+            (4, 22.0, 70.0, 0.3, "right"),
+        ):
+            if idx < len(self.cars):
+                self.cars[idx].duel = Duel(self.player, amplitude, period, phase, overtake)
+                self.cars[idx].pit_at = None
+
+    def spotter(self, t: float) -> int:
+        """The mock ``CarLeftRight``: who overlaps the player, on which side."""
+        left = right = 0
+        for c in self.cars:
+            if c.duel is None or abs(c.duel.offset_m(t)) > CAR_LENGTH_M:
+                continue
+            if c.duel.side(t) == "left":
+                left += 1
+            else:
+                right += 1
+        # irsdk_CarLeftRight: 1 clear, 2 left, 3 right, 4 both, 5 two left, 6 two right.
+        return {(0, 0): 1, (1, 0): 2, (0, 1): 3, (1, 1): 4, (2, 0): 5, (0, 2): 6}[
+            (min(left, 2), min(right, 2))
+        ]
 
     # --- ordering -----------------------------------------------------------
     def _ordered(self, t: float) -> list[MockCar]:
@@ -244,7 +305,9 @@ class MockField:
             arr["CarIdxPosition"][c.idx] = overall_pos[c.idx]
             arr["CarIdxClassPosition"][c.idx] = class_pos[c.idx]
             arr["CarIdxLap"][c.idx] = lap
-            arr["CarIdxLapDistPct"][c.idx] = round(pct, 4)
+            # Six places: at four, 7 km of track moves in 0.7 m steps and the
+            # radar's cars would judder alongside.
+            arr["CarIdxLapDistPct"][c.idx] = round(pct, 6)
             arr["CarIdxLastLapTime"][c.idx] = round(c.lap_time(t), 3)
             arr["CarIdxBestLapTime"][c.idx] = round(c.best_lap_time(t), 3)
             arr["CarIdxEstTime"][c.idx] = round(pct * c.pace, 3)
@@ -364,6 +427,7 @@ class MockField:
             "onPitRoad": False,
             "trackSurface": 0 if off else 3,
             "incidentCount": incidents,
+            "carLeftRight": self.spotter(t),
             "airTemp": 22.0,
             "trackTemp": round(30.0 + 2.0 * math.sin(t * 0.01), 1),
             "tyres": {

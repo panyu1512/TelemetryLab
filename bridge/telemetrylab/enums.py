@@ -83,3 +83,31 @@ def decode_flags(mask: int | None) -> list[str]:
     if not mask:
         return []
     return [name for bit, name in SESSION_FLAGS if mask & bit]
+
+
+# ---------------------------------------------------------------------------
+# CarLeftRight (irsdk_CarLeftRight) — the sim's own spotter call. It says how
+# many cars are alongside on each side, never which ones: see radar.py.
+# ---------------------------------------------------------------------------
+CAR_LEFT_RIGHT: Final[dict[int, str]] = {
+    0: "off",
+    1: "clear",
+    2: "car_left",
+    3: "car_right",
+    4: "car_left_right",
+    5: "two_cars_left",
+    6: "two_cars_right",
+}
+
+#: Cars alongside on (left, right) for each spotter call.
+CAR_LEFT_RIGHT_COUNTS: Final[dict[int, tuple[int, int]]] = {
+    2: (1, 0),
+    3: (0, 1),
+    4: (1, 1),
+    5: (2, 0),
+    6: (0, 2),
+}
+
+
+def car_left_right(value: int | None) -> str:
+    return CAR_LEFT_RIGHT.get(value if value is not None else 0, "off")

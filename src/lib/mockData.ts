@@ -19,6 +19,9 @@ import type {
   CornerAnalysis,
   DriverEntry,
   PlayerTelemetry,
+  RadarCar,
+  RadarFrame,
+  RadarState,
   SectorSplit,
   SessionInfo,
   StandingsEntry,
@@ -484,6 +487,7 @@ export function mockPlayerTelemetry(t: number): PlayerTelemetry {
   const gear = gearFor(kmh);
   const rpm = rpmFor(kmh, gear);
   const pos = playerPosition(t);
+  const radar = mockRadar(t);
 
   // Fuel: burned down a stint, refilled at the stop. Monotonic within a stint,
   // which is what lets both fuel readouts sample a per-lap burn from it.
@@ -545,6 +549,8 @@ export function mockPlayerTelemetry(t: number): PlayerTelemetry {
     onPitRoad: false,
     trackSurface: offTrackAt(lap, pct) ? 0 : 3,
     incidentCount: incidentsBy(lap, pct),
+    carLeftRight: radar.carLeftRight,
+    radar,
     airTemp: 22,
     trackTemp: round(30 + 2 * Math.sin(t * 0.01), 1),
     tyres: {
@@ -553,6 +559,65 @@ export function mockPlayerTelemetry(t: number): PlayerTelemetry {
       lr: corner(79, 3, 2),
       rr: corner(76, 2.5, 3), // coolest — green
     },
+  };
+}
+
+// ── radar ───────────────────────────────────────────────────────────────────
+
+/**
+ * Two cars dicing with the player, as the Python mock bridge has them: each
+ * one's gap swings `±amplitude` metres on a sine, so it sweeps past twice a
+ * period without ever teleporting, passing on its `overtake` side and dropping
+ * back on the other. Every so often both are alongside at once.
+ *
+ * The radar is all they are: the standings still run these cars at their own
+ * pace, so the Relative will not show them beside you. A demo of the widget,
+ * not a consistent world.
+ */
+const DUELS = [
+  { carIdx: 2, amplitude: 18, period: 48, phase: 0, overtake: "left" },
+  { carIdx: 4, amplitude: 22, period: 70, phase: 0.3, overtake: "right" },
+] as const;
+
+/** Inside this gap a mock car overlaps the player and the spotter calls it. */
+const MOCK_OVERLAP_M = 4.8;
+const MOCK_RADAR_RANGE_M = 30;
+
+/** irsdk_CarLeftRight for (cars left, cars right). */
+const SPOTTER: Record<string, [raw: number, state: RadarState]> = {
+  "0,0": [1, "clear"],
+  "1,0": [2, "car_left"],
+  "0,1": [3, "car_right"],
+  "1,1": [4, "car_left_right"],
+  "2,0": [5, "two_cars_left"],
+  "0,2": [6, "two_cars_right"],
+};
+
+export function mockRadar(t: number): RadarFrame {
+  // The cars sweep at wall-clock speed: at the feed's 5× they would flash past.
+  const wall = t / MOCK_TIME_SCALE;
+  const lanes = { left: 0, right: 0 };
+  const cars: RadarCar[] = [];
+  for (const d of DUELS) {
+    const angle = 2 * Math.PI * (wall / d.period + d.phase);
+    const gapM = d.amplitude * Math.sin(angle);
+    const gaining = Math.cos(angle) >= 0;
+    const side = gaining ? d.overtake : d.overtake === "left" ? "right" : "left";
+    const alongside = Math.abs(gapM) <= MOCK_OVERLAP_M;
+    const lane = alongside ? ((++lanes[side]) as 1 | 2) : null;
+    if (Math.abs(gapM) <= MOCK_RADAR_RANGE_M) {
+      cars.push({ carIdx: d.carIdx, gapM: round(gapM, 2), side: alongside ? side : null, lane });
+    }
+  }
+  cars.sort((a, b) => Math.abs(a.gapM) - Math.abs(b.gapM));
+  const [raw, state] = SPOTTER[`${lanes.left},${lanes.right}`];
+  return {
+    state,
+    carLeftRight: raw,
+    left: lanes.left,
+    right: lanes.right,
+    rangeM: MOCK_RADAR_RANGE_M,
+    cars,
   };
 }
 

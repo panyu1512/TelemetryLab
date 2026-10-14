@@ -10,6 +10,8 @@ from __future__ import annotations
 import asyncio
 import contextlib
 
+import pytest
+
 from telemetrylab import mocktrack as mt
 from telemetrylab.protocol import SNAPSHOT_CHANNELS, Channel
 from telemetrylab.service import BridgeService, coach_context
@@ -113,6 +115,48 @@ class TestBridgeServiceActive:
         # A handful of distinct frames at most (timestamps differ only inside the
         # engine, not on the wire) — certainly not one per 100 ms tick.
         assert 1 <= len(standings) <= 3
+
+
+class RadarSource(FakeSource):
+    """The spotter calls a car left, and car 1 is a metre behind the player."""
+
+    def read_player_frame(self):
+        return {"speed": 60.0, "carLeftRight": 2}
+
+    def read_car_arrays(self):
+        return {
+            **super().read_car_arrays(),
+            "CarIdxLapDistPct": [0.5, 0.5 - 1.0 / 4650.0],
+            "CarIdxOnPitRoad": [False, False],
+        }
+
+
+class TestRadar:
+    def test_telemetry_frames_carry_the_radar(self):
+        service = BridgeService(RadarSource(active=True))
+        pub = FakePublisher()
+        service._publisher = pub
+        _drive(service)
+        radars = [p["radar"] for p in pub.payloads(Channel.TELEMETRY)]
+        assert radars
+        # The first frames can beat the session loop; once the track length is
+        # known, the car is placed on the spotter's side.
+        placed = [r for r in radars if r["cars"]]
+        assert placed
+        (car,) = placed[-1]["cars"]
+        assert car["carIdx"] == 1
+        assert car["side"] == "left"
+        assert car["gapM"] == pytest.approx(-1.0, abs=0.01)
+        assert placed[-1]["state"] == "car_left"
+
+    def test_frames_without_a_spotter_read_off(self):
+        service = BridgeService(FakeSource(active=True))
+        pub = FakePublisher()
+        service._publisher = pub
+        _drive(service)
+        radar = pub.payloads(Channel.TELEMETRY)[-1]["radar"]
+        assert radar["state"] == "off"
+        assert radar["cars"] == []
 
 
 class TestBridgeServiceInactive:

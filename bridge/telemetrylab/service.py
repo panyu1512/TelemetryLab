@@ -10,7 +10,9 @@ machine.
                     └────────── this service ──────┘
 
 Cadences (see the milestone's "update strategy"):
-- telemetry  ~60 Hz  — player car only; ephemeral, never cached.
+- telemetry  ~60 Hz  — player car only; ephemeral, never cached. Carries the
+  radar (who is alongside, see :mod:`telemetrylab.radar`) because a car
+  sliding up your side has to move as smoothly as the needles do.
 - standings  ~10 Hz  — computed field order; published only when it changes.
 - session     ~1 Hz  — roster + rules + weather; published only on change.
 - coaching   per lap — the coach reads every telemetry frame and publishes
@@ -35,6 +37,7 @@ from .ingest import ingest_car_timings
 from .models import SessionInfo
 from .protocol import Channel, now_ms
 from .publisher import ChannelPublisher
+from .radar import RadarTracker
 from .repositories import CarRepository, SessionRepository
 
 TELEMETRY_HZ = 60.0
@@ -67,6 +70,7 @@ class BridgeService:
         self._car_repo = CarRepository(self._session_repo)
         self._publisher = ChannelPublisher()
         self._coach = Coach()
+        self._radar = RadarTracker()
         self._active = False
         self._bus.on_any(self._log_event)
 
@@ -89,6 +93,7 @@ class BridgeService:
             self._session_repo = SessionRepository(self._bus)
             self._car_repo = CarRepository(self._session_repo)
             self._coach.reset()
+            self._radar.reset()
         await self._publisher.publish(Channel.BRIDGE, {"iracingActive": active})
         if not active:
             # Overwrite the cached analysis, or a client connecting after the
@@ -141,9 +146,24 @@ class BridgeService:
                 continue
             frame = self._source.read_player_frame()
             if frame is not None:
+                frame["radar"] = self._radar_frame(frame)
                 await self._publisher.publish(Channel.TELEMETRY, frame)
                 await self._coach_frame(frame)
             await asyncio.sleep(1.0 / TELEMETRY_HZ)
+
+    def _radar_frame(self, frame: dict[str, Any]) -> dict[str, Any]:
+        """The radar for this frame: the spotter's call, placed on a map."""
+        session = self._session_repo.current
+        length_m = None
+        player_idx = -1
+        if session is not None:
+            player_idx = session.driver_car_idx
+            length_m = session.track.length_km * 1000.0 if session.track.length_km else None
+        spotter = frame.get("carLeftRight")
+        # Off (0 / missing) means the player is not driving: nothing to place,
+        # so skip reading every car's arrays at 60 Hz in the garage.
+        arrays = self._source.read_car_arrays() if length_m and spotter else {}
+        return self._radar.update(spotter, arrays, player_idx, length_m).to_dict()
 
     async def _coach_frame(self, frame: dict[str, Any]) -> None:
         """Feed the coach one frame; publish when it has something new."""

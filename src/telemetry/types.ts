@@ -95,11 +95,64 @@ export interface PlayerTelemetry {
   trackSurface: number | null;
   /** The player's own incident count this session (`PlayerCarMyIncidentCount`). */
   incidentCount: number | null;
+  /**
+   * iRacing's spotter, raw `CarLeftRight` (irsdk_CarLeftRight): 0 off, 1 clear,
+   * 2 car left, 3 car right, 4 both, 5 two cars left, 6 two cars right.
+   */
+  carLeftRight?: number | null;
+  /**
+   * The spotter's call placed on a map — see {@link RadarFrame}. Optional only
+   * so an older bridge still parses; every current frame carries it.
+   */
+  radar?: RadarFrame | null;
 
   airTemp: number | null;
   trackTemp: number | null;
 
   tyres: TyreSet;
+}
+
+/** The spotter's call, as a label (`car_left_right()` in `enums.py`). */
+export type RadarState =
+  | "off"
+  | "clear"
+  | "car_left"
+  | "car_right"
+  | "car_left_right"
+  | "two_cars_left"
+  | "two_cars_right";
+
+/** One car within radar range of the player (bridge `radar.RadarCar`). */
+export interface RadarCar {
+  carIdx: number;
+  /** Metres along the track from the player, signed: positive = ahead. */
+  gapM: number;
+  /**
+   * Which side it is on, when the spotter has it alongside. `null` for a car
+   * ahead or behind: iRacing publishes no lateral position, so its side is
+   * genuinely unknown until it overlaps.
+   */
+  side: "left" | "right" | null;
+  /** 1 = right next to you, 2 = beyond that car. `null` when not alongside. */
+  lane: 1 | 2 | null;
+}
+
+/**
+ * The radar (bridge `radar.RadarFrame`), on every telemetry frame.
+ *
+ * `left` / `right` are the spotter's own counts and are the authority on
+ * whether a side is occupied; `cars` is the bridge's placement of the nearest
+ * cars onto those sides, from their lap distance.
+ */
+export interface RadarFrame {
+  state: RadarState;
+  carLeftRight: number | null;
+  left: number;
+  right: number;
+  /** How far ahead and behind `cars` reaches, in metres. */
+  rangeM: number;
+  /** Nearest first. */
+  cars: RadarCar[];
 }
 
 // ---------------------------------------------------------------------------

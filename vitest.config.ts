@@ -28,6 +28,7 @@ export default defineConfig({
         "src/lib/tyreFreshness.ts",
         "src/lib/fuelStrategy.ts",
         "src/lib/coaching.ts",
+        "src/lib/radar.ts",
         "src/telemetry/protocol.ts",
       ],
       thresholds: {

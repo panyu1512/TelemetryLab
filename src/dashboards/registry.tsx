@@ -9,6 +9,7 @@ import {
   ListOrdered,
   Users,
   GraduationCap,
+  Radar,
   type LucideIcon,
 } from "lucide-react";
 import type { TelemetryData } from "../hooks/useTelemetry";
@@ -18,6 +19,7 @@ import { FuelWidget } from "../components/widgets/FuelWidget";
 import { TimingWidget } from "../components/widgets/TimingWidget";
 import { TyresWidget } from "../components/widgets/TyresWidget";
 import { PositionWidget } from "../components/widgets/PositionWidget";
+import { RadarWidget } from "../components/widgets/RadarWidget";
 import { StandingsScreen } from "../components/standings/StandingsScreen";
 import { RelativeScreen } from "../components/relative/RelativeScreen";
 import { FuelStrategyScreen } from "../components/fuel/FuelStrategyScreen";
@@ -117,6 +119,16 @@ export const DASHBOARDS: DashboardDef[] = [
         icon: Flag,
         defaultSize: "sm",
         Component: PositionWidget,
+      },
+      {
+        id: "radar",
+        title: "Radar",
+        description:
+          "Cars alongside you — which side, how far up and at what angle — for when there is no side screen to see them on.",
+        icon: Radar,
+        defaultSize: "md",
+        defaultLayout: { w: 3, h: 4 },
+        Component: RadarWidget,
       },
     ],
   },
