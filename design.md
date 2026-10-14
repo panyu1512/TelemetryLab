@@ -1130,6 +1130,25 @@ the fuel panel should not have to re-learn where the numbers are.
   so stops line up down the list; the recommended plan wears a low accent
   ground and an accent ring — the same "selection" statement the player's row
   makes — rather than a border style of its own.
+- **The lap history is a dense table in miniature.** `Fuel per lap`, under the
+  plans: one row per completed lap, newest first so the lap just finished sits
+  where the glance lands, with a hairline under each row and no vertical
+  rules (§ Dense tabular overlays, rule 1). The burn is the row's figure, in
+  the data ink; lap, time and tank are context, in the label grey. Its
+  delta against the strategy's per-lap average takes `accent` under and
+  `danger` over, rounded before it is graded so a lap never prints `0.00` in
+  red. Two marks, both words or glyphs rather than colour: `PIT` after the lap
+  number for a lap that touched pit road or crossed a refuel, and `~` before a
+  burn scaled up from a part lap — the same `~` as the stint's `of ~N`.
+
+  It carries column labels, which rule 3 turns off by default on Standings and
+  Relative. The case there is a label paid for in every group by a driver who
+  learned the columns in their first session; here one row of labels heads the
+  whole table, and five columns of bare litres and seconds are not learnable
+  the way a standings row is — `2.83` and `11.6` are both litres and only the
+  label says which is the lap and which is the tank. It is not interactive
+  (rule 7): no sorting, no selection, and a table longer than the window
+  scrolls with the rest of the panel.
 
 ### The Coach in the same language
 

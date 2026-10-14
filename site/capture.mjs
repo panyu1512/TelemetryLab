@@ -34,6 +34,11 @@
  *     mock feed now opens fourteen laps into the race and runs five times
  *     wall-clock (`MOCK_START_OFFSET_S` / `MOCK_TIME_SCALE` in
  *     `src/lib/mockData.ts`), so a lap boundary is ~28 s away instead of ~140.
+ *   · leave the working tree alone while it runs. The dev server reloads the
+ *     page on an edit anywhere in the repo — the CHANGELOG and `site/`
+ *     included — and a reload restarts the mock feed, so a shot taken after
+ *     one shows an earlier lap and a shorter fuel-per-lap table than its wait
+ *     promises.
  */
 
 import { chromium } from "playwright";
@@ -130,13 +135,16 @@ const SHOTS = [
   { name: "relative", route: "?overlay=relative", w: 700, h: 420 },
   { name: "dashboard", route: "?overlay=dashboard", w: 1100, h: 620 },
   { name: "manager", route: "", w: 1400, h: 900, wait: PAST_A_LAP_MS },
-  // Tall enough for the pit-strategies card, which stopped being collapsed and
-  // now always renders under the fold of the old 340 px frame — and no taller.
-  // 432, up from 412 for 1.25: sections are drawn by a 1 px hairline now and
-  // their metrics put the label above the figure, so the last card ends at
-  // 417 (measured in the live app, plus the panel's padding and edge and the
-  // window's 8 px).
-  { name: "fuel", route: "?overlay=fuel", w: 620, h: 432, wait: PAST_A_LAP_MS },
+  // Tall enough for the fuel-per-lap table under the pit strategies — and no
+  // taller. The table grows a row a lap, so this shot waits for four: laps
+  // 14–17 land at ~19, 47, 75 and 102 s and lap 18 at ~130 s, so 115 s sits
+  // between the fourth and the fifth (re-measure both if MOCK_START_OFFSET_S,
+  // MOCK_TIME_SCALE or the mock's lap times move). With four rows the table's
+  // card ends at 575 (measured in the live app), plus the panel's padding and
+  // edge and the window's 8 px. 590, up from 432 for 1.26, when the table
+  // arrived; still under the tank's refill at lap 19, so the panel tells the
+  // same "pit stop needed" story the page's copy does.
+  { name: "fuel", route: "?overlay=fuel", w: 620, h: 590, wait: 115_000 },
   // The coach after the first lap the feed completes: lap 13 is already done
   // when the page opens (and was a new best), lap 14 lands ~20 s in, and its
   // analysis holds until ~47 s. 30 s sits in the middle of that window, so the

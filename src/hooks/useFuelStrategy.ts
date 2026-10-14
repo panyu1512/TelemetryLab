@@ -5,6 +5,12 @@ import {
   type FuelStrategy,
   type FuelInputs,
 } from "../lib/fuelStrategy";
+import {
+  appendFuelLap,
+  closeLap,
+  settleLapTime,
+  type FuelLap,
+} from "../lib/fuelHistory";
 
 /**
  * Stateful front-end for the fuel & strategy calculator.
@@ -21,6 +27,9 @@ import {
  *     load), so stint progress and pit windows are anchored correctly.
  *   - **Out-of-fuel**, latched when the tank runs dry on track, cleared on the
  *     next refuel — surfaced so the UI can raise an incident-style alert.
+ *   - **Lap history**, one row per completed lap from the same measurement
+ *     the rolling burn is built from (`lib/fuelHistory.ts`), for the lap
+ *     table under the plans.
  *
  * Everything derived here is fed as a clean {@link FuelInputs} snapshot into
  * {@link computeFuelStrategy}, which owns all the actual strategy math.
@@ -45,6 +54,11 @@ export interface FuelStrategyResult {
   sampleCount: number;
   /** Latched when the car ran dry on track; cleared on the next refuel. */
   outOfFuel: boolean;
+  /**
+   * Every lap completed since the app started watching (up to
+   * `FUEL_HISTORY_LIMIT`), oldest first. Same array until a lap changes.
+   */
+  history: readonly FuelLap[];
 }
 
 /** Below this level (litres), on track, we consider the car out of fuel. */
@@ -63,7 +77,11 @@ interface SamplerState {
   burn: number[];
   lapTimes: number[];
   wasOnPitRoad: boolean;
+  /** Pit road was seen at some point during the lap in progress. */
+  lapTouchedPit: boolean;
   outOfFuelLatched: boolean;
+  /** Mirror of the `history` state, so the sampler can read it frame to frame. */
+  history: readonly FuelLap[];
 }
 
 export function useFuelStrategy(
@@ -82,7 +100,9 @@ export function useFuelStrategy(
     burn: [],
     lapTimes: [],
     wasOnPitRoad: false,
+    lapTouchedPit: false,
     outOfFuelLatched: false,
+    history: [],
   });
 
   const [perLap, setPerLap] = useState<number | null>(null);
@@ -91,6 +111,7 @@ export function useFuelStrategy(
   const [tankCapacity, setTankCapacity] = useState<number | null>(null);
   const [outOfFuel, setOutOfFuel] = useState(false);
   const [sampleCount, setSampleCount] = useState(0);
+  const [history, setHistory] = useState<readonly FuelLap[]>([]);
 
   const lap = data?.lap ?? null;
   const fuel = data?.fuelLevel ?? null;
@@ -113,6 +134,7 @@ export function useFuelStrategy(
   useEffect(() => {
     if (onPitRoad == null || lap == null) return;
     const st = s.current;
+    if (onPitRoad) st.lapTouchedPit = true;
     if (st.wasOnPitRoad && !onPitRoad) {
       // Just left the pits on a fresh fuel load: a new stint begins.
       setStintStartLap(lap);
@@ -154,18 +176,25 @@ export function useFuelStrategy(
        * A lap completed: record how much fuel it cost, scaling the interval up
        * when it covered only part of a lap — which the first one after we
        * start watching, or after a pit exit, always does. See the longer note
-       * on the same guard in {@link useFuelEstimate}.
+       * on the same guard in {@link useFuelEstimate}. The same measurement
+       * becomes the lap's row in the history, so the table and the average
+       * never disagree about a lap.
        */
-      const covered = st.startPct == null ? 1 : 1 - st.startPct;
-      if (st.lapStartFuel != null && covered >= 0.5) {
-        const used = (st.lapStartFuel - fuel) / covered;
-        if (used > 0.01) {
-          st.burn.push(used);
-          if (st.burn.length > window) st.burn.shift();
-          setPerLap(avg(st.burn));
-          setSampleCount(st.burn.length);
-        }
+      const closed = closeLap({
+        lap: st.lastLap,
+        startFuel: st.lapStartFuel,
+        endFuel: fuel,
+        startPct: st.startPct,
+        touchedPit: st.lapTouchedPit,
+      });
+      if (closed.used != null) {
+        st.burn.push(closed.used);
+        if (st.burn.length > window) st.burn.shift();
+        setPerLap(avg(st.burn));
+        setSampleCount(st.burn.length);
       }
+      st.history = settleLapTime(appendFuelLap(st.history, closed), lastLapTime);
+      setHistory(st.history);
       // Record the lap time (published as the just-completed lap's time).
       if (lastLapTime != null && lastLapTime > 0) {
         st.lapTimes.push(lastLapTime);
@@ -175,6 +204,8 @@ export function useFuelStrategy(
       st.startPct = null;
       st.lastLap = lap;
       st.lapStartFuel = fuel;
+      // A lap that starts in the pit lane is a pit lap too.
+      st.lapTouchedPit = onPitRoad === true;
     } else if (lap < st.lastLap) {
       // Session reset / new session — start clean.
       st.lastLap = lap;
@@ -183,13 +214,24 @@ export function useFuelStrategy(
       st.lapTimes = [];
       st.startPct = distPct;
       st.outOfFuelLatched = false;
+      st.lapTouchedPit = onPitRoad === true;
+      st.history = [];
+      setHistory(st.history);
       setPerLap(null);
       setAvgLapTime(null);
       setSampleCount(0);
       setStintStartLap(lap);
       setOutOfFuel(false);
+    } else {
+      // Mid-lap: the last lap's time may land a beat after the line.
+      const settled = settleLapTime(st.history, lastLapTime);
+      if (settled !== st.history) {
+        st.history = settled;
+        setHistory(settled);
+      }
     }
     // `stintStartLap` intentionally omitted: we only seed it on first sight.
+    // `onPitRoad` is read, not watched: the stint effect tracks its changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [lap, fuel, lastLapTime, distPct, window]);
 
@@ -221,6 +263,7 @@ export function useFuelStrategy(
     strategy: computeFuelStrategy(inputs),
     sampleCount,
     outOfFuel,
+    history,
   };
 }
 

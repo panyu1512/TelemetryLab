@@ -60,7 +60,7 @@
         "applicationCategory": "UtilitiesApplication",
         "applicationSubCategory": "Sim racing overlay",
         "operatingSystem": "Windows",
-        "softwareVersion": "1.25.0",
+        "softwareVersion": "1.26.0",
         "isAccessibleForFree": true,
         "license": "https://opensource.org/licenses/MIT",
         "offers": {
@@ -466,20 +466,25 @@
               <li>Consumption per lap, sampled live, with laps of fuel remaining</li>
               <li>A pit window and a recommended lap, both recomputed every lap</li>
               <li>A fuel-save target when finishing on what is in the tank is close</li>
+              <li>Every lap's burn in a table, against your average, with stops marked</li>
             </ul>
           </div>
           <figure class="shot">
             <img
               src="assets/fuel.png"
               width="1240"
-              height="864"
+              height="1180"
               loading="lazy"
               alt="The fuel and strategy overlay, under a strip naming the track and a
-                   1.0-lap margin: a 'Pit stop needed' block reading 4.3 fuel laps
-                   against 11 laps to the flag, 15.1 litres in tank at 2.85 litres per
+                   1.0-lap margin: a 'Pit stop needed' block reading 1.6 fuel laps
+                   against 8 laps to the flag, 7.3 litres in tank at 2.86 litres per
                    lap, a pit window of laps 18 to 19, a recommended pit on lap 19, a
                    note reading 'short by 7 laps at the current burn', and two
-                   candidate plans — a one-stop on lap 19 and a two-stop."
+                   candidate plans — a one-stop on lap 19 and a two-stop. Below them,
+                   a fuel-per-lap table lists laps 17 back to 14 with the litres each
+                   burned — 2.93, 2.91, 2.76 and an estimated 2.82 — each against the
+                   2.86 average in red when over and green when under, beside its
+                   lap time and the litres left in the tank at the line."
             />
           </figure>
         </section>
@@ -561,7 +566,7 @@
                    Relative, Fuel Calc and Coach, a column of widget and
                    appearance settings in the middle, and a live scaled preview
                    of the dashboard overlay on the right — its speed gauge
-                   reading 194 km/h in fifth, and a throttle and brake trace
+                   reading 206 km/h in fifth, and a throttle and brake trace
                    below it, throttle in cyan and brake in grey."
             />
           </figure>
