@@ -1,57 +1,53 @@
 /**
- * The colours that say which class a car is in.
+ * The colours that say which class a car is in — multiclass sessions only.
  *
- * These used to be iRacing's own `carClassColor`, taken as given. That is where
- * the collision came from: the sim hands out whatever hue it likes — the stock
- * GT3 colour is `#ff4d4d` — and this app spends red on **lapped traffic**. A
- * red-edged row and a red-grounded row then mean two unrelated things, and with
- * four or five classes on track the odds of some class landing on red, on the
- * blue that means "this is you", or on the amber that means "pit", stop being
- * odds at all.
+ * In the race-engineer look these are the one exception to "no decorative
+ * colour": in a multiclass race the class is functional and has to be found at
+ * a glance. They are carried sparingly — a thin bar on the left of a row, a
+ * small tag next to the car number, a chart line — and never as a row's
+ * ground, a panel's background or a block of text. A single-class session
+ * shows none of them.
  *
- * So identity colour is now the app's, not the sim's. This ramp is chosen
- * against the four themes' status hues rather than sampled from a wheel:
+ * Identity colour is the app's, not the sim's. iRacing's own `carClassColor`
+ * hands out whatever hue it likes — the stock GT3 colour is `#ff4d4d` — and
+ * this app spends red on loss, blue on lapped traffic, yellow on warnings and
+ * cyan on selection. So the ramp is chosen against those, rather than sampled
+ * from the sim:
  *
  * | reserved      | hue     | why it is out of bounds                        |
  * |---------------|---------|------------------------------------------------|
- * | `danger`      | 24–28   | off-track, a faster class closing               |
+ * | `danger`      | 22      | loss, off-track, a faster class closing         |
+ * | `warning`     | 90      | pit road, incident count, caution flags         |
+ * | `accent`      | 152     | gain, personal best, fastest lap in class       |
+ * | `primary`     | 222–234 | THE accent — selection, focus, "this is you"    |
  * | `lapped`      | 245     | lapped traffic on the Relative (fixed, unthemed)|
- * | `primary`     | 253–257 | "this is you", the only row ground              |
- * | `primary`     | 45      | same, in the Endurance theme, which is orange   |
- * | `warning`     | 81–82   | pit road, incident count                        |
- * | `accent`      | 154–157 | personal best, fastest lap in class             |
- * | `sectorPurple`| 295–302 | session-best lap                                |
  *
- * Every entry clears its nearest reserved hue by at least 25°, with one
- * deliberate exception: **violet sits 3° from `sectorPurple`**. There is simply
- * no room between `primary` at 255 and `sectorPurple` at 300 for a fifth hue,
- * and this is the cheapest collision on the board — `sectorPurple` appears as
- * *ink on one lap time*, transient and rare, where identity colour appears as a
- * row's leading edge and its heading blocks. Different carrier, different place, and
- * never in the same cell.
+ * Every entry clears its nearest reserved hue by more than 25°. They are a
+ * step desaturated (OKLCH chroma 0.10–0.12) so they sit in the graphite
+ * ground rather than glowing on it, and light enough to read as a 3 px bar.
  *
- * The order is not arbitrary either. Consecutive entries are the colours of
- * consecutive class *groups* down the screen, so the list is arranged to put
- * the largest hue steps between neighbours — every adjacent pair is more than
- * 110° apart, which is what keeps two groups from blurring into each other at
- * the edge of vision.
+ * The order is not arbitrary. Consecutive entries are the colours of
+ * consecutive class *groups* down the screen, so the list puts the largest hue
+ * steps between neighbours — every adjacent pair is more than 100° apart.
+ *
+ * The same five values are the `--color-class-1…5` tokens in `styles.css`
+ * (aliased as `--class-1…5`); `classColors.tokens.test.ts` holds the two
+ * together.
  */
 
 /**
  * Five classes' worth of identity colour, in the order groups are drawn.
  *
- * Five because that is the top of what iRacing runs — the brief was "3, 4 or
- * 5" — and because past five the hue wheel has nothing honest left to give
- * once the status colours are spoken for. A sixth class is handled by
- * {@link classColorFor} rather than by squeezing in a sixth hue nobody could
- * tell from its neighbours.
+ * Five because that is the top of what iRacing runs, and because past five
+ * the hue wheel has nothing honest left once the status colours and the
+ * accent are spoken for. A sixth class is handled by {@link classColorFor}.
  */
 export const CLASS_RAMP: readonly string[] = [
-  "#00d0f2", // cyan     — 215°
-  "#f071d1", // magenta  — 338°
-  "#cbda49", // lime     — 115°
-  "#8e6feb", // violet   — 292°
-  "#2ab5a6", // teal     — 184°
+  "#52bfb8", // teal    — 189°
+  "#e4965b", // orange  —  57°
+  "#9394e7", // violet  — 282°
+  "#b2ca6f", // lime    — 121°
+  "#d387c2", // pink    — 335°
 ];
 
 /**

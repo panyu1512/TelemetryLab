@@ -15,8 +15,10 @@ import type { TyreKind } from "../../lib/tyreCompound";
  * row: the badge means the same thing on every row, lapped traffic included.
  */
 
+/* Dry is the ordinary case and takes the label grey; wet is the one that
+ * means something, and keeps its blue. */
 const COLOR: Record<TyreKind, string> = {
-  dry: "var(--color-text)",
+  dry: "var(--color-muted)",
   wet: "var(--color-tyre-wet)",
 };
 
@@ -44,16 +46,16 @@ export function TyreCompoundIcon({ kind, size, label }: TyreCompoundIconProps) {
         color: COLOR[kind],
       }}
     >
-      {/* A heavy ring and a heavy letter that nearly fills it: a thin ring
-          round a small letter is what read as a clock face at the table's
-          smaller scales, so the letter is set as large as the ring allows. */}
+      {/* A clean ring and a letter set as large as the ring allows — large
+          enough not to read as a clock face at the table's smaller scales,
+          light enough to sit with the figures beside it. */}
       <circle
         cx="8"
         cy="8"
-        r="6.9"
+        r="7"
         fill="none"
         stroke="currentColor"
-        strokeWidth="1.8"
+        strokeWidth="1.25"
       />
       <text
         x="8"
@@ -62,8 +64,8 @@ export function TyreCompoundIcon({ kind, size, label }: TyreCompoundIconProps) {
         dominantBaseline="central"
         fill="currentColor"
         fontFamily="var(--font-timing)"
-        fontSize="8.6"
-        fontWeight="700"
+        fontSize="8.4"
+        fontWeight="600"
       >
         {LETTER[kind]}
       </text>

@@ -9,7 +9,7 @@
       content="Multi-class timing, relative, fuel, corner-by-corner coaching and telemetry overlays for iRacing. Each screen is its own window over the game, read at a glance. Free, open source, Windows."
     />
     <meta name="robots" content="index, follow, max-image-preview:large" />
-    <meta name="theme-color" content="#12161d" />
+    <meta name="theme-color" content="#0e1114" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="canonical" href="https://telemetrylab.app/" />
 
@@ -60,7 +60,7 @@
         "applicationCategory": "UtilitiesApplication",
         "applicationSubCategory": "Sim racing overlay",
         "operatingSystem": "Windows",
-        "softwareVersion": "1.22.0",
+        "softwareVersion": "1.25.0",
         "isAccessibleForFree": true,
         "license": "https://opensource.org/licenses/MIT",
         "offers": {
@@ -338,12 +338,12 @@
                    air temperature, strength of field and the clock, each a small
                    label over a large value — then a GT3 class header with strength of field, car count
                    and fastest lap over six driver rows, and the top three of the GT4
-                   group below it. Each row is a dark strip whose class colour runs
-                   from its left edge and fades out behind the position, carrying
-                   position, position change, car number, car brand, flag,
-                   driver, a combined licence and iRating pill with each licence in
-                   its own colour, gap, interval, last lap, best lap, tyre and three
-                   sector columns."
+                   group below it, every figure in a monospace face. Each row opens
+                   on a thin bar in its class colour, with a hairline under it,
+                   carrying position, position change, car number, car brand, flag,
+                   driver, a combined licence and iRating pill with each licence
+                   marked by a short bar in its own colour, gap, interval, last lap,
+                   best lap, tyre and three sector columns."
             />
           </figure>
         </section>
@@ -363,7 +363,7 @@
             <p class="row__body">
               Each class opens with its own header — how many cars are in it, its
               strength of field, and the lap that leads it. Underneath, every car
-              on its own strip with everything you would otherwise be squinting
+              on its own row with everything you would otherwise be squinting
               for. Your class shows its leaders and the cars around you, other
               classes their top runners, and there is no scroll bar: the table
               scales to fit the window. Join a practice late and the times set
@@ -374,7 +374,7 @@
               <li>Sector times and deltas, graded against your own best and the field's</li>
               <li>iRating with a live projected change, licence class and safety rating</li>
               <li>Who just passed whom: a green ▲ or red ▼ beside the new position on every change of place</li>
-              <li>Every car's tyres — a white D for dries, a blue W for wets — and laps on the set</li>
+              <li>Every car's tyres — a grey D for dries, a blue W for wets — and laps on the set</li>
             </ul>
           </div>
           <figure class="shot">
@@ -388,14 +388,15 @@
                    session, the track and its layout, with the lap, time left,
                    incidents, temperatures, strength of field and clock. Each group opens with a header strip
                    carrying strength of field, car count and fastest lap, followed by
-                   rows — each a dark strip whose class colour fades from its left
-                   edge to the position — carrying
+                   rows — each opening on a thin bar in its class colour, teal for
+                   GT3 and orange for GT4, with a hairline between rows — carrying
                    position, position change, car number, car brand, flag, driver, a
-                   combined licence and iRating pill — the licence in its own colour,
-                   blue A, red R, green B, gold C, orange D and black P — gap,
+                   combined licence and iRating pill — each licence marked by a short
+                   bar in its own colour, blue A, red R, green B, gold C, orange D,
+                   and a dark one for P — gap,
                    interval, last lap, best lap, tyre and three sector columns — two of the GT4 cars are on
                    wets, shown by a blue W. The car brands are drawn as their own
-                   marks in white, McLaren's and Aston Martin's lettering included. Each class leader's row reads GAP and INT
+                   marks in light grey, McLaren's and Aston Martin's lettering included. Each class leader's row reads GAP and INT
                    where it has no gap to show."
             />
           </figure>
@@ -414,13 +415,13 @@
             <p class="row__body">
               The relative sorts by time on track, not by position — so it shows
               the cars you are about to meet, whatever lap they are on. Gaps are
-              signed and live. Cars you are lapping turn blue, every car from
-              another class carries its class badge, and the only highlighted row
-              is yours. A closing indicator fires when a faster car is catching
+              signed and live. Cars you are lapping turn blue, in a multi-class
+              race every car carries a small class tag beside its number, and the
+              only highlighted row is yours. A closing indicator fires when a faster car is catching
               you, and turns red when that car is from another class. Every car
               carries its licence, safety rating and iRating, so you know who you
               are racing as well as where. And every car shows its
-              tyres — a white D for dries, a blue W for wets — with the laps on
+              tyres — a grey D for dries, a blue W for wets — with the laps on
               the set, so you see who has gone to wets the moment the rain comes.
             </p>
           </div>
@@ -432,14 +433,14 @@
               loading="lazy"
               alt="The relative overlay in a two-class race, under the same session
                    header as the standings: cars ahead and behind
-                   the player sorted by on-track time, each row a dark strip opening
-                   on a fade of its class colour, with its GT3 or GT4 class name
-                   lettered in that colour. GT3 cars on the
-                   player's lap are written in white; GT4 cars a lap down on the
+                   the player sorted by on-track time, each row opening on a thin
+                   bar of its class colour, with a small GT3 or GT4 tag beside the
+                   car number. GT3 cars on the
+                   player's lap are written in light grey; GT4 cars a lap down on the
                    player, both ahead and behind, are written in blue with a
                    minus-one-lap tag. Every row carries the driver's licence,
-                   safety rating and iRating as one pill — the licence in its own
-                   colour — and its tyres: a white D in a circle
+                   safety rating and iRating as one pill — the licence marked by a
+                   short bar in its own colour — and its tyres: a grey D in a circle
                    for dries or a blue W for wets, then the laps on the set — three of
                    the GT4 cars are on wets. The player's own row is the only
                    highlighted one, outlined and set apart by a gap above and below."
@@ -471,7 +472,7 @@
             <img
               src="assets/fuel.png"
               width="1240"
-              height="824"
+              height="864"
               loading="lazy"
               alt="The fuel and strategy overlay, under a strip naming the track and a
                    1.0-lap margin: a 'Pit stop needed' block reading 4.3 fuel laps
@@ -511,16 +512,17 @@
             <img
               src="assets/coach.png"
               width="1240"
-              height="808"
+              height="838"
               loading="lazy"
               alt="The coach overlay, under a strip naming the track with the
                    reference lap at 2:18.607, the last lap at 2:20.128 and a
-                   delta of plus 1.521. The headline tip, on a red ground, reads
+                   delta of plus 1.521. The headline tip, marked by a red bar on its
+                   left edge, reads
                    T4, 'Coasted 153 m off both pedals', plus 0.52 seconds, with
                    the apex and exit 2 km/h slower and '3 of the last 6 laps'. A
                    second tip reads T3, 'Braked 25 m early', plus 0.41 seconds,
                    entry 30 km/h slower, '5 of the last 6 laps'. Below, a strip
-                   of the lap coloured amber and red by where time went, and a
+                   of the lap coloured yellow and red by where time went, and a
                    list of all six corners as bars from a centre line — T2 too
                    hot, T3 early brake and T4 coasting in red — ending in a lap
                    row of plus 1.52 seconds against the reference."
@@ -532,7 +534,7 @@
           <div class="band">
             <span class="band__chip">Manager</span>
             <span class="band__field"><span class="band__k">OVERLAYS</span><b class="band__v">5</b></span>
-            <span class="band__field"><span class="band__k">WIDGETS</span><b class="band__v">6</b></span>
+            <span class="band__field"><span class="band__k">WIDGETS</span><b class="band__v">7</b></span>
             <span class="band__field"><span class="band__k">THEMES</span><b class="band__v">4</b></span>
           </div>
           <div class="row__copy">
@@ -559,8 +561,8 @@
                    Relative, Fuel Calc and Coach, a column of widget and
                    appearance settings in the middle, and a live scaled preview
                    of the dashboard overlay on the right — its speed gauge
-                   reading 187 km/h in fifth, and a throttle and brake trace
-                   below it."
+                   reading 194 km/h in fifth, and a throttle and brake trace
+                   below it, throttle in cyan and brake in grey."
             />
           </figure>
         </section>
@@ -636,7 +638,7 @@
                 <tr>
                   <th scope="row">LIC</th>
                   <td>Licence class and safety rating, joined to the iRating as one pill</td>
-                  <td>iRacing's own licence colour</td>
+                  <td>iRacing's own licence colour, as a short bar opening the pill</td>
                 </tr>
                 <tr>
                   <th scope="row">S1–S3</th>
@@ -644,7 +646,7 @@
                   <td>
                     <span class="sw sw--best">purple</span> ·
                     <span class="sw sw--pb">green</span> ·
-                    <span class="sw sw--warn">amber</span> ·
+                    <span class="sw sw--warn">yellow</span> ·
                     <span class="sw sw--bad">red</span>
                   </td>
                 </tr>
@@ -693,7 +695,7 @@
                   <th scope="row">INC</th>
                   <td>Your incident points this session</td>
                   <td>
-                    <span class="sw sw--warn">amber</span> then
+                    <span class="sw sw--warn">yellow</span> then
                     <span class="sw sw--bad">red</span> as a limit comes into sight
                   </td>
                 </tr>

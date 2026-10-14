@@ -153,14 +153,12 @@ function StandingsRowInner({
     >
       <div
         className={[
-          "relative grid items-center gap-x-1 px-1 text-xs",
+          "timing-row-rule relative grid items-center gap-x-1 px-1 text-xs",
           // Every row is on the same neutral ground — on these tables the
-          // paper itself (`.timing-blocks`), edge to edge with its
-          // neighbours, exactly as on Relative.
-          // "This is you" is the one strip on `primary` (§ Two colour systems,
-          // rule 3). The zebra and class-group tones this replaced made
-          // alternate rows different for no reason the reader could name; a
-          // strip per row separates them without ranking any of them.
+          // paper itself (`.timing-blocks`) — with one hairline under it, as
+          // on Relative. "This is you" is the one row in the accent
+          // (§ Two colour systems, rule 3); nothing else ranks a row by its
+          // ground.
           row?.isPlayer ? PLAYER_ROW_GROUND : "bg-timing-row",
           dimmed ? "opacity-40" : "",
           arrived ? "row-arrive" : "",
@@ -218,12 +216,9 @@ function StandingsRowInner({
           </span>
         )}
 
-        {/* position — bold white, on the class fill. It sat in a solid
-            block of the class's colour while the band above was one; the
-            fill is that block faded, strong at the edge and under half
-            strength where the digits start, so white reads on every class
-            colour (`lib/classFill`). The shadow lifts the digits off the
-            stronger part of the fill.
+        {/* position — the row's first figure, in the mono, a step larger and
+            heavier than the values after it. Plain on the paper: the class
+            is the bar to its left, never a ground under the number.
 
             For a few seconds after the car changes place, a chip on a status
             fill covers it — `▲ 3` on `accent`, `▼ 4` on `danger`, with
@@ -233,13 +228,13 @@ function StandingsRowInner({
             so the two never print side by side. See `lib/positionFlash` and
             `.pos-flash` in styles.css. */}
         <div className="relative">
-          <div className="tnum class-fill-ink text-center text-[14px] font-bold leading-none tabular-nums text-text">
+          <div className="tnum text-center text-emph font-semibold leading-none tabular-nums text-text">
             {position ?? "—"}
           </div>
           {flash && (
             <div
               key={flash.id}
-              className={`pos-flash pos-flash--${flash.move} tnum text-[14px] font-bold leading-none`}
+              className={`pos-flash pos-flash--${flash.move} tnum text-emph font-semibold leading-none`}
               style={
                 {
                   height: PILL_H,
@@ -268,11 +263,11 @@ function StandingsRowInner({
           </div>
         )}
 
-        {/* car number — no pill: fill is rationed (rule 5). Full `text`, at
-            the position's weight: on a row strip `muted` read as disabled. */}
+        {/* car number — no pill: fill is rationed (rule 5). In the data
+            grey: on a row `muted` read as disabled. */}
         {isVisible("num") && (
           <div
-            className="truncate text-center text-[12px] font-bold tabular-nums tnum text-text"
+            className="truncate text-center text-cell font-medium tabular-nums tnum text-text"
             title={`#${driver?.carNumber ?? ""}`}
           >
             {driver?.carNumber ?? "—"}
@@ -308,7 +303,7 @@ function StandingsRowInner({
             to truncate. Normalising the member's own casing gives the column
             its single voice without either cost. */}
         <div className="flex min-w-0 items-center gap-1">
-          <span className="truncate text-[13px] font-bold tracking-[0.01em] text-text">
+          <span className="truncate text-name font-medium text-text">
             {formatDriverName(driver?.userName) || `Car ${carIdx}`}
           </span>
           {/* On the radio: a mark straight after the name, in the name's own
@@ -409,10 +404,10 @@ function StandingsRowInner({
               className="text-warning"
               title={row?.isInPitStall ? "In pit stall" : "On pit road"}
             >
-              <Wrench className="size-3.5" />
+              <Wrench className="size-3" />
             </span>
           ) : row?.isOffTrack ? (
-            <AlertTriangle className="size-3.5 text-danger" />
+            <AlertTriangle className="size-3 text-danger" />
           ) : null}
         </div>
       </div>

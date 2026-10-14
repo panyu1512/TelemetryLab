@@ -26,14 +26,16 @@ const VIEW_BOX = `${-HALF_W} ${-VIEW_M} ${HALF_W * 2} ${VIEW_M * 2}`;
 const RING_M = 5;
 const TICK_M = 10;
 
+/*
+ * Colour only where it means something: a car you can touch is `danger`, you
+ * are the accent, everything else is neutral — traffic in the tertiary data
+ * tone, the guides as the chart grid.
+ */
 const DANGER = "var(--color-danger)";
 const PLAYER = "var(--color-primary)";
-const TRAFFIC = "rgb(255 255 255 / 0.5)";
-const GUIDE = "rgb(255 255 255 / 0.09)";
-
-const LABEL_FONT = "clamp(0.45rem, 6cqmin, 0.65rem)";
-const CALL_FONT = "clamp(0.7rem, 11cqmin, 1.35rem)";
-const SIDE_FONT = "clamp(0.6rem, 8cqmin, 1rem)";
+const TRAFFIC = "var(--color-chart-tertiary)";
+const GUIDE = "var(--color-chart-grid)";
+const AXIS = "var(--color-chart-axis)";
 
 function Car({ x, y, fill }: { x: number; y: number; fill: string }) {
   return (
@@ -42,7 +44,7 @@ function Car({ x, y, fill }: { x: number; y: number; fill: string }) {
       y={-y - CAR_LENGTH_M / 2}
       width={CAR_WIDTH_M}
       height={CAR_LENGTH_M}
-      rx={0.45}
+      rx={0.2}
       fill={fill}
     />
   );
@@ -61,9 +63,9 @@ function SideBar({ side, count }: { side: "left" | "right"; count: number }) {
             key={i}
             x={x - 0.2}
             y={-CAR_LENGTH_M}
-            width={0.4}
+            width={0.3}
             height={CAR_LENGTH_M * 2}
-            rx={0.2}
+            rx={0}
             fill={count > 0 ? DANGER : GUIDE}
           />
         );
@@ -84,8 +86,8 @@ function Bearing({ placed }: { placed: PlacedCar }) {
         x2={placed.x}
         y2={-placed.y}
         stroke={DANGER}
-        strokeWidth={0.12}
-        strokeDasharray="0.4 0.3"
+        strokeWidth={0.08}
+        strokeDasharray="0.3 0.3"
       />
       {/* At the car's far end — its nose when it is ahead, its tail when it
           is behind — clear of the line, and never beside it, which is where a
@@ -95,8 +97,8 @@ function Bearing({ placed }: { placed: PlacedCar }) {
         y={ahead ? -placed.y - CAR_LENGTH_M / 2 - 0.35 : -placed.y + CAR_LENGTH_M / 2 + 0.35}
         dominantBaseline={ahead ? "auto" : "hanging"}
         textAnchor="middle"
-        fontSize={1.25}
-        fontWeight={700}
+        fontSize={1.15}
+        fontWeight={500}
         fill={DANGER}
         className="tnum"
       >
@@ -119,8 +121,8 @@ function EdgeMarker({ placed }: { placed: PlacedCar }) {
         x={1.3}
         y={(tip + base) / 2}
         dominantBaseline="central"
-        fontSize={1.1}
-        fontWeight={700}
+        fontSize={1.05}
+        fontWeight={500}
         className="tnum"
       >
         {Math.round(Math.abs(placed.y))} m
@@ -144,17 +146,14 @@ function SideReadout({
     <div
       className={`flex min-w-0 flex-col gap-0.5 ${side === "left" ? "items-start text-left" : "items-end text-right"}`}
     >
-      <span
-        className="tnum max-w-full truncate font-semibold leading-none"
-        style={{ fontSize: SIDE_FONT, color: lit ? DANGER : undefined }}
-      >
-        {lit && placed?.bearing != null ? `${placed.bearing}°` : "—"}
+      <span className="wg-label max-w-full truncate">
+        {lit && placed ? gapText(placed.y) : side}
       </span>
       <span
-        className="tnum max-w-full truncate font-mono font-medium uppercase tracking-[0.12em] text-faint"
-        style={{ fontSize: LABEL_FONT }}
+        className={`tnum wg-value-sm max-w-full truncate font-medium ${lit ? "" : "text-faint"}`}
+        style={{ color: lit ? DANGER : undefined }}
       >
-        {lit && placed ? gapText(placed.y) : side}
+        {lit && placed?.bearing != null ? `${placed.bearing}°` : "—"}
       </span>
     </div>
   );
@@ -182,8 +181,8 @@ export function RadarWidget({ data }: { data: TelemetryData | null }) {
       {/* The call, the way the spotter would say it. On top, on its own line:
           it is the one word to read, and "BOTH SIDES" needs the width. */}
       <span
-        className={`shrink-0 truncate text-center font-semibold leading-none tracking-tight ${occupied ? "" : off ? "text-faint" : "text-muted"}`}
-        style={{ fontSize: CALL_FONT, color: occupied ? DANGER : undefined }}
+        className={`wg-value shrink-0 truncate text-center font-semibold uppercase tracking-caps ${occupied ? "" : off ? "text-faint" : "text-muted"}`}
+        style={{ color: occupied ? DANGER : undefined }}
       >
         {call.label}
       </span>
@@ -195,12 +194,30 @@ export function RadarWidget({ data }: { data: TelemetryData | null }) {
         role="img"
         aria-label={`Radar: ${call.label}`}
       >
-        <circle cx={0} cy={0} r={RING_M} fill="none" stroke={GUIDE} strokeWidth={0.08} />
+        {/* Guides: a dotted 5 m ring, ticks at 10 m on the centre line, and
+            the abeam line — all hairlines in the grid tone. */}
+        <circle
+          cx={0}
+          cy={0}
+          r={RING_M}
+          fill="none"
+          stroke={GUIDE}
+          strokeWidth={0.07}
+          strokeDasharray="0.12 0.3"
+        />
         {[-TICK_M, TICK_M].map((y) => (
-          <line key={y} x1={-0.8} y1={y} x2={0.8} y2={y} stroke={GUIDE} strokeWidth={0.12} />
+          <line key={y} x1={-0.7} y1={y} x2={0.7} y2={y} stroke={AXIS} strokeWidth={0.07} />
         ))}
         {/* The abeam line: a car on it is level with you. */}
-        <line x1={-HALF_W} y1={0} x2={HALF_W} y2={0} stroke={GUIDE} strokeWidth={0.08} />
+        <line
+          x1={-HALF_W}
+          y1={0}
+          x2={HALF_W}
+          y2={0}
+          stroke={GUIDE}
+          strokeWidth={0.07}
+          strokeDasharray="0.12 0.3"
+        />
 
         <SideBar side="left" count={call.left} />
         <SideBar side="right" count={call.right} />

@@ -45,47 +45,43 @@ function Corner({
   stale: boolean;
 }) {
   const temp = tyre?.tempM;
-  const color = heatColor(temp);
+  // The heat scale is the reading, so it stays — taken a step toward the
+  // neutral so it sits in the graphite rather than glowing on it, and carried
+  // by the corner's edge and its bar. The figure itself is data, in the data
+  // grey.
+  const color = `color-mix(in oklab, ${heatColor(temp)} 80%, var(--color-chart-tertiary))`;
   return (
     <div
-      // The timing surfaces' section tone (white alpha on the widget's paper),
-      // not graphite `surface-2`: a graphite tile on timing paper read as a
-      // card from another product, and it is the only widget that had one.
-      className="flex flex-col justify-center overflow-hidden rounded-ctl bg-white/[0.035] px-2.5 py-1.5"
+      // The panels' section tone, a hairline edge, and the heat colour as a
+      // 2 px bar down the corner's left.
+      className="flex flex-col justify-center overflow-hidden rounded-ctl bg-section px-2.5 py-1.5"
       style={{
-        borderLeft: `3px solid ${color}`,
+        borderLeft: `2px solid ${color}`,
         // Fade the whole corner rather than recolouring the number: the heat
         // colour is the reading, and swapping it for a "stale" grey would throw
         // away the one thing the driver is looking for.
         opacity: stale ? STALE_OPACITY : 1,
-        transition: "opacity 300ms",
+        transition: "opacity var(--dur-long) var(--ease-out)",
       }}
     >
       <div className="flex items-baseline justify-between gap-1">
-        <span
-          className="font-mono font-medium uppercase tracking-[0.12em] text-faint"
-          style={{ fontSize: "clamp(0.5rem, 5cqmin, 0.65rem)" }}
-        >
-          {name}
-        </span>
-        <span
-          className="tnum font-semibold"
-          style={{ fontSize: "clamp(0.8rem, 9cqmin, 1.2rem)", color }}
-        >
-          {num(temp, TEMP_DECIMALS)}°
+        <span className="wg-label">{name}</span>
+        <span className="flex items-baseline gap-0.5">
+          <span className="tnum wg-value-sm font-medium text-text">
+            {num(temp, TEMP_DECIMALS)}
+          </span>
+          <span className="wg-unit">°C</span>
         </span>
       </div>
-      <div className="mt-1 h-1 shrink-0 overflow-hidden bg-white/[0.08]">
+      <div className="mt-1.5 h-[3px] shrink-0 overflow-hidden bg-chart-track">
         <div
-          className="h-full transition-all duration-200"
+          className="h-full transition-[width] duration-200 ease-out"
           style={{ width: `${tempFrac(temp) * 100}%`, background: color }}
         />
       </div>
-      <span
-        className="tnum mt-1 truncate text-muted"
-        style={{ fontSize: "clamp(0.45rem, 5cqmin, 0.65rem)" }}
-      >
-        {num(tyre?.pressure)} kPa cold
+      <span className="wg-small mt-1.5 flex items-baseline gap-1 truncate text-muted">
+        <span className="tnum">{num(tyre?.pressure)}</span>
+        <span className="wg-unit">kPa cold</span>
       </span>
     </div>
   );
@@ -95,24 +91,14 @@ function Corner({
 function HeldNote({ heldMs }: { heldMs: number }) {
   return (
     <div
-      className="flex shrink-0 items-center justify-center gap-1.5 rounded-ctl bg-warning/15 px-2 py-1 text-warning"
+      className="flex shrink-0 items-center justify-center gap-1.5 rounded-ctl border-l-2 border-warning bg-section px-2 py-1 text-warning"
       title={
         "iRacing only refreshes carcass temperatures in the pit stall for this car, " +
         "so these are the temperatures your tyres had at your last stop."
       }
     >
-      <span
-        className="truncate font-mono font-medium uppercase tracking-[0.12em]"
-        style={{ fontSize: "clamp(0.45rem, 4cqmin, 0.6rem)" }}
-      >
-        since last stop
-      </span>
-      <span
-        className="tnum"
-        style={{ fontSize: "clamp(0.45rem, 4cqmin, 0.6rem)" }}
-      >
-        {duration(heldMs / 1000)}
-      </span>
+      <span className="wg-label truncate text-warning">since last stop</span>
+      <span className="tnum wg-small">{duration(heldMs / 1000)}</span>
     </div>
   );
 }
@@ -137,7 +123,7 @@ export function TyresWidget({ data }: { data: TelemetryData | null }) {
 
   return (
     <div className="flex h-full flex-col gap-1.5">
-      <div className="grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-2">
+      <div className="grid min-h-0 flex-1 grid-cols-2 grid-rows-2 gap-1.5">
         <Corner name="LF" tyre={t?.lf} stale={isCornerStale(ages, "lf", now)} />
         <Corner name="RF" tyre={t?.rf} stale={isCornerStale(ages, "rf", now)} />
         <Corner name="LR" tyre={t?.lr} stale={isCornerStale(ages, "lr", now)} />

@@ -48,46 +48,28 @@ export function TitleBar({ status }: { status: ConnectionStatus }) {
   return (
     <header
       data-tauri-drag-region
-      className="relative flex h-11 flex-none items-center gap-3 border-b border-border bg-surface px-4"
+      className="relative flex h-10 flex-none items-center gap-3 border-b border-border bg-surface px-4"
     >
-      {/* Signature speed stripe: the brand mark's two hues, racing off-edge.
-          3 px rather than a hairline — at 1 px it was a detail you found on the
-          second look, and this is the one piece of chrome that has to say which
-          product you are in from across a room. */}
-      <span
-        aria-hidden
-        className="absolute bottom-[-1px] left-0 h-[3px] w-44"
-        style={{
-          background:
-            "linear-gradient(90deg, var(--color-primary), var(--color-accent) 65%, transparent)",
-        }}
-      />
       {/* Brand */}
       <div
         data-tauri-drag-region
-        className="flex items-center gap-2.5 text-[13px] font-semibold tracking-tight text-text"
+        className="flex items-center gap-2.5 text-name font-semibold tracking-tight text-text"
       >
         <BrandMark />
         <span data-tauri-drag-region>TelemetryLab</span>
         <span
           data-tauri-drag-region
-          className="text-[13px] font-normal text-faint"
+          className="text-name font-normal text-faint"
         >
           for iRacing
         </span>
       </div>
 
-      {/* Connection status readout, cut on the mark's diagonal. `ml-3` rather
-          than `ml-2`: the shear pushes the corners ~3 px past the layout box on
-          each side, and the brand name is what they would graze. */}
-      <div className="shear ml-3 rounded-ctl border border-border bg-surface-2 px-2.5 py-1 text-[11px] font-medium">
-        <span className="gap-1.5">
-          <span
-            className="inline-block size-1.5 rounded-full"
-            style={{ background: status.color }}
-          />
-          <span className="text-muted">{status.label}</span>
-        </span>
+      {/* Connection status readout: a live dot that breathes, and the
+          state in words. */}
+      <div className="ml-2 inline-flex items-center gap-1.5 rounded-ctl border border-border bg-surface-2 px-2 py-1 text-small font-medium">
+        <span className="live-dot" style={{ color: status.color }} />
+        <span className="text-muted">{status.label}</span>
       </div>
 
       {/* Standard window controls */}

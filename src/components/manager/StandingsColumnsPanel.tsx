@@ -42,7 +42,7 @@ export function StandingsColumnsPanel() {
                 >
                   {col.name}
                 </span>
-                <span className="block font-mono text-[10px] uppercase tracking-[0.12em] text-faint">
+                <span className="block label-caps">
                   {col.label || "—"}
                 </span>
               </span>
@@ -52,14 +52,14 @@ export function StandingsColumnsPanel() {
       </div>
 
       <div className="flex items-center justify-between">
-        <p className="text-[11px] text-faint">
+        <p className="text-small text-faint">
           Position, driver and status are always shown.
         </p>
         {hiddenCount > 0 && (
           <button
             type="button"
             onClick={resetColumns}
-            className="text-[11px] text-muted underline-offset-2 hover:text-text hover:underline"
+            className="text-small text-muted underline-offset-2 hover:text-text hover:underline"
           >
             Show all columns
           </button>

@@ -5,7 +5,15 @@ import { SteeringWheel } from "../ui/SteeringWheel";
 
 const TRACE_POINTS = 300;
 
-const THROTTLE_FILL = "var(--color-accent)";
+/*
+ * A reduced chart palette: throttle is the primary channel and takes the
+ * accent; brake is the secondary channel in the light neutral; clutch, the
+ * channel a driver touches twice a lap, is the tertiary neutral. No status
+ * colour — a pedal position is not a gain or a loss.
+ */
+const THROTTLE_FILL = "var(--color-chart-primary)";
+const BRAKE_FILL = "var(--color-chart-secondary)";
+const CLUTCH_FILL = "var(--color-chart-tertiary)";
 
 /* -------------------------------------------------------------------------- */
 /*  Rolling throttle / brake trace                                            */
@@ -29,44 +37,87 @@ function tracePoints(
 }
 
 function InputTrace({ samples }: { samples: InputSample[] }) {
+  const last = samples[samples.length - 1];
   return (
-    <div className="relative min-w-0 flex-1 overflow-hidden rounded-ctl border border-border bg-bg">
+    <div className="relative min-w-0 flex-1 overflow-hidden border border-divider">
       <svg
         viewBox="0 0 100 100"
         preserveAspectRatio="none"
         className="h-full w-full"
       >
+        {/* A faint dotted grid: quarters of travel across, quarters of the
+            window down. Hairlines in screen px whatever the box's size. */}
         {[25, 50, 75].map((y) => (
           <line
-            key={y}
+            key={`h${y}`}
             x1="0"
             y1={y}
             x2="100"
             y2={y}
-            stroke="var(--color-border)"
-            strokeWidth="0.5"
+            stroke="var(--color-chart-grid)"
+            style={{ strokeWidth: "var(--chart-line-thin)" }}
+            strokeDasharray="1 3"
+            vectorEffect="non-scaling-stroke"
+          />
+        ))}
+        {[25, 50, 75].map((x) => (
+          <line
+            key={`v${x}`}
+            x1={x}
+            y1="0"
+            x2={x}
+            y2="100"
+            stroke="var(--color-chart-grid)"
+            style={{ strokeWidth: "var(--chart-line-thin)" }}
+            strokeDasharray="1 3"
             vectorEffect="non-scaling-stroke"
           />
         ))}
         <polyline
           points={tracePoints(samples, "brake", TRACE_POINTS)}
           fill="none"
-          stroke="var(--color-danger)"
-          strokeWidth="2"
+          stroke={BRAKE_FILL}
+          style={{ strokeWidth: "var(--chart-line)" }}
           strokeLinejoin="round"
-          strokeLinecap="round"
           vectorEffect="non-scaling-stroke"
         />
         <polyline
           points={tracePoints(samples, "throttle", TRACE_POINTS)}
           fill="none"
-          stroke="var(--color-accent)"
-          strokeWidth="2"
+          stroke={THROTTLE_FILL}
+          style={{ strokeWidth: "var(--chart-line)" }}
           strokeLinejoin="round"
-          strokeLinecap="round"
+          vectorEffect="non-scaling-stroke"
+        />
+        {/* The live cursor: a hairline at "now", the trace's right edge,
+            where the newest sample is drawn. */}
+        <line
+          x1="100"
+          y1="0"
+          x2="100"
+          y2="100"
+          stroke="var(--color-chart-axis)"
+          style={{ strokeWidth: "var(--chart-line-thin)" }}
           vectorEffect="non-scaling-stroke"
         />
       </svg>
+      {/* Where each channel meets the cursor: a small square in its colour,
+          so the live value is findable at the edge of a busy trace. Drawn in
+          HTML so it stays square in a stretched viewBox. */}
+      {last && (
+        <>
+          <span
+            aria-hidden
+            className="absolute right-0 size-[5px] -translate-y-1/2 translate-x-1/2"
+            style={{ top: `${100 - last.brake * 100}%`, background: BRAKE_FILL }}
+          />
+          <span
+            aria-hidden
+            className="absolute right-0 size-[5px] -translate-y-1/2 translate-x-1/2"
+            style={{ top: `${100 - last.throttle * 100}%`, background: THROTTLE_FILL }}
+          />
+        </>
+      )}
     </div>
   );
 }
@@ -86,14 +137,11 @@ function VBar({
 }) {
   const v = Math.max(0, Math.min(1, value ?? 0));
   return (
-    <div className="flex w-7 shrink-0 flex-col items-center gap-1">
-      <span
-        className="tnum font-semibold text-text"
-        style={{ fontSize: "clamp(0.5rem, 6cqmin, 0.7rem)" }}
-      >
+    <div className="flex w-6 shrink-0 flex-col items-center gap-1">
+      <span className="tnum wg-small font-medium text-text">
         {Math.round(v * 100)}
       </span>
-      <div className="relative w-full flex-1 overflow-hidden bg-surface-2">
+      <div className="relative w-full flex-1 overflow-hidden bg-chart-track">
         {/* No CSS transition: frames arrive at 30 Hz, which is already smooth,
             and a 75 ms ease on `height` low-passed the very thing this bar
             exists to show — the initial stab at the brake never reached its
@@ -103,12 +151,7 @@ function VBar({
           style={{ height: `${v * 100}%`, background: fill }}
         />
       </div>
-      <span
-        className="font-mono font-medium uppercase tracking-[0.12em] text-faint"
-        style={{ fontSize: "clamp(0.45rem, 5cqmin, 0.6rem)" }}
-      >
-        {label}
-      </span>
+      <span className="wg-label">{label}</span>
     </div>
   );
 }
@@ -142,23 +185,17 @@ function VBar({
 function SteeringColumn({ deg }: { deg: number | null | undefined }) {
   return (
     <div className="flex shrink-0 flex-col items-center gap-1">
-      <span
-        className="tnum font-semibold text-text"
-        style={{ fontSize: "clamp(0.5rem, 6cqmin, 0.7rem)" }}
-      >
-        {num(deg)}°
-      </span>
+      <span className="tnum wg-small font-medium text-text">{num(deg)}°</span>
       {/* Centred in the column's height, the way a bar's fill is anchored in
           its track — the wheel is the column's body, not a header for it. */}
       <div className="flex min-h-0 flex-1 items-center">
-        <SteeringWheel deg={deg} size="clamp(2.5rem, 62cqmin, 8rem)" />
+        {/* The wheel in the label grey: a silhouette that turns, not a
+            white graphic competing with the figures beside it. */}
+        <span className="text-chart-secondary">
+          <SteeringWheel deg={deg} size="clamp(2.5rem, 58cqmin, 7rem)" />
+        </span>
       </div>
-      <span
-        className="font-mono font-medium uppercase tracking-[0.12em] text-faint"
-        style={{ fontSize: "clamp(0.45rem, 5cqmin, 0.6rem)" }}
-      >
-        Steer
-      </span>
+      <span className="wg-label">Steer</span>
     </div>
   );
 }
@@ -173,23 +210,15 @@ export function InputsWidget({ data }: { data: TelemetryData | null }) {
     <div className="flex h-full gap-2">
       <InputTrace samples={trace} />
       <VBar value={data?.throttle} label="Thr" fill={THROTTLE_FILL} />
-      <VBar value={data?.brake} label="Brk" fill="var(--color-danger)" />
+      <VBar value={data?.brake} label="Brk" fill={BRAKE_FILL} />
       {/*
-        Clutch takes `primary`, not a third status colour. Throttle and brake
-        are a matched pair — the two pedals a driver modulates against each
-        other, in the accent/danger pairing they carry everywhere else in this
-        app — and the clutch is not part of that argument. It is on or it is
-        not, for a second or two a lap. `primary` says "a different kind of
-        thing" without inventing a hue (§ Two colour systems).
+        Clutch is the tertiary channel: on or off for a second or two a lap,
+        so it takes the quiet neutral rather than a hue of its own.
 
         `clutchPedal`, never `clutch`: the raw channel reads 1.0 with the
         driver's foot nowhere near it (see `telemetry/types.ts`).
       */}
-      <VBar
-        value={data?.clutchPedal}
-        label="Clu"
-        fill="var(--color-primary)"
-      />
+      <VBar value={data?.clutchPedal} label="Clu" fill={CLUTCH_FILL} />
       <SteeringColumn deg={data?.steeringDeg} />
     </div>
   );

@@ -14,6 +14,8 @@ const ALIGN: Record<string, string> = {
 /**
  * The column labels, printed in the top slice of the class leader's row rather
  * than in a band of their own (`design.md` § Dense tabular overlays, rule 3).
+ * The system's label voice — sans, uppercase, tracked — at the 8 px the
+ * 10 px slice allows.
  *
  * It renders as an absolutely positioned overlay inside the row, sharing that
  * row's grid template and horizontal padding so every label lands over its own
@@ -34,7 +36,7 @@ export function ColumnLabels({
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute inset-x-0 top-0 grid items-start gap-x-1 px-1 text-[8px] font-semibold uppercase leading-none tracking-[0.1em] text-faint"
+      className="pointer-events-none absolute inset-x-0 top-0 grid items-start gap-x-1 px-1 text-colhead font-semibold uppercase leading-none tracking-label text-faint"
       style={{
         height: COL_LABEL_H,
         gridTemplateColumns: gridTemplate(sectorCount, isVisible),

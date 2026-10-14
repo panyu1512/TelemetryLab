@@ -43,9 +43,9 @@
  * **Exactly one row has a ground, and it is yours.** Lapped traffic used to take
  * a danger-tinted ground and every other row a wash of its class colour; with
  * three kinds of ground in six rows the player's own was one block among many.
- * Lapped is now ink, class is the leading edge, the fill it runs into and a
- * badge at the start of the row, and the only filled row on the surface is the
- * one you are driving.
+ * Lapped is now ink, class is a thin bar down the row's left edge and a small
+ * tag beside the car number, and the only marked row on the surface is the one
+ * you are driving.
  *
  * Closing-rate hints flag cars that are approaching the player faster than a
  * threshold. A ⚡ icon in the closing column indicates the car is gaining
@@ -87,11 +87,6 @@ import { CountryFlag } from "../ui/CountryFlag";
 import { SessionStrip } from "../timing/SessionStrip";
 import { scaleBox, tableScale, unscaled } from "../../lib/tableScale";
 import { CLASS_RAMP, classColorFor } from "../../lib/classColors";
-import {
-  CLASS_NAME_OUTLINE,
-  CLASS_NAME_OUTLINE_PX,
-  classFill,
-} from "../../lib/classFill";
 import { formatDriverName } from "../../lib/driverName";
 
 // ─── Layout constants ────────────────────────────────────────────────────────
@@ -120,12 +115,13 @@ type RelColumnId =
   | "hint";
 
 const REL_COLUMNS: { id: RelColumnId; width: string; px: number }[] = [
-  // The class badge opens the row, against the class edge it repeats: in a
-  // multi-class field "which class is this" is the first question asked of a
-  // car arriving in the mirrors, so it is the first thing the eye lands on.
-  { id: "class", width: "3rem", px: 48 },
   { id: "pos", width: "2.3rem", px: 37 },
   { id: "num", width: "2.5rem", px: 40 },
+  // The class tag sits with the car number it qualifies — `#82 [GT3]` — the
+  // way a car is called on a radio: its number, then its class. The class bar
+  // at the row's left edge says the same thing pre-attentively; the tag is
+  // where it is read.
+  { id: "class", width: "3rem", px: 48 },
   { id: "country", width: "1.7rem", px: 27 },
   // `minmax(0, 1fr)`: the name absorbs all slack and is the only column allowed
   // to truncate (`design.md` § Dense tabular overlays, rule 6). `px` is the
@@ -207,10 +203,11 @@ function relNaturalWidth(isOn: RelVisibility): number {
 }
 
 /**
- * Where the row's class fill (`lib/classFill`) has faded out: the row's `px-2`,
- * then every visible column up to and including the position, with the
- * `gap-x-1` between them. In a multi-class field that takes in the class
- * badge, so the badge and the position both sit on the fill.
+ * Where the row's class fill (`lib/classFill`) used to fade out: the row's
+ * `px-2`, then every visible column up to and including the position, with
+ * the `gap-x-1` between them. The fill is no longer drawn — class colour is
+ * the bar and the tag — and this survives so `ClassRun`'s call sites are
+ * unchanged.
  */
 function relFillReach(isOn: RelVisibility): string {
   const through = REL_COLUMNS.slice(
@@ -290,7 +287,7 @@ function ColumnLabels({
   return (
     <div
       aria-hidden
-      className="pointer-events-none absolute inset-x-0 top-0 grid items-start gap-x-1 px-2 text-[9px] font-semibold uppercase leading-none tracking-[0.1em] text-faint"
+      className="pointer-events-none absolute inset-x-0 top-0 grid items-start gap-x-1 px-2 text-colhead font-semibold uppercase leading-none tracking-label text-faint"
       style={{ gridTemplateColumns: template, height: REL_LABEL_H }}
     >
       {REL_COLUMNS.filter((c) => isOn(c.id)).map((c) => (
@@ -316,13 +313,14 @@ function classRuns(entries: readonly StandingsEntry[]): StandingsEntry[][] {
 }
 
 /**
- * One stretch of same-class rows, carrying the class edge and its fill for all
- * of them — drawn once, so the colour has no join between cars to seam at when
- * the table scales (as Standings' `LayoutRun`).
+ * One stretch of same-class rows, carrying the class bar for all of them —
+ * drawn once, so the colour has no join between cars to seam at when the
+ * table scales (as Standings' `LayoutRun`). The bar is the only class colour
+ * a run carries: no fill behind the rows. `fillReach` is still accepted, so
+ * the call sites are unchanged, and no longer drawn.
  */
 function ClassRun({
   color,
-  fillReach,
   children,
 }: {
   color: string;
@@ -336,7 +334,6 @@ function ClassRun({
         borderLeftWidth: CLASS_EDGE_WIDTH,
         borderLeftStyle: "solid",
         borderLeftColor: color,
-        backgroundImage: classFill(color, fillReach),
       }}
     >
       {children}
@@ -449,7 +446,7 @@ function RowInner({
   return (
     <div
       className={[
-        "relative grid items-center gap-x-1 px-2 text-xs",
+        "timing-row-rule relative grid items-center gap-x-1 px-2 text-xs",
         // Every row is its own strip on the neutral row ground, exactly as on
         // Standings; the player's is the one strip in `primary`
         // (§ Dense tabular overlays, rule 14). Off-lap rows used to take a
@@ -477,44 +474,40 @@ function RowInner({
     >
       {labelled && <ColumnLabels isOn={isOn} template={template} />}
 
-      {/* class badge — the class's short name in its class colour, straight
-          on the class fill with a dark outline under the glyphs, as the
-          Standings band sets its class name. Class-coloured ink on its own
-          colour has no edge; the outline gives every letter one, and every
-          ramp colour clears 4.5:1 against it (§ Dense tabular overlays, rule
-          11). Standings needs no such badge — its rows sit under a band that
-          names the class — but a Relative mixes classes row by row. Only
-          drawn in a multi-class field. */}
-      {isOn("class") && (
-        <div className="flex justify-center">
-          <span
-            className="class-name-ink min-w-0 max-w-full truncate text-center text-[12px] font-bold uppercase leading-none tracking-[0.04em]"
-            style={{
-              color: classColor,
-              WebkitTextStroke: `${CLASS_NAME_OUTLINE_PX}px ${CLASS_NAME_OUTLINE}`,
-            }}
-            title={driver?.carClassShortName || undefined}
-          >
-            {driver?.carClassShortName || "?"}
-          </span>
-        </div>
-      )}
-
-      {/* overall position — full `text` on the class fill, as on Standings */}
+      {/* overall position — the row's first figure, plain on the paper, as
+          on Standings */}
       <div
-        className="class-fill-ink text-center text-[14px] font-bold tabular-nums tnum text-text"
+        className="text-center text-emph font-semibold tabular-nums tnum text-text"
         style={{ color: ink }}
       >
         {entry.position ?? "—"}
       </div>
 
-      {/* car number — no pill (rule 5), in full `text` as on Standings */}
+      {/* car number — no pill (rule 5), in the data grey as on Standings */}
       {isOn("num") && (
         <div
-          className="truncate text-center text-[12px] font-bold tabular-nums tnum text-text"
+          className="truncate text-center text-cell font-medium tabular-nums tnum text-text"
           style={{ color: ink }}
         >
           {driver?.carNumber ?? "—"}
+        </div>
+      )}
+
+      {/* class tag — the class's short name, small and grey, opened by a 2 px
+          bar in its class colour (`.class-tag`): the row's class bar at tag
+          scale, next to the car number it qualifies. The letters stay
+          neutral; the colour is the bar's. Standings needs no tag — its rows
+          sit under a band that names the class — but a Relative mixes classes
+          row by row. Only drawn in a multi-class field. */}
+      {isOn("class") && (
+        <div className="flex min-w-0 justify-center">
+          <span
+            className="class-tag max-w-full"
+            style={{ ["--class-color" as string]: classColor }}
+            title={driver?.carClassShortName || undefined}
+          >
+            {driver?.carClassShortName || "?"}
+          </span>
         </div>
       )}
 
@@ -535,14 +528,14 @@ function RowInner({
           two ways. */}
       <div className="flex min-w-0 items-center gap-1">
         <span
-          className="truncate text-[13px] font-bold tracking-[0.01em] text-text"
+          className="truncate text-name font-medium text-text"
           style={{ color: ink }}
         >
           {formatDriverName(driver?.userName) || `Car ${entry.carIdx}`}
         </span>
         {tag && (
           <span
-            className="shrink-0 text-[10px] font-bold leading-none tracking-[0.04em] text-muted"
+            className="tnum shrink-0 text-micro font-medium leading-none text-muted"
             style={{ color: ink }}
             title={
               relation === LapRelation.LappedBy
@@ -597,7 +590,7 @@ function RowInner({
 
       {/* signed relative gap */}
       <div
-        className="text-right text-[13px] font-bold tabular-nums tnum"
+        className="text-right text-name font-medium tabular-nums tnum"
         style={{ color: gapColor }}
       >
         {isPlayer ? "0.0s" : `${fmtGap(gap)}s`}
@@ -608,14 +601,14 @@ function RowInner({
           (`design.md` § Dense tabular overlays, rule 10) */}
       {isOn("last") && (
         <div
-          className="text-right text-[12px] font-semibold tabular-nums tnum text-muted"
+          className="text-right text-cell font-medium tabular-nums tnum text-muted"
           style={{
             color: ink,
             ...(LAP_UNDERLINE[entry.lastLapStatus]
               ? {
                   textDecoration: "underline",
                   textDecorationColor: LAP_UNDERLINE[entry.lastLapStatus],
-                  textDecorationThickness: 2,
+                  textDecorationThickness: 1.5,
                   textUnderlineOffset: 3,
                 }
               : undefined),
@@ -629,14 +622,14 @@ function RowInner({
       <div className="flex items-center justify-center">
         {isPlayer && (entry.onPitRoad || entry.isInPitStall) ? (
           <span title="On pit road">
-            <Wrench className="size-3.5 text-warning" />
+            <Wrench className="size-3 text-warning" />
           </span>
         ) : showAlert ? (
           <span
             title={`Closing at ${closingRate!.toFixed(1)}s/lap${isDiffClass ? " · different class" : ""}`}
           >
             <Zap
-              className="size-3.5"
+              className="size-3"
               style={{
                 color: isDiffClass
                   ? "var(--color-danger)"
@@ -658,10 +651,10 @@ function EmptyState({ iracingActive }: { iracingActive: boolean }) {
   return (
     <div className="grid h-full place-items-center">
       <div className="flex max-w-sm flex-col items-center gap-3 text-center">
-        <div className="grid size-12 place-items-center rounded-card border border-border bg-surface-2">
-          <Radio className="size-6 text-faint" />
+        <div className="grid size-10 place-items-center rounded-card border border-border bg-surface-2">
+          <Radio className="size-5 text-faint" />
         </div>
-        <h2 className="text-base font-semibold text-text">No relative data</h2>
+        <h2 className="text-sm font-semibold text-text">No relative data</h2>
         <p className="text-sm leading-relaxed text-muted">
           {iracingActive
             ? "Waiting for the standings feed…"
@@ -770,6 +763,9 @@ export function RelativeScreen() {
 
   const playerClassId = playerEntry?.carClassId ?? -1;
   const playerClassColor = classColorMap.get(playerClassId) ?? CLASS_RAMP[0];
+  // The class bar is information only when there is more than one class. In
+  // a single-class session it keeps its width and draws in nothing.
+  const barColor = (color: string) => (multiClass ? color : "transparent");
   const playerLastLap = playerEntry?.lastLapTime ?? null;
 
   const isEmpty = order.length === 0;
@@ -802,7 +798,7 @@ export function RelativeScreen() {
   return (
     <div
       ref={bodyRef}
-      className="overlay-card timing-surface timing-blocks font-timing @container flex h-full flex-col overflow-hidden rounded-card border border-border/60"
+      className="overlay-card timing-surface timing-blocks font-timing @container flex h-full flex-col overflow-hidden rounded-card"
     >
       {/* Its own block, flush with the field's: the header and the rows'
           paper share one left and right edge, and the space between them is
@@ -827,7 +823,7 @@ export function RelativeScreen() {
             {classRuns(ahead).map((run) => {
               const color = classColorMap.get(run[0].carClassId) ?? CLASS_RAMP[0];
               return (
-                <ClassRun key={run[0].carIdx} color={color} fillReach={fillReach}>
+                <ClassRun key={run[0].carIdx} color={barColor(color)} fillReach={fillReach}>
                   {run.map((entry) => (
                     <Row
                       key={entry.carIdx}
@@ -846,7 +842,7 @@ export function RelativeScreen() {
 
             {/* Player row */}
             {player && (
-              <ClassRun color={playerClassColor} fillReach={fillReach}>
+              <ClassRun color={barColor(playerClassColor)} fillReach={fillReach}>
                 <Row
                   key={player.carIdx}
                   entry={player}
@@ -865,7 +861,7 @@ export function RelativeScreen() {
             {classRuns(behind).map((run) => {
               const color = classColorMap.get(run[0].carClassId) ?? CLASS_RAMP[0];
               return (
-                <ClassRun key={run[0].carIdx} color={color} fillReach={fillReach}>
+                <ClassRun key={run[0].carIdx} color={barColor(color)} fillReach={fillReach}>
                   {run.map((entry) => (
                     <Row
                       key={entry.carIdx}

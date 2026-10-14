@@ -51,112 +51,114 @@ export interface Theme {
 }
 
 /*
- * Every theme keeps the same restrained philosophy: cool dark neutrals, white
- * primary type, and accents reserved for status. Themes vary the temperature
- * of the neutrals and the exact accent hues — never the meaning of a color.
+ * Every theme is the same instrument: near-monochrome graphite, light-grey
+ * ink, ONE accent for focus and selection, and semantic colour only where it
+ * means something. Themes vary the temperature of the neutrals and the exact
+ * tone of the accent — never what a colour means, and never the accent's
+ * family: it stays a cool cyan in all four, so the five car-class colours
+ * (`lib/classColors`) can be spaced against a single reserved hue.
  */
 export const THEMES: readonly Theme[] = [
   {
     id: "carbon",
     name: "Carbon",
-    description: "Default · graphite neutrals, racing green + signal blue",
+    description: "Default · blue-black graphite, cyan accent",
     colors: {
-      bg: "oklch(16% 0.01 256)",
-      surface: "oklch(20% 0.013 258)",
-      surface2: "oklch(24.5% 0.017 260)",
-      border: "oklch(30% 0.018 258)",
-      borderStrong: "oklch(40% 0.022 256)",
-      accent: "oklch(77.4% 0.181 154)",
-      accentDim: "oklch(64.6% 0.1526 155)",
-      primary: "oklch(68.6% 0.1569 254)",
-      primaryDim: "oklch(58.5% 0.1568 255)",
-      onAccent: "oklch(14% 0.008 256)",
-      focus: "oklch(68.6% 0.1569 254)",
-      text: "oklch(100% 0 0)",
-      muted: "oklch(80% 0.017 254)",
-      faint: "oklch(62% 0.021 256)",
-      danger: "oklch(66.5% 0.195 26)",
-      warning: "oklch(80.7% 0.1472 81)",
-      sectorPurple: "oklch(69.4% 0.1763 301)",
+      bg: "oklch(17.5% 0.009 255)",
+      surface: "oklch(20.5% 0.01 255)",
+      surface2: "oklch(23.5% 0.011 255)",
+      border: "oklch(29% 0.012 255)",
+      borderStrong: "oklch(36% 0.013 255)",
+      accent: "oklch(75% 0.125 152)",
+      accentDim: "oklch(64% 0.11 152)",
+      primary: "oklch(79% 0.09 226)",
+      primaryDim: "oklch(68% 0.085 226)",
+      onAccent: "oklch(15% 0.008 255)",
+      focus: "oklch(79% 0.09 226)",
+      text: "oklch(91% 0.005 255)",
+      muted: "oklch(72% 0.012 255)",
+      faint: "oklch(60% 0.012 255)",
+      danger: "oklch(67% 0.16 22)",
+      warning: "oklch(84% 0.12 90)",
+      sectorPurple: "oklch(70% 0.13 305)",
     },
   },
   {
     id: "midnight",
     name: "Midnight",
-    description: "Deep blue-black for night racing",
+    description: "Deeper blue-black for night racing",
     colors: {
-      bg: "oklch(13.9% 0.0155 267)",
-      surface: "oklch(17.7% 0.0289 269)",
-      surface2: "oklch(22.8% 0.0319 268)",
-      border: "oklch(28.4% 0.0365 267)",
-      borderStrong: "oklch(38.1% 0.0407 265)",
-      accent: "oklch(78.2% 0.1725 157)",
-      accentDim: "oklch(64.8% 0.146 156)",
-      primary: "oklch(70.9% 0.1534 257)",
-      primaryDim: "oklch(60.9% 0.1589 257)",
-      onAccent: "oklch(11.9% 0.0155 267)",
-      focus: "oklch(70.9% 0.1534 257)",
-      text: "oklch(97.3% 0.0128 267)",
-      muted: "oklch(76.2% 0.029 258)",
-      faint: "oklch(60.7% 0.0369 261)",
-      danger: "oklch(67.3% 0.1884 24)",
-      warning: "oklch(81.3% 0.1392 82)",
-      sectorPurple: "oklch(71.1% 0.1552 295)",
+      bg: "oklch(15% 0.016 262)",
+      surface: "oklch(18% 0.019 262)",
+      surface2: "oklch(21% 0.021 262)",
+      border: "oklch(26.5% 0.022 262)",
+      borderStrong: "oklch(34% 0.024 262)",
+      accent: "oklch(75% 0.125 152)",
+      accentDim: "oklch(64% 0.11 152)",
+      primary: "oklch(78% 0.09 234)",
+      primaryDim: "oklch(67% 0.085 234)",
+      onAccent: "oklch(13% 0.014 262)",
+      focus: "oklch(78% 0.09 234)",
+      text: "oklch(91% 0.01 262)",
+      muted: "oklch(72% 0.018 262)",
+      faint: "oklch(59% 0.02 262)",
+      danger: "oklch(67% 0.16 22)",
+      warning: "oklch(84% 0.12 90)",
+      sectorPurple: "oklch(70% 0.13 305)",
     },
   },
   {
     id: "graphite",
     name: "Graphite",
-    description: "Pure neutral grays · minimum color, maximum focus",
+    description: "Pure neutral greys · a steel accent, minimum colour",
     colors: {
-      bg: "oklch(14.3% 0 0)",
-      surface: "oklch(17.5% 0 0)",
-      surface2: "oklch(22.1% 0 0)",
-      border: "oklch(27.4% 0 0)",
-      borderStrong: "oklch(37.2% 0 0)",
-      accent: "oklch(76% 0.1641 156)",
-      accentDim: "oklch(63.2% 0.1388 156)",
-      primary: "oklch(67.6% 0.0193 253)",
-      primaryDim: "oklch(56.9% 0.0201 253)",
-      onAccent: "oklch(12.3% 0 0)",
-      focus: "oklch(67.6% 0.0193 253)",
-      text: "oklch(100% 0 0)",
-      muted: "oklch(78.3% 0.0096 258)",
-      faint: "oklch(60.6% 0.0116 262)",
-      danger: "oklch(65.4% 0.1926 25)",
-      warning: "oklch(78.4% 0.1405 81)",
-      sectorPurple: "oklch(69.5% 0.1574 299)",
+      bg: "oklch(17% 0 0)",
+      surface: "oklch(20% 0 0)",
+      surface2: "oklch(23% 0 0)",
+      border: "oklch(28.5% 0 0)",
+      borderStrong: "oklch(35.5% 0 0)",
+      accent: "oklch(74% 0.115 152)",
+      accentDim: "oklch(63% 0.1 152)",
+      primary: "oklch(82% 0.045 228)",
+      primaryDim: "oklch(71% 0.04 228)",
+      onAccent: "oklch(14% 0 0)",
+      focus: "oklch(82% 0.045 228)",
+      text: "oklch(91% 0 0)",
+      muted: "oklch(72% 0 0)",
+      faint: "oklch(60% 0 0)",
+      danger: "oklch(66% 0.15 22)",
+      warning: "oklch(83% 0.11 90)",
+      sectorPurple: "oklch(70% 0.12 305)",
     },
   },
   {
     /*
-     * Endurance's interactive hue used to sit 8° from `warning` at nearly the
-     * same lightness — "you can click this" and "caution" were, in practice,
-     * the same color, in a system whose whole premise is that a color means
-     * one thing. Pulled to copper (45°), which holds the warm identity and
-     * puts 36° between interactive and caution.
+     * Endurance keeps its warm graphite, and gives up the copper accent it
+     * used to carry: the system now has one accent family, and a copper
+     * "interactive" sat between `danger` and `warning`, where the class
+     * palette needs its orange.
      */
     id: "endurance",
     name: "Endurance",
-    description: "Warm graphite with copper accents for long stints",
+    description: "Warm graphite with a pale cyan accent for long stints",
     colors: {
-      bg: "oklch(15.3% 0.0026 68)",
-      surface: "oklch(18.5% 0.005 68)",
-      surface2: "oklch(23.3% 0.0049 39)",
-      border: "oklch(28.9% 0.0079 59)",
-      borderStrong: "oklch(38.8% 0.0097 61)",
-      accent: "oklch(77.4% 0.1667 156)",
-      accentDim: "oklch(63.6% 0.1389 156)",
-      primary: "oklch(70% 0.15 45)",
-      primaryDim: "oklch(62% 0.145 44)",
-      onAccent: "oklch(13.3% 0.0026 68)",
-      focus: "oklch(70% 0.15 45)",
-      text: "oklch(98.6% 0.0062 75)",
-      muted: "oklch(79.7% 0.0148 74)",
-      faint: "oklch(61.4% 0.0146 71)",
-      danger: "oklch(66.6% 0.1891 28)",
-      warning: "oklch(80.7% 0.1472 81)",
-      sectorPurple: "oklch(72.1% 0.1549 302)",
+      bg: "oklch(17.5% 0.005 70)",
+      surface: "oklch(20.5% 0.006 70)",
+      surface2: "oklch(23.5% 0.007 70)",
+      border: "oklch(29% 0.008 70)",
+      borderStrong: "oklch(36% 0.009 70)",
+      accent: "oklch(75% 0.125 152)",
+      accentDim: "oklch(64% 0.11 152)",
+      primary: "oklch(79% 0.085 222)",
+      primaryDim: "oklch(68% 0.08 222)",
+      onAccent: "oklch(15% 0.005 70)",
+      focus: "oklch(79% 0.085 222)",
+      text: "oklch(91% 0.008 80)",
+      muted: "oklch(72% 0.012 75)",
+      faint: "oklch(60% 0.012 72)",
+      danger: "oklch(67% 0.16 22)",
+      warning: "oklch(84% 0.12 90)",
+      sectorPurple: "oklch(70% 0.13 305)",
     },
   },
 ] as const;
@@ -234,23 +236,16 @@ export function applyTheme(
   const surface2 = overlay ? withAlpha(c.surface2, 0.66) : c.surface2;
   const border = overlay ? withAlpha(c.border, 0.5) : c.border;
   const borderStrong = overlay ? withAlpha(c.borderStrong, 0.5) : c.borderStrong;
-  // The timing surfaces' own near-black paper (see `--color-timing-bg` in
-  // styles.css). Over live footage it stays *opaque enough to read as its own
-  // panel* rather than following the other surfaces down to 0.66 glass — a
-  // 30 px row of 12 px type has no room to lose contrast to a bright sky.
-  //
-  // 68 % of `bg`, not 30 %: the ground under the field is no longer the only
-  // thing separating one class group from the next — a solid class band and a
-  // 4 px edge now do that — so the paper can come up far enough for those
-  // blocks to read *as* blocks rather than as light in a void. It is still the
-  // darkest surface in the app by a wide margin.
-  //
-  // 0.9 rather than 0.82 over footage: Standings and Relative now lay this
-  // paper per block and leave the gaps between blocks clear, so the game is
-  // already in view around them and the blocks themselves can be black.
+  // The overlay panels' own graphite paper (see `--color-timing-bg` in
+  // styles.css): a step under `bg`, so a panel is the darkest graphite in the
+  // palette — never pure black. Over live footage it stays nearly opaque
+  // rather than following the frame down to 0.66: a row of 12 px figures has
+  // no room to lose contrast to a bright sky. Standings and Relative lay this
+  // paper per block and leave the gaps clear, so the game is already in view
+  // around the panels and the panels themselves can be solid.
   const timingBg = overlay
-    ? "rgb(0 0 0 / 0.9)"
-    : `color-mix(in oklab, ${c.bg} 68%, #000)`;
+    ? `color-mix(in oklab, color-mix(in oklab, ${c.bg} 86%, #000) 92%, transparent)`
+    : `color-mix(in oklab, ${c.bg} 86%, #000)`;
 
   el.style.setProperty("--color-bg", bg);
   el.style.setProperty("--color-timing-bg", timingBg);

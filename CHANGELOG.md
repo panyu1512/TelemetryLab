@@ -7,6 +7,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **A new look across every screen: race-engineer telemetry.** Standings,
+  Relative, Fuel & Strategy, the Coach, every dashboard widget and the
+  Overlay Manager now read like data-analysis software on a pit wall: dark
+  graphite panels with thin 1 px edges, light-grey figures, and colour only
+  where it tells you something — green for a gain or a best lap, red for a
+  loss, yellow for a warning, purple for the session's fastest. One cyan
+  accent marks your own row, the current selection and keyboard focus. Nothing
+  about what the screens show, or how they behave, has changed.
+- **Every number is now in a monospaced face**, so times, gaps and ratings
+  line up digit for digit and never shift as they update. Labels are small
+  grey capitals above their values, and units sit smaller and dimmer than the
+  number they belong to (`287 KM/H`). The font ships with the app, so it looks
+  the same offline.
+- **Car class is a thin coloured bar, not a fill.** In a multi-class race each
+  row opens on a slim bar in its class colour, and on Relative a small class
+  tag now sits right after the car number. The five class colours were
+  re-picked so none can be mistaken for the accent, a gain, a loss or a
+  warning. In a single-class session no class colour is shown at all.
+- **Quieter licence and iRating pill.** The licence is now a short coloured
+  bar at the start of a flat grey pill instead of a full block of colour, so a
+  column of licences no longer outshouts the timing.
+- **Charts are thinner and calmer.** The input trace draws throttle in the
+  accent and brake in grey on a dotted grid, with a marker where each pedal
+  meets the live edge; the speed gauge is a thin arc; the rev lights stay grey
+  until the shift zone and then turn yellow and red.
+- **Widgets have a slim header again**, naming the channel — it hides itself
+  on a widget too small to spare the room.
+- **Animations are shorter and calmer** — position changes, qualifying laps,
+  the radio mark and live-status dots all still move, just faster and without
+  glow or bounce.
+- **Themes**: all four keep their character but now share the one cyan
+  accent; Endurance keeps its warm greys and loses its copper.
+
 ## [1.24.0] - 2026-10-14
 
 ### Added

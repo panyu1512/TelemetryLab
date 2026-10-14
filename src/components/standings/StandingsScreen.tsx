@@ -16,14 +16,12 @@ import {
   CLASS_EDGE_WIDTH,
   CLASS_GAP,
   SKIP_H,
-  STANDINGS_FILL_REACH,
   scopeColumnsToSession,
   tableMinWidth,
   type ColumnVisibility,
 } from "./constants";
 import { fitScale, scaleBox, unscaled } from "../../lib/tableScale";
 import { CLASS_RAMP, classColorFor } from "../../lib/classColors";
-import { classFill } from "../../lib/classFill";
 import { StandingsRow } from "./StandingsRow";
 import { useStandingsLayout, type LayoutBlock } from "./useStandingsLayout";
 import { SESSION_HEADER_H, SessionStrip } from "../timing/SessionStrip";
@@ -168,6 +166,10 @@ export function StandingsScreen() {
     () => new Map(classes.map((c, i) => [c.carClassId, classColorFor(i)])),
     [classes]
   );
+  // Class colour is information only when there is more than one class. In a
+  // single-class session the bar keeps its width — nothing moves — and draws
+  // in nothing; the band's bar falls back to the neutral hairline tone.
+  const multiClass = classes.length > 1;
 
   // Who holds a fastest lap: one car per class, plus the single car whose class
   // best is also the field best. This drives the surface's only filled cell
@@ -196,7 +198,7 @@ export function StandingsScreen() {
   return (
     <div
       ref={rootRef}
-      className="overlay-card timing-surface timing-blocks font-timing flex h-full flex-col overflow-hidden rounded-card border border-border/60"
+      className="overlay-card timing-surface timing-blocks font-timing flex h-full flex-col overflow-hidden rounded-card"
     >
       {/*
         The strip scales with the field — it is part of the same surface, and a
@@ -221,11 +223,11 @@ export function StandingsScreen() {
               className="relative"
               style={{ height: totalHeight, marginTop: fieldTop }}
             >
-              {/* One block of paper per class band and per class's rows,
-                  rounded, with the gaps between blocks left clear (see
-                  `LayoutBlock`). Everything in a block is drawn inside it, at
-                  offsets from its top, so its corners clip the class colour
-                  and the rows as well as the paper. */}
+              {/* One panel of paper per class band and per class's rows,
+                  with the gaps between panels left clear (see `LayoutBlock`).
+                  Everything in a panel is drawn inside it, at offsets from
+                  its top, so its edge and corners clip the class bar and the
+                  rows as well as the paper. */}
               {blocks.map((b) => (
                 <div
                   key={b.key}
@@ -235,9 +237,10 @@ export function StandingsScreen() {
                     transform: `translateY(${b.top}px)`,
                   }}
                 >
-                  {/* The class edge and its fill, once per run of same-class
-                      rows, so the colour has no joins to seam at (see
-                      `LayoutRun`). The rows draw neither. */}
+                  {/* The class bar, once per run of same-class rows, so the
+                      colour has no joins to seam at (see `LayoutRun`). The
+                      rows do not draw it. Never a fill: class colour is the
+                      bar and nothing else. */}
                   {inBlock(runs, b).map((r) => {
                     const color = classColorById.get(r.classId);
                     if (!color) return null;
@@ -251,8 +254,7 @@ export function StandingsScreen() {
                           transform: `translateY(${r.top - b.top}px)`,
                           borderLeftWidth: CLASS_EDGE_WIDTH,
                           borderLeftStyle: "solid",
-                          borderLeftColor: color,
-                          backgroundImage: classFill(color, STANDINGS_FILL_REACH),
+                          borderLeftColor: multiClass ? color : "transparent",
                         }}
                       />
                     );
@@ -264,10 +266,7 @@ export function StandingsScreen() {
                         <SkipMarker
                           key={it.key}
                           top={top}
-                          color={
-                            classColorById.get(it.classId) ??
-                            "var(--color-faint)"
-                          }
+                          color="var(--color-faint)"
                         />
                       );
                     }
@@ -286,7 +285,9 @@ export function StandingsScreen() {
                           <ClassBand
                             standing={standing}
                             color={
-                              classColorById.get(it.classId) ?? CLASS_RAMP[0]
+                              multiClass
+                                ? classColorById.get(it.classId) ?? CLASS_RAMP[0]
+                                : "var(--color-border-strong)"
                             }
                             fastestIsOverall={
                               standing.fastestLapCarIdx != null &&
@@ -331,8 +332,8 @@ function inBlock<T extends { top: number }>(entries: readonly T[], b: LayoutBloc
 }
 
 /**
- * Where a capped group skips cars: a short dotted rule in the class colour,
- * set against the position column so it reads as "places missing here" in the
+ * Where a capped group skips cars: a short dotted rule in the faint grey, set
+ * against the position column so it reads as "places missing here" in the
  * rank block, not as a divider across the timing data.
  */
 function SkipMarker({ top, color }: { top: number; color: string }) {
@@ -352,7 +353,7 @@ function SkipMarker({ top, color }: { top: number; color: string }) {
         {[0, 1, 2].map((i) => (
           <span
             key={i}
-            className="size-[3px] rounded-full opacity-80"
+            className="size-[2px] rounded-full"
             style={{ background: color }}
           />
         ))}
@@ -365,10 +366,10 @@ function EmptyState({ iracingActive }: { iracingActive: boolean }) {
   return (
     <div className="grid h-full place-items-center">
       <div className="flex max-w-sm flex-col items-center gap-3 text-center">
-        <div className="grid size-12 place-items-center rounded-card border border-border bg-surface-2">
-          <Flag className="size-6 text-faint" />
+        <div className="grid size-10 place-items-center rounded-card border border-border bg-surface-2">
+          <Flag className="size-5 text-faint" />
         </div>
-        <h2 className="text-base font-semibold text-text">No field yet</h2>
+        <h2 className="text-sm font-semibold text-text">No field yet</h2>
         <p className="text-sm leading-relaxed text-muted">
           {iracingActive
             ? "Waiting for the standings feed…"

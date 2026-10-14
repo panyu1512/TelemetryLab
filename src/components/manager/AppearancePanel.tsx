@@ -43,27 +43,28 @@ export function AppearancePanel({ overlayId }: AppearancePanelProps) {
                 className={[
                   "relative flex items-center gap-3 rounded-card border px-3 py-2.5 text-left transition-colors",
                   isActive
-                    ? "border-primary bg-primary/5 ring-1 ring-primary/40"
+                    ? "border-primary bg-primary/[0.06]"
                     : "border-border bg-surface hover:border-border-strong",
                 ].join(" ")}
               >
-                {/* Palette swatch: base surface + the three signal hues. */}
+                {/* Palette swatch: the base surface, the theme's one accent,
+                    and its gain green. */}
                 <span
-                  className="flex size-8 shrink-0 flex-col justify-end gap-1 overflow-hidden rounded-ctl border border-white/10 p-1"
+                  className="flex size-8 shrink-0 flex-col justify-end gap-1 overflow-hidden rounded-ctl border border-border p-1"
                   style={{ background: t.colors.bg }}
                 >
                   <span className="flex gap-0.5">
                     <span
-                      className="h-1 flex-1 rounded-full"
+                      className="h-1 flex-1"
                       style={{ background: t.colors.primary }}
                     />
                     <span
-                      className="h-1 flex-1 rounded-full"
+                      className="h-1 flex-1"
                       style={{ background: t.colors.accent }}
                     />
                   </span>
                   <span
-                    className="h-1.5 rounded-sm"
+                    className="h-1.5"
                     style={{ background: t.colors.surface2 }}
                   />
                 </span>
@@ -71,12 +72,12 @@ export function AppearancePanel({ overlayId }: AppearancePanelProps) {
                   <span className="block text-xs font-medium text-text">
                     {t.name}
                   </span>
-                  <span className="block truncate text-[10px] text-faint">
+                  <span className="block truncate text-micro text-faint">
                     {t.description}
                   </span>
                 </span>
                 {isGlobalInherited && (
-                  <span className="ml-auto shrink-0 whitespace-nowrap rounded-full bg-surface-2 px-1.5 py-0.5 font-mono text-[9px] uppercase tracking-[0.12em] text-faint">
+                  <span className="label-caps ml-auto shrink-0 whitespace-nowrap rounded-ctl border border-border px-1.5 py-0.5 text-faint">
                     Global
                   </span>
                 )}
@@ -89,7 +90,7 @@ export function AppearancePanel({ overlayId }: AppearancePanelProps) {
           <button
             type="button"
             onClick={() => store.setOverlayTheme(overlayId, null)}
-            className="mt-2 text-[11px] text-muted underline-offset-2 hover:text-text hover:underline"
+            className="mt-2 text-small text-muted underline-offset-2 hover:text-text hover:underline"
           >
             Reset to global theme ({getTheme(globalThemeId).name})
           </button>
@@ -136,7 +137,7 @@ export function AppearancePanel({ overlayId }: AppearancePanelProps) {
               store.setOverlayBrightness(overlayId, DEFAULT_APPEARANCE.brightness);
               store.setOverlayOpacity(overlayId, DEFAULT_APPEARANCE.opacity);
             }}
-            className="text-[11px] text-muted underline-offset-2 hover:text-text hover:underline"
+            className="text-small text-muted underline-offset-2 hover:text-text hover:underline"
           >
             Reset adjustments to defaults
           </button>

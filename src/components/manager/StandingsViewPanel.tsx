@@ -86,7 +86,7 @@ export function StandingsViewPanel() {
                 >
                   {label}
                 </span>
-                <span className="block truncate text-[11px] text-faint">
+                <span className="block truncate text-small text-faint">
                   {description}
                 </span>
               </span>
@@ -117,7 +117,7 @@ export function StandingsViewPanel() {
           <span className="block text-xs font-medium text-text">
             Whole field
           </span>
-          <span className="block text-[11px] text-faint">
+          <span className="block text-small text-faint">
             Every car in the session, shrunk to fit the window. Small in a big
             field.
           </span>
@@ -130,7 +130,7 @@ export function StandingsViewPanel() {
           <span className="block text-xs font-medium text-text">
             Session header
           </span>
-          <span className="block text-[11px] text-faint">
+          <span className="block text-small text-faint">
             Session, track, lap, time left, incidents, temperatures, SoF and
             the clock, above the field.
           </span>
@@ -153,7 +153,7 @@ export function StandingsViewPanel() {
           <span className="block text-xs font-medium text-text">
             Class bands
           </span>
-          <span className="block text-[11px] text-faint">
+          <span className="block text-small text-faint">
             {grouping === "class"
               ? "Open each class with its car count, strength of field and fastest lap."
               : "Only available when the field is grouped by class."}
@@ -171,7 +171,7 @@ export function StandingsViewPanel() {
           <span className="block text-xs font-medium text-text">
             Column labels
           </span>
-          <span className="block text-[11px] text-faint">
+          <span className="block text-small text-faint">
             Name each column once, in the first row. Off once you know them.
           </span>
         </div>
@@ -207,7 +207,7 @@ function RowCount({
     >
       <div className="min-w-0 flex-1">
         <span className="block text-xs font-medium text-text">{label}</span>
-        <span className="block text-[11px] text-faint">{description}</span>
+        <span className="block text-small text-faint">{description}</span>
       </div>
       <input
         type="range"

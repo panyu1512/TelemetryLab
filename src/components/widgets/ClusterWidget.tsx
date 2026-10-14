@@ -6,33 +6,33 @@ import { Bar, Gauge } from "./primitives";
 const SHIFT_LIGHTS = 8;
 
 /**
- * The rev strip: a segmented bar running green → yellow → red.
+ * The rev strip: a segmented bar, neutral until the shift zone.
  *
  * It was a row of round LEDs, copying the wheel display it stands in for. The
- * segments are the better read at the size this actually gets drawn: a circle
- * carries its ink in the middle and thins to nothing at the edges, so a lit dot
- * next to an unlit one leaves a gap of paper between two soft shapes, and the
- * *number* of lit lights — which is the whole reading — has to be counted. A
- * bar of hard-edged blocks reads as a length instead, and length is answered
- * without counting.
+ * segments are the better read at the size this actually gets drawn: a bar of
+ * hard-edged blocks reads as a length, and length is answered without
+ * counting. Segments are full-height and share the strip's width, so the bar
+ * grows and shrinks with the card.
  *
- * Aspect ratio goes with the circles: segments are full-height and share the
- * strip's width, so the bar grows and shrinks with the card rather than pinning
- * itself to an 11 px cap.
+ * Colour only where it carries meaning: the working range lights in the
+ * neutral data tone, the approach to the limiter in `warning`, the limiter in
+ * `danger`. No glow on a lit segment — a hard block on a dark track is
+ * already the brightest thing on the card. At the limiter the strip pulses,
+ * shallow and quick, rather than blinking.
  */
 function ShiftLights({ frac }: { frac: number }) {
   const lit = Math.round(frac * SHIFT_LIGHTS);
   const atRedline = frac >= 0.97;
   return (
     <div
-      className={`flex min-w-0 flex-1 items-center gap-0.5 ${atRedline ? "animate-pulse" : ""}`}
+      className={`flex min-w-0 flex-1 items-center gap-[2px] ${atRedline ? "redline-pulse" : ""}`}
       style={{ maxWidth: "55%" }}
     >
       {Array.from({ length: SHIFT_LIGHTS }).map((_, i) => {
         const on = i < lit;
         const color =
           i < SHIFT_LIGHTS * 0.6
-            ? "var(--color-accent)"
+            ? "var(--color-chart-secondary)"
             : i < SHIFT_LIGHTS * 0.85
               ? "var(--color-warning)"
               : "var(--color-danger)";
@@ -41,11 +41,8 @@ function ShiftLights({ frac }: { frac: number }) {
             key={i}
             className="min-w-0 flex-1 transition-colors"
             style={{
-              height: "clamp(6px, 9cqmin, 11px)",
-              background: on ? color : "var(--color-surface-2)",
-              boxShadow: on
-                ? `0 0 5px ${color}`
-                : "inset 0 0 0 1px var(--color-border)",
+              height: "clamp(5px, 7cqmin, 8px)",
+              background: on ? color : "var(--color-chart-track)",
             }}
           />
         );
@@ -63,23 +60,21 @@ export function ClusterWidget({ data }: { data: TelemetryData | null }) {
     <div className="flex h-full flex-col gap-2">
       <div className="flex shrink-0 items-center justify-between gap-2">
         <ShiftLights frac={rpmFrac} />
-        <span
-          className="tnum shrink-0 text-faint"
-          style={{ fontSize: "clamp(0.7rem, 9cqmin, 1rem)" }}
-        >
-          <span className="font-semibold text-text">{num(data?.rpm)}</span> rpm
+        <span className="flex shrink-0 items-baseline gap-1">
+          <span className="tnum wg-value-sm font-medium text-text">{num(data?.rpm)}</span>
+          <span className="wg-unit">rpm</span>
         </span>
       </div>
 
       <Bar
         value={rpmFrac}
-        height={6}
+        height={3}
         color={
           rpmFrac >= 0.95
             ? "var(--color-danger)"
             : rpmFrac >= 0.85
               ? "var(--color-warning)"
-              : "var(--color-accent)"
+              : "var(--color-chart-primary)"
         }
       />
 
@@ -87,18 +82,15 @@ export function ClusterWidget({ data }: { data: TelemetryData | null }) {
         <div className="h-full max-w-[48%] flex-1">
           <Gauge value={data?.speedKmh} max={speedMax} unit="km/h" />
         </div>
-        <div className="flex shrink-0 flex-col items-center">
+        {/* The gear: the largest figure on the card, in the mono, with its
+            label above it like every other channel. */}
+        <div className="flex shrink-0 flex-col items-center gap-1.5">
+          <span className="wg-label">Gear</span>
           <span
-            className="tnum font-bold leading-none text-text"
-            style={{ fontSize: "clamp(1.5rem, 40cqh, 5rem)" }}
+            className="tnum font-medium leading-none text-text"
+            style={{ fontSize: "clamp(1.5rem, 38cqh, 4.5rem)" }}
           >
             {gearLabel(data?.gear)}
-          </span>
-          <span
-            className="font-mono font-medium uppercase tracking-[0.12em] text-faint"
-            style={{ fontSize: "clamp(0.5rem, 7cqmin, 0.65rem)" }}
-          >
-            Gear
           </span>
         </div>
       </div>

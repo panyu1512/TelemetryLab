@@ -142,7 +142,7 @@ function LabeledField({
     <div className="flex items-start gap-4 bg-surface px-4 py-3">
       <div className="min-w-0 flex-1">
         <div className="text-xs font-medium text-text">{label}</div>
-        {hint && <div className="mt-0.5 text-[11px] leading-relaxed text-faint">{hint}</div>}
+        {hint && <div className="mt-0.5 text-small leading-relaxed text-faint">{hint}</div>}
       </div>
       <div className="shrink-0">{children}</div>
     </div>

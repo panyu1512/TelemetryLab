@@ -132,18 +132,20 @@ const SHOTS = [
   { name: "manager", route: "", w: 1400, h: 900, wait: PAST_A_LAP_MS },
   // Tall enough for the pit-strategies card, which stopped being collapsed and
   // now always renders under the fold of the old 340 px frame — and no taller.
-  // 412, down from 505: the panel moved to the timing surfaces' strip and
-  // section grammar and the fuel-save card spans both columns, so the last
-  // card now ends at 403.
-  { name: "fuel", route: "?overlay=fuel", w: 620, h: 412, wait: PAST_A_LAP_MS },
+  // 432, up from 412 for 1.25: sections are drawn by a 1 px hairline now and
+  // their metrics put the label above the figure, so the last card ends at
+  // 417 (measured in the live app, plus the panel's padding and edge and the
+  // window's 8 px).
+  { name: "fuel", route: "?overlay=fuel", w: 620, h: 432, wait: PAST_A_LAP_MS },
   // The coach after the first lap the feed completes: lap 13 is already done
   // when the page opens (and was a new best), lap 14 lands ~20 s in, and its
   // analysis holds until ~47 s. 30 s sits in the middle of that window, so the
   // frame shows tips rather than the new-best banner. Height measured to the
   // corner list's `Lap` row plus the panel's padding — re-measure if the
   // screen's sections change, and re-read the coach alt text in `index.html`:
-  // the tips it quotes come off this lap.
-  { name: "coach", route: "?overlay=coach", w: 620, h: 404, wait: 30_000 },
+  // the tips it quotes come off this lap. 419, up from 404 for 1.25's hairline
+  // sections: the `Lap` row now ends at 404.
+  { name: "coach", route: "?overlay=coach", w: 620, h: 419, wait: 30_000 },
 ];
 
 fs.mkdirSync(OUT, { recursive: true });
@@ -174,6 +176,12 @@ for (const { name, route, w, h, wait = PAST_A_LAP_MS } of SHOTS) {
   page.on("console", (m) => m.type() === "error" && errors.push(m.text()));
 
   await page.goto(`${BASE}/${route}`, { waitUntil: "networkidle" });
+  // The pointer sits inside the viewport, so a frameless overlay window draws
+  // its hover edge — chrome for finding and moving the window, not part of the
+  // overlay. A capture shows the overlay.
+  await page.addStyleTag({
+    content: "html.overlay-mode #root::after { display: none !important; }",
+  });
   await page.waitForTimeout(wait);
   await page.screenshot({ path: path.join(OUT, `${name}.png`) });
 

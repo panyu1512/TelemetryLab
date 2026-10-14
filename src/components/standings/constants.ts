@@ -35,16 +35,16 @@ export const ROW_H = 32;
 export const ROW_GAP = 3;
 
 /**
- * The player's row: the one strip on `primary` rather than the neutral
- * `timing-row` ground, on Standings and Relative alike (§ Two colour systems,
- * rule 3). With every row now on a ground of its own, it is the *hue* of the
- * ground that says "this is you", so it runs a step stronger than the 15 %
- * wash it was when it was the only ground on the paper; the inset ring keeps
- * it legible in the Graphite theme, whose `primary` is close to neutral.
+ * The player's row: the one row marked in the accent, on Standings and
+ * Relative alike (§ Two colour systems, rule 3) — "this is you" is selection,
+ * and selection is what the one accent is for. A low tint and a 1 px inset
+ * edge in the accent: enough to find at a glance, quiet enough that the
+ * figures on it stay the loudest thing on the row. The edge keeps it findable
+ * in the Graphite theme, whose accent is close to neutral.
  *
  * A literal class string, so Tailwind's scanner generates it.
  */
-export const PLAYER_ROW_GROUND = "bg-primary/25 ring-1 ring-inset ring-primary/50";
+export const PLAYER_ROW_GROUND = "bg-primary/[0.13] ring-1 ring-inset ring-primary/55";
 
 /**
  * A row's slot: one {@link ROW_H}, plus the label slice when the row carries
@@ -296,8 +296,9 @@ const RACE_ONLY_COLUMNS: readonly StandingsColumnId[] = [
 const LAP_TIME_COLUMNS: readonly StandingsColumnId[] = ["best"];
 
 /**
- * The 3 px class-colour edge, held at its drawn size however far the table
- * scales down.
+ * The class-colour bar down a row's left edge — 3 px, held at its drawn size
+ * however far the table scales down. In a single-class session it is drawn
+ * transparent: the width stays, so nothing moves, but no class colour shows.
  *
  * It went from 2 px to 3 px because on near-black paper a 2 px hairline of an
  * arbitrary hue was the first thing to disappear in peripheral vision, which is
@@ -308,13 +309,12 @@ const LAP_TIME_COLUMNS: readonly StandingsColumnId[] = ["best"];
  * thing at every size, because what it carries is presence rather than
  * quantity.
  *
- * 4 px, not 3, now that the band above the group is a solid block of the same
- * colour: the edge is the row's link back to that block, and at 3 px it read as
- * a hairline that happened to match rather than as the same device one scale
- * down. It is also the widest this can go — a fifth pixel starts eating the
- * position column it sits against.
+ * Back to 3 px from the 4 it grew to while the class band was a solid block
+ * of the same colour: the band is a neutral header now, and class colour is
+ * carried by this bar alone, so it only has to be findable, not to match a
+ * block. Three is the narrowest that still is in peripheral vision.
  */
-export const CLASS_EDGE_WIDTH = "calc(4px / var(--table-scale, 1))";
+export const CLASS_EDGE_WIDTH = "calc(3px / var(--table-scale, 1))";
 
 /**
  * Narrow the user's chosen columns to the ones that tell the truth in this

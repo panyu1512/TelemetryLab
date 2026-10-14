@@ -1,7 +1,6 @@
-/* Hallmark · genre: modern-minimal · macrostructure: Workbench
- * design-system: design.md · designed-as-app
- * theme: custom (tuned) · vibe: "pit wall — hard edges, solid blocks, 13.5° shear"
- * paper oklch(16% 0.01 256) dark · display grotesk-sans (Inter) · accent cool (254°)
+/* design-system: design.md · direction: race-engineer telemetry
+ * paper oklch(17.5% 0.009 255) graphite · sans Inter · mono JetBrains Mono
+ * one accent (cyan 226°) · semantic green / red / yellow · class ramp ×5
  */
 
 /*
@@ -26,57 +25,94 @@
 
 :root {
   /* ── Colour ──────────────────────────────────────────────────────────────
-     Neutrals are cool graphite (blue-tinted) so panels sit naturally over
-     iRacing footage instead of reading as warm grey boxes. Accents are never
-     decorative — each one carries exactly one meaning. */
+     Near-monochrome graphite with a blue-black cast, ONE accent, and colour
+     only where it carries meaning. */
 
-  /* Paper / surfaces — elevation reads through lightness, not shadow. Deep,
-     because this surface carries solid colour blocks and a block only reads as
-     one against a ground darker than itself; `border-strong` goes the other way
-     because at 2 px radii the 1 px edge is what draws a control's shape. */
-  --color-bg: oklch(16% 0.01 256);
-  --color-surface: oklch(20% 0.013 258);
-  --color-surface-2: oklch(24.5% 0.017 260);
-  --color-border: oklch(30% 0.018 258);
-  --color-border-strong: oklch(40% 0.022 256);
+  /* Paper / surfaces — three close levels and two hairline tones. Elevation
+     reads through lightness and a 1 px edge, never through glow. */
+  --color-bg: oklch(17.5% 0.009 255);
+  --color-surface: oklch(20.5% 0.01 255);
+  --color-surface-2: oklch(23.5% 0.011 255);
+  --color-border: oklch(29% 0.012 255);
+  --color-border-strong: oklch(36% 0.013 255);
 
-  /* Ink — a three-step scale. `faint` is pinned at L 62%: the floor that
-     clears 4.5:1 against `surface`, because it carries 10–11 px labels. */
-  --color-text: oklch(100% 0 0);
-  --color-muted: oklch(80% 0.017 254);
-  --color-faint: oklch(62% 0.021 256);
+  /* The overlay panels' ground: a step under `bg`, never pure black. */
+  --color-timing-bg: color-mix(in oklab, oklch(17.5% 0.009 255) 86%, #000);
+  --color-divider: rgb(255 255 255 / 0.055);
+  --color-section: rgb(255 255 255 / 0.03);
+  --color-panel-header: rgb(255 255 255 / 0.035);
 
-  /* Status — one colour, one meaning */
-  --color-accent: oklch(77.4% 0.181 154); /* positive: PB, faster, healthy */
-  --color-accent-dim: oklch(64.6% 0.1526 155);
-  --color-danger: oklch(66.5% 0.195 26); /* critical: slower, overheating */
-  --color-warning: oklch(80.7% 0.1472 81); /* caution: pit soon, yellow flag */
-  --color-primary: oklch(68.6% 0.1569 254); /* interactive / informational */
-  --color-primary-dim: oklch(58.5% 0.1568 255);
-  --color-sector-purple: oklch(69.4% 0.1763 301); /* overall-best lap/sector */
+  /* Ink — light grey for data, mid grey for labels, a lower grey for anything
+     tertiary. Nothing is pure white. `faint` clears 4.5:1 on `surface`. */
+  --color-text: oklch(91% 0.005 255);
+  --color-muted: oklch(72% 0.012 255);
+  --color-faint: oklch(60% 0.012 255);
 
-  /* Text on top of ANY filled status colour. Every accent here is light and
-     every paper dark, so white-on-accent measures 2.2–2.9:1; this reads at
-     6.5–8.7:1. Filled controls must use it — never white. */
-  --color-on-accent: oklch(14% 0.008 256);
+  /* The one accent: focus, selection, active, "this is you", the primary
+     channel on a chart. */
+  --color-primary: oklch(79% 0.09 226);
+  --color-primary-dim: oklch(68% 0.085 226);
+  --color-focus: oklch(79% 0.09 226);
 
-  /* Focus ring. Its own token, not an alias of `primary`, so a theme whose
-     interactive hue nears `warning` can move one without the other. Clears
-     3:1 against both `bg` and `surface`. */
-  --color-focus: oklch(68.6% 0.1569 254);
+  /* Semantic — only where a colour means something. */
+  --color-accent: oklch(75% 0.125 152); /* gain: PB, faster, healthy */
+  --color-accent-dim: oklch(64% 0.11 152);
+  --color-danger: oklch(67% 0.16 22); /* loss: slower, overheating */
+  --color-warning: oklch(84% 0.12 90); /* caution: pit soon, yellow flag */
+  --color-sector-purple: oklch(70% 0.13 305); /* overall-best lap/sector */
+  --color-lapped: oklch(72% 0.12 245); /* lapped traffic (fixed) */
+  --color-tyre-wet: oklch(64% 0.15 256); /* wet tyre (fixed) */
+
+  /* Text on any filled status colour. */
+  --color-on-accent: oklch(15% 0.008 255);
+
+  /* Car class — multiclass sessions only: a thin row bar, a small tag, a chart
+     line. Never a row's ground, a panel's background or a block of text. */
+  --color-class-1: #52bfb8; /* teal    189° */
+  --color-class-2: #e4965b; /* orange   57° */
+  --color-class-3: #9394e7; /* violet  282° */
+  --color-class-4: #b2ca6f; /* lime    121° */
+  --color-class-5: #d387c2; /* pink    335° */
+  --class-1: var(--color-class-1);
+  --class-2: var(--color-class-2);
+  --class-3: var(--color-class-3);
+  --class-4: var(--color-class-4);
+  --class-5: var(--color-class-5);
+
+  /* Charts — the primary channel in the accent, the rest in neutrals, the
+     reference lap in grey; grid and axes are hairlines. */
+  --color-chart-primary: var(--color-primary);
+  --color-chart-secondary: oklch(80% 0.008 255);
+  --color-chart-tertiary: oklch(58% 0.01 255);
+  --color-chart-reference: oklch(62% 0.008 255);
+  --color-chart-grid: rgb(255 255 255 / 0.1);
+  --color-chart-axis: rgb(255 255 255 / 0.2);
+  --color-chart-track: rgb(255 255 255 / 0.06);
+  --chart-line: 1.25px;
+  --chart-line-thin: 1px;
 
   /* ── Type ────────────────────────────────────────────────────────────────
-     A single-family system: Inter carries display and body alike. Mono is the
-     third voice, reserved for measured values, coordinates, counts, log lines
-     and status readouts — instrument nomenclature, never prose. */
+     Inter carries every word; JetBrains Mono carries every number, with
+     tabular figures. Labels are sans, small, uppercase and tracked; a unit
+     sits a size smaller and a step dimmer than its value. */
   --font-sans: "Inter Variable", Inter, "SF Pro Display", -apple-system,
     "Segoe UI", system-ui, sans-serif;
-  --font-mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas,
-    "Liberation Mono", monospace;
-  /* The timing tables' face (Standings, Relative) — see design.md
-     § Typography. */
-  --font-timing: "Saira Variable", "Inter Variable", Inter, system-ui,
-    sans-serif;
+  --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace,
+    SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --font-timing: "Inter Variable", Inter, system-ui, sans-serif;
+
+  --text-colhead: 0.5rem;
+  --text-label: 0.5625rem;
+  --text-micro: 0.625rem;
+  --text-small: 0.6875rem;
+  --text-cell: 0.75rem;
+  --text-name: 0.8125rem;
+  --text-emph: 0.875rem;
+  --text-title: 0.9375rem;
+  --text-readout: 1rem;
+  --text-readout-lg: 1.125rem;
+  --tracking-label: 0.12em;
+  --tracking-caps: 0.06em;
 
   /* ── Space ───────────────────────────────────────────────────────────────
      4-point scale. The app consumes this through Tailwind's default spacing
@@ -91,35 +127,25 @@
   --space-2xl: 4.5rem;
 
   /* ── Radius ──────────────────────────────────────────────────────────────
-     Near-square throughout: this is an instrument panel, not a consumer app,
-     and a pit-wall graphic is cut rather than moulded. 2 px is enough to stop a
-     1 px border pixel-stepping without softening the shape. */
+     Rectangular, with just enough radius to stop a 1 px edge stair-stepping. */
   --radius-ctl: 2px;
-  --radius-card: 2px;
-  --radius-panel: 2px;
+  --radius-card: 3px;
+  --radius-panel: 3px;
 
   /* ── Elevation ───────────────────────────────────────────────────────────
-     Tight and dark. On dark surfaces a soft coloured halo reads as glow, not
-     height — height comes from a brighter surface. */
-  --shadow-raise: 0 1px 0 rgb(0 0 0 / 0.4), 0 2px 6px rgb(0 0 0 / 0.3);
-  --shadow-float: 0 2px 0 rgb(0 0 0 / 0.45), 0 8px 20px rgb(0 0 0 / 0.45);
+     Only a floating layer casts anything, and it is neutral and tight. */
+  --shadow-raise: 0 1px 0 rgb(0 0 0 / 0.35);
+  --shadow-float: 0 4px 12px rgb(0 0 0 / 0.4);
 
   /* ── Motion ──────────────────────────────────────────────────────────────
-     Three easings, three durations. No bare `ease`, no overshoot on UI state.
-     Under `prefers-reduced-motion` the two short durations collapse to 0 and
-     spatial movement becomes a ≤150 ms opacity change. */
-  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-  --ease-in: cubic-bezier(0.7, 0, 0.84, 0);
-  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+     Short and ease-out; no overshoot, no bounce, nothing over 200 ms on UI
+     state. Under `prefers-reduced-motion` the short durations collapse to 0
+     and spatial movement becomes a ≤150 ms opacity change. */
+  --ease-out: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --ease-in: cubic-bezier(0.5, 0, 0.75, 0);
+  --ease-in-out: cubic-bezier(0.45, 0, 0.25, 1);
   --dur-instant: 80ms;
-  --dur-short: 140ms;
-  --dur-mid: 220ms;
-
-  /* ── Shear ───────────────────────────────────────────────────────────────
-     The brand mark's own cut, promoted to a system device. It goes on the
-     app's chrome — chips, section legends, CTAs — and never on a data surface:
-     a table read in peripheral vision needs its column edges vertical. See the
-     `.shear` pair in `src/styles.css` for the counter-transform that keeps the
-     type upright inside a sheared box. */
-  --shear: -13.5deg;
+  --dur-short: 120ms;
+  --dur-mid: 180ms;
+  --dur-long: 200ms;
 }

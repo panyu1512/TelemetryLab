@@ -19,12 +19,12 @@ export function OverlayChrome({ kind, id }: { kind: WindowKind; id: string }) {
       title="Drag to move this window"
       className="overlay-chrome group relative flex h-5 shrink-0 cursor-grab items-center justify-center opacity-0 transition-opacity hover:opacity-100 active:cursor-grabbing"
     >
-      <GripHorizontal data-tauri-drag-region className="size-3.5 text-muted" />
+      <GripHorizontal data-tauri-drag-region className="size-3.5 text-faint" />
       <button
         type="button"
         onClick={() => closeCurrentWindow(kind, id)}
         title="Close this window"
-        className="absolute right-1 grid size-4 place-items-center rounded text-muted transition-colors hover:bg-danger hover:text-white"
+        className="absolute right-1 grid size-4 place-items-center rounded-ctl text-faint transition-colors hover:bg-danger hover:text-on-accent"
       >
         <X className="size-3" />
       </button>

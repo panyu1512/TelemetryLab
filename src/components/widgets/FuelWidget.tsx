@@ -28,14 +28,16 @@ export function FuelWidget({ data }: { data: TelemetryData | null }) {
         />
       </div>
       <Bar value={data?.fuelLevelPct} />
-      <div
-        className="flex items-center justify-between gap-1 text-muted"
-        style={{ fontSize: "clamp(0.5rem, 6cqmin, 0.75rem)" }}
-      >
+      <div className="wg-small flex items-baseline justify-between gap-1 text-muted">
         <span className="tnum">{pct(data?.fuelLevelPct)}%</span>
-        <span className="tnum truncate">
-          {perLap == null ? "calibrating…" : `${perLap.toFixed(2)} L/lap`}
-        </span>
+        {perLap == null ? (
+          <span className="truncate text-faint">calibrating…</span>
+        ) : (
+          <span className="flex items-baseline gap-1 truncate">
+            <span className="tnum">{perLap.toFixed(2)}</span>
+            <span className="wg-unit">L/lap</span>
+          </span>
+        )}
       </div>
     </div>
   );

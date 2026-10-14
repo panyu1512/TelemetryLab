@@ -121,7 +121,7 @@ export function DebugPanel() {
       <section className="flex min-h-0 flex-1 flex-col">
         <div className="mb-2 flex items-center gap-2">
           <SectionLabelInline>Logs</SectionLabelInline>
-          <span className="text-[10px] text-muted">({logs.length} entries)</span>
+          <span className="text-micro text-muted">({logs.length} entries)</span>
 
           <div className="ml-auto flex items-center gap-1">
             {(["all", "debug", "info", "warn", "error"] as const).map((lv) => (
@@ -130,9 +130,9 @@ export function DebugPanel() {
                 type="button"
                 onClick={() => setFilter(lv)}
                 className={[
-                  "rounded-ctl px-2 py-0.5 text-[10px] font-medium uppercase transition-colors",
+                  "rounded-ctl px-2 py-0.5 text-micro font-medium uppercase transition-colors",
                   filter === lv
-                    ? "bg-primary/15 text-primary"
+                    ? "bg-surface-2 text-primary"
                     : "text-muted hover:text-text",
                 ].join(" ")}
               >
@@ -180,7 +180,7 @@ export function DebugPanel() {
               No log entries yet. Bridge messages will appear here.
             </div>
           ) : (
-            <div className="p-2 text-[11px] leading-5">
+            <div className="p-2 text-small leading-5">
               {filtered.map((l, i) => (
                 <LogLine key={i} entry={l} />
               ))}
@@ -198,7 +198,7 @@ export function DebugPanel() {
 /** The inline variant of the shared `SectionLabel`, for use inside a flex row. */
 function SectionLabelInline({ children }: { children: React.ReactNode }) {
   return (
-    <span className="font-mono text-[10px] font-medium uppercase tracking-[0.14em] text-faint">
+    <span className="label-caps">
       {children}
     </span>
   );
@@ -217,10 +217,12 @@ function StatusTile({
     <div className="rounded-card border border-border bg-surface px-3 py-2">
       <div className="mb-1 flex items-center gap-1.5">
         <span
-          className="inline-block size-1.5 rounded-full"
-          style={{ background: ok ? "var(--color-accent)" : "var(--color-faint)" }}
+          className={ok ? "live-dot" : "inline-block size-1.5 rounded-full"}
+          style={
+            ok ? { color: "var(--color-accent)" } : { background: "var(--color-faint)" }
+          }
         />
-        <span className="font-mono text-[10px] uppercase tracking-[0.12em] text-faint">{label}</span>
+        <span className="label-caps">{label}</span>
       </div>
       <span
         className="text-xs font-medium"
@@ -235,7 +237,7 @@ function StatusTile({
 function KV({ k, v }: { k: string; v: string }) {
   return (
     <div className="flex items-baseline gap-1.5">
-      <span className="w-14 shrink-0 font-mono text-[10px] uppercase tracking-[0.12em] text-faint">
+      <span className="w-14 shrink-0 label-caps">
         {k}
       </span>
       <span className="truncate text-muted">{v}</span>

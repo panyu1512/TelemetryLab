@@ -58,7 +58,7 @@ export function CoachScreen() {
   const compared = coaching != null && coaching.analysis.length > 0;
 
   return (
-    <div className="overlay-card timing-surface flex h-full flex-col overflow-hidden rounded-card border border-border/60">
+    <div className="overlay-card timing-surface flex h-full flex-col overflow-hidden rounded-card">
       <Strip track={track} coaching={coaching} />
 
       {/* Not connected: the empty state, whatever was last replayed — the
@@ -100,10 +100,8 @@ function Strip({
       className="timing-strip flex shrink-0 items-center gap-x-3 overflow-hidden px-2"
       style={{ height: STRIP_H }}
     >
-      <span className="shrink-0 px-1.5 font-mono text-[11px] font-bold uppercase leading-none tracking-[0.1em] text-muted">
-        Coach
-      </span>
-      <span className="min-w-0 truncate text-[12px] font-semibold leading-none text-muted">
+      <span className="label-caps shrink-0 px-0.5 text-text">Coach</span>
+      <span className="min-w-0 truncate text-cell font-medium leading-none text-muted">
         {track ?? "—"}
       </span>
       <StripField
@@ -127,11 +125,6 @@ function Strip({
 }
 
 // ── headline ─────────────────────────────────────────────────────────────────
-
-/** A status token at `pct` strength over transparent — valid for `var()`s. */
-function mix(color: string, pct: number): string {
-  return `color-mix(in oklab, ${color} ${pct}%, transparent)`;
-}
 
 /**
  * The verdict on the lap, on a ground of its status colour — the same block
@@ -165,25 +158,25 @@ function StatusBlock({ view }: { view: Exclude<CoachView, { kind: "none" | "tips
   const { color, Icon, title, line } = statusCopy(view);
   return (
     <section
-      className="flex items-center gap-2.5 rounded-card px-2.5 py-2"
-      style={{ background: mix(color, 12) }}
+      className="flex items-center gap-2.5 rounded-card border border-divider bg-section px-2.5 py-2"
+      style={{ boxShadow: `inset 2px 0 0 ${color}` }}
     >
       <div
-        className="grid size-8 shrink-0 place-items-center rounded-ctl"
-        style={{ background: mix(color, 22), color }}
+        className="grid size-7 shrink-0 place-items-center rounded-ctl border border-divider"
+        style={{ color }}
       >
-        <Icon className="size-4" />
+        <Icon className="size-3.5" />
       </div>
       <div className="min-w-0 flex-1">
-        <div className="truncate text-[15px] font-bold leading-tight" style={{ color }}>
+        <div className="truncate text-title font-semibold leading-tight" style={{ color }}>
           {title}
         </div>
-        <div className="text-[11px] leading-snug text-muted">{line}</div>
+        <div className="text-small leading-snug text-muted">{line}</div>
       </div>
       {view.kind === "best" && view.gains.length > 0 && (
         <div className="flex shrink-0 flex-col items-end gap-0.5">
           {view.gains.map((g) => (
-            <span key={g.corner} className="tnum font-mono text-[11px] font-bold text-accent">
+            <span key={g.corner} className="tnum text-small font-medium text-accent">
               {g.label} {formatLoss(g.timeLost)}
             </span>
           ))}
@@ -257,27 +250,27 @@ function TipBlock({ tip, primary = false }: { tip: CoachTip; primary?: boolean }
   const color = gradeColor(tip.grade);
   return (
     <section
-      className={`flex items-center gap-2.5 rounded-card px-2.5 ${primary ? "py-2" : "py-1.5"}`}
-      style={{ background: primary ? mix(color, 12) : "rgb(255 255 255 / 0.035)" }}
+      className={`flex items-center gap-2.5 rounded-card border border-divider bg-section px-2.5 ${primary ? "py-2" : "py-1.5"}`}
+      style={{ boxShadow: `inset 2px 0 0 ${primary ? color : "var(--color-border-strong)"}` }}
     >
       <div
-        className={`grid shrink-0 place-items-center rounded-ctl font-mono font-bold ${primary ? "h-8 min-w-10 text-[13px]" : "h-6 min-w-8 text-[11px]"}`}
-        style={{ background: mix(color, primary ? 22 : 16), color }}
+        className={`tnum grid shrink-0 place-items-center rounded-ctl border border-divider font-medium ${primary ? "h-7 min-w-10 text-name" : "h-6 min-w-8 text-small"}`}
+        style={{ color }}
       >
         {tip.label}
       </div>
       <div className="min-w-0 flex-1">
         <div
-          className={`truncate font-bold leading-tight ${primary ? "text-[15px]" : "text-[13px]"}`}
+          className={`truncate font-semibold leading-tight ${primary ? "text-title" : "text-name"}`}
           style={{ color: primary ? color : "var(--color-text)" }}
         >
           {tip.headline}
         </div>
         {(tip.detail.length > 0 || tip.repeat) && (
-          <div className="flex flex-wrap items-center gap-x-2 text-[11px] leading-snug text-muted">
+          <div className="flex flex-wrap items-center gap-x-2 text-small leading-snug text-muted">
             {tip.detail.length > 0 && <span>{tip.detail.join(" · ")}</span>}
             {tip.repeat && (
-              <span className="inline-flex items-center gap-1 font-semibold text-warning">
+              <span className="inline-flex items-center gap-1 font-medium text-warning">
                 <Repeat2 className="size-3" />
                 {tip.repeat}
               </span>
@@ -286,7 +279,7 @@ function TipBlock({ tip, primary = false }: { tip: CoachTip; primary?: boolean }
         )}
       </div>
       <span
-        className={`tnum shrink-0 font-bold ${primary ? "text-[18px]" : "text-[13px]"}`}
+        className={`tnum shrink-0 font-medium ${primary ? "text-readout-lg" : "text-name"}`}
         style={{ color }}
       >
         {formatLoss(tip.timeLost)}
@@ -296,7 +289,7 @@ function TipBlock({ tip, primary = false }: { tip: CoachTip; primary?: boolean }
 }
 
 function Note({ children }: { children: React.ReactNode }) {
-  return <p className="px-1 text-[11px] leading-snug text-faint">{children}</p>;
+  return <p className="px-1 text-small leading-snug text-faint">{children}</p>;
 }
 
 // ── lap strip ────────────────────────────────────────────────────────────────
@@ -310,11 +303,9 @@ function Note({ children }: { children: React.ReactNode }) {
 function LapStrip({ coaching, minLoss }: { coaching: CoachingPayload; minLoss: number }) {
   const segments = lapSegments(coaching.corners, coaching.analysis);
   return (
-    <section className="rounded-card bg-white/[0.035] px-2.5 pb-1.5 pt-2">
-      <h3 className="mb-1.5 font-mono text-[9px] font-semibold uppercase leading-none tracking-[0.14em] text-faint">
-        Lap
-      </h3>
-      <div className="relative h-2.5 w-full overflow-hidden" style={{ background: TRACK }}>
+    <section className="rounded-card border border-divider bg-section px-2.5 pb-1.5 pt-2">
+      <h3 className="label-caps mb-2">Lap</h3>
+      <div className="relative h-2 w-full overflow-hidden" style={{ background: TRACK }}>
         {segments.map((s, i) => {
           const grade = s.timeLost == null ? "even" : cornerGrade(s.timeLost, minLoss);
           return (
@@ -326,7 +317,7 @@ function LapStrip({ coaching, minLoss }: { coaching: CoachingPayload; minLoss: n
                 width: `${(s.to - s.from) * 100}%`,
                 background: grade === "even" ? "transparent" : gradeColor(grade),
                 opacity: grade === "even" ? 1 : 0.85,
-                borderLeft: "1px solid rgb(0 0 0 / 0.6)",
+                borderLeft: "1px solid var(--color-timing-bg)",
               }}
             />
           );
@@ -336,7 +327,7 @@ function LapStrip({ coaching, minLoss }: { coaching: CoachingPayload; minLoss: n
         {coaching.corners.map((c) => (
           <span
             key={c.number}
-            className="absolute -translate-x-1/2 font-mono text-[9px] font-semibold leading-none text-faint"
+            className="tnum absolute -translate-x-1/2 text-label leading-none text-faint"
             style={{ left: `${c.apexPct * 100}%` }}
           >
             {c.label}
@@ -360,10 +351,8 @@ function CornerList({ coaching, minLoss }: { coaching: CoachingPayload; minLoss:
   const label = new Map(coaching.corners.map((c) => [c.number, c.label]));
   const delta = coaching.lastLap?.delta ?? null;
   return (
-    <section className="rounded-card bg-white/[0.035] p-2.5">
-      <h3 className="mb-2 font-mono text-[9px] font-semibold uppercase leading-none tracking-[0.14em] text-faint">
-        Corners
-      </h3>
+    <section className="rounded-card border border-divider bg-section p-2.5">
+      <h3 className="label-caps mb-2.5">Corners</h3>
       <div className="flex flex-col gap-1">
         {coaching.analysis.map((a) => {
           const grade = cornerGrade(a.timeLost, minLoss);
@@ -371,11 +360,11 @@ function CornerList({ coaching, minLoss }: { coaching: CoachingPayload; minLoss:
           const frac = Math.min(1, Math.abs(a.timeLost) / scale) * 50;
           return (
             <div key={a.corner} className="grid grid-cols-[2.25rem_1fr_3.75rem_5.5rem] items-center gap-2">
-              <span className="font-mono text-[11px] font-bold text-muted">
+              <span className="tnum text-small font-medium text-muted">
                 {label.get(a.corner) ?? `T${a.corner}`}
               </span>
-              <div className="relative h-1.5" style={{ background: TRACK }}>
-                <div className="absolute inset-y-[-2px] left-1/2 w-px bg-white/25" />
+              <div className="relative h-1" style={{ background: TRACK }}>
+                <div className="absolute inset-y-[-2px] left-1/2 w-px bg-chart-axis" />
                 {grade !== "even" && (
                   <div
                     className="absolute inset-y-0"
@@ -388,30 +377,28 @@ function CornerList({ coaching, minLoss }: { coaching: CoachingPayload; minLoss:
                 )}
               </div>
               <span
-                className="tnum text-right font-mono text-[11px] font-bold"
+                className="tnum text-right text-small font-medium"
                 style={{ color: grade === "even" ? "var(--color-faint)" : color }}
               >
                 {formatLoss(a.timeLost)}
               </span>
-              <span className="truncate font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-faint">
+              <span className="label-caps truncate text-faint">
                 {grade === "even" ? "" : causeTag(a.cause)}
               </span>
             </div>
           );
         })}
         {delta != null && (
-          <div className="mt-1 grid grid-cols-[2.25rem_1fr_3.75rem_5.5rem] items-center gap-2 border-t border-white/10 pt-1.5">
-            <span className="font-mono text-[11px] font-bold text-text">Lap</span>
+          <div className="mt-1 grid grid-cols-[2.25rem_1fr_3.75rem_5.5rem] items-center gap-2 border-t border-divider pt-1.5">
+            <span className="label-caps text-text">Lap</span>
             <span />
             <span
-              className="tnum text-right font-mono text-[11px] font-bold"
+              className="tnum text-right text-small font-medium"
               style={{ color: deltaColor(delta) }}
             >
               {formatLoss(delta)}
             </span>
-            <span className="font-mono text-[9px] font-semibold uppercase tracking-[0.1em] text-faint">
-              vs ref
-            </span>
+            <span className="label-caps text-faint">vs ref</span>
           </div>
         )}
       </div>
@@ -425,10 +412,10 @@ function EmptyState({ iracingActive }: { iracingActive: boolean }) {
   return (
     <div className="grid h-full place-items-center">
       <div className="flex max-w-sm flex-col items-center gap-3 text-center">
-        <div className="grid size-12 place-items-center rounded-card border border-border bg-surface-2">
-          <Radio className="size-6 text-faint" />
+        <div className="grid size-10 place-items-center rounded-card border border-border bg-surface-2">
+          <Radio className="size-5 text-faint" />
         </div>
-        <h2 className="text-base font-semibold text-text">No laps yet</h2>
+        <h2 className="text-sm font-semibold text-text">No laps yet</h2>
         <p className="text-sm leading-relaxed text-muted">
           {iracingActive
             ? "Waiting for the coach — complete a lap to get going."
@@ -440,4 +427,4 @@ function EmptyState({ iracingActive }: { iracingActive: boolean }) {
 }
 
 /** A bar's empty track: visible on the section tone, unlike `surface`. */
-const TRACK = "rgb(255 255 255 / 0.08)";
+const TRACK = "var(--color-chart-track)";

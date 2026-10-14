@@ -12,6 +12,7 @@ import { useEffect } from "react";
 import { useBridge } from "../hooks/useBridge";
 import { useTelemetry } from "../hooks/useTelemetry";
 import { OverlayChrome } from "./OverlayChrome";
+import { PanelHeader } from "./ui/PanelHeader";
 import { getWidget } from "../dashboards/registry";
 import { useOverlayConfigStore } from "../stores/useOverlayConfigStore";
 import { getTheme, applyTheme } from "../themes";
@@ -57,13 +58,14 @@ export function SingleWidgetWindow({ id }: { id: string }) {
     <div className="widget-frame flex h-full w-full flex-col overflow-hidden bg-bg text-text">
       <OverlayChrome kind="widget" id={id} />
 
-      {/* Same paper as the widget in the dashboard grid — a widget popped into
-          its own window is the same widget, headerless included. The window's
-          own title bar already says which widget this is, so a name inside it
-          was saying it twice. */}
-      <section className="overlay-card widget-card timing-surface flex min-h-0 flex-1 flex-col overflow-hidden rounded-card border border-border/60">
+      {/* Same panel as the widget in the dashboard grid — a widget popped into
+          its own window is the same widget, header included: the window is
+          frameless over the game, so the channel name is the only title it
+          has. */}
+      <section className="overlay-card widget-card timing-surface flex min-h-0 flex-1 flex-col overflow-hidden rounded-card">
+        <PanelHeader title={def.title} />
         <div
-          className="min-h-0 flex-1 overflow-hidden"
+          className="widget-body min-h-0 flex-1 overflow-hidden"
           style={{ containerType: "size" }}
         >
           <Body data={data} />

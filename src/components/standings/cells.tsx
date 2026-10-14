@@ -11,13 +11,7 @@ import { LAP_COLOR, SECTOR_COLOR } from "./constants";
 import { tyreKind, tyreName } from "../../lib/tyreCompound";
 import { useSessionStore } from "../../stores/useSessionStore";
 import { TyreCompoundIcon } from "../ui/TyreCompoundIcon";
-import {
-  CHANGE_SLOT_W,
-  licenceGround,
-  PILL_SHEEN,
-  RATING_PAD_X,
-  ratingGround,
-} from "../../lib/ratingPill";
+import { CHANGE_SLOT_W, RATING_PAD_X } from "../../lib/ratingPill";
 
 /* -------------------------------------------------------------------------- */
 /*  Direction mark (▲ / ▼) — one glyph for every "which way" on the table      */
@@ -113,7 +107,7 @@ export function RadioMark({ size }: { size: number }) {
 
 export function PosChange({ value }: { value: number }) {
   if (!value) {
-    return <span className="text-[10px] leading-none text-faint/50">·</span>;
+    return <span className="text-micro leading-none text-faint/50">·</span>;
   }
   const up = value > 0;
   const color = up ? "var(--color-accent)" : "var(--color-danger)";
@@ -122,7 +116,7 @@ export function PosChange({ value }: { value: number }) {
   // inside the first, and the mark already groups the arrow with its count.
   return (
     <span
-      className="flex items-center justify-center gap-[3px] text-[12px] font-bold leading-none tnum"
+      className="flex items-center justify-center gap-[3px] text-cell font-medium leading-none tnum"
       style={{ color }}
       title={`${up ? "Gained" : "Lost"} ${Math.abs(value)} since start`}
     >
@@ -141,8 +135,8 @@ export function PosChange({ value }: { value: number }) {
  * flash, so every chip on the row stands the same height.
  */
 export const PILL_H = 20;
-/** The pill's corner, matching the row strip it sits on (`rounded-sm`). */
-const PILL_R = "4px";
+/** The pill's corner: the system's control radius. */
+const PILL_R = "var(--radius-ctl)";
 /** The grid's `gap-x-1`, which the licence segment reaches across to join. */
 const COLUMN_GAP = "4px";
 
@@ -158,17 +152,24 @@ function segmentRadius(side: "left" | "right", joined: boolean): string {
 }
 
 /*
- * The segments' grounds — the licence's own colour, lit from the top, and a
- * glass lift with a gain/loss rule — live in `lib/ratingPill`, where their
- * contrast is tested.
+ * The pill is one flat, neutral cell in two segments, on the panels' section
+ * tone with no sheen and no gradient. The licence keeps its own colour — it is
+ * the information, a driver knows the class of licence by it — but as a 2 px
+ * bar opening the segment, taken a step toward the neutral, rather than as the
+ * segment's ground: a column of red, orange, yellow, green and blue blocks is
+ * the loudest thing a timing table can carry, and here it would sit beside
+ * the red, yellow and green that mean loss, warning and gain.
  *
- * iRacing's licence colours run from a dark blue (A) to a near-white yellow
- * (C), so no one ink reads on all of them at full strength. Holding each at
- * one lightness in OKLab — its hue kept, its chroma as high as the gamut
- * allows there — puts all of them under the point where white reads, so the
- * segment can always print white and still show the colour a driver knows
- * the class of licence by.
+ * (The lit, held-lightness grounds this replaced are still in
+ * `lib/ratingPill`, tested, for anything that needs a filled licence colour.)
  */
+
+/** The flat ground both segments share. */
+const PILL_GROUND = "var(--color-section)";
+/** A licence colour, a step toward the neutral, for its 2 px bar. */
+function licenceBar(color: string): string {
+  return `color-mix(in oklab, ${color || "#ffffff"} 78%, var(--color-chart-tertiary))`;
+}
 
 export function LicenseBadge({
   group,
@@ -188,20 +189,19 @@ export function LicenseBadge({
 }) {
   return (
     <span
-      className="tnum flex items-center justify-center text-[11px] font-bold leading-none"
+      className="tnum flex items-center justify-center gap-[3px] text-small font-medium leading-none text-text"
       style={{
         height: PILL_H,
         width: joined ? `calc(100% + ${COLUMN_GAP})` : "100%",
         alignSelf: "center",
         justifySelf: "start",
-        color: "#fff",
-        background: licenceGround(color),
-        boxShadow: PILL_SHEEN,
+        background: PILL_GROUND,
+        boxShadow: `inset 2px 0 0 ${licenceBar(color)}`,
         borderRadius: segmentRadius("left", joined),
       }}
       title={`${group} ${safetyRating.toFixed(2)}`}
     >
-      {group}
+      <span className="text-muted">{group}</span>
       {safetyRating.toFixed(2)}
     </span>
   );
@@ -232,12 +232,12 @@ export function IRatingCell({
         style={{
           height: PILL_H,
           paddingInline: RATING_PAD_X,
-          background: ratingGround(0),
-          boxShadow: PILL_SHEEN,
+          background: PILL_GROUND,
+          boxShadow: joined ? "inset 1px 0 0 var(--color-divider)" : undefined,
           borderRadius: segmentRadius("right", joined),
         }}
       >
-        <span className="text-[12px] font-bold leading-none text-text">
+        <span className="text-cell font-medium leading-none text-text">
           {rating(iRating)}
         </span>
       </div>
@@ -253,24 +253,23 @@ export function IRatingCell({
     // change sits in a fixed-width slot, so every rating in the column ends on
     // the same vertical — the one thing a column of numbers must never lose.
     //
-    // A glass lift, with the change ruled underneath in its own colour
-    // (`lib/ratingPill`); the rule spans the slot, not the digits, so the
-    // rules line up down the column the way the numbers do.
+    // Flat and neutral; the change carries its grade in its own ink and
+    // direction mark, so nothing behind it needs colouring.
     <div
       className="tnum flex w-full items-center justify-end gap-1"
       style={{
         height: PILL_H,
         paddingInline: RATING_PAD_X,
-        background: ratingGround(change),
-        boxShadow: PILL_SHEEN,
+        background: PILL_GROUND,
+        boxShadow: joined ? "inset 1px 0 0 var(--color-divider)" : undefined,
         borderRadius: segmentRadius("right", joined),
       }}
     >
-      <span className="text-[12px] font-bold leading-none text-text">
+      <span className="text-cell font-medium leading-none text-text">
         {rating(iRating)}
       </span>
       <span
-        className="flex shrink-0 items-center justify-end gap-[2px] text-[11px] font-bold leading-none"
+        className="flex shrink-0 items-center justify-end gap-[2px] text-small font-medium leading-none"
         style={{
           width: CHANGE_SLOT_W,
           color: change > 0 ? "var(--color-accent)" : "var(--color-danger)",
@@ -565,13 +564,11 @@ export function BrandIcon({
     // .brand-icon CSS rule: > svg { height: 100%; width: auto; max-width: 52px }
     // inline-flex default (align-items: stretch) lets height:100% resolve.
     //
-    // Pure white, not the old 94% and certainly not the 55%-alpha grey before
-    // that. A manufacturer mark is *identity*, but class is the identity this
-    // surface colours (§ Two colour systems, rule 2) — so the mark reads in
-    // the row's own ink at full strength, and gets out of the way of the
-    // coloured status values by being monochrome, not by being dim. Dimming
-    // it only made it unreadable at speed. It is drawn heavier than its
-    // artwork for the same reason (see `.brand-icon` in styles.css).
+    // The data grey, the row's own ink — not a dimmed grey, which made marks
+    // unreadable at speed, and not pure white, which nothing on these
+    // surfaces is. Monochrome, so it stays out of the way of the coloured
+    // status values. Drawn a touch heavier than its artwork (see
+    // `.brand-icon` in styles.css).
     return (
       <span
         className={`brand-icon inline-flex shrink-0 items-center justify-center${
@@ -579,7 +576,7 @@ export function BrandIcon({
         }`}
         style={{
           height,
-          color: "#fff",
+          color: "var(--color-text)",
           ...(make in MARK_STROKE
             ? { ["--mark-stroke" as string]: `${MARK_STROKE[make]}px` }
             : undefined),
@@ -595,7 +592,7 @@ export function BrandIcon({
   // — no pill, since fill is rationed to the fastest-lap cell (rule 5).
   return (
     <span
-      className="shrink-0 text-[12px] font-black uppercase leading-none tracking-[0.02em] text-white"
+      className="shrink-0 text-cell font-semibold uppercase leading-none tracking-caps text-text"
       title={make}
     >
       {make.slice(0, 3)}
@@ -625,7 +622,9 @@ export function GapCell({
   leader?: boolean;
 }) {
   return (
-    <span className="text-right text-[12px] font-bold tabular-nums text-text tnum">
+    <span
+      className={`text-right text-cell font-medium tabular-nums tnum ${leader ? "text-faint" : "text-text"}`}
+    >
       {leader ? "GAP" : fmtGap(value, isLaps)}
     </span>
   );
@@ -640,7 +639,9 @@ export function IntervalCell({
   leader?: boolean;
 }) {
   return (
-    <span className="text-right text-[12px] font-bold tabular-nums text-text tnum">
+    <span
+      className={`text-right text-cell font-medium tabular-nums tnum ${leader ? "text-faint" : "text-text"}`}
+    >
       {leader ? "INT" : fmtInterval(value)}
     </span>
   );
@@ -681,11 +682,11 @@ export function LapCell({
   // different vertical from every other time in its column — the one thing a
   // column of numbers may never do (rule 5) — and the fastest lap is precisely
   // the number the eye is comparing the others against.
-  const base = `justify-self-end rounded-ctl px-1.5 py-0.5 text-right text-[12px] tabular-nums tnum ${flash ? "sec-flash" : ""}`;
+  const base = `justify-self-end rounded-ctl px-1.5 py-0.5 text-right text-cell tabular-nums tnum ${flash ? "sec-flash" : ""}`;
   if (fill) {
     return (
       <span
-        className={`${base} font-bold`}
+        className={`${base} font-semibold`}
         style={{ background: fill, color: "var(--color-on-accent)" }}
         title={fillTitle}
       >
@@ -695,14 +696,14 @@ export function LapCell({
   }
   return (
     <span
-      className={`${base} font-semibold`}
+      className={`${base} font-medium`}
       style={{
         color: color ?? "var(--color-text)",
         ...(underline
           ? {
               textDecoration: "underline",
               textDecorationColor: underline,
-              textDecorationThickness: 2,
+              textDecorationThickness: 1.5,
               textUnderlineOffset: 3,
             }
           : null),
@@ -719,7 +720,7 @@ export function LapCell({
 
 export function SectorCell({ sector }: { sector: SectorSplit | undefined }) {
   if (!sector || sector.lastTime == null) {
-    return <span className="text-center text-[10px] text-faint/40">·</span>;
+    return <span className="text-center text-micro text-faint/40">·</span>;
   }
   const color = SECTOR_COLOR[sector.status] ?? "var(--color-muted)";
   // Purple/green sectors read as the achievement (show the time); yellow/red
@@ -734,7 +735,7 @@ export function SectorCell({ sector }: { sector: SectorSplit | undefined }) {
   return (
     <span
       key={`${sector.status}-${sector.lastTime}`}
-      className="sec-cell text-center text-[12px] font-semibold tabular-nums tnum"
+      className="sec-cell text-center text-cell font-medium tabular-nums tnum"
       style={{ color }}
       title={`S${sector.index + 1}: ${sectorTime(sector.lastTime)}${
         sector.bestTime != null ? ` (best ${sectorTime(sector.bestTime)})` : ""
@@ -792,7 +793,7 @@ export function TireCell({
   const kind = useSessionStore((s) => tyreKind(compound, s.session?.tireCompounds));
   const name = useSessionStore((s) => tyreName(compound, s.session?.tireCompounds));
   if (compound == null) {
-    return <span className="text-center text-[10px] text-faint/40">·</span>;
+    return <span className="text-center text-micro text-faint/40">·</span>;
   }
   const label = COMPOUND_LABEL[compound] ?? String(compound);
   const title = kind
@@ -804,7 +805,7 @@ export function TireCell({
   return (
     <div className="flex items-center justify-center gap-1">
       <span
-        className="flex justify-center text-center text-[13px] font-bold leading-none text-text"
+        className="flex justify-center text-center text-name font-semibold leading-none text-muted"
         style={{ width: size }}
         title={title}
       >
@@ -815,7 +816,7 @@ export function TireCell({
         )}
       </span>
       <span
-        className="w-[1.45rem] text-left text-[12px] font-semibold leading-none tabular-nums tnum text-muted"
+        className="w-[1.45rem] text-left text-cell font-medium leading-none tabular-nums tnum text-muted"
         style={{ color: ink }}
         title={`${laps} laps on tyres`}
       >
