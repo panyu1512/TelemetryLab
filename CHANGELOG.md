@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.25.0] - 2026-10-14
+
 ### Changed
 
 - **A new look across every screen: race-engineer telemetry.** Standings,
@@ -684,7 +686,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.24.0...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.25.0...HEAD
+[1.25.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.24.0...v1.25.0
 [1.24.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.23.0...v1.24.0
 [1.23.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.22.0...v1.23.0
 [1.22.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.21.0...v1.22.0
