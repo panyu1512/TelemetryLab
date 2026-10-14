@@ -29,6 +29,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   tag now sits right after the car number. The five class colours were
   re-picked so none can be mistaken for the accent, a gain, a loss or a
   warning. In a single-class session no class colour is shown at all.
+- **Car logos are evenly sized.** Wide logos — Audi, Ford, Chevrolet,
+  McLaren, Aston Martin — used to fill up to three times the space of a
+  Ferrari or Porsche crest in the same column. Each logo is now sized by its
+  shape, so the column reads as a row of cars rather than a row of different
+  sizes.
 - **Quieter licence and iRating pill.** The licence is now a short coloured
   bar at the start of a flat grey pill instead of a full block of colour, so a
   column of licences no longer outshouts the timing.

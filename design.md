@@ -1263,7 +1263,18 @@ a better reason than the last one:
   rather than their height decides how large their letters print. At the
   old 48 px cap a 5.5:1 wordmark set its letters 6 px tall. Even the widest
   mark still sits with paper either side instead of running into the number
-  and the flag. This does not re-open
+  and the flag.
+
+  **Marks are sized optically, not to one height** (`lib/markSize`). Drawn
+  at the row's full height with only a width cap, a wide mark took three to
+  four times the room of a narrow one — McLaren and Aston Martin 60 × 21,
+  Audi, Ford and Chevrolet 52 × 21, Ferrari 15 × 21 — so the column read as a
+  row of different sizes rather than a row of cars. Now a mark up to 1.3:1
+  keeps the full height and anything wider is drawn at the area a 1.3:1 mark
+  has, its aspect read from its own viewBox: Audi's rings are 39 × 15,
+  McLaren's wordmark 56 × 10, a badge 21 × 21. Tall crests cannot grow past
+  the row and stay a little lighter; the widest mark is now ~1.8× the
+  narrowest, down from ~3.9×. The width caps stay as a backstop. This does not re-open
   § Two colour systems rule 2 — the mark is drawn in the row's own ink.
 - **The class band** was rejected on the grounds that a gap separates classes
   for a third of the height. True, and irrelevant: separation was never the

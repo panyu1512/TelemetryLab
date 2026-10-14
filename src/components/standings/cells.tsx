@@ -11,6 +11,7 @@ import { LAP_COLOR, SECTOR_COLOR } from "./constants";
 import { tyreKind, tyreName } from "../../lib/tyreCompound";
 import { useSessionStore } from "../../stores/useSessionStore";
 import { TyreCompoundIcon } from "../ui/TyreCompoundIcon";
+import { markHeight, viewBoxAspect } from "../../lib/markSize";
 import { CHANGE_SLOT_W, RATING_PAD_X } from "../../lib/ratingPill";
 
 /* -------------------------------------------------------------------------- */
@@ -545,17 +546,38 @@ const WIDE_MARKS: ReadonlySet<string> = new Set([
  * before this, McLaren's speedmark filled 15% of its box's height and Audi's
  * rings 35%, which at a 17 px box left 2.5 px and 6 px of actual drawing.
  *
- * The width cap is what lets one number serve both shapes: a wide mark fits to
- * the cap and centres, a compact badge takes the full height.
+ * This is the height the *row* allows a mark, not the height every mark is
+ * drawn at: wide marks are sized optically (`lib/markSize`), so a wordmark and a
+ * badge weigh about the same on the row instead of the wordmark taking three
+ * times the room. The width caps in styles.css remain as a backstop.
  */
 export const BRAND_ICON_H = 24;
+
+/**
+ * Width ÷ height of each mark, read once from the `viewBox` its renderer
+ * returns — the same viewBox the mark is drawn with, so there is no second
+ * list of sizes to drift from the artwork.
+ */
+const markAspects = new Map<string, number>();
+function markAspect(make: string, Icon: () => JSX.Element): number {
+  let aspect = markAspects.get(make);
+  if (aspect === undefined) {
+    aspect = viewBoxAspect(Icon().props.viewBox);
+    markAspects.set(make, aspect);
+  }
+  return aspect;
+}
 
 export function BrandIcon({
   make,
   height = BRAND_ICON_H,
 }: {
   make: string;
-  /** Override the mark height in px (the width follows from the viewBox). */
+  /**
+   * The height the row allows a mark, in px. Marks up to ~1.3:1 are drawn at
+   * it; wider ones a little shorter, at equal area (`lib/markSize`). The width
+   * follows from the viewBox.
+   */
   height?: number;
 }) {
   if (!make) return null;
@@ -563,6 +585,8 @@ export function BrandIcon({
   if (Icon) {
     // .brand-icon CSS rule: > svg { height: 100%; width: auto; max-width: 52px }
     // inline-flex default (align-items: stretch) lets height:100% resolve.
+    // The box's height is the mark's optical height, so a wide mark is drawn
+    // shorter rather than filling the width cap.
     //
     // The data grey, the row's own ink — not a dimmed grey, which made marks
     // unreadable at speed, and not pure white, which nothing on these
@@ -575,7 +599,7 @@ export function BrandIcon({
           WIDE_MARKS.has(make) ? " brand-icon--wide" : ""
         }`}
         style={{
-          height,
+          height: markHeight(height, markAspect(make, Icon)),
           color: "var(--color-text)",
           ...(make in MARK_STROKE
             ? { ["--mark-stroke" as string]: `${MARK_STROKE[make]}px` }
