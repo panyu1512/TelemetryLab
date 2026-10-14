@@ -31,6 +31,7 @@ export default defineConfig({
         "src/lib/fuelHistory.ts",
         "src/lib/coaching.ts",
         "src/lib/radar.ts",
+        "src/lib/overlayVisibility.ts",
         "src/telemetry/protocol.ts",
       ],
       thresholds: {

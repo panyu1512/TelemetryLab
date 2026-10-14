@@ -1,6 +1,8 @@
 import { Eye, EyeOff } from "lucide-react";
 import { useOverlayConfigStore } from "../../stores/useOverlayConfigStore";
 import { useSessionStore } from "../../stores/useSessionStore";
+import { useTelemetryStore } from "../../stores/useTelemetryStore";
+import { hiddenByRules, visibilityConditions } from "../../lib/overlayVisibility";
 import { Checkbox, SectionLabel } from "../ui/controls";
 
 interface VisibilityPanelProps {
@@ -13,12 +15,11 @@ export function VisibilityPanel({ overlayId }: VisibilityPanelProps) {
   const { visibility } = settings;
 
   const session = useSessionStore((s) => s.session);
-  const sessionState = session?.sessionStateLabel ?? null;
+  const onPitRoad = useTelemetryStore((s) => s.telemetry?.onPitRoad ?? null);
   const flags = session?.flags ?? [];
 
   // Derive current live conditions
-  const isReplay = sessionState === "Replay" || flags.includes("replay");
-  const isLoneQualify = flags.includes("lone_qualify");
+  const now = visibilityConditions(session, onPitRoad);
 
   return (
     <div className="space-y-6">
@@ -38,7 +39,7 @@ export function VisibilityPanel({ overlayId }: VisibilityPanelProps) {
             onChange={(v) =>
               store.setOverlayVisibility(overlayId, { hideOnReplay: v })
             }
-            currentlyActive={isReplay}
+            currentlyActive={now.replay}
           />
           <VisibilityRule
             label="In the pits"
@@ -47,7 +48,7 @@ export function VisibilityPanel({ overlayId }: VisibilityPanelProps) {
             onChange={(v) =>
               store.setOverlayVisibility(overlayId, { hideOnPits: v })
             }
-            currentlyActive={false}
+            currentlyActive={now.onPitRoad}
           />
           <VisibilityRule
             label="Lone qualify / first lap"
@@ -58,7 +59,7 @@ export function VisibilityPanel({ overlayId }: VisibilityPanelProps) {
                 hideOnLoneQualify: v,
               })
             }
-            currentlyActive={isLoneQualify}
+            currentlyActive={now.loneQualify}
           />
         </div>
       </section>
@@ -172,17 +173,14 @@ function VisibilityStatus({ overlayId }: { overlayId: string }) {
   const settings = store.getOverlaySettings(overlayId);
   const { visibility } = settings;
   const session = useSessionStore((s) => s.session);
+  const onPitRoad = useTelemetryStore((s) => s.telemetry?.onPitRoad ?? null);
 
   if (!session) return null;
 
-  const isReplay =
-    session.sessionStateLabel === "Replay" ||
-    session.flags.includes("replay");
-  const isLoneQualify = session.flags.includes("lone_qualify");
-
-  const wouldHide =
-    (visibility.hideOnReplay && isReplay) ||
-    (visibility.hideOnLoneQualify && isLoneQualify);
+  const wouldHide = hiddenByRules(
+    visibility,
+    visibilityConditions(session, onPitRoad),
+  );
 
   return (
     <div

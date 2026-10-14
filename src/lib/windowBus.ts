@@ -21,6 +21,7 @@ import type { CoachUiSnapshot } from "../stores/useCoachUiStore";
 import type { OverlayConfigSnapshot } from "../stores/useOverlayConfigStore";
 import type { RelativeUiSnapshot } from "../stores/useRelativeUiStore";
 import type { StandingsUiSnapshot } from "../stores/useStandingsUiStore";
+import type { WidgetSelectionSnapshot } from "../stores/useWidgetSelectionStore";
 
 const isTauri =
   typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
@@ -45,6 +46,7 @@ export interface BusPayloadMap {
   "standings-ui:changed": StandingsUiSnapshot;
   "relative-ui:changed": RelativeUiSnapshot;
   "coach-ui:changed": CoachUiSnapshot;
+  "widget-selection:changed": WidgetSelectionSnapshot;
 }
 
 /** Topics carried over the bus. Kept as a closed union for safety. */

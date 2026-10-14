@@ -181,3 +181,12 @@ export const ALL_WIDGETS: WidgetDef[] = DASHBOARDS.flatMap((d) => d.widgets);
 export function getWidget(id: string): WidgetDef | undefined {
   return ALL_WIDGETS.find((w) => w.id === id);
 }
+
+/**
+ * The dashboard a widget belongs to. A widget popped into its own window takes
+ * that dashboard's Enabled switch, appearance and "Hide when" rules — they are
+ * the Manager settings it is configured under.
+ */
+export function dashboardOfWidget(id: string): DashboardDef | undefined {
+  return DASHBOARDS.find((d) => d.widgets.some((w) => w.id === id));
+}
