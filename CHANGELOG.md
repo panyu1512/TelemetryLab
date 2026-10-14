@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Fuel per lap, lap by lap.** Fuel Calc now keeps a table of every lap you
+  complete, newest at the top, under the pit strategies: the litres the lap
+  burned, how that compares with the average the strategy is working from
+  (green under it, red over), the lap time, and what was left in the tank at
+  the line. A thirsty lap, a fuel-save lap or a stop now shows as itself
+  instead of disappearing into the average. Laps through the pit lane are
+  tagged `PIT`, a lap across a refuel shows no burn rather than a nonsense
+  one, and a lap the app only saw part of — the first one after it starts
+  watching, or an out-lap — is marked `~` because its figure is scaled up
+  from the part it saw. The table holds the last 100 laps and starts again
+  with a new session.
+- The mock feed's car now burns a slightly different amount each lap, more
+  on a faster one, so the new table has something to show without iRacing.
+
 ## [1.25.0] - 2026-10-14
 
 ### Changed

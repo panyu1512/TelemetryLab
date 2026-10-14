@@ -197,6 +197,22 @@ describe("mockPlayerTelemetry — the drive", () => {
     expect(burned).toBeLessThan(3.5);
   });
 
+  it("burns a different amount each lap, so the fuel table has a story", () => {
+    // Sample the tank at each lap boundary, as the fuel screen does.
+    const atLine: number[] = [];
+    let prevLap = mockPlayerTelemetry(MOCK_START_OFFSET_S).lap!;
+    for (let t = MOCK_START_OFFSET_S; atLine.length < 5; t += 0.05) {
+      const f = mockPlayerTelemetry(t);
+      if (f.lap! > prevLap) {
+        atLine.push(f.fuelLevel!);
+        prevLap = f.lap!;
+      }
+    }
+    const burns = atLine.slice(1).map((f, i) => atLine[i] - f);
+    expect(burns.every((b) => b > 2.6 && b < 3.1)).toBe(true);
+    expect(Math.max(...burns) - Math.min(...burns)).toBeGreaterThan(0.05);
+  });
+
   it("spreads the four tyres across the heat scale", () => {
     const f = mockPlayerTelemetry(MOCK_START_OFFSET_S);
     const temps = [f.tyres.lf, f.tyres.rf, f.tyres.lr, f.tyres.rr].map(

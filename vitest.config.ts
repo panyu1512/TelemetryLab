@@ -28,6 +28,7 @@ export default defineConfig({
         "src/lib/tableScale.ts",
         "src/lib/tyreFreshness.ts",
         "src/lib/fuelStrategy.ts",
+        "src/lib/fuelHistory.ts",
         "src/lib/coaching.ts",
         "src/lib/radar.ts",
         "src/telemetry/protocol.ts",

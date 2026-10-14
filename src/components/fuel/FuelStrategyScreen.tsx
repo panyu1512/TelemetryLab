@@ -3,9 +3,10 @@
  *
  * A full-bleed overlay screen that turns the player's raw fuel telemetry into
  * live strategy: how much you're burning, whether it lasts to the flag, when to
- * pit, how much to save, and one or two candidate stint plans. All of the math
- * lives in `lib/fuelStrategy.ts`; the sampling/state lives in
- * `hooks/useFuelStrategy.ts`. This file is purely presentation.
+ * pit, how much to save, one or two candidate stint plans, and what every lap
+ * so far has cost. All of the math lives in `lib/fuelStrategy.ts` and
+ * `lib/fuelHistory.ts`; the sampling/state lives in `hooks/useFuelStrategy.ts`.
+ * This file is purely presentation.
  *
  * **Nothing here can be aimed at** — design.md § Dense tabular overlays rule 7.
  * This screen used to carry three controls: a reserve stepper, a pit-fuel
@@ -17,12 +18,19 @@
  * needs to move, rule 7 says its home is the Overlay Manager, not this screen.
  */
 
+import { memo } from "react";
 import { Gauge, Wrench, TriangleAlert, Check, Radio, Leaf } from "lucide-react";
 import { useTelemetry } from "../../hooks/useTelemetry";
 import { useSessionStore } from "../../stores/useSessionStore";
 import { useFuelStrategy } from "../../hooks/useFuelStrategy";
 import type { FuelStatus, FuelStrategy, StintPlan } from "../../lib/fuelStrategy";
-import { num } from "../../lib/format";
+import {
+  fuelHistoryRows,
+  type BurnTone,
+  type FuelHistoryRow,
+  type FuelLap,
+} from "../../lib/fuelHistory";
+import { delta, lapTime, num } from "../../lib/format";
 import { STRIP_H, StripField } from "../timing/SessionStrip";
 
 // ── status metadata ──────────────────────────────────────────────────────────
@@ -81,7 +89,7 @@ export function FuelStrategyScreen() {
   const { data, iracingActive } = useTelemetry();
   const session = useSessionStore((s) => s.session);
 
-  const { strategy, sampleCount, outOfFuel } = useFuelStrategy(data, session, {
+  const { strategy, sampleCount, outOfFuel, history } = useFuelStrategy(data, session, {
     marginLaps: MARGIN_LAPS,
     pitFuel: PIT_FUEL,
   });
@@ -113,6 +121,8 @@ export function FuelStrategyScreen() {
           </div>
 
           <PlansCard strategy={strategy} />
+
+          <HistoryCard history={history} reference={strategy.perLap} />
         </div>
       )}
     </div>
@@ -476,6 +486,128 @@ function PlanRow({ plan, primary }: { plan: StintPlan; primary: boolean }) {
       {primary && (
         <span className="label-caps shrink-0 text-primary">Best</span>
       )}
+    </div>
+  );
+}
+
+// ── lap history ──────────────────────────────────────────────────────────────
+
+/**
+ * Lap, burn, the burn against the average, lap time, tank at the line. The
+ * lap column has room for a `PIT` tag after a three-digit lap.
+ */
+const HISTORY_COLS =
+  "grid grid-cols-[3.25rem_minmax(0,1fr)_minmax(0,1fr)_minmax(0,1.5fr)_minmax(0,1fr)] gap-x-2";
+
+/** Ink for a lap's burn against the average: less is a gain, more a loss. */
+const TONE_INK: Record<BurnTone, string> = {
+  lower: "text-accent",
+  higher: "text-danger",
+  even: "text-faint",
+};
+
+/**
+ * What every lap has cost, newest first, under the plans — the one place a
+ * thirsty lap, a fuel-save lap or a stop shows as itself rather than as a
+ * nudge to a five-lap average.
+ *
+ * Drawn as the dense tables are: a hairline under each row and no vertical
+ * rules, mono figures right-aligned so they line up digit for digit. It does
+ * carry column labels, which Standings and Relative leave off by default —
+ * there the labels cost height in every group, here one row of them heads
+ * every lap, and four columns of bare litres and seconds are not learnable
+ * the way a standings row is.
+ *
+ * Memoised: the screen re-renders every telemetry frame, and the table only
+ * changes when a lap does — `history` and the average keep their identity
+ * until then.
+ */
+const HistoryCard = memo(function HistoryCard({
+  history,
+  reference,
+}: {
+  history: readonly FuelLap[];
+  reference: number | null;
+}) {
+  const rows = fuelHistoryRows(history, reference);
+
+  return (
+    <Section title="Fuel per lap">
+      {rows.length === 0 ? (
+        <p className="text-xs text-muted">
+          Each lap&rsquo;s burn appears here as you complete it.
+        </p>
+      ) : (
+        <div role="table" aria-label="Fuel used per lap">
+          <div role="row" className={`${HISTORY_COLS} timing-row-rule pb-1.5`}>
+            <ColumnLabel align="start">Lap</ColumnLabel>
+            <ColumnLabel unit="L">Used</ColumnLabel>
+            <ColumnLabel unit="L">Δ Avg</ColumnLabel>
+            <ColumnLabel>Time</ColumnLabel>
+            <ColumnLabel unit="L">Tank</ColumnLabel>
+          </div>
+          {rows.map((row) => (
+            <HistoryRow key={row.lap} row={row} />
+          ))}
+        </div>
+      )}
+    </Section>
+  );
+});
+
+/** A column's label, with its unit after it a step dimmer — the litres
+ *  columns carry it once here rather than on every figure. */
+function ColumnLabel({
+  align = "end",
+  unit,
+  children,
+}: {
+  align?: "start" | "end";
+  unit?: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <span
+      role="columnheader"
+      className={`label-caps ${align === "end" ? "text-right" : ""}`}
+    >
+      {children}
+      {unit && <span className="text-faint"> {unit}</span>}
+    </span>
+  );
+}
+
+/**
+ * One lap. The burn is the row's figure, in the data ink; everything else is
+ * context, in the label grey. A burn scaled up from part of a lap — the first
+ * lap watched, an out-lap from the pit exit — is marked `~`, as the stint's
+ * `of ~N` is: honest about being an estimate without a footnote to read.
+ */
+function HistoryRow({ row }: { row: FuelHistoryRow }) {
+  return (
+    <div
+      role="row"
+      className={`${HISTORY_COLS} timing-row-rule h-6 items-center text-cell`}
+    >
+      <span role="cell" className="flex items-baseline gap-1.5">
+        <span className="tnum text-muted">{row.lap}</span>
+        {row.pit && <span className="label-caps text-faint">Pit</span>}
+      </span>
+      <span role="cell" className="tnum text-right font-medium text-text">
+        {row.used == null ? "—" : `${row.estimated ? "~" : ""}${row.used.toFixed(2)}`}
+      </span>
+      <span
+        role="cell"
+        className={`tnum text-right ${row.tone ? TONE_INK[row.tone] : "text-faint"}`}
+      >
+        {row.delta == null ? "—" : delta(row.delta, 2)}
+      </span>
+      <span role="cell" className="tnum text-right text-muted">
+        {lapTime(row.lapTime)}
+      </span>
+      <span role="cell" className="tnum text-right text-muted">
+        {row.fuelLeft.toFixed(1)}
+      </span>
     </div>
   );
 }

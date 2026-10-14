@@ -302,7 +302,7 @@ On Windows the real bridge talks to iRacing; on macOS and Linux a mock bridge ge
 │   ├── telemetry/            # Wire protocol, typed models, WS connection
 │   │   └── protocol.test.ts  # Wire-envelope parser specs
 │   ├── stores/               # Zustand stores (session/telemetry/standings/bridge)
-│   ├── lib/                  # Pure helpers (format/scales/fuelStrategy/coaching/radar) + *.test.ts
+│   ├── lib/                  # Pure helpers (format/scales/fuelStrategy/fuelHistory/coaching/radar) + *.test.ts
 │   ├── hooks/
 │   │   ├── useBridge.ts      # Owns the WS connection; feeds the stores
 │   │   └── useTelemetry.ts   # Single-car compatibility selector
@@ -435,7 +435,7 @@ npm test                # vitest run
 npm run test:coverage   # with coverage thresholds
 ```
 
-Specs sit next to the code they exercise (`*.test.ts`) and cover the value formatters, the tyre-heat colour scale, the wire-protocol parser, the full fuel-and-strategy solver, and the coach's tip selection and wording.
+Specs sit next to the code they exercise (`*.test.ts`) and cover the value formatters, the tyre-heat colour scale, the wire-protocol parser, the full fuel-and-strategy solver, the per-lap fuel history, and the coach's tip selection and wording.
 
 <details>
 <summary><b>Continuous integration and how a release is cut</b></summary>

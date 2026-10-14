@@ -490,9 +490,12 @@ export function mockPlayerTelemetry(t: number): PlayerTelemetry {
   const radar = mockRadar(t);
 
   // Fuel: burned down a stint, refilled at the stop. Monotonic within a stint,
-  // which is what lets both fuel readouts sample a per-lap burn from it.
+  // which is what lets both fuel readouts sample a per-lap burn from it. Each
+  // lap burns its own amount (`mockBurn`), so the fuel screen's lap table has
+  // something to show.
   const stintLap = lap % STINT_LAPS;
-  const burned = (stintLap + pct) * BURN_PER_LAP;
+  let burned = pct * mockBurn(lap);
+  for (let k = lap - stintLap; k < lap; k++) burned += mockBurn(k);
   const fuelLevel = Math.max(1.2, TANK_CAPACITY - burned);
   const fuelPct = fuelLevel / TANK_CAPACITY;
 
@@ -1321,6 +1324,17 @@ function lapAnalysis(lap: number, delta: number): CornerAnalysis[] {
     target.timeLost = round(target.timeLost + residue, 3);
   }
   return out;
+}
+
+/**
+ * Litres the mock player burns on lap `k`: the base, give or take 3.5 %, and
+ * more on a quicker lap — the variation follows the same wave as
+ * {@link mockLapTime}, inverted, so the fuel table pairs a thirsty lap with a
+ * fast one the way a real stint does.
+ */
+function mockBurn(k: number): number {
+  const car = MOCK_FIELD[MOCK_PLAYER_IDX];
+  return BURN_PER_LAP * (1 - 0.035 * Math.sin((k + 1) * 1.7 + car.idx));
 }
 
 /**
