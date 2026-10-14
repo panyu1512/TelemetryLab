@@ -35,16 +35,23 @@ const store = () => useCoachUiStore.getState();
 beforeEach(() => {
   backing.clear();
   bus.broadcasts.length = 0;
-  useCoachUiStore.setState({ minLoss: 0.05, tipCount: 2, showCorners: true, showLapStrip: true });
+  useCoachUiStore.setState({
+    minLoss: 0.05,
+    tipCount: 2,
+    showCorners: true,
+    showLapStrip: true,
+    showSessionBest: true,
+  });
 });
 
 describe("useCoachUiStore", () => {
-  it("defaults to a 0.05 s threshold, two tips, corners and strip on", () => {
+  it("defaults to a 0.05 s threshold, two tips, corners, strip and session best on", () => {
     expect(store()).toMatchObject({
       minLoss: 0.05,
       tipCount: 2,
       showCorners: true,
       showLapStrip: true,
+      showSessionBest: true,
     });
   });
 
@@ -63,19 +70,26 @@ describe("useCoachUiStore", () => {
   it("persists and broadcasts every change", () => {
     store().setShowLapStrip(false);
     store().setShowCorners(false);
+    store().setShowSessionBest(false);
     expect(JSON.parse(backing.get(KEY)!)).toMatchObject({
       showLapStrip: false,
       showCorners: false,
+      showSessionBest: false,
     });
     expect(bus.broadcasts[bus.broadcasts.length - 1]).toEqual({
       topic: "coach-ui:changed",
-      payload: expect.objectContaining({ showCorners: false }),
+      payload: expect.objectContaining({ showCorners: false, showSessionBest: false }),
     });
   });
 
   it("adopts a remote change without echoing it, filling gaps with defaults", () => {
     bus.handlers["coach-ui:changed"]({ tipCount: 3, minLoss: 99 });
-    expect(store()).toMatchObject({ tipCount: 3, minLoss: 0.3, showCorners: true });
+    expect(store()).toMatchObject({
+      tipCount: 3,
+      minLoss: 0.3,
+      showCorners: true,
+      showSessionBest: true,
+    });
     expect(bus.broadcasts).toHaveLength(0);
     bus.handlers["coach-ui:changed"](undefined);
     expect(store().tipCount).toBe(3);

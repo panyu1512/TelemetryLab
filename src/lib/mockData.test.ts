@@ -420,6 +420,27 @@ describe("mockCoaching", () => {
     }
   });
 
+  it("holds every lap against the session best, and the corners add up to it", () => {
+    let sawRival = false;
+    for (let lap = 2; lap < 60; lap++) {
+      const t = (lap + 0.4) * MOCK_FIELD[MOCK_PLAYER_IDX].pace;
+      const p = mockCoaching(t);
+      expect(p.sessionBest).toBeTruthy();
+      if (p.state !== "analysed") continue;
+      const vs = p.vsBest!;
+      expect(vs.delta).toBeCloseTo(p.lastLap!.lapTime - vs.lapTime, 3);
+      const sum = vs.corners.reduce((a, x) => a + x.timeLost, 0);
+      expect(sum).toBeCloseTo(vs.delta, 2);
+      expect(vs.corners).toHaveLength(6);
+      // The session best never gets slower, and the player only holds it
+      // with a lap of their own.
+      expect(p.sessionBest!.lapTime).toBeLessThanOrEqual(vs.lapTime);
+      if (vs.isPlayer) expect(vs.carIdx).toBe(MOCK_PLAYER_IDX);
+      else sawRival = true;
+    }
+    expect(sawRival).toBe(true);
+  });
+
   it("adds up: the corners always sum to the lap delta", () => {
     for (let lap = 2; lap < 60; lap++) {
       const t = (lap + 0.4) * MOCK_FIELD[MOCK_PLAYER_IDX].pace;
