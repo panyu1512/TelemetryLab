@@ -31,6 +31,10 @@ CAR_IDX_VARS = (
     # Not an array: the one carIdx keying the radio right now, -1 when nobody
     # is. It rides the same read so the standings row can say who is talking.
     "RadioTransmitCarIdx",
+    # Not an array either: the sim clock of the tick these arrays came from.
+    # The coach times every car's laps off it (`coaching/field.py`), and the
+    # player frame's clock can be a tick older than this read.
+    "SessionTime",
 )
 
 

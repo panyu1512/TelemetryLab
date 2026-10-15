@@ -50,6 +50,7 @@ import { useDashboardLayout } from "../../hooks/useDashboardLayout";
 import { DashboardGrid } from "../layout/DashboardGrid";
 import { PanelHeader } from "../ui/PanelHeader";
 import { applyTheme, getTheme } from "../../themes";
+import { appearanceStyle, effectiveThemeId } from "../../lib/overlayVisibility";
 
 /**
  * The overlay's natural render size — matches the default spawned overlay
@@ -477,8 +478,7 @@ function WidgetStackView({
   const dashboard = getDashboard(overlayId);
   const store = useOverlayConfigStore();
   const { appearance } = store.getOverlaySettings(overlayId);
-  const themeId = appearance.themeId ?? store.globalSettings.themeId;
-  const theme = getTheme(themeId);
+  const theme = getTheme(effectiveThemeId(appearance, store.globalSettings.themeId));
   const enabledMap = useWidgetSelectionStore((s) => s.enabled);
   const data = useTelemetryStore((s) => s.telemetry);
 
@@ -489,11 +489,6 @@ function WidgetStackView({
 
   const enabled = dashboard.widgets.filter((w) => enabledMap[w.id] !== false);
   const disabledCount = dashboard.widgets.length - enabled.length;
-
-  const filter =
-    appearance.saturation !== 100 || appearance.brightness !== 100
-      ? `saturate(${appearance.saturation}%) brightness(${appearance.brightness}%)`
-      : undefined;
 
   return (
     <div
@@ -511,7 +506,7 @@ function WidgetStackView({
         <div
           ref={themeRef}
           className="mx-auto flex w-full max-w-[560px] flex-col gap-4 transition-[filter,opacity]"
-          style={{ filter, opacity: appearance.opacity / 100 }}
+          style={appearanceStyle(appearance)}
         >
           {enabled.map((def) => (
             <WidgetPreviewCard key={def.id} def={def} data={data} />
@@ -544,6 +539,24 @@ function WidgetPreviewCard({
   def: WidgetDef;
   data: TelemetryData | null;
 }) {
+  if (def.bare) {
+    // A bare widget paints only its marks over the game, so that is all its
+    // preview paints over the backdrop.
+    return (
+      <div
+        className="pointer-events-none flex flex-col"
+        style={{ height: widgetPreviewHeight(def) }}
+      >
+        <div
+          className="widget-body min-h-0 flex-1 overflow-hidden"
+          style={{ containerType: "size" }}
+        >
+          <def.Component data={data} />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <section
       // `timing-surface` here for the same reason rule 7 exists: the preview
@@ -699,8 +712,7 @@ function OverlayStage({
   const store = useOverlayConfigStore();
   const settings = store.getOverlaySettings(overlayId);
   const { appearance } = settings;
-  const themeId = appearance.themeId ?? store.globalSettings.themeId;
-  const theme = getTheme(themeId);
+  const theme = getTheme(effectiveThemeId(appearance, store.globalSettings.themeId));
 
   const themeRef = useRef<HTMLDivElement>(null);
   const contentRef = useRef<HTMLDivElement>(null);
@@ -726,19 +738,13 @@ function OverlayStage({
     return () => ro.disconnect();
   }, [overlayId, size.w, size.h, onGrow]);
 
-  const filter =
-    appearance.saturation !== 100 || appearance.brightness !== 100
-      ? `saturate(${appearance.saturation}%) brightness(${appearance.brightness}%)`
-      : undefined;
-
   return (
     <div
       ref={themeRef}
       className="pointer-events-none origin-top-left transition-[filter,opacity]"
       style={{
         transform: `scale(${scale})`,
-        filter,
-        opacity: appearance.opacity / 100,
+        ...appearanceStyle(appearance),
       }}
     >
       <div ref={contentRef} style={{ width: size.w }}>

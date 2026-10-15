@@ -16,7 +16,9 @@ Cadences (see the milestone's "update strategy"):
 - standings  ~10 Hz  — computed field order; published only when it changes.
 - session     ~1 Hz  — roster + rules + weather; published only on change.
 - coaching   per lap — the coach reads every telemetry frame and publishes
-  once each time the player completes a lap (and once per new track/car).
+  once each time the player completes a lap (and once per new track/car, and
+  when somebody in the player's class sets a new session best — the coach
+  times every car's laps from the same frames' ``CarIdx`` arrays).
 
 Why these numbers: telemetry drives needles/animations that must feel
 continuous, so it rides the sim's own 60 Hz. Standings move visibly but not
@@ -146,12 +148,16 @@ class BridgeService:
                 continue
             frame = self._source.read_player_frame()
             if frame is not None:
-                frame["radar"] = self._radar_frame(frame)
+                # One read of every car's arrays per frame, shared by the radar
+                # and the coach's field timer. Only once there is a session:
+                # before it nobody's lap means anything.
+                arrays = self._source.read_car_arrays() if self._session_repo.current else {}
+                frame["radar"] = self._radar_frame(frame, arrays)
                 await self._publisher.publish(Channel.TELEMETRY, frame)
-                await self._coach_frame(frame)
+                await self._coach_frame(frame, arrays)
             await asyncio.sleep(1.0 / TELEMETRY_HZ)
 
-    def _radar_frame(self, frame: dict[str, Any]) -> dict[str, Any]:
+    def _radar_frame(self, frame: dict[str, Any], arrays: dict[str, Any]) -> dict[str, Any]:
         """The radar for this frame: the spotter's call, placed on a map."""
         session = self._session_repo.current
         length_m = None
@@ -160,19 +166,33 @@ class BridgeService:
             player_idx = session.driver_car_idx
             length_m = session.track.length_km * 1000.0 if session.track.length_km else None
         spotter = frame.get("carLeftRight")
-        # Off (0 / missing) means the player is not driving: nothing to place,
-        # so skip reading every car's arrays at 60 Hz in the garage.
-        arrays = self._source.read_car_arrays() if length_m and spotter else {}
-        return self._radar.update(spotter, arrays, player_idx, length_m).to_dict()
+        # Off (0 / missing) means the player is not driving: nothing to place.
+        placeable = arrays if length_m and spotter else {}
+        return self._radar.update(spotter, placeable, player_idx, length_m).to_dict()
 
-    async def _coach_frame(self, frame: dict[str, Any]) -> None:
+    async def _coach_frame(
+        self, frame: dict[str, Any], arrays: dict[str, Any] | None = None
+    ) -> None:
         """Feed the coach one frame; publish when it has something new."""
         session = self._session_repo.current
         if session is None:
             return
-        key, length_m = coach_context(session, self._session_repo.drivers_by_idx)
+        drivers = self._session_repo.drivers_by_idx
+        key, length_m = coach_context(session, drivers)
         if self._coach.set_track(key, length_m):
             # A new track or car: tell the overlay it is starting over.
+            await self._publisher.publish(Channel.COACHING, self._coach.snapshot().to_dict())
+        # The arrays' own tick when the source sends it, else the frame's.
+        clock = arrays.get("SessionTime") if arrays else None
+        if clock is None:
+            clock = frame.get("sessionTime")
+        if arrays and self._coach.feed_field(
+            clock,
+            arrays,
+            class_rivals(session.driver_car_idx, drivers),
+            session.driver_car_idx,
+        ):
+            # Somebody set a new session best: the strip shows it straight away.
             await self._publisher.publish(Channel.COACHING, self._coach.snapshot().to_dict())
         traffic = traffic_near(session.driver_car_idx, self._car_repo.timings, length_m)
         snap = self._coach.feed(frame, traffic)
@@ -186,6 +206,24 @@ class BridgeService:
             self._standings_loop(),
             self._telemetry_loop(),
         )
+
+
+def class_rivals(player_car_idx: int, drivers_by_idx: dict[int, Any]) -> list[int]:
+    """The cars whose laps can be the player's session best: same class, racing.
+
+    The player's class, because a GT4 held against an LMP2's lap is losing
+    time in every corner for reasons no driver can fix. In a one-class
+    session that is everybody. Pace car and spectators never count.
+    """
+    player = drivers_by_idx.get(player_car_idx)
+    klass = getattr(player, "car_class_id", None)
+    return [
+        idx
+        for idx, d in drivers_by_idx.items()
+        if not getattr(d, "is_pace_car", False)
+        and not getattr(d, "is_spectator", False)
+        and (klass is None or getattr(d, "car_class_id", None) == klass)
+    ]
 
 
 def coach_context(session: SessionInfo, drivers_by_idx: dict[int, Any]) -> tuple[str, float | None]:

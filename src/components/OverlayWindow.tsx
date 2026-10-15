@@ -23,6 +23,12 @@ import { OverlayChrome } from "./OverlayChrome";
 import { getDashboard } from "../dashboards/registry";
 import { useOverlayConfigStore } from "../stores/useOverlayConfigStore";
 import { useSessionStore } from "../stores/useSessionStore";
+import {
+  appearanceStyle,
+  effectiveThemeId,
+  isOverlayHidden,
+  visibilityConditions,
+} from "../lib/overlayVisibility";
 import { getTheme, applyTheme } from "../themes";
 import { initWindow } from "../stores/useWindowStore";
 
@@ -40,14 +46,10 @@ export function OverlayWindow({ id }: { id: string }) {
   // when the session matches a "hide when in" rule. The window stays open (so it
   // still restores), but paints nothing while hidden.
   const session = useSessionStore((s) => s.session);
-  const isReplay =
-    session?.sessionStateLabel === "Replay" ||
-    (session?.flags ?? []).includes("replay");
-  const isLoneQualify = (session?.flags ?? []).includes("lone_qualify");
-  const hidden =
-    !settings.enabled ||
-    (settings.visibility.hideOnReplay && isReplay) ||
-    (settings.visibility.hideOnLoneQualify && isLoneQualify);
+  const hidden = isOverlayHidden(
+    settings,
+    visibilityConditions(session, data?.onPitRoad),
+  );
 
   // Transparent, frosted background so the game (or an OBS capture) shows
   // through — a single-overlay render is always "overlay mode". Also remember
@@ -59,24 +61,21 @@ export function OverlayWindow({ id }: { id: string }) {
   }, []);
 
   // Apply this overlay's effective theme (own override, else global default).
-  const effectiveThemeId =
-    settings.appearance.themeId ?? config.globalSettings.themeId;
+  const themeId = effectiveThemeId(
+    settings.appearance,
+    config.globalSettings.themeId,
+  );
   useEffect(() => {
     // A single-overlay window is always an overlay: transparent background.
-    applyTheme(getTheme(effectiveThemeId), true);
-  }, [effectiveThemeId]);
+    applyTheme(getTheme(themeId), true);
+  }, [themeId]);
 
   useEffect(() => {
     document.title = `${dashboard.label} — iRacing Telemetry`;
   }, [dashboard.label]);
 
   // Per-overlay appearance adjustments (saturation / brightness / opacity).
-  const { saturation, brightness, opacity } = settings.appearance;
-  const style: React.CSSProperties = {};
-  if (saturation !== 100 || brightness !== 100) {
-    style.filter = `saturate(${saturation}%) brightness(${brightness}%)`;
-  }
-  if (opacity !== 100) style.opacity = opacity / 100;
+  const style = appearanceStyle(settings.appearance);
 
   return (
     <div className="flex h-full w-full flex-col overflow-hidden bg-bg text-text">

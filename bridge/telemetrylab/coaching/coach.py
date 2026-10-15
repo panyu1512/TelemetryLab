@@ -20,16 +20,28 @@ Lifecycle
 - A clean lap quicker than the reference becomes the new reference — after it
   has been compared with the old one, so a new best still shows where it came
   from.
+
+The session best
+----------------
+Alongside its own reference the coach keeps the **session best**: the fastest
+clean lap anybody in the player's class has driven since it joined this
+context, timed from lap distance by :class:`~.field.FieldLapTimer` (the
+service feeds it every car with :meth:`Coach.feed_field`), or the player's own
+when theirs is quicker. Each lap is held against it corner by corner as well
+(``vsBest``) — the time only, since the coach has nobody else's pedals — and,
+like the reference, a lap that beats it is compared first and kept after.
 """
 
 from __future__ import annotations
 
 from collections import deque
-from dataclasses import dataclass, field
+from collections.abc import Iterable
+from dataclasses import dataclass, field, replace
 from typing import Any
 
 from .compare import DRIVER_CAUSES, CornerAnalysis, compare_lap
 from .corners import Corner, Ring, detect_corners, ring_for
+from .field import FieldLapTimer, TimedLap, compare_to_best, timed_from_resampled
 from .laps import LapRecorder, RecordedLap, ResampledLap, grid_points, resample
 
 #: How many recent compared laps the "N of the last M" tally looks back over.
@@ -48,6 +60,11 @@ class CoachingSnapshot:
     corners: list[dict[str, Any]] = field(default_factory=list)
     analysis: list[CornerAnalysis] = field(default_factory=list)
     laps_analysed: int = 0
+    #: The fastest clean lap in the player's class right now (`TimedLap.ref`).
+    session_best: dict[str, Any] | None = None
+    #: The last lap against the session best as it stood before it: that lap's
+    #: ref, plus ``delta`` and per-corner ``corners``. None when not compared.
+    vs_best: dict[str, Any] | None = None
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -59,6 +76,8 @@ class CoachingSnapshot:
             "corners": self.corners,
             "analysis": [a.to_dict() for a in self.analysis],
             "lapsAnalysed": self.laps_analysed,
+            "sessionBest": self.session_best,
+            "vsBest": self.vs_best,
         }
 
 
@@ -67,9 +86,13 @@ class Coach:
         self._track_key: str | None = None
         self._track_length_m: float | None = None
         self._recorder = LapRecorder()
+        self._field = FieldLapTimer()
+        self._player_car_idx: int | None = None
         self._reset_state()
 
     def _reset_state(self) -> None:
+        self._field.reset()
+        self._best: TimedLap | None = None
         self._reference: ResampledLap | None = None
         self._corners: list[Corner] = []
         self._ring: Ring | None = None
@@ -108,20 +131,67 @@ class Coach:
         self._last = self.analyse(lap)
         return self._last
 
+    def feed_field(
+        self,
+        session_time: Any,
+        arrays: dict[str, Any],
+        cars: Iterable[int],
+        player_car_idx: int,
+    ) -> bool:
+        """Feed one frame of every car's lap distance; True when the session best moved.
+
+        ``cars`` are the cars worth comparing with — the player's class. The
+        player's own laps are left to :meth:`feed`, which has their inputs.
+        """
+        self._player_car_idx = player_car_idx
+        others = [c for c in cars if c != player_car_idx]
+        moved = False
+        for lap in self._field.feed(session_time, arrays, others):
+            if self._best is None or lap.lap_time < self._best.lap_time:
+                self._best = lap
+                moved = True
+        return moved
+
     def snapshot(self) -> CoachingSnapshot:
-        """The latest analysis, or the waiting state before there is one."""
+        """The latest analysis, or the waiting state before there is one.
+
+        Either way it carries the session best as it stands now, so a client
+        sees a new one without waiting for the player's next lap.
+        """
+        best = self._best_ref()
         if self._last is not None:
-            return self._last
+            return replace(self._last, session_best=best)
         return CoachingSnapshot(
             state="waiting",
             track_length_m=self._track_length_m,
             reference=None,
             last_lap=None,
             new_reference=False,
+            session_best=best,
         )
+
+    def _best_ref(self) -> dict[str, Any] | None:
+        return self._best.ref() if self._best is not None else None
 
     # --- analysis -------------------------------------------------------------
     def analyse(self, lap: RecordedLap) -> CoachingSnapshot:
+        snap, current = self._against_reference(lap)
+        if current is not None:
+            best = self._best
+            if best is not None and self._corners:
+                gaps = compare_to_best(current, best, self._corners)
+                snap.vs_best = {
+                    **best.ref(),
+                    "delta": round(current.lap_time - best.lap_time, 3),
+                    "corners": [g.to_dict() for g in gaps],
+                }
+            if current.clean and (best is None or current.lap_time < best.lap_time):
+                self._best = timed_from_resampled(current, self._player_car_idx)
+        snap.session_best = self._best_ref()
+        return snap
+
+    def _against_reference(self, lap: RecordedLap) -> tuple[CoachingSnapshot, ResampledLap | None]:
+        """The coach proper: ``lap`` against the reference, and the lap resampled."""
         last = {
             "lap": lap.lap,
             "lapTime": round(lap.lap_time, 3),
@@ -130,18 +200,19 @@ class Coach:
             "delta": None,
         }
         if not lap.comparable:
-            return self._snap("skipped" if self._reference else "waiting", last, False, [])
+            state = "skipped" if self._reference else "waiting"
+            return self._snap(state, last, False, []), None
 
         points = self._reference.n if self._reference else grid_points(self._track_length_m)
         current = resample(lap, points)
 
         if self._reference is None:
             if not current.clean:
-                return self._snap("waiting", last, False, [])
+                return self._snap("waiting", last, False, []), current
             self._reference = current
             self._ring = ring_for(current, self._track_length_m)
             self._corners = detect_corners(current, self._track_length_m)
-            return self._snap("analysed", last, True, [])
+            return self._snap("analysed", last, True, []), current
 
         ref = self._reference
         ring = self._ring
@@ -156,7 +227,7 @@ class Coach:
         if new_best:
             self._reference = current
             snap.reference = self._lap_ref(current)
-        return snap
+        return snap, current
 
     def _count_repeats(self, analysis: list[CornerAnalysis]) -> None:
         for a in analysis:

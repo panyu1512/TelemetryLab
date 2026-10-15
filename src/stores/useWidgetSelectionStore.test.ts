@@ -1,4 +1,19 @@
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+
+const bus = vi.hoisted(() => ({
+  broadcasts: [] as { topic: string; payload: unknown }[],
+  handlers: {} as Record<string, (payload: unknown) => void>,
+}));
+
+vi.mock("../lib/windowBus", () => ({
+  broadcast: (topic: string, payload: unknown) => {
+    bus.broadcasts.push({ topic, payload });
+  },
+  subscribe: (topic: string, handler: (payload: unknown) => void) => {
+    bus.handlers[topic] = handler;
+    return () => {};
+  },
+}));
 
 import { useWidgetSelectionStore } from "./useWidgetSelectionStore";
 
@@ -13,6 +28,7 @@ beforeEach(() => {
     clear: () => backing.clear(),
   };
   useWidgetSelectionStore.setState({ enabled: {} });
+  bus.broadcasts.length = 0;
 });
 
 afterEach(() => {
@@ -40,5 +56,30 @@ describe("widget selection", () => {
     const raw = localStorage.getItem("telemetrylab.widget-selection.v1");
     expect(raw).toBeTruthy();
     expect(JSON.parse(raw as string)).toMatchObject({ inputs: false });
+  });
+});
+
+describe("cross-window sync", () => {
+  it("broadcasts a toggle so an open widget window can hide itself", () => {
+    store().toggle("radar");
+    expect(bus.broadcasts).toEqual([
+      { topic: "widget-selection:changed", payload: { enabled: { radar: false } } },
+    ]);
+  });
+
+  it("adopts a selection from another window without echoing it", () => {
+    bus.handlers["widget-selection:changed"]({ enabled: { fuel: false } });
+    expect(store().isEnabled("fuel")).toBe(false);
+    expect(store().isEnabled("radar")).toBe(true);
+    expect(bus.broadcasts).toHaveLength(0);
+  });
+
+  it("drops malformed entries and ignores an empty message", () => {
+    bus.handlers["widget-selection:changed"]({
+      enabled: { fuel: false, radar: "no" as unknown as boolean },
+    });
+    expect(store().enabled).toEqual({ fuel: false });
+    bus.handlers["widget-selection:changed"](undefined);
+    expect(store().enabled).toEqual({ fuel: false });
   });
 });

@@ -1,6 +1,7 @@
 /**
  * Options for the coach overlay: the smallest loss worth a tip, how many tips
- * to show, and whether the lap strip and corner list sit under them.
+ * to show, and whether the lap strip, the corner list and the session-best
+ * comparison sit under them.
  * Writes to {@link useCoachUiStore}, which persists and broadcasts over the
  * window bus, so an open coach overlay updates live.
  */
@@ -23,6 +24,8 @@ export function CoachOptionsPanel() {
   const setShowLapStrip = useCoachUiStore((s) => s.setShowLapStrip);
   const showCorners = useCoachUiStore((s) => s.showCorners);
   const setShowCorners = useCoachUiStore((s) => s.setShowCorners);
+  const showSessionBest = useCoachUiStore((s) => s.showSessionBest);
+  const setShowSessionBest = useCoachUiStore((s) => s.setShowSessionBest);
 
   return (
     <div className="space-y-2">
@@ -57,6 +60,12 @@ export function CoachOptionsPanel() {
         description="Every corner's loss or gain against the reference, with its cause."
         checked={showCorners}
         onChange={setShowCorners}
+      />
+      <OptionRow
+        label="Session best"
+        description="Your last lap against the fastest lap anyone in your class has set this session, corner by corner."
+        checked={showSessionBest}
+        onChange={setShowSessionBest}
       />
     </div>
   );

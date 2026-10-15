@@ -17,6 +17,13 @@
  * The analysis lands once per lap, at the line. The headline replays a short
  * fade when it changes — the one moment the driver might glance across for
  * it — and holds still until the next lap.
+ *
+ * Under it, when the bridge has one, the **session best**: the fastest lap
+ * anyone in the player's class has set, and the last lap held against it
+ * corner by corner. Time only — nobody else's pedals are published, so the
+ * causes stay with the coach's own reference — but it answers the other
+ * question a driver has: not "what did I do wrong" but "where is the quick
+ * guy finding it".
  */
 
 import { Check, Flag, GraduationCap, Radio, Repeat2, Trophy } from "lucide-react";
@@ -24,9 +31,10 @@ import { useMemo } from "react";
 import { useBridgeStore } from "../../stores/useBridgeStore";
 import { useCoachingStore } from "../../stores/useCoachingStore";
 import { useCoachUiStore } from "../../stores/useCoachUiStore";
-import { useSessionStore } from "../../stores/useSessionStore";
+import { useDriver, useSessionStore } from "../../stores/useSessionStore";
 import {
   barScale,
+  bestHolder,
   causeTag,
   coachView,
   cornerGrade,
@@ -34,12 +42,14 @@ import {
   gradeColor,
   invalidReasonText,
   lapSegments,
+  vsBestRows,
+  type BestRow,
   type CoachTip,
   type CoachView,
 } from "../../lib/coaching";
 import { lapTime } from "../../lib/format";
 import { deltaColor, signedDelta } from "../../lib/scales";
-import type { CoachingPayload } from "../../telemetry/types";
+import type { CoachingPayload, CoachVsBest, SessionBestRef } from "../../telemetry/types";
 import { STRIP_H, StripField } from "../timing/SessionStrip";
 
 export function CoachScreen() {
@@ -50,6 +60,7 @@ export function CoachScreen() {
   const tipCount = useCoachUiStore((s) => s.tipCount);
   const showCorners = useCoachUiStore((s) => s.showCorners);
   const showLapStrip = useCoachUiStore((s) => s.showLapStrip);
+  const showSessionBest = useCoachUiStore((s) => s.showSessionBest);
 
   const view = useMemo(
     () => coachView(coaching, { minLoss, tipCount }),
@@ -59,7 +70,7 @@ export function CoachScreen() {
 
   return (
     <div className="overlay-card timing-surface flex h-full flex-col overflow-hidden rounded-card">
-      <Strip track={track} coaching={coaching} />
+      <Strip track={track} coaching={coaching} showSessionBest={showSessionBest} />
 
       {/* Not connected: the empty state, whatever was last replayed — the
           bridge forgets its reference when iRacing goes away. */}
@@ -70,6 +81,9 @@ export function CoachScreen() {
           <Headline view={view} />
           {showLapStrip && coaching && coaching.corners.length > 0 && (
             <LapStrip coaching={coaching} minLoss={minLoss} />
+          )}
+          {showSessionBest && coaching?.vsBest && (
+            <SessionBestList coaching={coaching} vsBest={coaching.vsBest} minLoss={minLoss} />
           )}
           {showCorners && compared && <CornerList coaching={coaching} minLoss={minLoss} />}
         </div>
@@ -89,12 +103,15 @@ export function CoachScreen() {
 function Strip({
   track,
   coaching,
+  showSessionBest,
 }: {
   track: string | null;
   coaching: CoachingPayload | null;
+  showSessionBest: boolean;
 }) {
   const ref = coaching?.reference ?? null;
   const last = coaching?.lastLap ?? null;
+  const best = showSessionBest ? (coaching?.sessionBest ?? null) : null;
   return (
     <div
       className="timing-strip flex shrink-0 items-center gap-x-3 overflow-hidden px-2"
@@ -120,7 +137,25 @@ function Strip({
       {last?.delta != null && !coaching?.newReference && (
         <StripField label="Δ" text={signedDelta(last.delta)} color={deltaColor(last.delta)} />
       )}
+      {best && <SessionBestField best={best} />}
     </div>
+  );
+}
+
+/**
+ * The session best on the strip, in the timing screens' purple — the colour
+ * every overall-best lap wears — so it reads as the field's number, not yours.
+ * It moves the moment anybody sets a new one, not at the player's line.
+ */
+function SessionBestField({ best }: { best: SessionBestRef }) {
+  const driver = useDriver(best.carIdx ?? -1);
+  return (
+    <StripField
+      label="Best"
+      text={lapTime(best.lapTime)}
+      color="var(--color-sector-purple)"
+      title={`Session best in your class: ${bestHolder(best, driver)}`}
+    />
   );
 }
 
@@ -403,6 +438,91 @@ function CornerList({ coaching, minLoss }: { coaching: CoachingPayload; minLoss:
         )}
       </div>
     </section>
+  );
+}
+
+// ── session best ─────────────────────────────────────────────────────────────
+
+/**
+ * The last lap against the session best, drawn exactly like the corner list —
+ * a diverging bar per corner and the time — so the two read as one grammar.
+ * No cause column: the bridge times other cars from where they are on the
+ * lap, and has no pedals to say why. The header names the lap it was held
+ * against, which is the session best as it stood when this lap began: a new
+ * one set since moves the strip at once and this list at the next line.
+ */
+function SessionBestList({
+  coaching,
+  vsBest,
+  minLoss,
+}: {
+  coaching: CoachingPayload;
+  vsBest: CoachVsBest;
+  minLoss: number;
+}) {
+  const rows = vsBestRows(coaching);
+  const scale = barScale(rows);
+  const driver = useDriver(vsBest.carIdx ?? -1);
+  const holder = bestHolder(vsBest, driver);
+  return (
+    <section className="rounded-card border border-divider bg-section p-2.5">
+      <div className="mb-2.5 flex items-baseline gap-2">
+        <h3 className="label-caps shrink-0">Session best</h3>
+        <span className="min-w-0 truncate text-small text-muted">
+          {holder} ·{" "}
+          <span className="tnum" style={{ color: "var(--color-sector-purple)" }}>
+            {lapTime(vsBest.lapTime)}
+          </span>
+        </span>
+      </div>
+      <div className="flex flex-col gap-1">
+        {rows.map((r) => (
+          <BestRowLine key={r.corner} row={r} scale={scale} minLoss={minLoss} />
+        ))}
+        <div className="mt-1 grid grid-cols-[2.25rem_1fr_3.75rem_5.5rem] items-center gap-2 border-t border-divider pt-1.5">
+          <span className="label-caps text-text">Lap</span>
+          <span />
+          <span
+            className="tnum text-right text-small font-medium"
+            style={{ color: deltaColor(vsBest.delta) }}
+          >
+            {formatLoss(vsBest.delta)}
+          </span>
+          <span className="label-caps truncate text-faint">vs best</span>
+        </div>
+      </div>
+    </section>
+  );
+}
+
+function BestRowLine({ row, scale, minLoss }: { row: BestRow; scale: number; minLoss: number }) {
+  const grade = cornerGrade(row.timeLost, minLoss);
+  const color = gradeColor(grade);
+  const frac = Math.min(1, Math.abs(row.timeLost) / scale) * 50;
+  return (
+    <div className="grid grid-cols-[2.25rem_1fr_3.75rem_5.5rem] items-center gap-2">
+      <span className="tnum text-small font-medium text-muted">{row.label}</span>
+      <div className="relative h-1" style={{ background: TRACK }}>
+        <div className="absolute inset-y-[-2px] left-1/2 w-px bg-chart-axis" />
+        {grade !== "even" && (
+          <div
+            className="absolute inset-y-0"
+            style={{
+              background: color,
+              width: `${frac}%`,
+              left: row.timeLost < 0 ? `${50 - frac}%` : "50%",
+            }}
+          />
+        )}
+      </div>
+      <span
+        className="tnum text-right text-small font-medium"
+        style={{ color: grade === "even" ? "var(--color-faint)" : color }}
+      >
+        {formatLoss(row.timeLost)}
+      </span>
+      <span />
+    </div>
   );
 }
 

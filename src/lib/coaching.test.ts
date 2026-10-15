@@ -8,6 +8,7 @@ import type {
 import {
   MIN_LOSS_DEFAULT,
   barScale,
+  bestHolder,
   causeDetail,
   causeHeadline,
   causeTag,
@@ -21,6 +22,7 @@ import {
   pickGains,
   pickTips,
   repeatText,
+  vsBestRows,
 } from "./coaching";
 
 const OPTS = { minLoss: MIN_LOSS_DEFAULT, tipCount: 2 };
@@ -330,5 +332,50 @@ describe("lapSegments", () => {
   it("scales bars to the biggest swing, with a floor", () => {
     expect(barScale([a(1, 0.1), a(2, -0.05)])).toBe(0.3);
     expect(barScale([a(1, 0.1), a(2, -0.8)])).toBe(0.8);
+  });
+});
+
+describe("the session best", () => {
+  const vsBest = {
+    carIdx: 7,
+    lap: 9,
+    lapTime: 135.9,
+    isPlayer: false,
+    delta: 1.2,
+    corners: [
+      { corner: 1, timeLost: 0.1 },
+      { corner: 2, timeLost: 0.6 },
+      { corner: 9, timeLost: 0.5 },
+    ],
+  };
+
+  it("labels each corner the way the coach does, in the bridge's order", () => {
+    expect(vsBestRows(payload({ vsBest }))).toEqual([
+      { corner: 1, label: "T1", timeLost: 0.1 },
+      { corner: 2, label: "T2", timeLost: 0.6 },
+      { corner: 9, label: "T9", timeLost: 0.5 },
+    ]);
+  });
+
+  it("has no rows when the lap was not compared, or from an older bridge", () => {
+    expect(vsBestRows(null)).toEqual([]);
+    expect(vsBestRows(payload())).toEqual([]);
+    expect(vsBestRows(payload({ vsBest: null }))).toEqual([]);
+  });
+
+  it("names the holder: you, their name, their number, or the slot", () => {
+    expect(bestHolder({ carIdx: 0, isPlayer: true }, { userName: "ignored" })).toBe("You");
+    expect(bestHolder({ carIdx: 7, isPlayer: false }, { userName: "ana LOPEZ" })).toBe(
+      "Ana Lopez",
+    );
+    expect(bestHolder({ carIdx: 7, isPlayer: false }, { userName: "", carNumber: "44" })).toBe(
+      "#44",
+    );
+    expect(bestHolder({ carIdx: 7, isPlayer: false })).toBe("Car 7");
+    expect(bestHolder({ carIdx: null, isPlayer: false }, null)).toBe("—");
+  });
+
+  it("scales the bars from any rows with a time", () => {
+    expect(barScale(vsBestRows(payload({ vsBest })))).toBe(0.6);
   });
 });

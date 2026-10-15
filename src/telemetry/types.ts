@@ -493,6 +493,34 @@ export interface CoachLastLap extends CoachLapRef {
   delta: number | null;
 }
 
+/**
+ * A lap that is (or was) the session best: the fastest clean lap in the
+ * player's class, timed by the bridge from lap distance (`coaching/field.py`).
+ */
+export interface SessionBestRef {
+  /** Whose lap; resolve the name through the session roster. */
+  carIdx: number | null;
+  lap: number | null;
+  lapTime: number;
+  /** The player's own lap — the session best is theirs. */
+  isPlayer: boolean;
+}
+
+/** One corner of the last lap against the session best: time only, no cause. */
+export interface CornerBestGap {
+  /** {@link CoachCorner.number}. */
+  corner: number;
+  /** Seconds: + lost to the session best, − gained on it. Sums to `delta`. */
+  timeLost: number;
+}
+
+/** The last lap against the session best as it stood before that lap. */
+export interface CoachVsBest extends SessionBestRef {
+  /** Lap time minus the session best's. */
+  delta: number;
+  corners: CornerBestGap[];
+}
+
 /** The `coaching` channel payload. */
 export interface CoachingPayload {
   /**
@@ -508,4 +536,11 @@ export interface CoachingPayload {
   corners: CoachCorner[];
   analysis: CornerAnalysis[];
   lapsAnalysed: number;
+  /**
+   * The session best right now, updated the moment anybody sets one. Optional
+   * so an older bridge still parses: it simply has no session best.
+   */
+  sessionBest?: SessionBestRef | null;
+  /** The last lap against the session best; null when it was not compared. */
+  vsBest?: CoachVsBest | null;
 }

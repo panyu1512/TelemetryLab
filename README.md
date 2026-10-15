@@ -80,7 +80,7 @@ Each overlay lives in its own frameless, always-on-top window rather than inside
 
 <br>
 
-Every lap you complete is lined up against your quickest clean lap, metre by metre, and split into corners. Each corner gets the time it cost and the reason — braked 14 m early, coasted off both pedals, over-slowed the apex, back on the throttle late — and the Coach overlay says the one or two that matter, with a "4 of the last 6 laps" when it is a habit rather than a one-off. The corner losses always add up to the lap delta, laps through the pits or with a reset are never compared, and an off-track lap is compared but never becomes your reference. Corners driven in traffic are marked as traffic, not blamed on you. It all runs locally in the bridge, on the telemetry iRacing already exposes.
+Every lap you complete is lined up against your quickest clean lap, metre by metre, and split into corners. Each corner gets the time it cost and the reason — braked 14 m early, coasted off both pedals, over-slowed the apex, back on the throttle late — and the Coach overlay says the one or two that matter, with a "4 of the last 6 laps" when it is a habit rather than a one-off. The corner losses always add up to the lap delta, laps through the pits or with a reset are never compared, and an off-track lap is compared but never becomes your reference. Corners driven in traffic are marked as traffic, not blamed on you. Under that, your lap is also held against the **session best** — the fastest clean lap anyone in your class has set, timed by the bridge from every car's lap distance — corner by corner, so you can see where the quickest driver out there is finding the time (how much, not why: iRacing publishes nobody's pedals but yours). It all runs locally in the bridge, on the telemetry iRacing already exposes.
 
 <div align="center">
   <img src="site/assets/coach.png" alt="The Coach overlay: a headline tip for T4 reading 'Coasted off both pedals' with the time it cost, a second tip for T3 'Braked early' marked as a habit on most recent laps, a strip of the lap coloured by where time went, and every corner's loss or gain as a bar with its cause" width="620">
@@ -93,7 +93,7 @@ Every lap you complete is lined up against your quickest clean lap, metre by met
 
 <br>
 
-On a single monitor the car in your blind spot is a voice, not a picture. The **Radar** widget draws it: your car in the middle, the spotter's side lit red, and each car alongside placed where it is — how many metres ahead or behind, and the angle it sits at from your nose (90° is door to door, 150° is a nose at your rear wheel). Cars closing from behind or ahead show up before they are alongside. iRacing's own spotter (`CarLeftRight`) decides whether a side is occupied; the bridge only adds where along you the car is, from every car's lap distance. iRacing publishes no lateral position, so a car alongside is drawn one lane over (two, when the spotter calls two cars on that side) — the gap is measured, the lane is assumed.
+On a single monitor the car in your blind spot is a voice, not a picture. The **Radar** widget is two lines and nothing else — one down each side of its window, no panel, no background, no text. Size the window to sit either side of your car: a car alongside lights the stretch of the line it covers, red while it overlaps you, and as it comes past the mark slides up the line exactly as it slides up your door. iRacing's own spotter (`CarLeftRight`) decides whether a side is lit; the bridge only adds where along you the car is, from every car's lap distance — which is measured, so it is the only thing drawn. A second car on the same side lights a second line beyond the first.
 
 </details>
 
@@ -317,7 +317,7 @@ On Windows the real bridge talks to iRacing; on macOS and Linux a mock bridge ge
 │   └── Cargo.toml
 ├── bridge/                   # Python sidecar
 │   ├── telemetrylab/         # Shared core: protocol, models, repos, service
-│   │   ├── coaching/         # Lap recorder, corner detection, per-corner causes
+│   │   ├── coaching/         # Lap recorder, corner detection, per-corner causes, session best
 │   │   ├── radar.py          # Places the spotter's call: who is alongside, where
 │   │   └── mocktrack.py      # Synthetic Spa lap with known mistakes (mock + tests)
 │   ├── tests/                # pytest suite (unit + service integration)
@@ -367,7 +367,7 @@ The bridge multiplexes several **channels** over the single WebSocket, each in a
 | `standings` | ~5–10 Hz (on change) | Computed field order: positions, gaps, per-car timing, pit state, who is on the radio. |
 | `session`   | on change / ~1 Hz    | Driver roster, session/track/weather metadata, flags, SOF.           |
 | `bridge`    | on change            | `{ iracingActive }` — replaces the old `{connected:false}` heartbeat. |
-| `coaching`  | once per lap         | The last lap against your reference, corner by corner: loss and cause. |
+| `coaching`  | once per lap         | The last lap against your reference (loss and cause) and the session best (loss), corner by corner. |
 
 Stateful channels (`session` / `standings` / `bridge` / `coaching`) are **replayed on connect**, so a client that joins mid-session renders the current world immediately instead of waiting for the next tick.
 

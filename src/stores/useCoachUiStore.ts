@@ -25,10 +25,16 @@ export interface CoachUiState {
   showCorners: boolean;
   /** Show the lap as a strip, each corner's stretch in its grade's colour. */
   showLapStrip: boolean;
+  /**
+   * Show the session best — the fastest lap in the player's class — on the
+   * strip, and the last lap against it corner by corner.
+   */
+  showSessionBest: boolean;
   setMinLoss: (v: number) => void;
   setTipCount: (n: number) => void;
   setShowCorners: (v: boolean) => void;
   setShowLapStrip: (v: boolean) => void;
+  setShowSessionBest: (v: boolean) => void;
 }
 
 const STORAGE_KEY = "telemetrylab.coach.ui.v1";
@@ -38,6 +44,7 @@ export interface Persisted {
   tipCount: number;
   showCorners: boolean;
   showLapStrip: boolean;
+  showSessionBest: boolean;
 }
 
 const DEFAULTS: Persisted = {
@@ -45,6 +52,7 @@ const DEFAULTS: Persisted = {
   tipCount: TIP_COUNT_DEFAULT,
   showCorners: true,
   showLapStrip: true,
+  showSessionBest: true,
 };
 
 export function clampMinLoss(v: number): number {
@@ -63,6 +71,7 @@ function sanitize(raw: Partial<Persisted> | null | undefined): Persisted {
     tipCount: clampTipCount(raw?.tipCount ?? DEFAULTS.tipCount),
     showCorners: raw?.showCorners ?? DEFAULTS.showCorners,
     showLapStrip: raw?.showLapStrip ?? DEFAULTS.showLapStrip,
+    showSessionBest: raw?.showSessionBest ?? DEFAULTS.showSessionBest,
   };
 }
 
@@ -88,8 +97,8 @@ let applyingRemote = false;
 
 export const useCoachUiStore = create<CoachUiState>((set, get) => {
   const save = () => {
-    const { minLoss, tipCount, showCorners, showLapStrip } = get();
-    const snapshot: Persisted = { minLoss, tipCount, showCorners, showLapStrip };
+    const { minLoss, tipCount, showCorners, showLapStrip, showSessionBest } = get();
+    const snapshot: Persisted = { minLoss, tipCount, showCorners, showLapStrip, showSessionBest };
     persist(snapshot);
     if (!applyingRemote) broadcast("coach-ui:changed", snapshot);
   };
@@ -109,6 +118,10 @@ export const useCoachUiStore = create<CoachUiState>((set, get) => {
     },
     setShowLapStrip: (showLapStrip) => {
       set({ showLapStrip });
+      save();
+    },
+    setShowSessionBest: (showSessionBest) => {
+      set({ showSessionBest });
       save();
     },
   };

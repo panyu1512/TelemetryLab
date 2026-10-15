@@ -7,6 +7,48 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Coach: your lap against the session best.** The Coach now also holds
+  every lap you complete against the fastest clean lap anyone in your class
+  has set this session — yours included — corner by corner, so you can see
+  where the quickest driver out there is finding the time. The strip shows
+  that lap time as `BEST`, in the purple the timing screens use for the
+  overall best, and updates the moment someone beats it; a new **Session
+  best** section under the tips names who set it and lists what each corner
+  cost or gained you against it, adding up to the lap gap. It says how much,
+  not why: iRacing publishes nobody's pedals but yours, so the causes stay
+  with the coach's comparison against your own best. In a multi-class race
+  you are compared with your own class only. It can be switched off under
+  Coach → Coaching → Session best in the Manager. Needs the updated bridge;
+  with an older one the section stays hidden.
+
+### Changed
+
+- **The Radar is just two lines now.** No panel, no background, no header,
+  no text: one line down each side of the window. A car alongside lights
+  the stretch of the line it covers — red while it overlaps you, amber once
+  it is clear by a nose — and as it comes past, the mark slides up the line
+  exactly as it slides up your door, so you can see at a glance whether the
+  car overtaking you is at your rear wheel, level, or past your nose. The old
+  map showed an angle that assumed how far across the track the other car
+  was (iRacing never says) and drew a car closing from behind in your own
+  lane until it jumped sideways; both are gone, and only what is measured is
+  drawn. Size the window to sit either side of your car.
+
+### Fixed
+
+- **The Dashboard's Enabled switch, Appearance and Visibility settings now
+  reach its widget windows.** A widget opened in its own window ignored them
+  — they changed the Manager's preview and nothing over the game. Turning the
+  Dashboard off now hides its widget windows, the theme and the saturation,
+  brightness and opacity sliders apply to them live, and so do the "Hide
+  when" rules. Turning a single widget off in the Widgets list hides its open
+  window too. The windows stay open while hidden, so they come back where
+  they were.
+- **"Hide when: In the pits" now works,** on every overlay. The rule was
+  saved but never checked.
+
 ## [1.26.0] - 2026-10-14
 
 ### Added

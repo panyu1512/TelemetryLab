@@ -18,7 +18,9 @@ import type {
   CoachInvalidReason,
   CoachingPayload,
   CornerAnalysis,
+  SessionBestRef,
 } from "../telemetry/types";
+import { formatDriverName } from "./driverName";
 
 export interface CoachOptions {
   /** The smallest loss, in seconds, worth a tip. */
@@ -385,6 +387,48 @@ export function lapSegments(
  * swing on this lap, but never under 0.3 s — so a lap of small losses does
  * not draw them as full-width alarms.
  */
-export function barScale(analysis: CornerAnalysis[]): number {
+export function barScale(analysis: ReadonlyArray<{ timeLost: number }>): number {
   return analysis.reduce((m, a) => Math.max(m, Math.abs(a.timeLost)), 0.3);
+}
+
+// ── the session best ─────────────────────────────────────────────────────────
+
+/** One corner of the last lap against the session best, ready to draw. */
+export interface BestRow {
+  corner: number;
+  label: string;
+  /** Seconds: + lost to the session best, − gained on it. */
+  timeLost: number;
+}
+
+/**
+ * The last lap's corners against the session best, in the coach's corner
+ * order with the coach's labels. Empty when the lap was not compared (an
+ * older bridge, no session best yet, or a lap that was not timed).
+ */
+export function vsBestRows(payload: CoachingPayload | null): BestRow[] {
+  const vs = payload?.vsBest;
+  if (!vs) return [];
+  const label = new Map(payload.corners.map((c) => [c.number, c.label]));
+  return vs.corners.map((c) => ({
+    corner: c.corner,
+    label: label.get(c.corner) ?? `T${c.corner}`,
+    timeLost: c.timeLost,
+  }));
+}
+
+/**
+ * Who holds a session best, as the overlay names them: "You" for the player's
+ * own lap, else the driver's name from the roster, else their car number,
+ * else the car slot.
+ */
+export function bestHolder(
+  ref: Pick<SessionBestRef, "carIdx" | "isPlayer">,
+  driver?: { userName?: string | null; carNumber?: string | null } | null,
+): string {
+  if (ref.isPlayer) return "You";
+  const name = formatDriverName(driver?.userName);
+  if (name) return name;
+  if (driver?.carNumber) return `#${driver.carNumber}`;
+  return ref.carIdx != null ? `Car ${ref.carIdx}` : "—";
 }

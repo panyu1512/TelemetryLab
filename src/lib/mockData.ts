@@ -11,11 +11,14 @@
  */
 
 import { clutchFor, cornerSeverity, pedalsFor } from "./drivingInputs";
+import { lapSegments } from "./coaching";
 import type {
   ClassStanding,
   CoachCause,
   CoachCorner,
+  CoachVsBest,
   CoachingPayload,
+  SessionBestRef,
   CornerAnalysis,
   DriverEntry,
   PlayerTelemetry,
@@ -1362,8 +1365,67 @@ function referenceBefore(k: number): { lap: number; lapTime: number } | null {
 }
 
 /**
+ * The quickest rival in the player's class: its best lap is the race board's
+ * (`pace - 0.8`, as the standings have it), set on an early lap.
+ */
+const MOCK_RIVAL_BEST: SessionBestRef = (() => {
+  const me = MOCK_FIELD[MOCK_PLAYER_IDX];
+  const rival = MOCK_FIELD.filter((c) => c.klass === me.klass && c.idx !== me.idx).reduce(
+    (a, b) => (b.pace < a.pace ? b : a),
+  );
+  return { carIdx: rival.idx, lap: 3, lapTime: round(rival.pace - 0.8, 3), isPlayer: false };
+})();
+
+/**
+ * The session best as it stood before lap `k` was completed: the rival's,
+ * unless the player's own reference beats it — the bridge keeps both, as
+ * `Coach.analyse` does.
+ */
+function sessionBestBefore(k: number): SessionBestRef {
+  const own = referenceBefore(k);
+  if (own && own.lapTime < MOCK_RIVAL_BEST.lapTime) {
+    return { carIdx: MOCK_PLAYER_IDX, lap: own.lap, lapTime: own.lapTime, isPlayer: true };
+  }
+  return MOCK_RIVAL_BEST;
+}
+
+/**
+ * Lap `k` against the session best. The mock has no rival trace to subtract,
+ * so each corner's gap is its loss to the player's own reference plus the
+ * reference's deficit to the session best, shared out by how long the
+ * corner's segment is — the way a rival quicker everywhere would show. It
+ * keeps the invariant that matters: the corners add up to the lap's delta.
+ */
+function mockVsBest(
+  k: number,
+  lapTimeS: number,
+  ref: { lapTime: number },
+  analysis: CornerAnalysis[],
+): CoachVsBest {
+  const best = sessionBestBefore(k);
+  const deficit = ref.lapTime - best.lapTime;
+  const share = new Map<number, number>();
+  for (const seg of lapSegments([...MOCK_COACH_CORNERS], analysis)) {
+    share.set(seg.corner, (share.get(seg.corner) ?? 0) + (seg.to - seg.from));
+  }
+  const delta = round(lapTimeS - best.lapTime, 3);
+  const corners = analysis.map((a) => ({
+    corner: a.corner,
+    timeLost: round(a.timeLost + deficit * (share.get(a.corner) ?? 0), 3),
+  }));
+  const residue = round(delta - corners.reduce((sum, c) => sum + c.timeLost, 0), 3);
+  if (residue !== 0 && corners.length > 0) {
+    const target = corners.reduce((x, c) => (Math.abs(c.timeLost) > Math.abs(x.timeLost) ? c : x));
+    target.timeLost = round(target.timeLost + residue, 3);
+  }
+  return { ...best, delta, corners };
+}
+
+/**
  * The `coaching` payload for mock time `t`: the last completed lap against
- * the quickest clean lap before it, exactly as the bridge's coach keeps it.
+ * the quickest clean lap before it, exactly as the bridge's coach keeps it —
+ * and against the session best, which a rival in the player's class holds
+ * until the player beats it.
  */
 export function mockCoaching(t: number): CoachingPayload {
   const car = MOCK_FIELD[MOCK_PLAYER_IDX];
@@ -1379,12 +1441,15 @@ export function mockCoaching(t: number): CoachingPayload {
       corners: [],
       analysis: [],
       lapsAnalysed: 0,
+      sessionBest: MOCK_RIVAL_BEST,
+      vsBest: null,
     };
   }
   const lapTimeS = mockLapTime(lap);
   const delta = round(lapTimeS - ref.lapTime, 3);
   const valid = isCleanLap(lap);
   const newReference = valid && delta < 0;
+  const analysis = lapAnalysis(lap, delta);
   return {
     state: "analysed",
     trackLengthM: MOCK_TRACK_M,
@@ -1398,8 +1463,10 @@ export function mockCoaching(t: number): CoachingPayload {
     },
     newReference,
     corners: [...MOCK_COACH_CORNERS],
-    analysis: lapAnalysis(lap, delta),
+    analysis,
     lapsAnalysed: Math.max(0, lap - 1),
+    sessionBest: sessionBestBefore(lap + 1),
+    vsBest: mockVsBest(lap, lapTimeS, ref, analysis),
   };
 }
 
