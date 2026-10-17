@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.27.1] - 2026-10-17
+
 ### Changed
 
 - **A new website, in English and Spanish.** telemetrylab.app is now laid out
@@ -778,7 +780,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.0...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.1...HEAD
+[1.27.1]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.0...v1.27.1
 [1.27.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.26.0...v1.27.0
 [1.26.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.25.0...v1.26.0
 [1.25.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.24.0...v1.25.0
