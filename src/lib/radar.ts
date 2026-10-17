@@ -2,10 +2,12 @@
  * The radar as two LED boxes: an **L** on the left and an **R** on the right,
  * lit when iRacing's spotter calls a car alongside on that side.
  *
- * The spotter (`CarLeftRight`) is the authority on whether a side is
- * occupied; the bridge adds which car it is and how far along you, from lap
- * distance (`bridge/telemetrylab/radar.py`). The boxes only need the first;
- * the second still feeds the screen-reader label.
+ * The spotter (`CarLeftRight`) is the authority on which side a car is on;
+ * the bridge adds which car it is and how far along you, from lap distance
+ * (`bridge/telemetrylab/radar.py`). It also holds a side the spotter called
+ * while that car still overlaps you, because the sim's spotter drops back to
+ * "clear" with a car still alongside (off the throttle, out of the pits). The
+ * boxes only need the per-side counts; the cars feed the screen-reader label.
  *
  * Pure and DOM-free so it can be unit-tested; `RadarWidget` only draws it.
  */
@@ -14,7 +16,7 @@ import type { RadarCar, RadarFrame } from "../telemetry/types";
 
 /** One side of the car, as the spotter calls it. */
 export interface RadarSide {
-  /** Cars alongside on this side, per the spotter (0–2). */
+  /** Cars alongside on this side (0–2), as the bridge counts them. */
   count: number;
   /** The car right next to you on this side, when the bridge matched one. */
   car: RadarCar | null;
@@ -42,9 +44,10 @@ function side(frame: RadarFrame, which: "left" | "right"): RadarSide {
 }
 
 /**
- * Which sides are lit. The spotter's counts decide, every frame — a side is
- * never lit for a car the sim has not called, and always lit when it has,
- * whether or not the bridge could say which car it was.
+ * Which sides are lit: the bridge's per-side counts, every frame. A side is
+ * never lit for a car the sim has not called, always lit while it calls one —
+ * whether or not the bridge could say which car it was — and stays lit while
+ * a car it called there still overlaps you, even once the spotter goes quiet.
  */
 export function radarSides(frame: RadarFrame | null | undefined): RadarSides {
   if (!frame || frame.state === "off") return { off: true, left: CLEAR, right: CLEAR };

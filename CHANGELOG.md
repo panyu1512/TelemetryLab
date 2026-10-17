@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.27.1] - 2026-10-17
+
 ### Changed
 
 - **A new website, in English and Spanish.** telemetrylab.app is now laid out
@@ -19,6 +21,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   [telemetrylab.app/es](https://telemetrylab.app/es/), with a language switch
   in the bar. The radar finally has a capture of its own, and the dashboard
   capture shows the 1.27 LED boxes.
+
+### Fixed
+
+- **Radar: the L / R box stays lit while the car is still beside you.** The
+  boxes followed iRacing's spotter channel (`CarLeftRight`) frame by frame,
+  and the sim drops it back to "clear" with a car still alongside whenever it
+  decides one of you is not "driving" — off the throttle into a braking zone,
+  on the way out of the pits — so the letter went dark, or never lit, exactly
+  when you were side by side. The bridge now holds a side the spotter has
+  called for as long as that car still overlaps you along the track, and
+  clears it once it is a car length away. A car the spotter never calls still
+  lights nothing: which side it is on is the one thing iRacing does not
+  publish. Needs the updated bridge.
 
 ## [1.27.0] - 2026-10-17
 
@@ -765,7 +780,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.0...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.1...HEAD
+[1.27.1]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.0...v1.27.1
 [1.27.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.26.0...v1.27.0
 [1.26.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.25.0...v1.26.0
 [1.25.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.24.0...v1.25.0

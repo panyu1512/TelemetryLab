@@ -1239,11 +1239,18 @@ draw nothing the sim does not publish — and the box draws even less.
   header, no words (`WidgetDef.bare`). Square, as big as the window allows
   with two side by side, so the window's width decides whether they sit
   either side of the car on screen or together.
-- **The spotter is the whole input.** iRacing's `CarLeftRight` lights a side,
-  every frame; nothing else does. A side is never lit for a car the sim has
-  not called, and always lit when it has, whether or not the bridge could
-  match the car by lap distance (`telemetrylab/radar.py` still does, for the
-  screen-reader label: "car left, 1.8 m behind").
+- **The spotter is the whole input.** iRacing's `CarLeftRight` lights a side;
+  nothing else can give a car a side. A side is never lit for a car the sim
+  has not called, and always lit when it calls one, whether or not the bridge
+  could match the car by lap distance (`telemetrylab/radar.py` still does, for
+  the screen-reader label: "car left, 1.8 m behind").
+- **…but it drops out, so a call is held.** `CarLeftRight` falls back to
+  "clear" with a car still door to door whenever the sim decides one of you is
+  not "driving" — off the throttle into a braking zone, out of the pits, at
+  the flag — which is exactly when side by side matters. 1.27 trusted every
+  frame of it and the boxes went dark mid-battle. Now a car the spotter has
+  called keeps its side while the lap distances say it still overlaps you
+  (`HOLD_M`, a car length); a side the spotter is calling is its own count.
 - **Unlit is still legible.** A clear side's LEDs sit dark, the letter's in a
   trace of red, so the box says which side it is without lighting. A lit
   letter takes `--color-led-red` with a bright core and a glow.
@@ -1252,8 +1259,9 @@ draw nothing the sim does not publish — and the box draws even less.
   glowed; this is the one place the radar's red parts from the timing
   screens' — on purpose, since this widget imitates a physical lamp.
 - **No transition.** A side lights on the frame the spotter calls it and goes
-  dark on the frame it clears. A fade would say "car" after the car has gone,
-  which is the one error this widget cannot afford.
+  dark on the frame the car is clear — by the spotter, or by a car length of
+  lap distance once the spotter has gone quiet. A fade would say "car" after
+  the car has gone, which is the one error this widget cannot afford.
 
 ### Deliberately not adopted
 

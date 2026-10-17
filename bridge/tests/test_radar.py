@@ -5,7 +5,14 @@ from __future__ import annotations
 import pytest
 
 from telemetrylab.enums import car_left_right
-from telemetrylab.radar import ALONGSIDE_M, RANGE_M, RadarTracker, nearby_cars, wrap_gap
+from telemetrylab.radar import (
+    ALONGSIDE_M,
+    HOLD_M,
+    RANGE_M,
+    RadarTracker,
+    nearby_cars,
+    wrap_gap,
+)
 
 TRACK_M = 5000.0
 
@@ -167,6 +174,82 @@ class TestRadarTracker:
         # Neither car is remembered, so the nearer one takes left.
         assert by_idx(frame)[1].side == "left"
         assert by_idx(frame)[2].side == "right"
+
+    def test_a_called_car_keeps_its_side_when_the_spotter_goes_quiet(self):
+        # iRacing drops CarLeftRight to "clear" with the car still door to
+        # door (off the throttle into a braking zone): the side stays lit.
+        tracker = RadarTracker()
+        tracker.update(LEFT, arrays(0.5, {1: -1.0}), 0, TRACK_M)
+        frame = tracker.update(CLEAR, arrays(0.5, {1: 2.0}), 0, TRACK_M)
+        assert frame.state == "clear"  # what the sim said, unchanged
+        assert (frame.left, frame.right) == (1, 0)
+        assert (by_idx(frame)[1].side, by_idx(frame)[1].lane) == ("left", 1)
+
+    def test_the_hold_lasts_while_the_car_overlaps(self):
+        tracker = RadarTracker()
+        tracker.update(RIGHT, arrays(0.5, {1: -4.0}), 0, TRACK_M)
+        for gap in (-3.0, -1.0, 1.0, 3.0, HOLD_M - 0.1):
+            frame = tracker.update(CLEAR, arrays(0.5, {1: gap}), 0, TRACK_M)
+            assert frame.right == 1, gap
+
+    def test_the_hold_ends_once_the_car_has_gone(self):
+        tracker = RadarTracker()
+        tracker.update(LEFT, arrays(0.5, {1: -1.0}), 0, TRACK_M)
+        frame = tracker.update(CLEAR, arrays(0.5, {1: HOLD_M + 0.5}), 0, TRACK_M)
+        assert (frame.left, frame.right) == (0, 0)
+        assert by_idx(frame)[1].side is None
+        # Gone is gone: coming back alongside unannounced does not relight it.
+        frame = tracker.update(CLEAR, arrays(0.5, {1: 1.0}), 0, TRACK_M)
+        assert frame.left == 0
+
+    def test_the_hold_ends_when_the_car_leaves_the_radar(self):
+        tracker = RadarTracker()
+        tracker.update(LEFT, arrays(0.5, {1: -1.0}), 0, TRACK_M)
+        a = arrays(0.5, {1: -1.0})
+        a["CarIdxOnPitRoad"][1] = True
+        assert tracker.update(CLEAR, a, 0, TRACK_M).left == 0
+
+    def test_a_car_the_spotter_never_called_gets_no_side(self):
+        # Overlapping by lap distance, but which side is what the sim does
+        # not publish: nothing lights.
+        frame = RadarTracker().update(CLEAR, arrays(0.5, {1: 1.0}), 0, TRACK_M)
+        assert (frame.left, frame.right) == (0, 0)
+        assert by_idx(frame)[1].side is None
+
+    def test_the_hold_survives_a_call_on_the_other_side(self):
+        tracker = RadarTracker()
+        tracker.update(LEFT, arrays(0.5, {1: -1.0}), 0, TRACK_M)
+        # The spotter now calls only a new car on the right; the left car is
+        # still beside you.
+        frame = tracker.update(RIGHT, arrays(0.5, {1: -1.5, 2: 0.5}), 0, TRACK_M)
+        cars = by_idx(frame)
+        assert (frame.left, frame.right) == (1, 1)
+        assert cars[1].side == "left"
+        assert cars[2].side == "right"
+
+    def test_a_side_the_spotter_calls_is_its_own(self):
+        # Two cars were left; the spotter now counts one there. Its count
+        # stands, and the car it no longer calls is not held beside it.
+        tracker = RadarTracker()
+        tracker.update(TWO_LEFT, arrays(0.5, {1: -1.0, 2: 0.5}), 0, TRACK_M)
+        frame = tracker.update(LEFT, arrays(0.5, {1: -4.5, 2: 0.5}), 0, TRACK_M)
+        assert frame.left == 1
+        assert by_idx(frame)[1].side is None
+
+    def test_two_held_cars_keep_their_lanes(self):
+        tracker = RadarTracker()
+        tracker.update(TWO_LEFT, arrays(0.5, {1: -1.0, 2: 0.5}), 0, TRACK_M)
+        frame = tracker.update(CLEAR, arrays(0.5, {1: -1.2, 2: 0.4}), 0, TRACK_M)
+        cars = by_idx(frame)
+        assert frame.left == 2
+        assert (cars[2].side, cars[2].lane) == ("left", 1)
+        assert (cars[1].side, cars[1].lane) == ("left", 2)
+
+    def test_off_drops_the_hold(self):
+        tracker = RadarTracker()
+        tracker.update(LEFT, arrays(0.5, {1: -1.0}), 0, TRACK_M)
+        assert tracker.update(0, arrays(0.5, {1: -1.0}), 0, TRACK_M).left == 0
+        assert tracker.update(CLEAR, arrays(0.5, {1: -1.0}), 0, TRACK_M).left == 0
 
     def test_reset_forgets(self):
         tracker = RadarTracker()
