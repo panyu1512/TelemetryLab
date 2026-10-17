@@ -93,7 +93,7 @@ Every lap you complete is lined up against your quickest clean lap, metre by met
 
 <br>
 
-On a single monitor the car in your blind spot is a voice, not a picture. The **Radar** widget is two lines and nothing else — one down each side of its window, no panel, no background, no text. Size the window to sit either side of your car: a car alongside lights the stretch of the line it covers, red while it overlaps you, and as it comes past the mark slides up the line exactly as it slides up your door. iRacing's own spotter (`CarLeftRight`) decides whether a side is lit; the bridge only adds where along you the car is, from every car's lap distance — which is measured, so it is the only thing drawn. A second car on the same side lights a second line beyond the first.
+On a single monitor the car in your blind spot is a voice, not a picture. The **Radar** widget is two LED boxes and nothing else — an **L** at the left of its window and an **R** at the right, each a square dot matrix in a carbon frame, like the LED letter boxes on a sim rig. When iRacing's own spotter (`CarLeftRight`) calls a car alongside, that side's letter lights up red; when the side is clear its LEDs sit dark. Size the window to sit either side of your car, or narrow it to bring the boxes together.
 
 </details>
 

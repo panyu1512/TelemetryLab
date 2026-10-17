@@ -417,9 +417,9 @@ the nav and title bar inline the two paths so they can take `currentColor`.
   under 96 px tall. Its two actions sit in that header, shown on hover.
   **One exception: a `bare` widget** (`WidgetDef.bare`, the Radar today) has
   no panel, no paper and no header in its own window or in the preview — only
-  its marks. It is the one widget whose whole job is to cover as little of
-  the game as it can; on the dashboard grid its header is still the grab
-  strip and the home of its buttons, and shows on hover only.
+  its own marks. The Radar brings its own frame (the LED boxes) and covers as
+  little of the game as it can; on the dashboard grid its header is still the
+  grab strip and the home of its buttons, and shows on hover only.
 - **A widget window obeys its dashboard.** A widget popped into its own
   window is configured under the Dashboard in the Manager, so it takes the
   Dashboard's Enabled switch, theme, saturation / brightness / opacity and
@@ -1219,49 +1219,39 @@ the Manager (`useCoachUiStore`), applied at render time by `lib/coaching.ts`.
 
 The Radar widget (`components/widgets/RadarWidget.tsx`) is for the driver with
 one screen: the car in the blind spot is a voice from the spotter, and the
-widget puts it where it is. It is a widget, not an overlay with a manager page
-— it has nothing to configure.
+widget makes it a light. It is a widget, not an overlay with a manager page —
+it has nothing to configure.
 
-**Rewritten as lines.** The first version (1.24) drew a map: your car in the
-middle, a car alongside one lane over, a dashed bearing and a printed angle
-("120°"), on a panel with a header and a call word above it. Drivers could not
-read the overtaking car off it. The angle mixed a measured number (how far up
-your door the car is) with an assumed one (how far across), so it moved when
-the car moved along you and never when it moved across; and a car closing from
-behind sat in your own lane until the spotter called it, then jumped sideways.
-A picture with that much invented in it, under that much chrome, was the
-wrong shape for a glance in a braking zone.
+**Its third form.** 1.24 drew a map: your car in the middle, a car alongside
+one lane over, a dashed bearing and a printed angle, on a panel with a header.
+Drivers could not read the overtaking car off it — the angle mixed a measured
+gap along the track with an assumed one across it — so it became two bare
+lines with the car's stretch lit on them. That never shipped: before the
+release the driver asked for the thing sim rigs actually bolt to the dash, an
+LED letter box, and that is what it is now. The lines' argument still holds —
+draw nothing the sim does not publish — and the box draws even less.
 
-- **Two lines and nothing else.** One down each edge of the window; no panel,
-  no paper, no header, no words, no numbers (`WidgetDef.bare`). The window is
-  the stretch of track beside your car — `LINE_M` (8 m) ahead at the top, as
-  far behind at the bottom — so sized to sit either side of your car on
-  screen, the lines are the edges of your own field of view.
-- **Only what is measured is drawn.** A car alongside lights the part of the
-  line it covers along the track: its gap is lap distance × track length,
-  exact, and its length is a car's. As it comes past, its mark slides up the
-  line exactly as it slides up your door. Nothing lateral is drawn because
-  iRacing publishes nothing lateral — the old lane offset and angle are gone
-  with the assumption under them.
-- **Your car is the reference on the line.** The stretch of each line level
-  with your own car is a little stronger than the rest, so "on my rear wheel"
-  and "past my nose" read without a scale.
-- **The spotter is the authority; the position is ours.** iRacing's
-  `CarLeftRight` decides whether a side is lit, every frame. The bridge
-  (`telemetrylab/radar.py`) only adds where along you the car is. A side the
-  spotter calls with no car the bridge could match lights your own car's
-  stretch, dimmer — the sim said alongside, not where; a car on a side the
-  spotter has not called is never drawn.
-- **Two cars, two lines.** The second car on a side lights a second line
-  outside the first, in the order the bridge keeps them (the car that was
-  next to you stays next to you).
-- **Status colour only.** A car overlapping you is `danger`; one the spotter
-  still calls but clear by a nose is `warning`. The rails are the chart axis
-  tone, your stretch the tertiary neutral. A 1 px dark edge keeps a lit line
-  readable over a red car or a sunlit kerb.
-- **No easing.** The marks ride the 60 Hz telemetry frame and are drawn where
-  they are. A glide would put a car behind where it actually is, which is the
-  one error this widget cannot afford.
+- **Two LED boxes and nothing else.** An `L` at the left edge of the window,
+  an `R` at the right; each a 9 × 9 dot matrix (`lib/radar.ts`, `GLYPHS`) in a
+  carbon-weave frame (`.radar-box` in styles.css). No panel, no paper, no
+  header, no words (`WidgetDef.bare`). Square, as big as the window allows
+  with two side by side, so the window's width decides whether they sit
+  either side of the car on screen or together.
+- **The spotter is the whole input.** iRacing's `CarLeftRight` lights a side,
+  every frame; nothing else does. A side is never lit for a car the sim has
+  not called, and always lit when it has, whether or not the bridge could
+  match the car by lap distance (`telemetrylab/radar.py` still does, for the
+  screen-reader label: "car left, 1.8 m behind").
+- **Unlit is still legible.** A clear side's LEDs sit dark, the letter's in a
+  trace of red, so the box says which side it is without lighting. A lit
+  letter takes `--color-led-red` with a bright core and a glow.
+- **Its own red.** `--color-led-red` is `danger`'s hue at full chroma. A lit
+  LED is a light, not ink, and the softened status red read salmon once it
+  glowed; this is the one place the radar's red parts from the timing
+  screens' — on purpose, since this widget imitates a physical lamp.
+- **No transition.** A side lights on the frame the spotter calls it and goes
+  dark on the frame it clears. A fade would say "car" after the car has gone,
+  which is the one error this widget cannot afford.
 
 ### Deliberately not adopted
 
