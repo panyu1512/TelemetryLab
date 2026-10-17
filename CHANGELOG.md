@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.27.0] - 2026-10-17
+
 ### Added
 
 - **Coach: your lap against the session best.** The Coach now also holds
@@ -25,16 +27,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
-- **The Radar is just two lines now.** No panel, no background, no header,
-  no text: one line down each side of the window. A car alongside lights
-  the stretch of the line it covers — red while it overlaps you, amber once
-  it is clear by a nose — and as it comes past, the mark slides up the line
-  exactly as it slides up your door, so you can see at a glance whether the
-  car overtaking you is at your rear wheel, level, or past your nose. The old
-  map showed an angle that assumed how far across the track the other car
-  was (iRacing never says) and drew a car closing from behind in your own
-  lane until it jumped sideways; both are gone, and only what is measured is
-  drawn. Size the window to sit either side of your car.
+- **The Radar is now two LED boxes, L and R.** Modelled on the LED letter
+  boxes on sim rigs: a square dot matrix in a carbon frame, an **L** at the
+  left of the window and an **R** at the right. When the spotter calls a car
+  alongside, that side's letter lights up red; when the side is clear its
+  LEDs stay dark, with the letter just readable so you know which box is
+  which. Nothing else is drawn — no panel, no background, no text. Size the
+  window to sit either side of your car, or narrow it to bring the boxes
+  together. The old map's angle, which guessed how far across the track the
+  other car was (iRacing never says), is gone.
 
 ### Fixed
 
@@ -751,7 +752,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.26.0...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.0...HEAD
+[1.27.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.26.0...v1.27.0
 [1.26.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.25.0...v1.26.0
 [1.25.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.24.0...v1.25.0
 [1.24.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.23.0...v1.24.0
