@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **A new website, in English and Spanish.** telemetrylab.app is now laid out
+  like the overlay sites sim racers already know: a centred hero with the
+  download, a strip of the numbers that matter (five overlays, seven widgets,
+  four themes, free, MIT), and the overlays themselves on screen — real
+  captures placed the way they sit over the game. Below it, every overlay gets
+  its own card with a capture, then the features, three install steps, the
+  price (nothing), the open-source story and an FAQ. The whole page is also at
+  [telemetrylab.app/es](https://telemetrylab.app/es/), with a language switch
+  in the bar. The radar finally has a capture of its own, and the dashboard
+  capture shows the 1.27 LED boxes.
+
 ## [1.27.0] - 2026-10-17
 
 ### Added

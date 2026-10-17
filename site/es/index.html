@@ -1,0 +1,982 @@
+<!doctype html>
+<html lang="es">
+  <head>
+    <!-- The Spanish copy of ../index.html. Same markup, same class names,
+         same section ids (the nav's scroll readout keys on them), translated
+         text, and every path one level up. The English page carries the
+         comments that explain the structure; change both pages together. -->
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>TelemetryLab — overlays de cronometraje y telemetría para iRacing</title>
+    <meta
+      name="description"
+      content="Clasificación multiclase, relative, combustible, un coach curva a curva y telemetría para iRacing. Cada pantalla en su propia ventana sobre el juego, legible de un vistazo. Gratis, de código abierto, para Windows."
+    />
+    <meta name="robots" content="index, follow, max-image-preview:large" />
+    <meta name="theme-color" content="#0e1114" />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="canonical" href="https://telemetrylab.app/es/" />
+
+    <link rel="alternate" hreflang="en" href="https://telemetrylab.app/" />
+    <link rel="alternate" hreflang="es" href="https://telemetrylab.app/es/" />
+    <link rel="alternate" hreflang="x-default" href="https://telemetrylab.app/" />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="TelemetryLab" />
+    <meta property="og:locale" content="es_ES" />
+    <meta property="og:locale:alternate" content="en" />
+    <meta property="og:url" content="https://telemetrylab.app/es/" />
+    <meta property="og:title" content="TelemetryLab — lee la carrera sin apartar la vista" />
+    <meta
+      property="og:description"
+      content="Clasificación multiclase, relative en pista, estrategia de combustible, un coach curva a curva y un cuadro de instrumentos. Cada uno en su propia ventana sobre iRacing."
+    />
+    <meta property="og:image" content="https://telemetrylab.app/assets/standings.png" />
+    <meta property="og:image:width" content="2360" />
+    <meta property="og:image:height" content="888" />
+    <meta
+      property="og:image:alt"
+      content="El overlay de clasificación de TelemetryLab con dos grupos de clase, GT3 y GT4, con gaps y tiempos por vuelta."
+    />
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content="TelemetryLab — lee la carrera sin apartar la vista" />
+    <meta
+      name="twitter:description"
+      content="Clasificación multiclase, relative en pista, estrategia de combustible, un coach curva a curva y un cuadro de instrumentos. Cada uno en su propia ventana sobre iRacing."
+    />
+    <meta name="twitter:image" content="https://telemetrylab.app/assets/standings.png" />
+    <meta
+      name="twitter:image:alt"
+      content="El overlay de clasificación de TelemetryLab con dos grupos de clase, GT3 y GT4, con gaps y tiempos por vuelta."
+    />
+
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "SoftwareApplication",
+        "name": "TelemetryLab",
+        "url": "https://telemetrylab.app/es/",
+        "inLanguage": "es",
+        "description": "Clasificación multiclase, relative, combustible, un coach curva a curva y telemetría para iRacing. Cada pantalla en su propia ventana sobre el juego, legible de un vistazo.",
+        "applicationCategory": "UtilitiesApplication",
+        "applicationSubCategory": "Sim racing overlay",
+        "operatingSystem": "Windows",
+        "softwareVersion": "1.27.0",
+        "isAccessibleForFree": true,
+        "license": "https://opensource.org/licenses/MIT",
+        "offers": {
+          "@type": "Offer",
+          "price": "0",
+          "priceCurrency": "EUR"
+        },
+        "downloadUrl": "https://github.com/panyu1512/TelemetryLab/releases/latest",
+        "author": {
+          "@type": "Person",
+          "name": "panyu1512",
+          "url": "https://github.com/panyu1512"
+        },
+        "sameAs": ["https://github.com/panyu1512/TelemetryLab"],
+        "screenshot": [
+          "https://telemetrylab.app/assets/standings.png",
+          "https://telemetrylab.app/assets/relative.png",
+          "https://telemetrylab.app/assets/fuel.png",
+          "https://telemetrylab.app/assets/coach.png",
+          "https://telemetrylab.app/assets/dashboard.png",
+          "https://telemetrylab.app/assets/manager.png"
+        ]
+      }
+    </script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Anton&display=block"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../css/site.css" />
+
+    <script>
+      (function () {
+        var KEY = "telemetrylab.theme";
+        var stored = null;
+        try {
+          stored = localStorage.getItem(KEY);
+        } catch (e) {
+          /* private mode, or storage disabled — fall through to the OS */
+        }
+        var theme =
+          stored === "light" || stored === "dark"
+            ? stored
+            : window.matchMedia &&
+                window.matchMedia("(prefers-color-scheme: light)").matches
+              ? "light"
+              : "dark";
+        document.documentElement.dataset.theme = theme;
+      })();
+    </script>
+  </head>
+
+  <body>
+    <a class="skip" href="#main">Saltar al contenido</a>
+
+    <div class="nav-dock">
+      <div class="shell">
+        <header class="nav">
+          <a class="wordmark" href="#main">
+            <svg class="wordmark__mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+              <path d="M8.69 9L18.89 9L17.69 14L15.69 14L13.48 23.2L7.81 26L10.69 14L4.69 14Z" />
+              <path d="M20.41 6L25.41 6L21.81 21L27.31 21L23.31 26L15.61 26Z" />
+            </svg>
+            TelemetryLab
+          </a>
+
+          <nav class="nav__links" aria-label="Secciones">
+            <a class="nav__link" href="#overlays">Overlays</a>
+            <a class="nav__link" href="#features">Funciones</a>
+            <a class="nav__link" href="#install">Instalar</a>
+            <a class="nav__link" href="#pricing">Precio</a>
+            <a class="nav__link" href="#faq">Preguntas</a>
+          </nav>
+
+          <div class="nav__actions">
+            <div class="lang" role="group" aria-label="Idioma">
+              <a class="lang__opt" href="../" hreflang="en" lang="en">EN</a>
+              <a class="lang__opt" href="./" hreflang="es" lang="es" aria-current="page">ES</a>
+            </div>
+
+            <button class="icon-btn theme-toggle" type="button" id="theme-toggle" aria-label="Cambiar tema">
+              <svg class="theme-toggle__sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                <circle cx="12" cy="12" r="4.2" />
+                <path d="M12 2.6v2.2M12 19.2v2.2M4.2 12H2M22 12h-2.2M6.5 6.5 4.9 4.9M19.1 19.1l-1.6-1.6M17.5 6.5l1.6-1.6M4.9 19.1l1.6-1.6" />
+              </svg>
+              <svg class="theme-toggle__moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
+                <path d="M20 13.4A8.2 8.2 0 0 1 10.6 4a8.4 8.4 0 1 0 9.4 9.4Z" />
+              </svg>
+            </button>
+
+            <a class="icon-btn nav__gh" href="https://github.com/panyu1512/TelemetryLab" rel="noopener" target="_blank" aria-label="Código en GitHub">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path fill="currentColor" d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48l-.01-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85l-.01 2.75c0 .27.18.58.69.48A10 10 0 0 0 12 2Z" />
+              </svg>
+            </a>
+
+            <a class="chip-solid nav__cta" href="https://github.com/panyu1512/TelemetryLab/releases/latest/download/TelemetryLab-setup.exe">Descargar</a>
+
+            <details class="menu" id="menu">
+              <summary class="icon-btn menu__btn" aria-label="Menú">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                  <path d="M4 7h16M4 12h16M4 17h16" />
+                </svg>
+              </summary>
+              <nav class="menu__panel" aria-label="Secciones">
+                <a href="#overlays">Overlays</a>
+                <a href="#features">Funciones</a>
+                <a href="#install">Instalar</a>
+                <a href="#pricing">Precio</a>
+                <a href="#faq">Preguntas</a>
+                <a href="../" hreflang="en" lang="en">English</a>
+              </nav>
+            </details>
+          </div>
+        </header>
+      </div>
+    </div>
+
+    <main id="main">
+      <section class="hero">
+        <div class="shell hero__inner">
+          <a class="pill" href="https://github.com/panyu1512/TelemetryLab/blob/main/CHANGELOG.md" rel="noopener" target="_blank">
+            <span class="pill__tag">Novedad en 1.27</span>
+            El radar ahora son dos cajas LED
+            <svg class="pill__arrow" viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5 10.5 8 6 12.5" /></svg>
+          </a>
+
+          <h1>Lee la carrera sin apartar la vista.</h1>
+          <p class="hero__lede">
+            Overlays de cronometraje y telemetría para iRacing. Clasificación
+            multiclase, relative en pista, estrategia de combustible, un coach
+            curva a curva y un cuadro de instrumentos — cada uno en su propia
+            ventana, sobre el juego.
+          </p>
+
+          <div class="actions actions--center">
+            <a class="chip-solid chip--lg" href="https://github.com/panyu1512/TelemetryLab/releases/latest/download/TelemetryLab-setup.exe">
+              <svg class="chip__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M5 19.5h14" /></svg>
+              Descargar para Windows
+            </a>
+            <a class="chip chip--lg" href="#overlays">Ver los overlays</a>
+          </div>
+          <p class="hero__note">Gratis y de código abierto · Windows · sin permisos de administrador</p>
+
+          <div class="session" role="group" aria-label="TelemetryLab de un vistazo">
+            <span class="session__chip">v1.27</span>
+            <div class="session__title">
+              <b>TelemetryLab</b>
+              <span>Cronometraje y telemetría para iRacing</span>
+            </div>
+            <dl class="session__fields">
+              <div class="session__field"><dt>Overlays</dt><dd>5</dd></div>
+              <div class="session__field"><dt>Widgets</dt><dd>7</dd></div>
+              <div class="session__field"><dt>Temas</dt><dd>4</dd></div>
+              <div class="session__field"><dt>Datos</dt><dd>~60<small>Hz</small></dd></div>
+              <div class="session__field"><dt>Precio</dt><dd>0<small>€</small></dd></div>
+              <div class="session__field"><dt>Licencia</dt><dd>MIT</dd></div>
+            </dl>
+          </div>
+        </div>
+
+        <div class="shell">
+          <figure class="stage">
+            <div class="stage__screen">
+              <img class="win win--standings" src="../assets/standings-compact.png" width="1240" height="526" alt="El overlay de clasificación: una cabecera de sesión y los grupos de clase GT3 y GT4, con gaps y tiempos por vuelta." />
+              <img class="win win--relative" src="../assets/relative.png" width="1400" height="840" alt="El overlay relative: los coches por delante y por detrás en pista, con la fila del piloto resaltada." />
+              <img class="win win--coach" src="../assets/coach.png" width="1240" height="838" alt="El overlay del coach: las curvas que más tiempo costaron en la última vuelta, y por qué." />
+              <img class="win win--fuel" src="../assets/fuel.png" width="1240" height="1180" alt="El overlay de combustible: vueltas de combustible restantes, la ventana de parada y una parada recomendada." />
+              <img class="win win--radar" src="../assets/radar.png" width="920" height="440" alt="El radar: dos cajas LED, con la R encendida por un coche al lado derecho." />
+            </div>
+            <figcaption class="stage__cap">
+              Cinco de los overlays, colocados como quedan sobre el juego. Un
+              montaje con capturas reales, tomadas con los datos simulados
+              integrados.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section id="overlays" class="section">
+        <div class="shell">
+          <header class="sec-head">
+            <p class="eyebrow">Overlays</p>
+            <h2>Todo lo que necesitas ver, sin girar la cabeza.</h2>
+            <p class="sec-head__lede">
+              Cinco overlays y siete widgets. Cada uno se abre en su propia
+              ventana sin marco y siempre visible — colócala, ajusta su tamaño,
+              bloquéala, y volverá a aparecer donde la dejaste.
+            </p>
+          </header>
+
+          <div class="bento">
+            <article class="card card--wide">
+              <div class="card__copy">
+                <div class="band">
+                  <span class="band__chip">Clasificación</span>
+                  <span class="band__field"><span class="band__k">COLUMNAS</span><b class="band__v">15</b></span>
+                  <span class="band__field"><span class="band__k">FILA</span><b class="band__v">32px</b></span>
+                </div>
+                <h3>El orden de carrera, agrupado por clase.</h3>
+                <p>
+                  Cada clase abre con su propia cabecera — número de coches,
+                  strength of field y la vuelta más rápida — y debajo, cada coche
+                  en su fila. No hay barra de desplazamiento: la tabla se escala
+                  para caber en la ventana, sin perder ninguna de las columnas
+                  que elegiste.
+                </p>
+                <ul class="reads">
+                  <li>Gap al líder de la clase e intervalo con el coche de delante</li>
+                  <li>Sectores comparados con tu mejor tiempo y con el del grupo</li>
+                  <li>iRating con el cambio previsto, licencia y safety rating</li>
+                  <li>Un ▲ verde o un ▼ rojo junto a la nueva posición en cada adelantamiento</li>
+                  <li>Neumáticos de cada coche — una D gris para secos, una W azul para lluvia</li>
+                </ul>
+              </div>
+              <figure class="shot">
+                <img
+                  src="../assets/standings.png"
+                  width="2360"
+                  height="888"
+                  loading="lazy"
+                  alt="El overlay de clasificación con dos grupos de clase: los seis
+                       GT3 y los tres primeros GT4, bajo una cabecera de sesión con el
+                       tipo de sesión, el circuito y su trazado, la vuelta, el tiempo
+                       restante, los incidentes, las temperaturas, el strength of field
+                       y la hora. Cada grupo abre con una franja con su strength of
+                       field, el número de coches y la vuelta más rápida, seguida de
+                       filas — cada una empieza con una barra fina del color de su
+                       clase, verde azulado para GT3 y naranja para GT4 — con posición,
+                       cambio de posición, número, marca del coche, bandera, piloto, una
+                       píldora con licencia e iRating — cada licencia marcada con una
+                       barra corta de su color — gap, intervalo, última vuelta, mejor
+                       vuelta, neumático y tres columnas de sectores. Dos de los GT4
+                       van con neumáticos de lluvia, marcados con una W azul. La fila
+                       de cada líder de clase muestra GAP e INT donde no hay gap que
+                       mostrar."
+                />
+              </figure>
+            </article>
+
+            <article class="card card--7">
+              <div class="card__copy">
+                <div class="band">
+                  <span class="band__chip">Relative</span>
+                  <span class="band__field"><span class="band__k">ORDEN</span><b class="band__v">en pista</b></span>
+                  <span class="band__field"><span class="band__k">GAP</span><b class="band__v">con signo</b></span>
+                </div>
+                <h3>Quién viene de verdad.</h3>
+                <p>
+                  Ordenado por tiempo en pista, no por posición: muestra los
+                  coches con los que te vas a cruzar, estén en la vuelta que
+                  estén. Los doblados se ven en azul, y un indicador avisa cuando
+                  un coche más rápido se te acerca — en rojo si es de otra clase.
+                </p>
+              </div>
+              <figure class="shot">
+                <img
+                  src="../assets/relative.png"
+                  width="1400"
+                  height="840"
+                  loading="lazy"
+                  alt="El overlay relative en una carrera de dos clases, bajo la misma
+                       cabecera de sesión que la clasificación: los coches por delante
+                       y por detrás del piloto, ordenados por tiempo en pista, cada fila
+                       con una barra fina del color de su clase y una pequeña etiqueta
+                       GT3 o GT4 junto al número. Los GT3 en la misma vuelta que el
+                       piloto aparecen en gris claro; los GT4 a una vuelta, por delante
+                       y por detrás, en azul con una etiqueta de menos una vuelta. Cada
+                       fila muestra la licencia, el safety rating y el iRating del
+                       piloto en una píldora, y sus neumáticos: una D gris para secos o
+                       una W azul para lluvia, con las vueltas que llevan — tres de los
+                       GT4 van con lluvia. La fila del propio piloto es la única
+                       resaltada, con contorno y separada por un hueco arriba y abajo."
+                />
+              </figure>
+            </article>
+
+            <article class="card card--5">
+              <div class="card__copy">
+                <div class="band">
+                  <span class="band__chip">Combustible</span>
+                  <span class="band__field"><span class="band__k">CONSUMO</span><b class="band__v">medido</b></span>
+                </div>
+                <h3>La parada, antes de necesitarla.</h3>
+                <p>
+                  Estrategia a partir de tu consumo real, no de un número que
+                  escribiste antes de la carrera: la ventana de parada, la vuelta
+                  que recomienda y cuántas vueltas te faltan al ritmo que llevas.
+                </p>
+              </div>
+              <figure class="shot">
+                <img
+                  src="../assets/fuel.png"
+                  width="1240"
+                  height="1180"
+                  loading="lazy"
+                  alt="El overlay de combustible y estrategia, bajo una franja con el
+                       circuito y un margen de 1,0 vueltas: un bloque de 'Pit stop
+                       needed' con 1,6 vueltas de combustible frente a 8 vueltas hasta
+                       la bandera, 7,3 litros en el depósito a 2,86 litros por vuelta,
+                       una ventana de parada en las vueltas 18 a 19, parada recomendada
+                       en la vuelta 19, una nota de que faltan 7 vueltas al consumo
+                       actual y dos planes — una parada en la vuelta 19 y dos paradas.
+                       Debajo, una tabla de consumo por vuelta de la 17 a la 14 con los
+                       litros de cada una — 2,93, 2,91, 2,76 y unos 2,82 estimados —
+                       frente a la media de 2,86, en rojo por encima y en verde por
+                       debajo, junto a su tiempo y los litros que quedaban al cruzar la
+                       línea."
+                />
+              </figure>
+            </article>
+
+            <article class="card card--5">
+              <div class="card__copy">
+                <div class="band">
+                  <span class="band__chip">Coach</span>
+                  <span class="band__field"><span class="band__k">CORRE</span><b class="band__v">en local</b></span>
+                </div>
+                <h3>Dónde se fue la vuelta, curva a curva.</h3>
+                <p>
+                  Cada vuelta se compara metro a metro con tu vuelta limpia más
+                  rápida. El coach señala la curva o las dos curvas que más te
+                  costaron, y por qué — frenaste pronto, fuiste sin pedales,
+                  pasaste lento por el vértice, aceleraste tarde.
+                </p>
+              </div>
+              <figure class="shot">
+                <img
+                  src="../assets/coach.png"
+                  width="1240"
+                  height="838"
+                  loading="lazy"
+                  alt="El overlay del coach, bajo una franja con el circuito, la
+                       vuelta de referencia en 2:18.607, la última en 2:20.128 y una
+                       diferencia de más 1,521. El consejo principal, marcado con una
+                       barra roja a la izquierda, dice T4, 'Coasted 153 m off both
+                       pedals', más 0,52 segundos, con vértice y salida 2 km/h más
+                       lentos y '3 of the last 6 laps'. Un segundo consejo dice T3,
+                       'Braked 25 m early', más 0,41 segundos, entrada 30 km/h más
+                       lenta, '5 of the last 6 laps'. Debajo, una franja de la vuelta
+                       coloreada en amarillo y rojo según dónde se perdió el tiempo, y
+                       las seis curvas como barras desde una línea central — T2
+                       demasiado rápida, T3 frenada temprana y T4 sin pedales en rojo
+                       — terminando en una fila de vuelta de más 1,52 segundos frente
+                       a la referencia."
+                />
+              </figure>
+            </article>
+
+            <article class="card card--7">
+              <div class="card__copy">
+                <div class="band">
+                  <span class="band__chip">Dashboard</span>
+                  <span class="band__field"><span class="band__k">WIDGETS</span><b class="band__v">7</b></span>
+                  <span class="band__field"><span class="band__k">REJILLA</span><b class="band__v">12 col</b></span>
+                </div>
+                <h3>Un cuadro de instrumentos a tu medida.</h3>
+                <p>
+                  Velocidad, marcha y luces de cambio, traza de pedales,
+                  combustible, tiempos por vuelta, temperatura de neumáticos,
+                  posición y el radar — colócalos en una rejilla, o saca cualquier
+                  widget a su propia ventana.
+                </p>
+              </div>
+              <figure class="shot">
+                <img
+                  src="../assets/dashboard.png"
+                  width="2200"
+                  height="1240"
+                  loading="lazy"
+                  alt="Los siete widgets del overlay dashboard en una rejilla: un
+                       velocímetro a 224 km/h en quinta bajo una barra de luces de
+                       cambio a 6871 rpm; un panel de pedales con la traza del
+                       acelerador en cian y el freno en gris junto a barras de
+                       acelerador, freno y embrague y un volante; combustible — 15,1
+                       litros en el depósito, 5,4 vueltas a 2,82 litros por vuelta;
+                       tiempos — última 2:20.128, mejor 2:18.917 en verde, la vuelta
+                       en curso y una diferencia de más 1,211 en rojo; temperaturas y
+                       presiones de los cuatro neumáticos; posición P6 en la vuelta
+                       15; y las dos cajas LED del radar con la L encendida en rojo."
+                />
+              </figure>
+            </article>
+
+            <article class="card card--wide card--row">
+              <div class="card__copy">
+                <div class="band">
+                  <span class="band__chip">Radar</span>
+                  <span class="band__field"><span class="band__k">FUENTE</span><b class="band__v">spotter de iRacing</b></span>
+                </div>
+                <h3>Un spotter para quien corre con una sola pantalla.</h3>
+                <p>
+                  Con un solo monitor, el coche en tu ángulo muerto es una voz, no
+                  una imagen. El radar son dos cajas LED y nada más: cuando el
+                  spotter de iRacing avisa de un coche al lado, la letra de ese lado
+                  se enciende en rojo. Ajusta la ventana para que quede a cada lado
+                  de tu coche.
+                </p>
+              </div>
+              <figure class="shot shot--radar">
+                <img
+                  src="../assets/radar.png"
+                  width="920"
+                  height="440"
+                  loading="lazy"
+                  alt="El widget de radar: dos cajas LED cuadradas con marco de
+                       carbono, una L a la izquierda y una R a la derecha. La R está
+                       encendida en rojo — un coche al lado derecho — y la L está
+                       apagada."
+                />
+              </figure>
+            </article>
+          </div>
+
+          <details class="legend">
+            <summary class="legend__sum">
+              <span>Qué significa cada columna de la pantalla de tiempos</span>
+              <svg class="legend__icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M8 3v10M3 8h10" /></svg>
+            </summary>
+            <div class="legend__body">
+              <div class="legend__scroll">
+                <table class="tnum">
+                  <caption class="micro legend__cap">Fila de la clasificación</caption>
+                  <thead>
+                    <tr><th scope="col">Columna</th><th scope="col">Indica</th><th scope="col">Color</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th scope="row">POS</th>
+                      <td>Posición en la clase, o general cuando no hay clases</td>
+                      <td><span class="sw sw--pb">↑ ganada</span> · <span class="sw sw--bad">↓ perdida</span> durante tres segundos tras un adelantamiento</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">GAP</th>
+                      <td>Segundos por detrás del líder de la clase, o vueltas perdidas — la fila del líder muestra GAP</td>
+                      <td>—</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">INT</th>
+                      <td>Segundos hasta el coche que tienes justo delante en tu clase</td>
+                      <td>—</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">LAST</th>
+                      <td>Tu última vuelta completada, subrayada cuando destaca</td>
+                      <td><span class="sw sw--pb">subrayado verde</span> mejor personal · <span class="sw sw--best">morado</span> lidera la sesión</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">BEST</th>
+                      <td>La vuelta más rápida de la sesión de ese coche</td>
+                      <td><span class="sw sw--pb">relleno</span> cuando lidera la clase</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">iR</th>
+                      <td>iRating, con el cambio previsto para esta carrera</td>
+                      <td><span class="sw sw--pb">▲ sube</span> · <span class="sw sw--bad">▼ baja</span> — una estimación</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">LIC</th>
+                      <td>Clase de licencia y safety rating, unidos al iRating en una sola píldora</td>
+                      <td>El color de licencia de iRacing, como una barra corta al inicio de la píldora</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">S1–S3</th>
+                      <td>Tiempo del sector cuando es un mejor tiempo, la diferencia cuando es una pérdida</td>
+                      <td><span class="sw sw--best">morado</span> · <span class="sw sw--pb">verde</span> · <span class="sw sw--warn">amarillo</span> · <span class="sw sw--bad">rojo</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="legend__scroll">
+                <table class="tnum">
+                  <caption class="micro legend__cap">Cabecera de sesión</caption>
+                  <thead>
+                    <tr><th scope="col">Campo</th><th scope="col">Indica</th><th scope="col">Color</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th scope="row">RACE</th>
+                      <td>Tipo de sesión, relleno con la bandera que ondea en ese momento</td>
+                      <td><span class="sw sw--pb">verde</span> · <span class="sw sw--warn">amarillo</span> · <span class="sw sw--bad">rojo</span></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">CIRCUIT</th>
+                      <td>El circuito y su trazado — el primer campo que desaparece si el overlay se estrecha</td>
+                      <td>—</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">LAP</th>
+                      <td>Vueltas completadas sobre la distancia de carrera — estimadas en una carrera por tiempo</td>
+                      <td>—</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">LEFT</th>
+                      <td>Tiempo, o vueltas, que quedan de sesión</td>
+                      <td>—</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">INC</th>
+                      <td>Tus puntos de incidente en esta sesión</td>
+                      <td><span class="sw sw--warn">amarillo</span> y luego <span class="sw sw--bad">rojo</span> al acercarse a un límite</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">TRACK · AIR</th>
+                      <td>Temperatura de la pista y del aire</td>
+                      <td>—</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">SOF</th>
+                      <td>Strength of field, el nivel medio del grupo</td>
+                      <td>—</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">TIME</th>
+                      <td>Hora local, para cuando el stint ya ha dejado de tener sentido</td>
+                      <td>—</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <section id="features" class="section">
+        <div class="shell">
+          <header class="sec-head">
+            <p class="eyebrow">Funciones</p>
+            <h2>Hecho para no estorbar.</h2>
+            <p class="sec-head__lede">
+              Los overlays no tienen ningún control — mientras los lees, tienes
+              las manos ocupadas. Todo lo que puedes cambiar está en el gestor.
+            </p>
+          </header>
+
+          <ul class="feats">
+            <li class="feat">
+              <svg class="feat__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="4" width="11" height="8" rx="1" /><rect x="10" y="12" width="11" height="8" rx="1" /></svg>
+              <h3>Una ventana por overlay</h3>
+              <p>Sin marco y siempre visible. Cada ventana recuerda su posición y su tamaño, y se vuelve a abrir justo donde la dejaste.</p>
+            </li>
+            <li class="feat">
+              <svg class="feat__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="5" y="10.5" width="14" height="10" rx="1.5" /><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" /></svg>
+              <h3>Bloquéala y conduce a través</h3>
+              <p>Una ventana bloqueada deja pasar los clics: el ratón va directo a iRacing. <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> bloquea o desbloquea la ventana activa.</p>
+            </li>
+            <li class="feat">
+              <svg class="feat__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h10M18 7h2M4 17h2M10 17h10" /><circle cx="16" cy="7" r="2" /><circle cx="8" cy="17" r="2" /></svg>
+              <h3>Vista previa en vivo, sin botón de aplicar</h3>
+              <p>Cada ajuste se aplica en cuanto lo cambias — en la vista previa y en el overlay que ya tienes abierto sobre el juego.</p>
+            </li>
+            <li class="feat">
+              <svg class="feat__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 12h3.5l2.5-6 4 12 2.5-6H21" /></svg>
+              <h3>Directo del simulador</h3>
+              <p>Un pequeño puente lee la memoria compartida de iRacing y la envía a los overlays por un WebSocket local a unos 60 Hz.</p>
+            </li>
+            <li class="feat">
+              <svg class="feat__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5V12l3 2" /></svg>
+              <h3>Pruébalo sin simulador</h3>
+              <p>Activa los datos simulados y toda la interfaz funciona con una parrilla multiclase sintética. Todas las capturas de esta página se tomaron así.</p>
+            </li>
+            <li class="feat">
+              <svg class="feat__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3.5 5 6.5v5c0 4.4 3 7.8 7 9 4-1.2 7-4.6 7-9v-5Z" /><path d="m9 12 2.2 2.2L15.5 10" /></svg>
+              <h3>Tuyo, en tu PC</h3>
+              <p>Sin cuenta que crear y sin nada que envíe datos fuera. Se instala en tu perfil de usuario — sin permisos de administrador.</p>
+            </li>
+          </ul>
+
+          <div class="split">
+            <div class="split__copy">
+              <div class="band">
+                <span class="band__chip">Gestor</span>
+                <span class="band__field"><span class="band__k">TEMAS</span><b class="band__v">4</b></span>
+              </div>
+              <h3>Se configura una vez y te olvidas.</h3>
+              <p>
+                Elige un overlay y toda su configuración está en una sola página
+                — apariencia, visibilidad, ventana — junto a una vista previa en
+                vivo del overlay que estás cambiando.
+              </p>
+              <ul class="reads">
+                <li>Elige tus columnas de tiempos; la tabla se escala para conservarlas todas</li>
+                <li>Cuatro temas: Carbon, Midnight, Graphite y Endurance</li>
+                <li>Datos simulados en los ajustes globales, para cuando no tienes el simulador a mano</li>
+              </ul>
+            </div>
+            <figure class="shot">
+              <img
+                src="../assets/manager.png"
+                width="2800"
+                height="1800"
+                loading="lazy"
+                alt="El gestor de overlays: una columna a la izquierda con Dashboard,
+                     Standings, Relative, Fuel Calc y Coach, una columna de ajustes de
+                     widgets y apariencia en el centro, y a la derecha una vista previa
+                     a escala del overlay dashboard — su velocímetro a 206 km/h en
+                     quinta, y debajo la traza de acelerador y freno, el acelerador en
+                     cian y el freno en gris."
+              />
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <section id="install" class="section">
+        <div class="shell">
+          <header class="sec-head">
+            <p class="eyebrow">Instalar</p>
+            <h2>De la descarga a la parrilla en tres pasos.</h2>
+          </header>
+
+          <ol class="steps">
+            <li class="step">
+              <span class="step__n" aria-hidden="true">1</span>
+              <h3>Descarga</h3>
+              <p>
+                <code>TelemetryLab-setup.exe</code> — el enlace apunta siempre a
+                la última versión.
+              </p>
+            </li>
+            <li class="step">
+              <span class="step__n" aria-hidden="true">2</span>
+              <h3>Ejecuta el instalador</h3>
+              <p>
+                Se instala solo para tu usuario, sin pedir permisos de
+                administrador. Windows dirá que el editor es desconocido porque el
+                instalador no está firmado: elige <b>Más información</b> y después
+                <b>Ejecutar de todas formas</b>.
+              </p>
+            </li>
+            <li class="step">
+              <span class="step__n" aria-hidden="true">3</span>
+              <h3>Coloca tus overlays</h3>
+              <p>
+                Abre los que quieras desde el gestor y ponlos donde prefieras.
+                Entra en una sesión de iRacing y se llenan de datos en directo.
+              </p>
+            </li>
+          </ol>
+
+          <p class="install__verify">
+            ¿Quieres comprobar lo que has descargado? Cada versión publica el
+            SHA-256 del instalador en la
+            <a class="link-inline" href="https://github.com/panyu1512/TelemetryLab/releases/latest" rel="noopener" target="_blank">página de la versión</a>,
+            con el comando para verificarlo.
+          </p>
+        </div>
+      </section>
+
+      <section id="pricing" class="section">
+        <div class="shell">
+          <header class="sec-head">
+            <p class="eyebrow">Precio</p>
+            <h2>Gratis. Todo.</h2>
+            <p class="sec-head__lede">
+              No hay versión de pago ni nada reservado para ella. Todos los
+              overlays, todos los widgets y todas las actualizaciones vienen en
+              la descarga.
+            </p>
+          </header>
+
+          <div class="plans">
+            <article class="plan plan--main">
+              <header class="plan__head">
+                <h3>TelemetryLab</h3>
+                <p class="plan__price"><span class="plan__amount">0 €</span><span class="plan__per">sin cuenta, sin periodo de prueba</span></p>
+              </header>
+              <ul class="plan__list">
+                <li>Clasificación, Relative, Combustible, Coach y Dashboard</li>
+                <li>Los siete widgets, radar incluido</li>
+                <li>Cuatro temas y un gestor con vista previa en vivo</li>
+                <li>Cada versión, en cuanto sale</li>
+                <li>El código fuente, con licencia MIT</li>
+              </ul>
+              <a class="chip-solid chip--lg plan__cta" href="https://github.com/panyu1512/TelemetryLab/releases/latest/download/TelemetryLab-setup.exe">Descargar para Windows</a>
+            </article>
+
+            <article class="plan">
+              <header class="plan__head">
+                <h3>Invítame a un café</h3>
+                <p class="plan__price"><span class="plan__amount plan__amount--word">Opcional</span><span class="plan__per">lo que quieras</span></p>
+              </header>
+              <ul class="plan__list">
+                <li>El mismo software — no desbloquea nada</li>
+                <li>Una forma de decir que te ha ayudado a correr</li>
+                <li>Tiempo para el próximo overlay</li>
+              </ul>
+              <a class="chip chip--lg chip--coffee plan__cta" href="https://buymeacoffee.com/panyu1512" rel="noopener" target="_blank">
+                <svg class="chip__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M4.5 8.5h13v6a4.5 4.5 0 0 1-4.5 4.5H9a4.5 4.5 0 0 1-4.5-4.5v-6Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+                  <path d="M17.5 10h1.75a2.25 2.25 0 0 1 0 4.5H17.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+                  <path d="M8.4 5.6c0-.9 1.1-1.3 1.1-2.2M11.8 5.6c0-.9 1.1-1.3 1.1-2.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" opacity="0.75" />
+                </svg>
+                Invítame a un café
+              </a>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section id="source" class="section">
+        <div class="shell">
+          <div class="oss">
+            <div class="oss__copy">
+              <div class="band">
+                <span class="band__chip">Código abierto</span>
+                <span class="band__field"><span class="band__k">LICENCIA</span><b class="band__v">MIT</b></span>
+                <span class="band__field"><span class="band__k">STACK</span><b class="band__v">Tauri · React · Python</b></span>
+              </div>
+              <h2>Todo está en GitHub.</h2>
+              <p>
+                Léelo, haz un fork, cámbialo, publica tu propia versión — incluso
+                con fines comerciales. Unos datos simulados mueven todos los
+                overlays con telemetría sintética, así que necesitas Windows e
+                iRacing para <em>usarlo</em>, y ninguno de los dos para
+                <em>mejorarlo</em>.
+              </p>
+              <div class="actions">
+                <a class="chip" href="https://github.com/panyu1512/TelemetryLab" rel="noopener" target="_blank">
+                  <svg class="chip__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path fill="currentColor" d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48l-.01-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85l-.01 2.75c0 .27.18.58.69.48A10 10 0 0 0 12 2Z" />
+                  </svg>
+                  Ver el código
+                </a>
+                <a class="chip" href="https://github.com/panyu1512/TelemetryLab/blob/main/CONTRIBUTING.md" rel="noopener" target="_blank">Cómo contribuir</a>
+              </div>
+            </div>
+            <dl class="oss__list">
+              <div>
+                <dt>Sin cuenta y sin telemetría propia</dt>
+                <dd>Nada envía datos fuera. Los únicos datos que maneja son los del simulador, y no salen de tu equipo.</dd>
+              </div>
+              <div>
+                <dt>Las razones están escritas</dt>
+                <dd><code>design.md</code> recoge por qué cada pantalla es como es — incluidas las decisiones que luego se revirtieron.</dd>
+              </div>
+              <div>
+                <dt>Informes de errores que llevan a algo</dt>
+                <dd>Dos preguntas de entrada: ¿sigue pasando con los datos simulados activados?, y ¿en qué tipo de sesión estabas?</dd>
+              </div>
+            </dl>
+          </div>
+        </div>
+      </section>
+
+      <section id="faq" class="section">
+        <div class="shell">
+          <header class="sec-head">
+            <p class="eyebrow">Preguntas</p>
+            <h2>Preguntas frecuentes.</h2>
+          </header>
+
+          <div class="faq">
+            <details class="faq__item" name="faq">
+              <summary>¿Necesito tener iRacing abierto para probarlo?</summary>
+              <p>No. Activa <b>Mock data</b> (datos simulados) en los ajustes globales del gestor y toda la interfaz funciona con telemetría sintética integrada — una parrilla multiclase completa, sin puente y sin simulador.</p>
+            </details>
+            <details class="faq__item" name="faq">
+              <summary>¿De verdad es gratis?</summary>
+              <p>Sí. No hay versión de pago, ni periodo de prueba, ni cuenta. El código tiene licencia MIT, así que puedes leerlo, cambiarlo y redistribuirlo. Si quieres apoyarlo, hay un enlace para invitar a un café — no desbloquea nada.</p>
+            </details>
+            <details class="faq__item" name="faq">
+              <summary>¿Por qué Windows dice que el editor es desconocido?</summary>
+              <p>El instalador no está firmado digitalmente, así que SmartScreen no tiene un editor que mostrar y lo bloquea por defecto. Elige <b>Más información</b> y después <b>Ejecutar de todas formas</b>. Para comprobar lo que has descargado, compara su SHA-256 con el publicado en la <a class="link-inline" href="https://github.com/panyu1512/TelemetryLab/releases/latest" rel="noopener" target="_blank">página de la versión</a>.</p>
+            </details>
+            <details class="faq__item" name="faq">
+              <summary>¿Necesita permisos de administrador?</summary>
+              <p>No. El <code>.exe</code> de instalación se instala en tu propio perfil de usuario — no escribe nada en Archivos de programa y abre la aplicación al terminar. Junto a él, en la página de la versión, hay un <code>.msi</code> para instalaciones por equipo.</p>
+            </details>
+            <details class="faq__item" name="faq">
+              <summary>¿Funciona en macOS o Linux?</summary>
+              <p>Para correr, no: la memoria compartida de iRacing solo existe en Windows. Para desarrollar, sí — los datos simulados y la interfaz funcionan en cualquier sistema, y así se construye la mayor parte.</p>
+            </details>
+            <details class="faq__item" name="faq">
+              <summary>¿Puedo mover los overlays mientras conduzco?</summary>
+              <p>Desbloquea una ventana y arrástrala; vuelve a bloquearla y dejará pasar los clics, así que el ratón irá al simulador. <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> bloquea o desbloquea la ventana activa. Las posiciones y los tamaños se recuerdan entre sesiones.</p>
+            </details>
+            <details class="faq__item" name="faq">
+              <summary>¿Está afiliado a iRacing?</summary>
+              <p>No. TelemetryLab es un proyecto independiente, sin relación ni respaldo de iRacing.com Motorsport Simulations.</p>
+            </details>
+          </div>
+        </div>
+      </section>
+
+      <section class="section section--cta">
+        <div class="shell">
+          <div class="cta">
+            <h2>Tu próximo stint, con la carrera a la vista.</h2>
+            <p>Gratis para Windows. Se instala en tu perfil de usuario y se abre al terminar.</p>
+            <div class="actions actions--center">
+              <a class="chip-solid chip--lg" href="https://github.com/panyu1512/TelemetryLab/releases/latest/download/TelemetryLab-setup.exe">
+                <svg class="chip__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M5 19.5h14" /></svg>
+                Descargar para Windows
+              </a>
+              <a class="chip chip--lg" href="https://github.com/panyu1512/TelemetryLab/releases" rel="noopener" target="_blank">Todas las versiones</a>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <!-- BRAND NAME: as on the English page, the wordmark's two copies are the
+         last two nodes of the footer. Change both, on both pages. -->
+    <footer class="foot">
+      <div class="shell">
+        <div class="foot__grid">
+          <div class="foot__brand">
+            <a class="wordmark" href="#main">
+              <svg class="wordmark__mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+                <path d="M8.69 9L18.89 9L17.69 14L15.69 14L13.48 23.2L7.81 26L10.69 14L4.69 14Z" />
+                <path d="M20.41 6L25.41 6L21.81 21L27.31 21L23.31 26L15.61 26Z" />
+              </svg>
+              TelemetryLab
+            </a>
+            <p>Overlays de cronometraje y telemetría para iRacing. Gratis y de código abierto.</p>
+          </div>
+
+          <nav class="foot__col" aria-label="Producto">
+            <h2 class="foot__h">Producto</h2>
+            <a class="link-q" href="#overlays">Overlays</a>
+            <a class="link-q" href="#features">Funciones</a>
+            <a class="link-q" href="#install">Instalar</a>
+            <a class="link-q" href="#faq">Preguntas</a>
+          </nav>
+
+          <nav class="foot__col" aria-label="Descarga">
+            <h2 class="foot__h">Descarga</h2>
+            <a class="link-q" href="https://github.com/panyu1512/TelemetryLab/releases/latest/download/TelemetryLab-setup.exe">Instalador para Windows</a>
+            <a class="link-q" href="https://github.com/panyu1512/TelemetryLab/releases" rel="noopener" target="_blank">Todas las versiones</a>
+            <a class="link-q" href="https://github.com/panyu1512/TelemetryLab/blob/main/CHANGELOG.md" rel="noopener" target="_blank">Registro de cambios</a>
+          </nav>
+
+          <nav class="foot__col" aria-label="Proyecto">
+            <h2 class="foot__h">Proyecto</h2>
+            <a class="link-q" href="https://github.com/panyu1512/TelemetryLab" rel="noopener" target="_blank">Código en GitHub</a>
+            <a class="link-q" href="https://github.com/panyu1512/TelemetryLab/blob/main/CONTRIBUTING.md" rel="noopener" target="_blank">Contribuir</a>
+            <a class="link-q" href="https://github.com/panyu1512/TelemetryLab/issues/new/choose" rel="noopener" target="_blank">Informar de un error</a>
+            <a class="link-q" href="https://buymeacoffee.com/panyu1512" rel="noopener" target="_blank">Invítame a un café</a>
+          </nav>
+        </div>
+
+        <div class="foot__meta">
+          <p class="foot__colophon">© 2026 TelemetryLab · licencia MIT · sin afiliación con iRacing</p>
+          <div class="lang" role="group" aria-label="Idioma">
+            <a class="lang__opt" href="../" hreflang="en" lang="en">English</a>
+            <a class="lang__opt" href="./" hreflang="es" lang="es" aria-current="page">Español</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="foot__mark">
+        <span class="sr-only">TelemetryLab</span>
+        <span class="foot__mark-word" aria-hidden="true">TelemetryLab</span>
+      </div>
+    </footer>
+
+    <script>
+      (function () {
+        var KEY = "telemetrylab.theme";
+        var root = document.documentElement;
+        var button = document.getElementById("theme-toggle");
+        var meta = document.querySelector('meta[name="theme-color"]');
+        var menu = document.getElementById("menu");
+
+        function paintChrome() {
+          if (!meta) return;
+          var paper = getComputedStyle(root).getPropertyValue("--color-bg").trim();
+          if (!paper) return;
+          try {
+            var c = document.createElement("canvas").getContext("2d");
+            c.fillStyle = paper;
+            var d = ((c.fillRect(0, 0, 1, 1), c.getImageData(0, 0, 1, 1)) || {}).data;
+            if (d) paper = "rgb(" + d[0] + " " + d[1] + " " + d[2] + ")";
+          } catch (e) {
+            /* no canvas — send the token through as authored */
+          }
+          meta.setAttribute("content", paper);
+        }
+
+        if (button) {
+          button.addEventListener("click", function () {
+            var next = root.dataset.theme === "light" ? "dark" : "light";
+            root.dataset.theme = next;
+            try {
+              localStorage.setItem(KEY, next);
+            } catch (e) {
+              /* the choice just will not survive the tab; the page still flips */
+            }
+            paintChrome();
+          });
+        }
+
+        if (menu) {
+          menu.addEventListener("click", function (e) {
+            if (e.target.closest && e.target.closest(".menu__panel a")) menu.open = false;
+          });
+          document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && menu.open) {
+              menu.open = false;
+              menu.querySelector("summary").focus();
+            }
+          });
+        }
+
+        paintChrome();
+      })();
+    </script>
+  </body>
+</html>

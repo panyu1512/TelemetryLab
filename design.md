@@ -95,9 +95,11 @@ decoration.
   and, where it earns its place, a header rule. It has no macrostructure and
   must never acquire one. **Tabular overlays** — Standings and Relative — are a
   named exception to the header rule; see § Dense tabular overlays.
-- **Marketing surface: Split Studio.** One page, at [`site/`](site/), selling
-  the app. Every claim is paired with the capture that proves it, and the
-  pairing alternates down the page. See § The marketing surface.
+- **Marketing surface: product landing.** One page, at [`site/`](site/), in
+  English and Spanish, selling the app: a centred hero over a composed stage
+  of real captures, then overlay cards, features, install steps, price, FAQ.
+  Every card still pairs a claim with the capture that proves it. See § The
+  marketing surface.
 
 ## Theme
 
@@ -1330,22 +1332,46 @@ is a rule that will keep getting revisited.
 
 ## The marketing surface
 
-One page at [`site/`](site/): static HTML, three stylesheets and ~30 lines of
-inline script for the theme toggle — no build step, no framework, deployable as
-a folder. It is a **third surface class**, and the
-sharing rule at the top of this file governs it exactly as it governs the other
-two — a page selling an instrument that does not look like the instrument is
-selling something else.
+One page at [`site/`](site/), in two languages — `index.html` and
+`es/index.html` — with three stylesheets and a few dozen lines of inline script
+for the theme toggle and the mobile menu: no build step, no framework,
+deployable as a folder. It is a **third surface class**, and the sharing rule
+at the top of this file governs it exactly as it governs the other two — a page
+selling an instrument that does not look like the instrument is selling
+something else.
 
-**Macrostructure: Split Studio.** Every claim sits beside the capture that
-proves it, and the pairing alternates direction. Nav is **N9 edge-aligned**
-(wordmark hard-left, actions hard-right, nothing between); footer is **Ft5
-statement** — a closing line, not a sitemap. The closing line is the wordmark
-itself, and rule 5 below is what it is allowed to do.
+**Macrostructure: product landing.** The product owner asked for a page laid
+out like the sim-racing overlay sites drivers already know (RaceLab's was the
+reference), so the old Split Studio spine — one long column of claim/capture
+rows alternating direction — gave way to the sections a driver expects to find
+on one: a centred hero with the two actions, a stats strip and the product on
+screen; the overlays as cards; the features; three install steps; the price;
+open source; an FAQ; a closing call to action. The *layout* is borrowed; the
+*voice* is not. Every colour, face, radius and meaning below is this system's,
+and the honest-copy rule at the end of this section is untouched — the
+reference's user counts, star ratings, game-logo strip and testimonials have no
+equivalent here, because none of them can be measured for this project.
+
+What survived from Split Studio is its one real rule: **every claim gets its
+proof.** Each overlay card is a band, a heading, a paragraph and the capture
+that shows all of it; the standings card still runs its capture the full width
+of the shell, because twelve columns of 12 px type are illegible at half.
+
+Nav is **N1 product**: wordmark left, the page's five sections in the middle,
+language, theme, source and the download on the right; below 68rem the section
+links fold into a menu. The middle links are not decoration added to an N9 row
+— they are rule 8's readout, moved up into the bar. Footer is **a sitemap in
+columns over the Ft5 wordmark**: the brand and a line about it, the page's links
+grouped by what they are for, the colophon and the language switch, and the
+cropped wordmark still the last element on the page (rule 5).
 
 What it inherits without change: every colour token and every colour *meaning*,
 Inter, the 4-point spacing scale, the three easings and durations, the 8-state
 control contract, and the focus-ring rule.
+
+Its cards take an 8 px radius, against the app's 3–4 px. That is a page-scale
+step, not a new geometry: a 1,200 px card cut at 4 px reads as square-cornered,
+and the captures inside the cards keep the app's own 4 px.
 
 **§ Motion's reveal pattern is the one thing it no longer inherits.** This file
 used to say that a marketing page which animates on scroll "would be the first
@@ -1364,6 +1390,19 @@ Seven things it is allowed that no app surface is:
    `<figure>` with a hairline border on `--color-timing-bg`, so a screenshot
    sits on the paper it was shot on. **No drawn browser chrome** — no URL pill,
    no traffic lights, no phone frame. A fake window only ever reads as fake.
+
+   **One composite, and it says so.** The hero's stage places five captures on
+   a 16:9 field of `--color-timing-bg` the way a driver arranges the windows
+   over the game — standings top left, relative right, coach, fuel and the
+   radar below. It is the product's whole idea (separate windows, not one
+   dashboard) shown rather than told. Every image in it is an unretouched
+   capture; the arrangement is the only thing composed, and the figcaption
+   names it a composite so it is never read as one screenshot. The windows
+   carry a drop shadow there and nowhere else: overlapping windows need
+   separating, and lightness alone cannot separate five dark pictures on dark
+   paper. Below 48rem the stage stops being a screen — five windows on a
+   phone-width 16:9 would be five thumbnails — and becomes the two captures
+   that still read at that size, stacked.
 3. **A pinned mono.** The app bundles JetBrains Mono for every figure since
    1.25 (§ Typography); the site pins the same face from Google Fonts, since a
    public page cannot reach the app's bundle — and the mono is what makes the
@@ -1402,9 +1441,11 @@ Seven things it is allowed that no app surface is:
    read at the top of the page is not.
 
 6. **Scroll-driven devices — three of them, and each one reports or reveals
-   rather than performs.** A section fade on entry, a 26 px drift on the
-   product captures, and a progress rule along the pinned nav that fills with
-   how far down the page you are. That last one is the reason the set is
+   rather than performs.** A fade on each card as it enters, a drift on the
+   stage's windows as the hero scrolls away (each by its own depth, at most
+   28 px, so the windows separate slightly — the composite reads as layered
+   windows rather than as one flat picture), and a progress rule along the
+   pinned nav that fills with how far down the page you are. That last one is the reason the set is
    allowed at all: a bar reporting a measured quantity is the same instrument
    voice as the § Session header, not decoration borrowed from a template.
 
@@ -1413,15 +1454,15 @@ Seven things it is allowed that no app surface is:
 
    - **Transform and opacity only**, per § Motion — never a layout property.
      The fade is opacity; the drift and the progress rule are transforms.
-   - **Amplitude is the argument.** The drift is ±13 px over a capture's whole
-     pass through the viewport: felt, not watched. At the 80–120 px a parallax
+   - **Amplitude is the argument.** The drift is at most 28 px, over the first
+     screen of scrolling: felt, not watched. At the 80–120 px a parallax
      library defaults to, a screenshot whose entire job is to be *read* would
-     be sliding while you read it. It moves the `<figure>`, never the `<img>`
-     inside it — an image shifting within its own frame reads as a bug; a
-     framed picture drifting against the paragraph beside it reads as depth.
-   - **Never above the fold.** The range ends inside `entry`, so anything
-     already on screen when the page opens renders at full strength. A hero
-     that fades in is a hero the reader waits for.
+     be sliding while you read it. It moves whole windows against each other,
+     never an image inside its own frame — that reads as a bug.
+   - **Never above the fold.** The fade's range ends inside `entry`, so
+     anything already on screen when the page opens renders at full strength,
+     and the drift starts at zero at the top of the page. A hero that fades in
+     is a hero the reader waits for.
    - **No JavaScript in any of the three.** `animation-timeline: view()` and
      `scroll()` inside `@supports`, so a browser without scroll-driven
      animations gets the page exactly as it was. The fallback is *visible* —
@@ -1472,38 +1513,52 @@ Seven things it is allowed that no app surface is:
      does nothing — the one thing it must never be is a page that renders
      unstyled or unreadable.
 
-   This is the only script on the surface and the only script this system has
-   outside the app itself. Anything else that wants to be added here has to
-   argue for itself the way this did.
+   This and the menu's one handler (below) are the only script on the surface
+   and the only script this system has outside the app itself. Anything else
+   that wants to be added here has to argue for itself the way these did.
+
+   **The mobile menu** is a `<details>`, so it opens with scripting off. Its
+   handler closes it after a link inside it is followed, and on Escape —
+   without that a followed link leaves the panel open over the section it just
+   scrolled to. It is a dozen lines and touches nothing else.
 
 8. **The product's own readout devices, at page scale.** Rule 6 admitted the
    progress rule on the argument that *a bar reporting a measured quantity is
-   the same instrument voice as the § Session header*. Two devices now cash that
-   argument in properly, and both are the app's own furniture rather than
+   the same instrument voice as the § Session header*. Three devices now cash that
+   argument in properly, and all three are the app's own furniture rather than
    anything borrowed from a marketing template.
 
-   - **The page's session strip** (`.readout`) sits in the dock under the nav
-     row: the six sections as sans-caps micro-labels, with the one you are reading
-     filled. It is the § Session header's grammar exactly — a row of fields, one
-     fill, and the fill marks the state that changes what you do next. It takes
-     `primary` (§ Theme: selection) and `on-accent` ink (§ Theme rule 1).
+   - **The nav's section links are the page's readout.** The link for the
+     section you are reading lights — brighter ink and a 2 px `primary` bar
+     under it (§ Theme: selection) — and exactly one is lit at a time. It used
+     to be a separate strip of micro-labels under an N9 nav row; the product
+     landing has a link row in the bar anyway, so the readout moved into it
+     rather than repeating it.
 
-     It costs **no JavaScript**, per rule 6's fourth fence: six `view()`
+     It costs **no JavaScript**, per rule 6's fourth fence: five `view()`
      timelines declared on the sections and referenced from the dock through a
      `timeline-scope` on `:root`. The scope has to be on the root and not on
      `main` — the sections that *define* the timelines are inside `main`, the
-     strip that *references* them is not, and the scope must cover both. Where
-     scroll-driven animations are unavailable the strip is six plain links,
-     which is what it is anyway.
+     links that *reference* them are not, and the scope must cover both. Where
+     scroll-driven animations are unavailable they are five plain links, which
+     is what they are anyway.
 
-     **The nav row above it is still N9.** Wordmark left, actions right,
-     nothing between. This is a readout *below* the nav, not links moved into
-     it — and it is the only wayfinding on a page ~5,600 px tall.
+   - **The stats strip is the § Session header.** Under the hero's actions, a
+     panel with a filled chip (`v1.27`, in `accent` with `on-accent` ink, as
+     the session chip fills with the green flag), the name over a caps
+     sub-line, then small sans labels over large mono values divided by
+     hairlines: `OVERLAYS 5 · WIDGETS 7 · THEMES 4 · FEED ~60 Hz · PRICE 0 € ·
+     LICENCE MIT`. It is where the reference page put its user count and star
+     rating; here every value is checkable in this repo, and the layout is the
+     header across the top of the standings capture a few hundred pixels
+     below it.
 
-   - **The section band** (`.band`) opens every section, including the hero, in
-     the § Class band's grammar: a chip naming the subject, then micro-label /
-     value pairs carrying that subject's own numbers — `COLUMNS 15 · ALWAYS 3 ·
-     ROW 32px`. Every value is a fact checkable in this repo or in a capture on
+   - **The section band** (`.band`) opens every overlay card, the manager and
+     open-source panels, in the § Class band's grammar: a chip naming the
+     subject, then micro-label / value pairs carrying that subject's own
+     numbers — `COLUMNS 15 · ROW 32px`. Section heads above the cards are a
+     centred eyebrow, heading and lede instead; the eyebrow is the section's
+     nav label, in `primary`, so it names where the lit link points. Every value is a fact checkable in this repo or in a capture on
      the page, so the band is inside the honest-copy rule below rather than an
      exception to it. Its 3 px leading edge is the standings row's left border
      at a larger scale — one device, three sizes — and it takes
@@ -1511,12 +1566,22 @@ Seven things it is allowed that no app surface is:
      carries structure and there is no identity colour to quarantine
      (§ Two colour systems is a product-surface rule).
 
-     This is the answer to a page that hosted the instrument in screenshots but
-     did not speak its language anywhere else: the hero was a headline, a lede
-     and a filled button, which is the layout of every other product page and
-     told the reader nothing this product is. Numbered section markers were
-     tried and cut — the fill already reports position, and an ordinal beside
-     it is the decoration this system does not use.
+     This is the answer to a page that hosts the instrument in screenshots
+     but would otherwise not speak its language anywhere else. Numbered
+     section markers were tried and cut — the lit link already reports
+     position, and an ordinal beside it is the decoration this system does not
+     use. The install steps are numbered, because there the order *is* the
+     information.
+
+9. **Two languages, two files.** English at `/`, Spanish at `/es/`, each
+   naming the other with `hreflang` and a two-way switch in the nav and the
+   footer. With no build step there is no template to translate through, so
+   `es/index.html` is a full copy of the markup with the text translated and
+   every path one level up — same class names, same section ids (the readout
+   keys on them). **Change one page and change the other.** The app's own UI
+   labels stay in English inside the Spanish copy where the reader will see
+   them in English on screen (`Mock data`, the capture text); Windows' dialog
+   buttons are given as the Spanish Windows names them.
 
 Two rules it does *not* get to break:
 
@@ -1525,7 +1590,7 @@ Two rules it does *not* get to break:
   plain fact about how the software runs.
 - **No hanging headers.** A heading parked in a left column with its body in a
   right one is banned here as it is everywhere else in this system. Section
-  heads stack.
+  heads stack, centred.
 
 ## Provenance
 
