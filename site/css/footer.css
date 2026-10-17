@@ -1,5 +1,4 @@
-/* Hallmark · genre: modern-minimal · macrostructure: Split Studio
- * design-system: design.md (locked) · surface: marketing · component: Ft5 footer
+/* design-system: design.md (locked) · surface: marketing · component: footer
  *
  * ─────────────────────────────────────────────────────────────────────────────
  *  The footer, split out of site.css because it is the one part of this page
@@ -7,10 +6,11 @@
  *  viewport and cut off by the bottom edge of the document, so only the top of
  *  the letters survives.
  *
- *  Everything above the wordmark stays quiet. The links and the copyright are
- *  the page's small type on the page's own text column; the wordmark is the
- *  only thing in this file that raises its voice, and it is not a link, not
- *  selectable, and not in the accessibility tree.
+ *  Above it, a sitemap in columns — the brand and a line about it, then the
+ *  page's links grouped by what they are for — and a colophon row with the
+ *  language switch. All of it is the page's small type on the page's own text
+ *  column; the wordmark is the only thing in this file that raises its voice,
+ *  and it is not a link, not selectable, and not in the accessibility tree.
  * ─────────────────────────────────────────────────────────────────────────────
  */
 
@@ -54,14 +54,59 @@
   /* The container the wordmark's `cqw` is measured against. */
   container-type: inline-size;
 
-  padding-block-start: var(--space-2xl);
+  padding-block-start: var(--space-3xl);
   /* No bottom padding: the crop IS the bottom of the document. A gap under it
      would turn a deliberate cut into a mis-measured one. */
   padding-block-end: 0;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   The quiet row — links, then the copyright
+   The sitemap — brand column, then three columns of links
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.foot__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 2fr) repeat(3, minmax(0, 1fr));
+  gap: var(--space-xl) var(--space-lg);
+  padding-block: var(--space-xl);
+  /* Column-aligned, like every other rule on this page: it sits inside the
+     shell, so it stops at the gutters rather than running the full bleed the
+     wordmark below it takes. */
+  border-top: var(--rule-hair) solid var(--color-border);
+}
+
+.foot__brand {
+  display: grid;
+  gap: var(--space-xs);
+  align-content: start;
+  justify-items: start;
+}
+
+.foot__brand p {
+  max-width: 30ch;
+  color: var(--color-faint);
+  font-size: var(--text-sm);
+}
+
+.foot__col {
+  display: grid;
+  align-content: start;
+  justify-items: start;
+}
+
+/* The column heads are the instrument's channel labels. */
+.foot__h {
+  margin-block-end: var(--space-2xs);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-faint);
+  line-height: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   The colophon row — copyright left, language right
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .foot__meta {
@@ -71,17 +116,7 @@
   align-items: center;
   gap: var(--space-sm);
   padding-block-start: var(--space-sm);
-  /* Column-aligned, like every other rule on this page: it sits inside the
-     shell, so it stops at the gutters rather than running the full bleed the
-     wordmark below it takes. */
-  border-top: var(--rule-hair) solid var(--color-border-strong);
-}
-
-.foot__links {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-sm);
+  border-top: var(--rule-hair) solid var(--color-border);
 }
 
 .foot__colophon {
@@ -148,10 +183,22 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    Responsive
    The wordmark needs no breakpoint — it is sized and cropped in units that
-   scale themselves. The row above it does.
+   scale themselves. The columns above it do.
    ═══════════════════════════════════════════════════════════════════════════ */
 
+@media (max-width: 60rem) {
+  .foot__grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .foot__brand {
+    grid-column: 1 / -1;
+  }
+}
+
 @media (max-width: 40rem) {
+  .foot__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
   .foot__meta {
     flex-direction: column;
     align-items: flex-start;

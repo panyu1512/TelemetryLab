@@ -263,7 +263,7 @@ npm run tauri build
 
 <br>
 
-A static download page lives in [`site/`](site/) — plain HTML and two stylesheets, no build step. Serve the folder:
+A static download page lives in [`site/`](site/) — plain HTML in English and Spanish (`/es/`) and three stylesheets, no build step. Serve the folder:
 
 ```bash
 python3 -m http.server 4173 --directory site   # → http://localhost:4173

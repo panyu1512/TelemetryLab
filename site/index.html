@@ -13,12 +13,20 @@
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="canonical" href="https://telemetrylab.app/" />
 
+    <!-- The two languages point at each other, and `x-default` names the
+         English page as the one to serve when neither matches. The Spanish
+         page carries the same three lines. -->
+    <link rel="alternate" hreflang="en" href="https://telemetrylab.app/" />
+    <link rel="alternate" hreflang="es" href="https://telemetrylab.app/es/" />
+    <link rel="alternate" hreflang="x-default" href="https://telemetrylab.app/" />
+
     <!-- Open Graph and Twitter image URLs must be absolute — a relative path
          resolves against the scraper, not the page, and the card renders with
          no image at all. -->
     <meta property="og:type" content="website" />
     <meta property="og:site_name" content="TelemetryLab" />
     <meta property="og:locale" content="en" />
+    <meta property="og:locale:alternate" content="es_ES" />
     <meta property="og:url" content="https://telemetrylab.app/" />
     <meta property="og:title" content="TelemetryLab — read the field without looking" />
     <meta
@@ -56,6 +64,7 @@
         "@type": "SoftwareApplication",
         "name": "TelemetryLab",
         "url": "https://telemetrylab.app/",
+        "inLanguage": "en",
         "description": "Multi-class timing, relative, fuel, corner-by-corner coaching and telemetry overlays for iRacing. Each screen is its own window over the game, read at a glance.",
         "applicationCategory": "UtilitiesApplication",
         "applicationSubCategory": "Sim racing overlay",
@@ -80,6 +89,7 @@
           "https://telemetrylab.app/assets/relative.png",
           "https://telemetrylab.app/assets/fuel.png",
           "https://telemetrylab.app/assets/coach.png",
+          "https://telemetrylab.app/assets/dashboard.png",
           "https://telemetrylab.app/assets/manager.png"
         ]
       }
@@ -92,15 +102,10 @@
       rel="stylesheet"
     />
     <!-- Anton is the third face and it is scoped to exactly one element — the
-         footer wordmark. It loads here rather than through the app's font
-         pipeline because this page has no build step; `--font-display` in
-         tokens.css is the token everything else goes through.
-
-         Its own request, for `display=block` rather than the `swap` above.
-         Body text must be readable while Inter is in flight, so it swaps; the
-         wordmark is a decorative shape below the fold, and swapping it would
-         flash a fallback ~40 % too wide for the crop it is sized to. Blank for
-         a moment, then correct, beats wrong and then correct. -->
+         footer wordmark. Its own request, for `display=block` rather than the
+         `swap` above: the wordmark is a decorative shape below the fold, and
+         swapping it would flash a fallback ~40 % too wide for the crop it is
+         sized to. See design.md § The marketing surface, rule 5. -->
     <link
       href="https://fonts.googleapis.com/css2?family=Anton&display=block"
       rel="stylesheet"
@@ -110,10 +115,8 @@
     <!-- The theme, resolved before the first paint.
          Inline and synchronous on purpose: a stored preference applied after
          paint is a white flash on a dark page, which is the one thing a theme
-         toggle must never do. This is the whole of the page's JavaScript
-         besides the toggle's own click handler — see design.md § The marketing
-         surface, rule 7. With scripting off the page still follows the OS,
-         through the `prefers-color-scheme` copy of the palette. -->
+         toggle must never do. With scripting off the page still follows the
+         OS, through the `prefers-color-scheme` copy of the palette. -->
     <script>
       (function () {
         var KEY = "telemetrylab.theme";
@@ -138,11 +141,12 @@
   <body>
     <a class="skip" href="#main">Skip to content</a>
 
-    <!-- N9 · Edge-aligned: wordmark hard-left, actions hard-right, nothing in
-         between. The empty middle is the archetype.
-
-         The dock pins the row to the top of the viewport and carries the scroll
-         readout along its bottom edge. -->
+    <!-- N1 · Product nav: wordmark left, the page's sections in the middle,
+         language, theme, source and the download on the right. The middle
+         links double as the page's readout — the one for the section you are
+         reading is lit, by `view()` timelines and no script (design.md § The
+         marketing surface, rule 8). The progress rule along the dock's bottom
+         edge reports how far down the page you are. -->
     <div class="nav-dock">
       <div class="shell">
         <header class="nav">
@@ -150,762 +154,837 @@
             <!-- The TL monogram, inlined so it takes `currentColor` and needs
                  no second request. Same two paths as favicon.svg, minus its
                  plate — the nav has paper of its own. -->
-            <svg
-              class="wordmark__mark"
-              viewBox="0 0 32 32"
-              aria-hidden="true"
-              focusable="false"
-            >
+            <svg class="wordmark__mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
               <path d="M8.69 9L18.89 9L17.69 14L15.69 14L13.48 23.2L7.81 26L10.69 14L4.69 14Z" />
               <path d="M20.41 6L25.41 6L21.81 21L27.31 21L23.31 26L15.61 26Z" />
             </svg>
             TelemetryLab
           </a>
+
+          <nav class="nav__links" aria-label="Sections">
+            <a class="nav__link" href="#overlays">Overlays</a>
+            <a class="nav__link" href="#features">Features</a>
+            <a class="nav__link" href="#install">Install</a>
+            <a class="nav__link" href="#pricing">Price</a>
+            <a class="nav__link" href="#faq">FAQ</a>
+          </nav>
+
           <div class="nav__actions">
+            <div class="lang" role="group" aria-label="Language">
+              <a class="lang__opt" href="./" hreflang="en" lang="en" aria-current="page">EN</a>
+              <a class="lang__opt" href="es/" hreflang="es" lang="es">ES</a>
+            </div>
+
             <!-- The glyph names the destination, not the current state: sun on
                  dark paper, moon on light. Both ship; CSS picks. -->
-            <button
-              class="theme-toggle"
-              type="button"
-              id="theme-toggle"
-              aria-label="Switch theme"
-            >
-              <svg
-                class="theme-toggle__sun"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-                focusable="false"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-              >
+            <button class="icon-btn theme-toggle" type="button" id="theme-toggle" aria-label="Switch theme">
+              <svg class="theme-toggle__sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
                 <circle cx="12" cy="12" r="4.2" />
-                <path
-                  d="M12 2.6v2.2M12 19.2v2.2M4.2 12H2M22 12h-2.2M6.5 6.5 4.9 4.9M19.1 19.1l-1.6-1.6M17.5 6.5l1.6-1.6M4.9 19.1l1.6-1.6"
-                />
+                <path d="M12 2.6v2.2M12 19.2v2.2M4.2 12H2M22 12h-2.2M6.5 6.5 4.9 4.9M19.1 19.1l-1.6-1.6M17.5 6.5l1.6-1.6M4.9 19.1l1.6-1.6" />
               </svg>
-              <svg
-                class="theme-toggle__moon"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-                focusable="false"
-                fill="none"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linejoin="round"
-              >
+              <svg class="theme-toggle__moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
                 <path d="M20 13.4A8.2 8.2 0 0 1 10.6 4a8.4 8.4 0 1 0 9.4 9.4Z" />
               </svg>
             </button>
+
+            <a class="icon-btn nav__gh" href="https://github.com/panyu1512/TelemetryLab" rel="noopener" target="_blank" aria-label="Source on GitHub">
+              <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                <path fill="currentColor" d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48l-.01-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85l-.01 2.75c0 .27.18.58.69.48A10 10 0 0 0 12 2Z" />
+              </svg>
+            </a>
+
+            <a class="chip-solid nav__cta" href="https://github.com/panyu1512/TelemetryLab/releases/latest/download/TelemetryLab-setup.exe">Download</a>
+
+            <!-- Below 60rem the section links fold into this menu. A
+                 <details> rather than a scripted drawer, so it opens with
+                 scripting off; the only script it has closes it again after a
+                 link inside it is followed. -->
+            <details class="menu" id="menu">
+              <summary class="icon-btn menu__btn" aria-label="Menu">
+                <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
+                  <path d="M4 7h16M4 12h16M4 17h16" />
+                </svg>
+              </summary>
+              <nav class="menu__panel" aria-label="Sections">
+                <a href="#overlays">Overlays</a>
+                <a href="#features">Features</a>
+                <a href="#install">Install</a>
+                <a href="#pricing">Price</a>
+                <a href="#faq">FAQ</a>
+                <a href="es/" hreflang="es" lang="es">Español</a>
+              </nav>
+            </details>
           </div>
         </header>
-
-        <!-- The page's own session strip.
-             §·The marketing surface rule 6 allowed the progress rule on the
-             argument that a bar reporting a measured quantity is the same
-             instrument voice as the product's § Session strip. This is that
-             argument cashed in one step further: the strip names its fields
-             the way the overlay does — mono micro-labels in a row — and fills
-             exactly one of them, the section you are currently reading.
-
-             The fill is the strip's only fill, as it is in the product, and it
-             marks the state that changes what you do next. It is driven by
-             `view()` timelines scoped from `<main>`, so it costs no
-             JavaScript (rule 6, fence 4); a browser without scroll-driven
-             animations gets six plain links, which is what they are anyway.
-
-             It is also the only wayfinding on a page this tall. The nav row
-             above it stays N9 edge-aligned — wordmark left, actions right,
-             nothing between — because this is a readout below it, not links
-             moved into it. -->
-        <nav class="readout" aria-label="Sections">
-          <a class="readout__field" href="#standings">
-            Standings
-          </a>
-          <a class="readout__field" href="#relative">
-            Relative
-          </a>
-          <a class="readout__field" href="#fuel">
-            Fuel
-          </a>
-          <a class="readout__field" href="#coach">
-            Coach
-          </a>
-          <a class="readout__field" href="#manager">
-            Manager
-          </a>
-          <a class="readout__field" href="#spec">
-            Legend
-          </a>
-          <a class="readout__field" href="#needs">
-            Requirements
-          </a>
-          <a class="readout__field" href="#source">
-            Source
-          </a>
-        </nav>
       </div>
     </div>
 
     <main id="main">
-      <div class="shell">
-        <!-- H2 · Split diptych -->
-        <section class="hero">
-          <div class="hero__copy">
-            <!-- The hero opens in the same band grammar every section below
-                 uses, so the page states what it is in the product's own
-                 voice before it says a word of prose. Every value is a fact
-                 checkable on this page. -->
-            <div class="band band--hero">
-              <span class="band__chip">TelemetryLab</span>
-              <span class="band__field"><span class="band__k">OVERLAYS</span><b class="band__v">5</b></span>
-              <span class="band__field"><span class="band__k">OS</span><b class="band__v">Windows</b></span>
-              <span class="band__field"><span class="band__k">PRICE</span><b class="band__v">free</b></span>
+      <!-- ══ Hero ═════════════════════════════════════════════════════════
+           Centred: what it is, the two actions, the session strip that
+           carries its numbers, and the stage — the overlays laid out the way
+           they sit over the game. -->
+      <section class="hero">
+        <div class="shell hero__inner">
+          <a class="pill" href="https://github.com/panyu1512/TelemetryLab/blob/main/CHANGELOG.md" rel="noopener" target="_blank">
+            <span class="pill__tag">New in 1.27</span>
+            The radar is two LED boxes now
+            <svg class="pill__arrow" viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5 10.5 8 6 12.5" /></svg>
+          </a>
+
+          <h1>Read the field without looking.</h1>
+          <p class="hero__lede">
+            Timing and telemetry overlays for iRacing. Multi-class standings, an
+            on-track relative, fuel strategy, a corner-by-corner coach and a
+            driving cluster — each in its own window, over the game.
+          </p>
+
+          <div class="actions actions--center">
+            <!-- Straight at the file. `releases/latest/download/<name>`
+                 always resolves to the newest release, which is why the
+                 build publishes a copy under a name that does not carry the
+                 version — see build.yml. -->
+            <a class="chip-solid chip--lg" href="https://github.com/panyu1512/TelemetryLab/releases/latest/download/TelemetryLab-setup.exe">
+              <svg class="chip__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M5 19.5h14" /></svg>
+              Download for Windows
+            </a>
+            <a class="chip chip--lg" href="#overlays">See the overlays</a>
+          </div>
+          <p class="hero__note">Free and open source · Windows · no administrator rights needed</p>
+
+          <!-- The stats strip, drawn as the product's own session header: a
+               chip, a title over a sub-line, then small labels over large mono
+               values. Every value is a fact checkable in this repo — there is
+               no user count or rating here, because nothing on this page may
+               be invented. -->
+          <div class="session" role="group" aria-label="TelemetryLab at a glance">
+            <span class="session__chip">v1.27</span>
+            <div class="session__title">
+              <b>TelemetryLab</b>
+              <span>Timing &amp; telemetry for iRacing</span>
             </div>
-            <h1>Read the field without looking.</h1>
-            <p class="hero__lede">
-              TelemetryLab is a timing and telemetry overlay for iRacing.
-              Multi-class standings, an on-track relative, fuel strategy, a
-              corner-by-corner coach and a driving cluster — each one its own
-              window, sitting over the game.
+            <dl class="session__fields">
+              <div class="session__field"><dt>Overlays</dt><dd>5</dd></div>
+              <div class="session__field"><dt>Widgets</dt><dd>7</dd></div>
+              <div class="session__field"><dt>Themes</dt><dd>4</dd></div>
+              <div class="session__field"><dt>Feed</dt><dd>~60<small>Hz</small></dd></div>
+              <div class="session__field"><dt>Price</dt><dd>0<small>€</small></dd></div>
+              <div class="session__field"><dt>Licence</dt><dd>MIT</dd></div>
+            </dl>
+          </div>
+        </div>
+
+        <!-- The stage. Real captures, composed — each window placed roughly
+             where a driver would put it, which is the product's whole idea:
+             separate windows, not one dashboard. The figcaption says it is a
+             composite, so it is not mistaken for a single screenshot. -->
+        <div class="shell">
+          <figure class="stage">
+            <div class="stage__screen">
+              <img class="win win--standings" src="assets/standings-compact.png" width="1240" height="526" alt="The standings overlay: a session header, then GT3 and GT4 class groups with gaps and lap times." />
+              <img class="win win--relative" src="assets/relative.png" width="1400" height="840" alt="The relative overlay: the cars ahead and behind on track, with the player's row highlighted." />
+              <img class="win win--coach" src="assets/coach.png" width="1240" height="838" alt="The coach overlay: the corners that cost the most time on the last lap, and why." />
+              <img class="win win--fuel" src="assets/fuel.png" width="1240" height="1180" alt="The fuel overlay: fuel laps left, the pit window and a recommended stop." />
+              <img class="win win--radar" src="assets/radar.png" width="920" height="440" alt="The radar: two LED boxes, with the R lit for a car alongside on the right." />
+            </div>
+            <figcaption class="stage__cap">
+              Five of the overlays, placed the way they sit over the game. A
+              composite of real captures, taken on the built-in mock feed.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ══ Overlays ═══════════════════════════════════════════════════ -->
+      <section id="overlays" class="section">
+        <div class="shell">
+          <header class="sec-head">
+            <p class="eyebrow">Overlays</p>
+            <h2>Everything you would turn your head for.</h2>
+            <p class="sec-head__lede">
+              Five overlays and seven widgets. Each one opens as its own
+              frameless, always-on-top window — place it, size it, lock it, and
+              it comes back where you left it.
             </p>
-            <div class="hero__actions">
-              <!-- Straight at the file. `releases/latest/download/<name>`
-                   always resolves to the newest release, which is why the
-                   build publishes a copy under a name that does not carry the
-                   version — see build.yml. One click, no release page to
-                   read. -->
-              <a
-                class="chip-solid"
-                href="https://github.com/panyu1512/TelemetryLab/releases/latest/download/TelemetryLab-setup.exe"
-                >Download for Windows</a
-              >
+          </header>
+
+          <div class="bento">
+            <article class="card card--wide">
+              <div class="card__copy">
+                <div class="band">
+                  <span class="band__chip">Standings</span>
+                  <span class="band__field"><span class="band__k">COLUMNS</span><b class="band__v">15</b></span>
+                  <span class="band__field"><span class="band__k">ROW</span><b class="band__v">32px</b></span>
+                </div>
+                <h3>The running order, grouped by class.</h3>
+                <p>
+                  Each class opens with its own header — car count, strength of
+                  field and the lap that leads it — then every car on its own
+                  row. There is no scroll bar: the table scales to fit the
+                  window, keeping every column you picked.
+                </p>
+                <ul class="reads">
+                  <li>Gap to the class leader and the interval to the car ahead</li>
+                  <li>Sectors graded against your best and the field's</li>
+                  <li>iRating with a projected change, licence and safety rating</li>
+                  <li>A green ▲ or red ▼ beside the new position on every pass</li>
+                  <li>Tyres for every car — a grey D for dries, a blue W for wets</li>
+                </ul>
+              </div>
+              <figure class="shot">
+                <img
+                  src="assets/standings.png"
+                  width="2360"
+                  height="888"
+                  loading="lazy"
+                  alt="The standings overlay showing two class groups: all six GT3 cars
+                       and the top three GT4 cars, under a session header naming the
+                       session, the track and its layout, with the lap, time left,
+                       incidents, temperatures, strength of field and clock. Each group opens with a header strip
+                       carrying strength of field, car count and fastest lap, followed by
+                       rows — each opening on a thin bar in its class colour, teal for
+                       GT3 and orange for GT4, with a hairline between rows — carrying
+                       position, position change, car number, car brand, flag, driver, a
+                       combined licence and iRating pill — each licence marked by a short
+                       bar in its own colour, blue A, red R, green B, gold C, orange D,
+                       and a dark one for P — gap,
+                       interval, last lap, best lap, tyre and three sector columns — two of the GT4 cars are on
+                       wets, shown by a blue W. The car brands are drawn as their own
+                       marks in light grey, McLaren's and Aston Martin's lettering included. Each class leader's row reads GAP and INT
+                       where it has no gap to show."
+                />
+              </figure>
+            </article>
+
+            <article class="card card--7">
+              <div class="card__copy">
+                <div class="band">
+                  <span class="band__chip">Relative</span>
+                  <span class="band__field"><span class="band__k">SORT</span><b class="band__v">track order</b></span>
+                  <span class="band__field"><span class="band__k">GAP</span><b class="band__v">signed</b></span>
+                </div>
+                <h3>Who is actually coming.</h3>
+                <p>
+                  Sorted by time on track, not by position, so it shows the cars
+                  you are about to meet whatever lap they are on. Lapped cars
+                  turn blue, and a closing indicator fires when a faster car is
+                  catching you — red when it is from another class.
+                </p>
+              </div>
+              <figure class="shot">
+                <img
+                  src="assets/relative.png"
+                  width="1400"
+                  height="840"
+                  loading="lazy"
+                  alt="The relative overlay in a two-class race, under the same session
+                       header as the standings: cars ahead and behind
+                       the player sorted by on-track time, each row opening on a thin
+                       bar of its class colour, with a small GT3 or GT4 tag beside the
+                       car number. GT3 cars on the
+                       player's lap are written in light grey; GT4 cars a lap down on the
+                       player, both ahead and behind, are written in blue with a
+                       minus-one-lap tag. Every row carries the driver's licence,
+                       safety rating and iRating as one pill — the licence marked by a
+                       short bar in its own colour — and its tyres: a grey D in a circle
+                       for dries or a blue W for wets, then the laps on the set — three of
+                       the GT4 cars are on wets. The player's own row is the only
+                       highlighted one, outlined and set apart by a gap above and below."
+                />
+              </figure>
+            </article>
+
+            <article class="card card--5">
+              <div class="card__copy">
+                <div class="band">
+                  <span class="band__chip">Fuel</span>
+                  <span class="band__field"><span class="band__k">BURN</span><b class="band__v">measured</b></span>
+                </div>
+                <h3>The stop, before you need it.</h3>
+                <p>
+                  Strategy from your own measured burn, not a number typed in
+                  before the race: the pit window, the lap it recommends, and
+                  how many laps short you are at the pace you are driving.
+                </p>
+              </div>
+              <figure class="shot">
+                <img
+                  src="assets/fuel.png"
+                  width="1240"
+                  height="1180"
+                  loading="lazy"
+                  alt="The fuel and strategy overlay, under a strip naming the track and a
+                       1.0-lap margin: a 'Pit stop needed' block reading 1.6 fuel laps
+                       against 8 laps to the flag, 7.3 litres in tank at 2.86 litres per
+                       lap, a pit window of laps 18 to 19, a recommended pit on lap 19, a
+                       note reading 'short by 7 laps at the current burn', and two
+                       candidate plans — a one-stop on lap 19 and a two-stop. Below them,
+                       a fuel-per-lap table lists laps 17 back to 14 with the litres each
+                       burned — 2.93, 2.91, 2.76 and an estimated 2.82 — each against the
+                       2.86 average in red when over and green when under, beside its
+                       lap time and the litres left in the tank at the line."
+                />
+              </figure>
+            </article>
+
+            <article class="card card--5">
+              <div class="card__copy">
+                <div class="band">
+                  <span class="band__chip">Coach</span>
+                  <span class="band__field"><span class="band__k">RUNS</span><b class="band__v">locally</b></span>
+                </div>
+                <h3>Where the lap went, corner by corner.</h3>
+                <p>
+                  Every lap is lined up against your quickest clean lap, metre by
+                  metre. The coach names the one or two corners that cost you
+                  most, and why — braked early, coasted, over-slowed the apex,
+                  late on the throttle.
+                </p>
+              </div>
+              <figure class="shot">
+                <img
+                  src="assets/coach.png"
+                  width="1240"
+                  height="838"
+                  loading="lazy"
+                  alt="The coach overlay, under a strip naming the track with the
+                       reference lap at 2:18.607, the last lap at 2:20.128 and a
+                       delta of plus 1.521. The headline tip, marked by a red bar on its
+                       left edge, reads
+                       T4, 'Coasted 153 m off both pedals', plus 0.52 seconds, with
+                       the apex and exit 2 km/h slower and '3 of the last 6 laps'. A
+                       second tip reads T3, 'Braked 25 m early', plus 0.41 seconds,
+                       entry 30 km/h slower, '5 of the last 6 laps'. Below, a strip
+                       of the lap coloured yellow and red by where time went, and a
+                       list of all six corners as bars from a centre line — T2 too
+                       hot, T3 early brake and T4 coasting in red — ending in a lap
+                       row of plus 1.52 seconds against the reference."
+                />
+              </figure>
+            </article>
+
+            <article class="card card--7">
+              <div class="card__copy">
+                <div class="band">
+                  <span class="band__chip">Dashboard</span>
+                  <span class="band__field"><span class="band__k">WIDGETS</span><b class="band__v">7</b></span>
+                  <span class="band__field"><span class="band__k">GRID</span><b class="band__v">12 col</b></span>
+                </div>
+                <h3>A driving cluster you lay out yourself.</h3>
+                <p>
+                  Speed, gear and shift lights, a pedal trace, fuel, lap timing,
+                  tyre temperatures, position and the radar — arrange them on one
+                  grid, or pop any widget out into a window of its own.
+                </p>
+              </div>
+              <figure class="shot">
+                <img
+                  src="assets/dashboard.png"
+                  width="2200"
+                  height="1240"
+                  loading="lazy"
+                  alt="The dashboard overlay's seven widgets on one grid: a speed gauge
+                       reading 224 km/h in fifth gear under a shift-light bar at 6871
+                       rpm; an inputs panel with the throttle trace in cyan and the
+                       brake in grey beside throttle, brake and clutch bars and a
+                       steering wheel; fuel — 15.1 litres in tank, 5.4 laps left at
+                       2.82 litres a lap; lap timing — last 2:20.128, best 2:18.917 in
+                       green, current lap running and a delta of plus 1.211 in red;
+                       temperatures and pressures for all four tyres; position P6 on
+                       lap 15; and the radar's two LED boxes with the L lit red."
+                />
+              </figure>
+            </article>
+
+            <article class="card card--wide card--row">
+              <div class="card__copy">
+                <div class="band">
+                  <span class="band__chip">Radar</span>
+                  <span class="band__field"><span class="band__k">SOURCE</span><b class="band__v">iRacing spotter</b></span>
+                </div>
+                <h3>A spotter for single-screen drivers.</h3>
+                <p>
+                  On one monitor the car in your blind spot is a voice, not a
+                  picture. The radar is two LED boxes and nothing else: when
+                  iRacing's own spotter calls a car alongside, that side's letter
+                  lights up red. Size the window to sit either side of your car.
+                </p>
+              </div>
+              <figure class="shot shot--radar">
+                <img
+                  src="assets/radar.png"
+                  width="920"
+                  height="440"
+                  loading="lazy"
+                  alt="The radar widget: two square LED boxes in carbon frames, an L on
+                       the left and an R on the right. The R is lit red — a car
+                       alongside on the right — and the L sits dark."
+                />
+              </figure>
+            </article>
+          </div>
+
+          <!-- The legend, folded. It is the reference half of the page —
+               read once, by the people who want it — so it does not get to
+               interrupt the overlays for everyone else. -->
+          <details class="legend">
+            <summary class="legend__sum">
+              <span>What every column on the timing screen means</span>
+              <svg class="legend__icon" viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"><path d="M8 3v10M3 8h10" /></svg>
+            </summary>
+            <div class="legend__body">
+              <div class="legend__scroll">
+                <table class="tnum">
+                  <caption class="micro legend__cap">Standings row</caption>
+                  <thead>
+                    <tr><th scope="col">Column</th><th scope="col">Reads</th><th scope="col">Colour</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th scope="row">POS</th>
+                      <td>Position in class, or overall when the field is ungrouped</td>
+                      <td><span class="sw sw--pb">↑ gained</span> · <span class="sw sw--bad">↓ lost</span> for three seconds after a pass</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">GAP</th>
+                      <td>Seconds behind the class leader, or laps down — the leader's own row reads GAP</td>
+                      <td>—</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">INT</th>
+                      <td>Seconds to the car directly ahead of you in class</td>
+                      <td>—</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">LAST</th>
+                      <td>Your last completed lap, ruled when it grades</td>
+                      <td><span class="sw sw--pb">green rule</span> personal best · <span class="sw sw--best">purple</span> leads the session</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">BEST</th>
+                      <td>Fastest lap of the session for that car</td>
+                      <td><span class="sw sw--pb">filled</span> when it leads the class</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">iR</th>
+                      <td>iRating, with a projected change for this race</td>
+                      <td><span class="sw sw--pb">▲ gain</span> · <span class="sw sw--bad">▼ loss</span> — an estimate</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">LIC</th>
+                      <td>Licence class and safety rating, joined to the iRating as one pill</td>
+                      <td>iRacing's own licence colour, as a short bar opening the pill</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">S1–S3</th>
+                      <td>Sector time when it is a best, the delta when it is a loss</td>
+                      <td><span class="sw sw--best">purple</span> · <span class="sw sw--pb">green</span> · <span class="sw sw--warn">yellow</span> · <span class="sw sw--bad">red</span></td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+
+              <div class="legend__scroll">
+                <table class="tnum">
+                  <caption class="micro legend__cap">Session header</caption>
+                  <thead>
+                    <tr><th scope="col">Field</th><th scope="col">Reads</th><th scope="col">Colour</th></tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <th scope="row">RACE</th>
+                      <td>Session type, filled with the flag currently flying</td>
+                      <td><span class="sw sw--pb">green</span> · <span class="sw sw--warn">yellow</span> · <span class="sw sw--bad">red</span></td>
+                    </tr>
+                    <tr>
+                      <th scope="row">CIRCUIT</th>
+                      <td>The circuit and its layout — the first field to go when the overlay narrows</td>
+                      <td>—</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">LAP</th>
+                      <td>Laps done over the race distance — projected in a timed race</td>
+                      <td>—</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">LEFT</th>
+                      <td>Time, or laps, left in the session</td>
+                      <td>—</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">INC</th>
+                      <td>Your incident points this session</td>
+                      <td><span class="sw sw--warn">yellow</span> then <span class="sw sw--bad">red</span> as a limit comes into sight</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">TRACK · AIR</th>
+                      <td>Track and air temperature</td>
+                      <td>—</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">SOF</th>
+                      <td>Strength of field</td>
+                      <td>—</td>
+                    </tr>
+                    <tr>
+                      <th scope="row">TIME</th>
+                      <td>Local time, for when the stint has stopped meaning anything</td>
+                      <td>—</td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </details>
+        </div>
+      </section>
+
+      <!-- ══ Features ═══════════════════════════════════════════════════ -->
+      <section id="features" class="section">
+        <div class="shell">
+          <header class="sec-head">
+            <p class="eyebrow">Features</p>
+            <h2>Built to stay out of your way.</h2>
+            <p class="sec-head__lede">
+              The overlays carry no controls at all — while you are reading
+              them your hands are busy. Everything you can change lives in the
+              manager instead.
+            </p>
+          </header>
+
+          <ul class="feats">
+            <li class="feat">
+              <svg class="feat__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="4" width="11" height="8" rx="1" /><rect x="10" y="12" width="11" height="8" rx="1" /></svg>
+              <h3>One window per overlay</h3>
+              <p>Frameless and always on top. Each window remembers its own position and size, and reopens exactly where you left it.</p>
+            </li>
+            <li class="feat">
+              <svg class="feat__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="5" y="10.5" width="14" height="10" rx="1.5" /><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" /></svg>
+              <h3>Lock it, drive through it</h3>
+              <p>A locked window is click-through: the mouse goes straight to iRacing. <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> toggles the focused one.</p>
+            </li>
+            <li class="feat">
+              <svg class="feat__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M4 7h10M18 7h2M4 17h2M10 17h10" /><circle cx="16" cy="7" r="2" /><circle cx="8" cy="17" r="2" /></svg>
+              <h3>Live preview, no apply button</h3>
+              <p>Every setting lands the moment you change it — on the preview and on the overlay already open over the game.</p>
+            </li>
+            <li class="feat">
+              <svg class="feat__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M3 12h3.5l2.5-6 4 12 2.5-6H21" /></svg>
+              <h3>Straight from the sim</h3>
+              <p>A small bridge reads iRacing's shared memory and streams it to the overlays over a local WebSocket at about 60 Hz.</p>
+            </li>
+            <li class="feat">
+              <svg class="feat__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5V12l3 2" /></svg>
+              <h3>Try it without a sim</h3>
+              <p>Turn on mock data and the whole interface runs on a synthetic multi-class field. Every capture on this page was taken that way.</p>
+            </li>
+            <li class="feat">
+              <svg class="feat__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M12 3.5 5 6.5v5c0 4.4 3 7.8 7 9 4-1.2 7-4.6 7-9v-5Z" /><path d="m9 12 2.2 2.2L15.5 10" /></svg>
+              <h3>Yours, on your PC</h3>
+              <p>No account to make and nothing that phones home. It installs in your own user profile — no administrator rights.</p>
+            </li>
+          </ul>
+
+          <div class="split">
+            <div class="split__copy">
+              <div class="band">
+                <span class="band__chip">Manager</span>
+                <span class="band__field"><span class="band__k">THEMES</span><b class="band__v">4</b></span>
+              </div>
+              <h3>Configured once, then left alone.</h3>
+              <p>
+                Pick an overlay and its whole configuration is on one page —
+                appearance, visibility, window — next to a live preview of the
+                overlay it is changing.
+              </p>
+              <ul class="reads">
+                <li>Choose your timing columns; the table scales to keep every one</li>
+                <li>Four themes: Carbon, Midnight, Graphite and Endurance</li>
+                <li>Mock data in the global settings, for when there is no sim to hand</li>
+              </ul>
+            </div>
+            <figure class="shot">
+              <img
+                src="assets/manager.png"
+                width="2800"
+                height="1800"
+                loading="lazy"
+                alt="The Overlay Manager: a left rail listing Dashboard, Standings,
+                     Relative, Fuel Calc and Coach, a column of widget and
+                     appearance settings in the middle, and a live scaled preview
+                     of the dashboard overlay on the right — its speed gauge
+                     reading 206 km/h in fifth, and a throttle and brake trace
+                     below it, throttle in cyan and brake in grey."
+              />
+            </figure>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ Install ════════════════════════════════════════════════════
+           Numbered because it is a sequence: the order is the information. -->
+      <section id="install" class="section">
+        <div class="shell">
+          <header class="sec-head">
+            <p class="eyebrow">Install</p>
+            <h2>From download to the grid in three steps.</h2>
+          </header>
+
+          <ol class="steps">
+            <li class="step">
+              <span class="step__n" aria-hidden="true">1</span>
+              <h3>Download</h3>
+              <p>
+                <code>TelemetryLab-setup.exe</code> — the link always points at
+                the newest release.
+              </p>
+            </li>
+            <li class="step">
+              <span class="step__n" aria-hidden="true">2</span>
+              <h3>Run the installer</h3>
+              <p>
+                It installs for your user only, with no administrator prompt.
+                Windows will call the publisher unknown, because the installer is
+                not code-signed: choose <b>More info</b>, then <b>Run anyway</b>.
+              </p>
+            </li>
+            <li class="step">
+              <span class="step__n" aria-hidden="true">3</span>
+              <h3>Place your overlays</h3>
+              <p>
+                Open the ones you want from the manager and put them where you
+                want them. Start a session in iRacing and they fill with live
+                data.
+              </p>
+            </li>
+          </ol>
+
+          <p class="install__verify">
+            Want proof of what you downloaded? Every release publishes the
+            installer's SHA-256 on the
+            <a class="link-inline" href="https://github.com/panyu1512/TelemetryLab/releases/latest" rel="noopener" target="_blank">release page</a>,
+            with the command that checks it.
+          </p>
+        </div>
+      </section>
+
+      <!-- ══ Price ══════════════════════════════════════════════════════
+           Two cards in the shape of a plans table, and neither of them is a
+           tier: the software is the same on both sides. -->
+      <section id="pricing" class="section">
+        <div class="shell">
+          <header class="sec-head">
+            <p class="eyebrow">Price</p>
+            <h2>Free. All of it.</h2>
+            <p class="sec-head__lede">
+              There is no paid tier and nothing held back for one. Every
+              overlay, every widget and every update is in the download.
+            </p>
+          </header>
+
+          <div class="plans">
+            <article class="plan plan--main">
+              <header class="plan__head">
+                <h3>TelemetryLab</h3>
+                <p class="plan__price"><span class="plan__amount">0 €</span><span class="plan__per">no account, no trial</span></p>
+              </header>
+              <ul class="plan__list">
+                <li>Standings, Relative, Fuel, Coach and Dashboard</li>
+                <li>All seven widgets, the radar included</li>
+                <li>Four themes and a live-preview manager</li>
+                <li>Every release, as it ships</li>
+                <li>The source code, MIT licensed</li>
+              </ul>
+              <a class="chip-solid chip--lg plan__cta" href="https://github.com/panyu1512/TelemetryLab/releases/latest/download/TelemetryLab-setup.exe">Download for Windows</a>
+            </article>
+
+            <article class="plan">
+              <header class="plan__head">
+                <h3>Buy me a coffee</h3>
+                <p class="plan__price"><span class="plan__amount plan__amount--word">Optional</span><span class="plan__per">whatever you like</span></p>
+              </header>
+              <ul class="plan__list">
+                <li>The same software — nothing unlocks</li>
+                <li>A way to say it helped your racing</li>
+                <li>Time for the next overlay</li>
+              </ul>
               <!-- Drawn here rather than loaded from Buy Me a Coffee's CDN: this
-                   page makes no third-party requests for its own chrome, and a
-                   button that waits on someone else's server is a button that
-                   sometimes is not there. A cup, not their wordmark — the label
-                   beside it says whose it is. -->
-              <a
-                class="chip chip--coffee"
-                href="https://buymeacoffee.com/panyu1512"
-                rel="noopener"
-                target="_blank"
-              >
-                <svg
-                  class="chip__icon"
-                  viewBox="0 0 24 24"
-                  aria-hidden="true"
-                  focusable="false"
-                >
-                  <path
-                    d="M4.5 8.5h13v6a4.5 4.5 0 0 1-4.5 4.5H9a4.5 4.5 0 0 1-4.5-4.5v-6Z"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.7"
-                    stroke-linejoin="round"
-                  />
-                  <path
-                    d="M17.5 10h1.75a2.25 2.25 0 0 1 0 4.5H17.5"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.7"
-                    stroke-linecap="round"
-                  />
-                  <path
-                    d="M8.4 5.6c0-.9 1.1-1.3 1.1-2.2M11.8 5.6c0-.9 1.1-1.3 1.1-2.2"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="1.7"
-                    stroke-linecap="round"
-                    opacity="0.75"
-                  />
+                   page makes no third-party requests for its own chrome. A cup,
+                   not their wordmark — the label beside it says whose it is. -->
+              <a class="chip chip--lg chip--coffee plan__cta" href="https://buymeacoffee.com/panyu1512" rel="noopener" target="_blank">
+                <svg class="chip__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                  <path d="M4.5 8.5h13v6a4.5 4.5 0 0 1-4.5 4.5H9a4.5 4.5 0 0 1-4.5-4.5v-6Z" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linejoin="round" />
+                  <path d="M17.5 10h1.75a2.25 2.25 0 0 1 0 4.5H17.5" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" />
+                  <path d="M8.4 5.6c0-.9 1.1-1.3 1.1-2.2M11.8 5.6c0-.9 1.1-1.3 1.1-2.2" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" opacity="0.75" />
                 </svg>
                 Buy me a coffee
               </a>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <!-- ══ Open source ════════════════════════════════════════════════ -->
+      <section id="source" class="section">
+        <div class="shell">
+          <div class="oss">
+            <div class="oss__copy">
+              <div class="band">
+                <span class="band__chip">Open source</span>
+                <span class="band__field"><span class="band__k">LICENCE</span><b class="band__v">MIT</b></span>
+                <span class="band__field"><span class="band__k">STACK</span><b class="band__v">Tauri · React · Python</b></span>
+              </div>
+              <h2>All of it is on GitHub.</h2>
+              <p>
+                Read it, fork it, change it, ship your own build — commercially if
+                you like. A mock feed drives every overlay from synthetic
+                telemetry, so you need Windows and iRacing to <em>use</em> it,
+                and neither to <em>improve</em> it.
+              </p>
+              <div class="actions">
+                <a class="chip" href="https://github.com/panyu1512/TelemetryLab" rel="noopener" target="_blank">
+                  <svg class="chip__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false">
+                    <path fill="currentColor" d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48l-.01-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85l-.01 2.75c0 .27.18.58.69.48A10 10 0 0 0 12 2Z" />
+                  </svg>
+                  View the source
+                </a>
+                <a class="chip" href="https://github.com/panyu1512/TelemetryLab/blob/main/CONTRIBUTING.md" rel="noopener" target="_blank">How to contribute</a>
+              </div>
             </div>
-            <p class="hero__note">Free. Windows only.</p>
+            <dl class="oss__list">
+              <div>
+                <dt>No account, no telemetry of its own</dt>
+                <dd>Nothing here phones home. The only data it handles is the sim's, and it stays on your machine.</dd>
+              </div>
+              <div>
+                <dt>The arguments are written down</dt>
+                <dd><code>design.md</code> records why each screen looks the way it does — including the decisions that were later reversed.</dd>
+              </div>
+              <div>
+                <dt>Bug reports that get somewhere</dt>
+                <dd>Two questions up front: does it still happen with mock data on, and what kind of session were you in.</dd>
+              </div>
+            </dl>
           </div>
+        </div>
+      </section>
 
-          <figure class="shot">
-            <img
-              src="assets/standings-compact.png"
-              width="1240"
-              height="526"
-              alt="The standings overlay in a narrow window, drawn small enough that
-                   every column still fits: a session header of its own — a green
-                   RACE tag, the track, then lap, time left, incidents, track and
-                   air temperature, strength of field and the clock, each a small
-                   label over a large value — then a GT3 class header with strength of field, car count
-                   and fastest lap over six driver rows, and the top three of the GT4
-                   group below it, every figure in a monospace face. Each row opens
-                   on a thin bar in its class colour, with a hairline under it,
-                   carrying position, position change, car number, car brand, flag,
-                   driver, a combined licence and iRating pill with each licence
-                   marked by a short bar in its own colour, gap, interval, last lap,
-                   best lap, tyre and three sector columns."
-            />
-          </figure>
-        </section>
+      <!-- ══ FAQ ════════════════════════════════════════════════════════
+           <details>, so every answer opens without script and is found by
+           the browser's find-in-page even while closed. -->
+      <section id="faq" class="section">
+        <div class="shell">
+          <header class="sec-head">
+            <p class="eyebrow">FAQ</p>
+            <h2>Questions, answered.</h2>
+          </header>
 
-        <!-- Split Studio rows. Every claim is paired with the capture that
-             proves it; the pairing alternates direction down the page. -->
+          <div class="faq">
+            <details class="faq__item" name="faq">
+              <summary>Do I need iRacing running to try it?</summary>
+              <p>No. Turn on <b>Mock data</b> in the manager's global settings and the whole interface runs on built-in synthetic telemetry — a full multi-class field, with no bridge and no sim.</p>
+            </details>
+            <details class="faq__item" name="faq">
+              <summary>Is it really free?</summary>
+              <p>Yes. There is no paid tier, no trial and no account. The code is MIT licensed, so you can read, change and redistribute it. If you want to support it, there is a coffee link — it unlocks nothing.</p>
+            </details>
+            <details class="faq__item" name="faq">
+              <summary>Why does Windows say the publisher is unknown?</summary>
+              <p>The installer is not code-signed, so SmartScreen has no publisher to name and blocks it by default. Choose <b>More info</b>, then <b>Run anyway</b>. To check what you downloaded, compare its SHA-256 with the one published on the <a class="link-inline" href="https://github.com/panyu1512/TelemetryLab/releases/latest" rel="noopener" target="_blank">release page</a>.</p>
+            </details>
+            <details class="faq__item" name="faq">
+              <summary>Does it need administrator rights?</summary>
+              <p>No. The setup <code>.exe</code> installs into your own user profile — nothing is written to Program Files, and it opens the app when it finishes. A <code>.msi</code> for per-machine installs sits beside it on the release page.</p>
+            </details>
+            <details class="faq__item" name="faq">
+              <summary>Does it work on macOS or Linux?</summary>
+              <p>Not for racing: iRacing's shared memory exists only on Windows. For development, yes — the mock feed and the interface run anywhere, which is how most of it is built.</p>
+            </details>
+            <details class="faq__item" name="faq">
+              <summary>Can I move the overlays while I drive?</summary>
+              <p>Unlock a window and drag it; lock it again and it is click-through, so the mouse goes to the sim. <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>L</kbd> toggles the lock on the focused window. Positions and sizes are remembered between sessions.</p>
+            </details>
+            <details class="faq__item" name="faq">
+              <summary>Is it affiliated with iRacing?</summary>
+              <p>No. TelemetryLab is an independent project and is not affiliated with or endorsed by iRacing.com Motorsport Simulations.</p>
+            </details>
+          </div>
+        </div>
+      </section>
 
-        <section id="standings" class="row row--wide">
-          <div class="band">
-            <span class="band__chip">Standings</span>
-            <span class="band__field"><span class="band__k">COLUMNS</span><b class="band__v">15</b></span>
-            <span class="band__field"><span class="band__k">ALWAYS</span><b class="band__v">3</b></span>
-            <span class="band__field"><span class="band__k">ROW</span><b class="band__v">32px</b></span>
-          </div>
-          <div class="row__copy">
-            <h2>The running order, grouped by class.</h2>
-            <p class="row__body">
-              Each class opens with its own header — how many cars are in it, its
-              strength of field, and the lap that leads it. Underneath, every car
-              on its own row with everything you would otherwise be squinting
-              for. Your class shows its leaders and the cars around you, other
-              classes their top runners, and there is no scroll bar: the table
-              scales to fit the window. Join a practice late and the times set
-              before you arrived are already on the board.
-            </p>
-            <ul class="reads">
-              <li>Gap to the class leader, and the interval to the car directly ahead</li>
-              <li>Sector times and deltas, graded against your own best and the field's</li>
-              <li>iRating with a live projected change, licence class and safety rating</li>
-              <li>Who just passed whom: a green ▲ or red ▼ beside the new position on every change of place</li>
-              <li>Every car's tyres — a grey D for dries, a blue W for wets — and laps on the set</li>
-            </ul>
-          </div>
-          <figure class="shot">
-            <img
-              src="assets/standings.png"
-              width="2360"
-              height="888"
-              loading="lazy"
-              alt="The standings overlay showing two class groups: all six GT3 cars
-                   and the top three GT4 cars, under a session header naming the
-                   session, the track and its layout, with the lap, time left,
-                   incidents, temperatures, strength of field and clock. Each group opens with a header strip
-                   carrying strength of field, car count and fastest lap, followed by
-                   rows — each opening on a thin bar in its class colour, teal for
-                   GT3 and orange for GT4, with a hairline between rows — carrying
-                   position, position change, car number, car brand, flag, driver, a
-                   combined licence and iRating pill — each licence marked by a short
-                   bar in its own colour, blue A, red R, green B, gold C, orange D,
-                   and a dark one for P — gap,
-                   interval, last lap, best lap, tyre and three sector columns — two of the GT4 cars are on
-                   wets, shown by a blue W. The car brands are drawn as their own
-                   marks in light grey, McLaren's and Aston Martin's lettering included. Each class leader's row reads GAP and INT
-                   where it has no gap to show."
-            />
-          </figure>
-        </section>
-
-        <section id="relative" class="row row--flip">
-          <div class="band">
-            <span class="band__chip">Relative</span>
-            <span class="band__field"><span class="band__k">SORT</span><b class="band__v">track order</b></span>
-            <span class="band__field"><span class="band__k">GAP</span><b class="band__v">signed</b></span>
-            <span class="band__field"><span class="band__k">iRATING</span><b class="band__v">+ SR</b></span>
-            <span class="band__field"><span class="band__k">TYRES</span><b class="band__v">D · W</b></span>
-          </div>
-          <div class="row__copy">
-            <h2>Who is actually coming.</h2>
-            <p class="row__body">
-              The relative sorts by time on track, not by position — so it shows
-              the cars you are about to meet, whatever lap they are on. Gaps are
-              signed and live. Cars you are lapping turn blue, in a multi-class
-              race every car carries a small class tag beside its number, and the
-              only highlighted row is yours. A closing indicator fires when a faster car is catching
-              you, and turns red when that car is from another class. Every car
-              carries its licence, safety rating and iRating, so you know who you
-              are racing as well as where. And every car shows its
-              tyres — a grey D for dries, a blue W for wets — with the laps on
-              the set, so you see who has gone to wets the moment the rain comes.
-            </p>
-          </div>
-          <figure class="shot">
-            <img
-              src="assets/relative.png"
-              width="1400"
-              height="840"
-              loading="lazy"
-              alt="The relative overlay in a two-class race, under the same session
-                   header as the standings: cars ahead and behind
-                   the player sorted by on-track time, each row opening on a thin
-                   bar of its class colour, with a small GT3 or GT4 tag beside the
-                   car number. GT3 cars on the
-                   player's lap are written in light grey; GT4 cars a lap down on the
-                   player, both ahead and behind, are written in blue with a
-                   minus-one-lap tag. Every row carries the driver's licence,
-                   safety rating and iRating as one pill — the licence marked by a
-                   short bar in its own colour — and its tyres: a grey D in a circle
-                   for dries or a blue W for wets, then the laps on the set — three of
-                   the GT4 cars are on wets. The player's own row is the only
-                   highlighted one, outlined and set apart by a gap above and below."
-            />
-          </figure>
-        </section>
-
-        <section id="fuel" class="row">
-          <div class="band">
-            <span class="band__chip">Fuel</span>
-            <span class="band__field"><span class="band__k">MARGIN</span><b class="band__v">1.0 lap</b></span>
-            <span class="band__field"><span class="band__k">BURN</span><b class="band__v">measured</b></span>
-          </div>
-          <div class="row__copy">
-            <h2>The stop, before you need it.</h2>
-            <p class="row__body">
-              Fuel strategy works from your own measured burn, not from a number
-              you typed in before the race. It gives you the pit window, the lap
-              it recommends, and — when the two disagree — how many laps short you
-              are at the pace you are actually driving.
-            </p>
-            <ul class="reads">
-              <li>Consumption per lap, sampled live, with laps of fuel remaining</li>
-              <li>A pit window and a recommended lap, both recomputed every lap</li>
-              <li>A fuel-save target when finishing on what is in the tank is close</li>
-              <li>Every lap's burn in a table, against your average, with stops marked</li>
-            </ul>
-          </div>
-          <figure class="shot">
-            <img
-              src="assets/fuel.png"
-              width="1240"
-              height="1180"
-              loading="lazy"
-              alt="The fuel and strategy overlay, under a strip naming the track and a
-                   1.0-lap margin: a 'Pit stop needed' block reading 1.6 fuel laps
-                   against 8 laps to the flag, 7.3 litres in tank at 2.86 litres per
-                   lap, a pit window of laps 18 to 19, a recommended pit on lap 19, a
-                   note reading 'short by 7 laps at the current burn', and two
-                   candidate plans — a one-stop on lap 19 and a two-stop. Below them,
-                   a fuel-per-lap table lists laps 17 back to 14 with the litres each
-                   burned — 2.93, 2.91, 2.76 and an estimated 2.82 — each against the
-                   2.86 average in red when over and green when under, beside its
-                   lap time and the litres left in the tank at the line."
-            />
-          </figure>
-        </section>
-
-        <section id="coach" class="row row--flip">
-          <div class="band">
-            <span class="band__chip">Coach</span>
-            <span class="band__field"><span class="band__k">COMPARED</span><b class="band__v">every lap</b></span>
-            <span class="band__field"><span class="band__k">AGAINST</span><b class="band__v">your best</b></span>
-            <span class="band__field"><span class="band__k">RUNS</span><b class="band__v">locally</b></span>
-          </div>
-          <div class="row__copy">
-            <h2>Where the lap went, corner by corner.</h2>
-            <p class="row__body">
-              Every lap you complete is lined up against your quickest clean
-              lap, metre by metre, and split into corners. The coach says the
-              one or two that cost you most, and why — braked early, rolled in
-              off the pedals, over-slowed the apex, late on the throttle — with
-              the number that says how much. When the same mistake keeps
-              coming back, it says that too.
-            </p>
-            <ul class="reads">
-              <li>Time lost or gained in every corner, adding up to the lap delta</li>
-              <li>A cause for each: braking point, coasting, apex and exit speed, throttle pick-up</li>
-              <li>Pit laps and resets are never compared; an off-track lap never becomes your reference</li>
-              <li>Corners driven in traffic are marked as traffic, not blamed on you</li>
-            </ul>
-          </div>
-          <figure class="shot">
-            <img
-              src="assets/coach.png"
-              width="1240"
-              height="838"
-              loading="lazy"
-              alt="The coach overlay, under a strip naming the track with the
-                   reference lap at 2:18.607, the last lap at 2:20.128 and a
-                   delta of plus 1.521. The headline tip, marked by a red bar on its
-                   left edge, reads
-                   T4, 'Coasted 153 m off both pedals', plus 0.52 seconds, with
-                   the apex and exit 2 km/h slower and '3 of the last 6 laps'. A
-                   second tip reads T3, 'Braked 25 m early', plus 0.41 seconds,
-                   entry 30 km/h slower, '5 of the last 6 laps'. Below, a strip
-                   of the lap coloured yellow and red by where time went, and a
-                   list of all six corners as bars from a centre line — T2 too
-                   hot, T3 early brake and T4 coasting in red — ending in a lap
-                   row of plus 1.52 seconds against the reference."
-            />
-          </figure>
-        </section>
-
-        <section id="manager" class="row">
-          <div class="band">
-            <span class="band__chip">Manager</span>
-            <span class="band__field"><span class="band__k">OVERLAYS</span><b class="band__v">5</b></span>
-            <span class="band__field"><span class="band__k">WIDGETS</span><b class="band__v">7</b></span>
-            <span class="band__field"><span class="band__k">THEMES</span><b class="band__v">4</b></span>
-          </div>
-          <div class="row__copy">
-            <h2>Configured once, then left alone.</h2>
-            <p class="row__body">
-              The timing screens carry no controls at all. Nothing on them can be
-              aimed at, because while you are reading them your hands are busy.
-              Everything configurable lives in the manager instead, next to a live
-              preview of the overlay it is changing.
-            </p>
-            <ul class="reads">
-              <li>Every overlay is a separate window — place, resize and theme it on its own</li>
-              <li>Pick which timing columns you want; the whole table scales to fit, keeping every one</li>
-              <li>Four themes, and a mock-data mode that runs the whole UI without a sim</li>
-            </ul>
-          </div>
-          <figure class="shot">
-            <img
-              src="assets/manager.png"
-              width="2800"
-              height="1800"
-              loading="lazy"
-              alt="The Overlay Manager: a left rail listing Dashboard, Standings,
-                   Relative, Fuel Calc and Coach, a column of widget and
-                   appearance settings in the middle, and a live scaled preview
-                   of the dashboard overlay on the right — its speed gauge
-                   reading 206 km/h in fifth, and a throttle and brake trace
-                   below it, throttle in cyan and brake in grey."
-            />
-          </figure>
-        </section>
-
-        <!-- F3 · Tabular spec sheet. The page becomes the instrument. -->
-        <section id="spec" class="spec">
-          <div class="band">
-            <span class="band__chip">Legend</span>
-            <span class="band__field"><span class="band__k">FIELDS</span><b class="band__v">17</b></span>
-            <span class="band__field"><span class="band__k">TABLES</span><b class="band__v">2</b></span>
-          </div>
-          <div class="spec__intro">
-            <h2>What every column is telling you.</h2>
-            <p>
-              The timing screen is dense on purpose — it is read in peripheral
-              vision, at speed. Every column above is in this table, and colour
-              carries exactly one meaning throughout.
-            </p>
-          </div>
-
-          <div class="spec__scroll">
-            <table class="tnum">
-              <caption class="micro spec__cap">
-                Standings row
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Column</th>
-                  <th scope="col">Reads</th>
-                  <th scope="col">Colour</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th scope="row">POS</th>
-                  <td>Position in class, or overall when the field is ungrouped</td>
-                  <td>
-                    <span class="sw sw--pb">↑ gained</span> ·
-                    <span class="sw sw--bad">↓ lost</span> for three seconds after a pass
-                  </td>
-                </tr>
-                <tr>
-                  <th scope="row">GAP</th>
-                  <td>Seconds behind the class leader, or laps down — the leader's own row reads GAP</td>
-                  <td>—</td>
-                </tr>
-                <tr>
-                  <th scope="row">INT</th>
-                  <td>Seconds to the car directly ahead of you in class</td>
-                  <td>—</td>
-                </tr>
-                <tr>
-                  <th scope="row">LAST</th>
-                  <td>Your last completed lap, ruled when it grades</td>
-                  <td>
-                    <span class="sw sw--pb">green rule</span> personal best ·
-                    <span class="sw sw--best">purple</span> leads the session
-                  </td>
-                </tr>
-                <tr>
-                  <th scope="row">BEST</th>
-                  <td>Fastest lap of the session for that car</td>
-                  <td><span class="sw sw--pb">filled</span> when it leads the class</td>
-                </tr>
-                <tr>
-                  <th scope="row">iR</th>
-                  <td>iRating, with a projected change for this race</td>
-                  <td>
-                    <span class="sw sw--pb">▲ gain</span> ·
-                    <span class="sw sw--bad">▼ loss</span> — an estimate
-                  </td>
-                </tr>
-                <tr>
-                  <th scope="row">LIC</th>
-                  <td>Licence class and safety rating, joined to the iRating as one pill</td>
-                  <td>iRacing's own licence colour, as a short bar opening the pill</td>
-                </tr>
-                <tr>
-                  <th scope="row">S1–S3</th>
-                  <td>Sector time when it is a best, the delta when it is a loss</td>
-                  <td>
-                    <span class="sw sw--best">purple</span> ·
-                    <span class="sw sw--pb">green</span> ·
-                    <span class="sw sw--warn">yellow</span> ·
-                    <span class="sw sw--bad">red</span>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="spec__scroll spec__scroll--stacked">
-            <table class="tnum">
-              <caption class="micro spec__cap">
-                Session header
-              </caption>
-              <thead>
-                <tr>
-                  <th scope="col">Field</th>
-                  <th scope="col">Reads</th>
-                  <th scope="col">Colour</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr>
-                  <th scope="row">RACE</th>
-                  <td>Session type, filled with the flag currently flying</td>
-                  <td>
-                    <span class="sw sw--pb">green</span> ·
-                    <span class="sw sw--warn">yellow</span> ·
-                    <span class="sw sw--bad">red</span>
-                  </td>
-                </tr>
-                <tr>
-                  <th scope="row">CIRCUIT</th>
-                  <td>The circuit and its layout — the first field to go when the overlay narrows</td>
-                  <td>—</td>
-                </tr>
-                <tr>
-                  <th scope="row">LAP</th>
-                  <td>Laps done over the race distance — projected in a timed race</td>
-                  <td>—</td>
-                </tr>
-                <tr>
-                  <th scope="row">LEFT</th>
-                  <td>Time, or laps, left in the session</td>
-                  <td>—</td>
-                </tr>
-                <tr>
-                  <th scope="row">INC</th>
-                  <td>Your incident points this session</td>
-                  <td>
-                    <span class="sw sw--warn">yellow</span> then
-                    <span class="sw sw--bad">red</span> as a limit comes into sight
-                  </td>
-                </tr>
-                <tr>
-                  <th scope="row">TRACK · AIR</th>
-                  <td>Track and air temperature</td>
-                  <td>—</td>
-                </tr>
-                <tr>
-                  <th scope="row">SOF</th>
-                  <td>Strength of field</td>
-                  <td>—</td>
-                </tr>
-                <tr>
-                  <th scope="row">TIME</th>
-                  <td>Local time, for when the stint has stopped meaning anything</td>
-                  <td>—</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- S5 · Bottom-anchored label: the table is the act, the label is its
-               footer. -->
-          <p class="spec__end micro">Every field above appears in the captures on this page</p>
-        </section>
-
-        <section id="needs" class="needs">
-          <div class="band">
-            <span class="band__chip">Requirements</span>
-            <span class="band__field"><span class="band__k">OS</span><b class="band__v">Windows</b></span>
-            <span class="band__field"><span class="band__k">SIM</span><b class="band__v">iRacing</b></span>
-            <span class="band__field"><span class="band__k">SIGNED</span><b class="band__v">no</b></span>
-            <span class="band__field"><span class="band__k">PRICE</span><b class="band__v">free</b></span>
-          </div>
-          <h2>What it needs.</h2>
-          <dl class="needs__list">
-            <div>
-              <dt>Windows, and iRacing</dt>
-              <dd>
-                The bridge reads iRacing's shared memory, which exists only on
-                Windows. The installer puts the app in your own user profile —
-                no administrator rights, nothing written to Program Files.
-              </dd>
+      <!-- ══ Closing call to action ═════════════════════════════════════ -->
+      <section class="section section--cta">
+        <div class="shell">
+          <div class="cta">
+            <h2>Your next stint, with the field in view.</h2>
+            <p>Free for Windows. Installs in your user profile, opens when it is done.</p>
+            <div class="actions actions--center">
+              <a class="chip-solid chip--lg" href="https://github.com/panyu1512/TelemetryLab/releases/latest/download/TelemetryLab-setup.exe">
+                <svg class="chip__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M5 19.5h14" /></svg>
+                Download for Windows
+              </a>
+              <a class="chip chip--lg" href="https://github.com/panyu1512/TelemetryLab/releases" rel="noopener" target="_blank">All releases</a>
             </div>
-            <div>
-              <dt>Windows will warn you</dt>
-              <dd>
-                The setup <code>.exe</code> is signed by nobody, so
-                SmartScreen calls the publisher unknown and asks you to trust it
-                on nothing. Choose <b>More info</b>, then <b>Run anyway</b>. You
-                do not have to take it on trust either: every release publishes
-                the installer's SHA-256, so you can check that the file you
-                downloaded is the file that was built. It is on the
-                <a
-                  class="link-inline"
-                  href="https://github.com/panyu1512/TelemetryLab/releases/latest"
-                  >release page</a
-                >, with the command that checks it.
-              </dd>
-            </div>
-            <div>
-              <dt>No sim to hand?</dt>
-              <dd>
-                Turn on mock data in the manager's global settings and the whole
-                interface runs on synthetic telemetry — a full multi-class field,
-                no bridge required. Every capture on this page was taken that way.
-              </dd>
-            </div>
-            <div>
-              <dt>Four windows, one manager</dt>
-              <dd>
-                Standings, relative, fuel and the driving cluster each open as
-                their own always-on-top window. Place, size and theme them once
-                in the manager; the overlays themselves carry no controls at all.
-              </dd>
-            </div>
-          </dl>
-        </section>
-
-        <!-- Open source. Same band + definition-list grammar as § Requirements
-             above: this is the other half of "what you are getting into", and
-             giving it a different shape would have made it read as a footnote
-             rather than as one of the reasons to trust the download. -->
-        <section id="source" class="needs">
-          <div class="band">
-            <span class="band__chip">Open source</span>
-            <span class="band__field"><span class="band__k">LICENCE</span><b class="band__v">MIT</b></span>
-            <span class="band__field"><span class="band__k">STACK</span><b class="band__v">Tauri · React · Python</b></span>
-            <span class="band__field"><span class="band__k">PRS</span><b class="band__v">welcome</b></span>
           </div>
-          <h2>All of it is on GitHub.</h2>
-          <dl class="needs__list">
-            <div>
-              <dt>MIT licensed</dt>
-              <dd>
-                Read it, fork it, change it, ship your own build of it —
-                commercially if you like. Keep the copyright notice and the rest
-                is yours. Nothing here phones home, and there is no account to
-                make.
-              </dd>
-            </div>
-            <div>
-              <dt>You can work on it without the sim</dt>
-              <dd>
-                The mock feed drives every overlay from synthetic telemetry — a
-                full multi-class field at Spa, with lap times, sector splits and
-                fuel burn — so the whole interface builds and runs on macOS and
-                Linux. You need Windows and iRacing to <em>use</em> it, and
-                neither to <em>improve</em> it.
-              </dd>
-            </div>
-            <div>
-              <dt>The arguments are written down, not just the rules</dt>
-              <dd>
-                <code>design.md</code> records why each of these surfaces looks
-                the way it does — including the decisions that were later
-                reversed, and what changed. It is meant to be argued with. If a
-                change contradicts it, the file moves too.
-              </dd>
-            </div>
-            <div>
-              <dt>Issues and pull requests</dt>
-              <dd>
-                Bug reports get two questions worth answering up front: does it
-                still happen with mock data on, and what kind of session were
-                you in. Between them they usually say whether a bug is in the
-                overlay or in the data reaching it.
-              </dd>
-            </div>
-          </dl>
-          <div class="hero__actions">
-            <!-- The mark is drawn here for the same reason the coffee cup is:
-                 this page makes no third-party requests for its own chrome. -->
-            <a
-              class="chip"
-              href="https://github.com/panyu1512/TelemetryLab"
-              rel="noopener"
-              target="_blank"
-            >
-              <svg
-                class="chip__icon"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-                focusable="false"
-              >
-                <path
-                  fill="currentColor"
-                  d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48l-.01-1.7c-2.78.6-3.37-1.34-3.37-1.34-.45-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.6.07-.6 1 .07 1.53 1.03 1.53 1.03.9 1.53 2.34 1.09 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.65 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.38.2 2.4.1 2.65.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.69-4.57 4.94.36.31.68.92.68 1.85l-.01 2.75c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"
-                />
-              </svg>
-              View the source
-            </a>
-            <a
-              class="chip"
-              href="https://github.com/panyu1512/TelemetryLab/blob/main/CONTRIBUTING.md"
-              rel="noopener"
-              target="_blank"
-              >How to contribute</a
-            >
-          </div>
-        </section>
-      </div>
+        </div>
+      </section>
     </main>
 
-    <!-- ══ Footer · Ft5 statement ═══════════════════════════════════════════
-         Styles live in their own stylesheet: css/footer.css. Two knobs sit at
-         the top of that file — `--brand-size` (how big the wordmark is against
-         the width of the viewport) and `--brand-crop` (how far the bottom edge
-         is pulled up into the letters).
+    <!-- ══ Footer ═══════════════════════════════════════════════════════════
+         Styles live in css/footer.css. A link sitemap in columns, the
+         colophon, then the cropped wordmark — still the last element on the
+         page (design.md § The marketing surface, rule 5).
 
          BRAND NAME: this page has no template engine, so the string is not a
-         constant it can interpolate. It appears exactly twice, in the two
-         adjacent nodes below — the screen-reader copy and the decorative
-         wordmark — and nowhere else in this file. Change both together.
+         constant it can interpolate. The wordmark's two copies — the
+         screen-reader one and the decorative one — are the last two nodes
+         below. Change both together, and re-measure `--brand-size` and
+         `--brand-crop` in footer.css.
          ══════════════════════════════════════════════════════════════════ -->
     <footer class="foot">
-      <!-- The quiet row: the links and the colophon, held to the same text
-           column as the rest of the page. -->
       <div class="shell">
-        <div class="foot__meta">
-          <div class="foot__links">
-            <a
-              class="link-q"
-              href="https://github.com/panyu1512/TelemetryLab/releases/latest/download/TelemetryLab-setup.exe"
-              >Download</a
-            >
-            <a
-              class="link-q"
-              href="https://github.com/panyu1512/TelemetryLab"
-              rel="noopener"
-              target="_blank"
-              >Source on GitHub</a
-            >
-            <a
-              class="link-q"
-              href="https://buymeacoffee.com/panyu1512"
-              rel="noopener"
-              target="_blank"
-              >Buy me a coffee</a
-            >
+        <div class="foot__grid">
+          <div class="foot__brand">
+            <a class="wordmark" href="#main">
+              <svg class="wordmark__mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
+                <path d="M8.69 9L18.89 9L17.69 14L15.69 14L13.48 23.2L7.81 26L10.69 14L4.69 14Z" />
+                <path d="M20.41 6L25.41 6L21.81 21L27.31 21L23.31 26L15.61 26Z" />
+              </svg>
+              TelemetryLab
+            </a>
+            <p>Timing and telemetry overlays for iRacing. Free and open source.</p>
           </div>
-          <p class="foot__colophon">
-            © 2026 TelemetryLab · MIT licensed · not affiliated with iRacing
-          </p>
+
+          <nav class="foot__col" aria-label="Product">
+            <h2 class="foot__h">Product</h2>
+            <a class="link-q" href="#overlays">Overlays</a>
+            <a class="link-q" href="#features">Features</a>
+            <a class="link-q" href="#install">Install</a>
+            <a class="link-q" href="#faq">FAQ</a>
+          </nav>
+
+          <nav class="foot__col" aria-label="Download">
+            <h2 class="foot__h">Download</h2>
+            <a class="link-q" href="https://github.com/panyu1512/TelemetryLab/releases/latest/download/TelemetryLab-setup.exe">Windows installer</a>
+            <a class="link-q" href="https://github.com/panyu1512/TelemetryLab/releases" rel="noopener" target="_blank">All releases</a>
+            <a class="link-q" href="https://github.com/panyu1512/TelemetryLab/blob/main/CHANGELOG.md" rel="noopener" target="_blank">Changelog</a>
+          </nav>
+
+          <nav class="foot__col" aria-label="Project">
+            <h2 class="foot__h">Project</h2>
+            <a class="link-q" href="https://github.com/panyu1512/TelemetryLab" rel="noopener" target="_blank">Source on GitHub</a>
+            <a class="link-q" href="https://github.com/panyu1512/TelemetryLab/blob/main/CONTRIBUTING.md" rel="noopener" target="_blank">Contributing</a>
+            <a class="link-q" href="https://github.com/panyu1512/TelemetryLab/issues/new/choose" rel="noopener" target="_blank">Report a bug</a>
+            <a class="link-q" href="https://buymeacoffee.com/panyu1512" rel="noopener" target="_blank">Buy me a coffee</a>
+          </nav>
+        </div>
+
+        <div class="foot__meta">
+          <p class="foot__colophon">© 2026 TelemetryLab · MIT licensed · not affiliated with iRacing</p>
+          <div class="lang" role="group" aria-label="Language">
+            <a class="lang__opt" href="./" hreflang="en" lang="en" aria-current="page">English</a>
+            <a class="lang__opt" href="es/" hreflang="es" lang="es">Español</a>
+          </div>
         </div>
       </div>
 
@@ -919,17 +998,19 @@
       </div>
     </footer>
 
-    <!-- The toggle's handler. It flips the attribute the head script set,
-         stores the choice, and keeps the browser-chrome colour in step. It
-         does not touch the stylesheet: the palette is entirely `data-theme`,
-         so there is nothing here to keep in sync with the CSS. -->
+    <!-- The page's script, besides the theme resolver in the head.
+         · The theme toggle flips the attribute the head script set, stores the
+           choice, and keeps the browser-chrome colour in step.
+         · The mobile menu is a <details>; following a link inside it would
+           otherwise leave it open over the section it just scrolled to.
+         Neither touches the stylesheet or the scroll-driven devices. -->
     <script>
       (function () {
         var KEY = "telemetrylab.theme";
         var root = document.documentElement;
         var button = document.getElementById("theme-toggle");
         var meta = document.querySelector('meta[name="theme-color"]');
-        if (!button) return;
+        var menu = document.getElementById("menu");
 
         function paintChrome() {
           if (!meta) return;
@@ -950,16 +1031,30 @@
           meta.setAttribute("content", paper);
         }
 
-        button.addEventListener("click", function () {
-          var next = root.dataset.theme === "light" ? "dark" : "light";
-          root.dataset.theme = next;
-          try {
-            localStorage.setItem(KEY, next);
-          } catch (e) {
-            /* the choice just will not survive the tab; the page still flips */
-          }
-          paintChrome();
-        });
+        if (button) {
+          button.addEventListener("click", function () {
+            var next = root.dataset.theme === "light" ? "dark" : "light";
+            root.dataset.theme = next;
+            try {
+              localStorage.setItem(KEY, next);
+            } catch (e) {
+              /* the choice just will not survive the tab; the page still flips */
+            }
+            paintChrome();
+          });
+        }
+
+        if (menu) {
+          menu.addEventListener("click", function (e) {
+            if (e.target.closest && e.target.closest(".menu__panel a")) menu.open = false;
+          });
+          document.addEventListener("keydown", function (e) {
+            if (e.key === "Escape" && menu.open) {
+              menu.open = false;
+              menu.querySelector("summary").focus();
+            }
+          });
+        }
 
         paintChrome();
       })();

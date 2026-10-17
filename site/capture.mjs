@@ -23,8 +23,8 @@
  *   · `reducedMotion: "reduce"` — rows are positioned by `translateY` with a
  *     220 ms glide, so a capture fired mid-swap catches two rows overlapping.
  *     Reduced motion switches the glide off and every row sits at its offset.
- *   · the fuel capture's `alt` text in `index.html` quotes numbers off the
- *     panel — fuel laps, litres in tank. The mock feed is wall-clock driven, so
+ *   · the fuel capture's `alt` text in `index.html` and `es/index.html` quotes
+ *     numbers off the panel — fuel laps, litres in tank. The mock feed is wall-clock driven, so
  *     those move on every re-shoot. **Re-read that alt after running this**, or
  *     the page describes a picture it is no longer showing, which is the one
  *     accessibility bug a sighted reviewer cannot see.
@@ -107,7 +107,7 @@ const PAST_A_LAP_MS = 40_000;
  * `-1L` tag, and the player's row as the only highlighted one. The mock pins
  * a lapped GT4 near the player for exactly this (`src/lib/mockData.ts`), but
  * which other cars are in the window drifts with the wall clock — re-read the
- * relative's alt text in `index.html` after a re-shoot.
+ * relative's alt text in both pages after a re-shoot.
  */
 const SHOTS = [
   // The hero capture. Narrow on purpose — it doubles as the proof that the
@@ -133,7 +133,15 @@ const SHOTS = [
   // 560 for 1.19, when licence and iRating joined the row, so the table is
   // not shrunk by a fifth to make room for them.
   { name: "relative", route: "?overlay=relative", w: 700, h: 420 },
+  // The dashboard's alt text in both pages quotes its speed, gear, fuel and
+  // which radar box is lit — re-read them after a re-shoot.
   { name: "dashboard", route: "?overlay=dashboard", w: 1100, h: 620 },
+  // The radar widget on its own, for its card and the hero stage. Its LED
+  // boxes fill whatever window they are given, so the frame is the boxes. Which
+  // side is lit follows the mock's spotter call at the shutter — the alt text
+  // in both pages names it. No lap to wait for: the radar has no burn to
+  // measure.
+  { name: "radar", route: "?widget=radar", w: 460, h: 220, wait: 4_000 },
   { name: "manager", route: "", w: 1400, h: 900, wait: PAST_A_LAP_MS },
   // Tall enough for the fuel-per-lap table under the pit strategies — and no
   // taller. The table grows a row a lap, so this shot waits for four: laps
@@ -150,7 +158,7 @@ const SHOTS = [
   // analysis holds until ~47 s. 30 s sits in the middle of that window, so the
   // frame shows tips rather than the new-best banner. Height measured to the
   // corner list's `Lap` row plus the panel's padding — re-measure if the
-  // screen's sections change, and re-read the coach alt text in `index.html`:
+  // screen's sections change, and re-read the coach alt text in both pages:
   // the tips it quotes come off this lap. 419, up from 404 for 1.25's hairline
   // sections: the `Lap` row now ends at 404.
   { name: "coach", route: "?overlay=coach", w: 620, h: 419, wait: 30_000 },
