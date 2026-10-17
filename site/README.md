@@ -1,12 +1,14 @@
 # site/
 
-The marketing page for TelemetryLab. Static HTML, three stylesheets and ~30
-lines of inline script for the theme toggle — no build step, no framework, no
-dependencies. Deploy the folder.
+The marketing page for TelemetryLab, in English and Spanish. Static HTML,
+three stylesheets and a few dozen lines of inline script for the theme toggle
+and the mobile menu — no build step, no framework, no dependencies. Deploy the
+folder.
 
 ```
 site/
-├── index.html          the page
+├── index.html          the page, in English — served at /
+├── es/index.html       the same page in Spanish — served at /es/
 ├── css/tokens.css      design tokens (see the caveat below)
 ├── css/site.css        the page's styles
 ├── css/footer.css      the footer, which has a device of its own
@@ -14,6 +16,10 @@ site/
 ├── capture.mjs         regenerates assets/ from the live app
 └── favicon.svg         a copy of ../public/favicon.svg — see below
 ```
+
+The layout follows the overlay sites sim racers already know — a centred hero
+over the overlays on screen, then cards, features, install steps, price and an
+FAQ — in this project's own colours, type and voice.
 
 ## Running it locally
 
@@ -31,7 +37,13 @@ the app and the overlays. The rules it inherits — and the seven things it is
 allowed that no app surface is — are written down in
 [`design.md` § The marketing surface](../design.md).
 
-The four that bite if you forget them:
+The five that bite if you forget them:
+
+- **There are two pages, and they are copies.** `es/index.html` is the whole
+  of `index.html` with the text translated and every path one level up
+  (`../css/site.css`, `../assets/…`). Same class names, same section ids — the
+  nav's scroll readout keys on the ids. **Change the markup of one and change
+  the other**, alt text included.
 
 - **`css/tokens.css` is a copy, not an import.** The site has no build step and
   cannot reach the app's Tailwind `@theme` block, so the colour values are
@@ -48,12 +60,14 @@ The four that bite if you forget them:
   ink width in ems, the crop is half an x-height off the baseline. **Change the
   brand name or the display face and both have to be re-measured**, or the
   wordmark will either stop short of the edge or lose its last letter to the
-  crop. The name itself appears twice in `index.html`, in two adjacent nodes —
-  the `sr-only` copy and the visible one — and they must match.
+  crop. The name itself appears twice at the bottom of each page, in two
+  adjacent nodes — the `sr-only` copy and the visible one — and they must
+  match.
 - **Nothing on the page may be invented.** No metric, no download count, no
-  testimonial, no logo wall. Every claim is either visible in a capture on the
-  page or a plain fact about how the software runs. If you want to add a number,
-  measure it first.
+  testimonial, no logo wall, no star rating. Every claim is either visible in a
+  capture on the page or a plain fact about how the software runs — the stats
+  strip under the hero included, which counts overlays, widgets and themes in
+  this repo. If you want to add a number, measure it first.
 
 ## Regenerating the captures
 
@@ -68,3 +82,7 @@ npx -p playwright@latest node site/capture.mjs # in another terminal
 Playwright is deliberately not a project dependency — the app doesn't need a
 browser driver to build. `capture.mjs` documents why the shots use 2× scaling,
 reduced motion, and a long wait on the fuel panel.
+
+Several alt texts quote numbers off the captures — fuel laps, the radar's lit
+side, the dashboard's speed — and the mock feed moves on every re-shoot.
+**Re-read those alts in both pages after re-shooting.**

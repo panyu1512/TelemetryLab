@@ -1,15 +1,14 @@
 /* design-system: design.md · surface: marketing · direction: race-engineer
  * telemetry — graphite paper, one cyan accent, sans caps for labels, mono for
- * every figure. nav: N9 edge-aligned · footer: Ft5 statement
- * enrichment: real product captures (no illustration, no re-drawn chrome)
+ * every figure. macrostructure: product landing — centred hero, overlay
+ * cards, features, steps, plans, FAQ. nav: N1 product · footer: sitemap
+ * columns over the Ft5 wordmark · enrichment: real product captures only
  */
 
 @import url("tokens.css");
 /* The footer is the one part of this page with a device of its own, so it gets
    its own stylesheet. Imported rather than `<link>`ed, to match `tokens.css`
-   above and keep the head to a single stylesheet. The cost is that the request
-   is serialized behind this file rather than running beside it; at ~5 KB of
-   render-blocking CSS that is the cheaper of the two prices. */
+   above and keep the head to a single stylesheet. */
 @import url("footer.css");
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -32,11 +31,11 @@ body {
 
 /* `color-scheme` tells the browser which way to paint the things this
    stylesheet does not own — form controls, scrollbars, the canvas behind the
-   page. It follows the same three states as the palette: the OS decides until
-   the toggle says otherwise. */
+   page. It follows the same three states as the palette. */
 html {
   color-scheme: dark;
   -webkit-text-size-adjust: 100%;
+  scroll-behavior: smooth;
 }
 @media (prefers-color-scheme: light) {
   html:not([data-theme="dark"]) {
@@ -75,10 +74,11 @@ h3 {
   margin: 0;
   font-weight: 600;
   font-style: normal;
-  line-height: 1.05;
+  line-height: 1.08;
   letter-spacing: -0.025em;
   overflow-wrap: anywhere;
   min-width: 0;
+  text-wrap: balance;
 }
 
 p {
@@ -87,6 +87,24 @@ p {
 
 a {
   color: inherit;
+}
+
+code,
+kbd {
+  font-family: var(--font-mono);
+  font-size: 0.88em;
+}
+
+/* A key cap: the product's chip at text size. */
+kbd {
+  display: inline-block;
+  padding: 0.05em 0.4em;
+  border: var(--rule-hair) solid var(--color-border-strong);
+  border-bottom-width: 2px;
+  border-radius: var(--radius-ctl);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+  line-height: 1.35;
 }
 
 /* Tabular numerals wherever a number is a measurement — the same rule the app
@@ -113,12 +131,10 @@ a {
 }
 
 /* Anything a link or a "find in page" can jump to has to clear the pinned
-   dock, or it arrives underneath it. ~5rem is the dock's height plus air. */
+   dock, or it arrives underneath it. */
 #main,
-.row,
-.spec,
-.needs {
-  scroll-margin-block-start: 5rem;
+.section {
+  scroll-margin-block-start: 4.5rem;
 }
 
 /* Skip link — visible the moment it takes focus, off-screen otherwise. */
@@ -139,10 +155,9 @@ a {
   top: var(--space-2xs);
 }
 
-/* Read by a screen reader, invisible to everyone else. Used once — for the
-   footer wordmark, whose visible copy is a cropped shape rather than a string
-   and is `aria-hidden` for it. `clip-path` rather than a negative offset so
-   the text is never a target for a "find in page" scroll. */
+/* Read by a screen reader, invisible to everyone else. `clip-path` rather than
+   a negative offset so the text is never a target for a "find in page"
+   scroll. */
 .sr-only {
   position: absolute;
   width: 1px;
@@ -161,7 +176,8 @@ a {
    sans, uppercase, tracked, small and grey. Figures beside it are mono.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-.micro {
+.micro,
+.eyebrow {
   font-family: var(--font-sans);
   font-size: var(--text-micro);
   font-weight: 600;
@@ -171,220 +187,28 @@ a {
   line-height: 1;
 }
 
-/* ═══════════════════════════════════════════════════════════════════════════
-   N9 · Edge-aligned nav
-   Wordmark hard-left, actions hard-right, and nothing in between. The empty
-   middle IS the archetype; filling it with four links makes it N1 with extra
-   steps.
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-/*
- * The dock: the nav pins to the top of the viewport and carries a scroll
- * readout along its bottom edge.
- *
- * It pins because the theme toggle is the only control on the page now and a
- * control you have to scroll back up to reach is a control you do not use. It
- * is opaque `bg` rather than translucent glass — the page's own paper, so the
- * pinned row is indistinguishable from the unpinned one at the top of the
- * page, and copy never shows through it.
- *
- * The rule along its bottom is a **progress readout**, not a decoration: it
- * fills left to right with how far down the page you are. This is the same
- * instrument voice as the session strip in the product — a bar that reports a
- * measured quantity — which is the only reason a progress indicator belongs on
- * a page in this system at all.
- */
-.nav-dock {
-  position: sticky;
-  top: 0;
-  z-index: 20;
-  background: var(--color-bg);
-}
-
-.nav {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-md);
-  padding-block: var(--space-md);
-  border-bottom: var(--rule-hair) solid var(--color-border);
-}
-
-.nav-dock::after {
-  content: "";
-  position: absolute;
-  inset-inline: 0;
-  bottom: 0;
-  height: 2px;
-  background: var(--color-primary);
-  transform: scaleX(0);
-  transform-origin: 0 50%;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  @supports (animation-timeline: scroll()) {
-    .nav-dock::after {
-      animation: scroll-progress linear both;
-      /* The document's own scroller, so the bar reports the whole page rather
-         than one section of it. */
-      animation-timeline: scroll(root block);
-    }
-  }
-}
-
-@keyframes scroll-progress {
-  to {
-    transform: scaleX(1);
-  }
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   The page's session strip
-   The product's § Session strip at page scale: a row of mono fields, one of
-   them filled, reporting the state that matters. In the overlay that state is
-   the flag; here it is the section you are reading.
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-.readout {
-  display: flex;
-  align-items: stretch;
-  gap: var(--space-md);
-  /* Narrow viewports scroll it rather than wrapping it: a strip that becomes
-     two strips has stopped being one line of state. Fields drop right-to-left
-     in the product; here they run off the same edge and can be dragged back. */
-  overflow-x: auto;
-  scrollbar-width: none;
-  padding-block: var(--space-2xs);
-  border-top: var(--rule-hair) solid var(--color-border);
-}
-.readout::-webkit-scrollbar {
-  display: none;
-}
-
-.readout__field {
-  flex: none;
-  font-family: var(--font-sans);
-  font-size: var(--text-micro);
-  font-weight: 600;
-  text-transform: uppercase;
-  letter-spacing: 0.14em;
-  line-height: 1;
-  padding: 0.4rem 0.5rem;
-  border-radius: var(--radius-ctl);
-  color: var(--color-faint);
-  text-decoration: none;
-  white-space: nowrap;
-  transition: color var(--dur-instant) var(--ease-out);
-}
-
-.readout__field:hover {
-  color: var(--color-text);
-}
-
-/* The active field. `primary` is the token for "informational / selection"
-   (§ Theme), which is exactly what this is — and filled ink takes `on-accent`,
-   never white, per § Theme rule 1. */
-@media (prefers-reduced-motion: no-preference) {
-  @supports (animation-timeline: view()) {
-    /* Scoped on the root, not on `main`: the sections that *define* these
-       timelines live in `main`, but the strip that *references* them is up in
-       the dock. The scope has to cover both. */
-    :root {
-      timeline-scope: --sec-standings, --sec-relative, --sec-fuel,
-        --sec-coach, --sec-manager, --sec-spec, --sec-needs;
-    }
-
-    #standings {
-      view-timeline-name: --sec-standings;
-    }
-    #relative {
-      view-timeline-name: --sec-relative;
-    }
-    #fuel {
-      view-timeline-name: --sec-fuel;
-    }
-    #coach {
-      view-timeline-name: --sec-coach;
-    }
-    #manager {
-      view-timeline-name: --sec-manager;
-    }
-    #spec {
-      view-timeline-name: --sec-spec;
-    }
-    #needs {
-      view-timeline-name: --sec-needs;
-    }
-
-    .readout__field {
-      animation: readout-active linear both;
-      /* Lit while the section owns the middle of its pass through the
-         viewport, so exactly one field is filled at a time. */
-      animation-range: cover 22% cover 78%;
-    }
-
-    .readout__field:nth-child(1) {
-      animation-timeline: --sec-standings;
-    }
-    .readout__field:nth-child(2) {
-      animation-timeline: --sec-relative;
-    }
-    .readout__field:nth-child(3) {
-      animation-timeline: --sec-fuel;
-    }
-    .readout__field:nth-child(4) {
-      animation-timeline: --sec-coach;
-    }
-    .readout__field:nth-child(5) {
-      animation-timeline: --sec-manager;
-    }
-    .readout__field:nth-child(6) {
-      animation-timeline: --sec-spec;
-    }
-    .readout__field:nth-child(7) {
-      animation-timeline: --sec-needs;
-    }
-  }
-}
-
-/* Off at both ends of the range, on through the middle. `fill: both` clamps to
-   the nearest endpoint outside the range, so both endpoints must be the *off*
-   state or the field stays lit for the rest of the page. */
-@keyframes readout-active {
-  0% {
-    background: transparent;
-    color: var(--color-faint);
-  }
-  1%,
-  99% {
-    background: var(--color-primary);
-    color: var(--color-on-accent);
-  }
-  100% {
-    background: transparent;
-    color: var(--color-faint);
-  }
+/* The section eyebrow takes `primary`: it names where the nav's lit link
+   points, so it wears the same colour as the selection that got you here. */
+.eyebrow {
+  color: var(--color-primary);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Section band
-   The product's § Class band at page scale: a chip naming the subject, then
+   The product's § Class band at card scale: a chip naming the subject, then
    micro-label/value pairs carrying that subject's own numbers. Every value is
-   a fact about the thing in the section — the band is structure that reports,
-   not structure that decorates.
+   a fact about the thing in the card.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .band {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-xs) var(--space-md);
-  padding-inline-start: var(--space-sm);
-  /* The leading edge is the row's left border one scale up — the same device
-     at a different size, not a second one. On the site there is no identity
-     colour to carry (§ Two colour systems is a product-surface rule), so it
-     takes `border-strong`: structure, not status. */
+  gap: var(--space-2xs) var(--space-md);
+  padding-inline-start: var(--space-xs);
+  /* The standings row's 3 px left border one scale up. On the site there is
+     no identity colour to carry (§ Two colour systems is a product-surface
+     rule), so it takes `border-strong`: structure, not status. */
   border-inline-start: 3px solid var(--color-border-strong);
 }
 
@@ -424,12 +248,75 @@ a {
   font-variant-numeric: tabular-nums;
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   N1 · Product nav
+   Wordmark left, the sections in the middle, actions right. The middle links
+   are also the page's readout: the one for the section on screen is lit.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/*
+ * The dock pins to the top of the viewport and carries a progress readout
+ * along its bottom edge. It is the page's own paper at 92 % with a blur under
+ * it, so copy passing beneath reads as passing beneath rather than showing
+ * through; where `backdrop-filter` is missing the fallback is opaque paper.
+ */
+.nav-dock {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+  background: var(--color-bg);
+  border-bottom: var(--rule-hair) solid var(--color-border);
+}
+@supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+  .nav-dock {
+    background: color-mix(in oklab, var(--color-bg) 92%, transparent);
+    -webkit-backdrop-filter: blur(12px) saturate(1.2);
+    backdrop-filter: blur(12px) saturate(1.2);
+  }
+}
+
+.nav {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: var(--space-md);
+  min-height: 4rem;
+}
+
+/* The progress readout — a bar reporting a measured quantity, the same
+   instrument voice as the product's session strip. */
+.nav-dock::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  bottom: -1px;
+  height: 2px;
+  background: var(--color-primary);
+  transform: scaleX(0);
+  transform-origin: 0 50%;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: scroll()) {
+    .nav-dock::after {
+      animation: scroll-progress linear both;
+      animation-timeline: scroll(root block);
+    }
+  }
+}
+
+@keyframes scroll-progress {
+  to {
+    transform: scaleX(1);
+  }
+}
+
 .wordmark {
   display: inline-flex;
   align-items: center;
   gap: 0.55rem;
-  /* The wordmark is a link, so it carries a link's hit target — 27 px of cap
-     height is a fine logo and a poor tap target. */
+  justify-self: start;
+  /* The wordmark is a link, so it carries a link's hit target. */
   min-height: 44px;
   font-weight: 600;
   font-size: 1.0625rem;
@@ -438,83 +325,232 @@ a {
   white-space: nowrap;
 }
 
-/* The TL monogram. One shape in one colour: it takes `primary` here because
-   the wordmark's own text is white and a white mark beside white text is not a
-   mark, it is a ligature. `em` rather than px, so the mark tracks the wordmark
-   if its type size ever moves. */
+/* The TL monogram. It takes `primary` because a white mark beside white text
+   is not a mark, it is a ligature. */
 .wordmark__mark {
   flex: none;
-  /* 1.45em of box, of which the ink is 62.5 % — so the mark stands about a
-     fifth taller than the wordmark's cap height, which is where a monogram
-     beside its own name wants to sit. */
   width: 1.45em;
   height: 1.45em;
   fill: var(--color-primary);
-  /* The mark's optical centre sits above its box centre — the L's foot is the
-     only thing in the bottom fifth — so it needs nudging down to sit on the
-     wordmark's midline. */
   margin-block-start: 0.06em;
+}
+
+.nav__links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3xs);
+}
+
+.nav__link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: var(--space-xs);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-muted);
+  text-decoration: none;
+  white-space: nowrap;
+  transition: color var(--dur-short) var(--ease-out);
+}
+.nav__link:hover {
+  color: var(--color-text);
+}
+
+/* The lit bar under the active link. Off by default; the scroll-driven block
+   below lights it while its section owns the viewport. */
+.nav__link::after {
+  content: "";
+  position: absolute;
+  inset-inline: var(--space-xs);
+  bottom: 6px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--color-primary);
+  transform: scaleX(0);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    /* Scoped on the root: the sections that *define* these timelines live in
+       `main`, the links that *reference* them are up in the dock, and the
+       scope has to cover both. */
+    :root {
+      timeline-scope: --sec-overlays, --sec-features, --sec-install,
+        --sec-pricing, --sec-faq;
+    }
+    #overlays {
+      view-timeline-name: --sec-overlays;
+    }
+    #features {
+      view-timeline-name: --sec-features;
+    }
+    #install {
+      view-timeline-name: --sec-install;
+    }
+    #pricing {
+      view-timeline-name: --sec-pricing;
+    }
+    #faq {
+      view-timeline-name: --sec-faq;
+    }
+
+    .nav__link {
+      animation: nav-lit linear both;
+      animation-range: cover 18% cover 82%;
+    }
+    .nav__link::after {
+      animation: nav-lit-bar linear both;
+      animation-range: cover 18% cover 82%;
+    }
+    .nav__link:nth-child(1),
+    .nav__link:nth-child(1)::after {
+      animation-timeline: --sec-overlays;
+    }
+    .nav__link:nth-child(2),
+    .nav__link:nth-child(2)::after {
+      animation-timeline: --sec-features;
+    }
+    .nav__link:nth-child(3),
+    .nav__link:nth-child(3)::after {
+      animation-timeline: --sec-install;
+    }
+    .nav__link:nth-child(4),
+    .nav__link:nth-child(4)::after {
+      animation-timeline: --sec-pricing;
+    }
+    .nav__link:nth-child(5),
+    .nav__link:nth-child(5)::after {
+      animation-timeline: --sec-faq;
+    }
+  }
+}
+
+/* Off at both ends of the range, on through the middle. `fill: both` clamps to
+   the nearest endpoint outside the range, so both endpoints must be the *off*
+   state or the link stays lit for the rest of the page. */
+@keyframes nav-lit {
+  0%,
+  100% {
+    color: var(--color-muted);
+  }
+  1%,
+  99% {
+    color: var(--color-text);
+  }
+}
+@keyframes nav-lit-bar {
+  0%,
+  100% {
+    transform: scaleX(0);
+  }
+  1%,
+  99% {
+    transform: scaleX(1);
+  }
 }
 
 .nav__actions {
   display: flex;
   align-items: center;
-  gap: var(--space-xs);
+  justify-content: flex-end;
+  gap: var(--space-2xs);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Theme toggle
-   An icon button, and the only control on the page. It ships the same states
-   as the chips — `border-width` never changes, state goes to background and
-   colour — and it keeps a 44 px hit target while painting a 34 px box, via
-   the inset pseudo-element the app's controls use for the same reason.
+   Language switch — a two-way segmented control. The current language is the
+   filled segment and carries `aria-current`.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-.theme-toggle {
+.lang {
+  display: inline-flex;
+  align-items: center;
+  padding: 2px;
+  border: var(--rule-hair) solid var(--color-border-strong);
+  border-radius: var(--radius-card);
+}
+
+.lang__opt {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding-inline: 0.5rem;
+  border-radius: var(--radius-ctl);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: var(--color-faint);
+  text-decoration: none;
+  transition:
+    color var(--dur-short) var(--ease-out),
+    background-color var(--dur-short) var(--ease-out);
+}
+/* 28 px painted, 44 px hittable. */
+.lang__opt::before {
+  content: "";
+  position: absolute;
+  inset: -8px -2px;
+}
+.lang__opt:hover {
+  color: var(--color-text);
+}
+.lang__opt[aria-current="page"] {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Icon buttons — the theme toggle, the GitHub link, the menu
+   One box, the full state set. `border-width` never changes; state goes to
+   background and colour. A 34 px box with a 44 px hit area.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.icon-btn {
   position: relative;
   display: grid;
   place-items: center;
   width: 34px;
   height: 34px;
+  flex: none;
   padding: 0;
   border: var(--rule-hair) solid var(--color-border-strong);
   border-radius: var(--radius-ctl);
   background: transparent;
   color: var(--color-muted);
   cursor: pointer;
+  list-style: none;
   transition:
     background-color var(--dur-short) var(--ease-out),
     border-color var(--dur-short) var(--ease-out),
     color var(--dur-short) var(--ease-out);
 }
-
-/* The painted box is 34 px; the thing you can hit is 44. */
-.theme-toggle::before {
+.icon-btn::-webkit-details-marker {
+  display: none;
+}
+.icon-btn::before {
   content: "";
   position: absolute;
   inset: -5px;
 }
-
-.theme-toggle:hover {
+.icon-btn:hover {
   background: var(--color-surface-2);
   border-color: var(--color-faint);
   color: var(--color-text);
 }
-
-.theme-toggle:active {
+.icon-btn:active {
   transform: translateY(1px);
 }
-
-.theme-toggle svg {
+.icon-btn svg {
   width: 17px;
   height: 17px;
 }
 
 /*
- * Which glyph shows is a statement about what the button *does*, not about
- * what the page currently is: on dark paper it offers the sun, on light paper
- * the moon. Both are in the markup and CSS picks one, so there is no flash of
- * the wrong icon and no second script to swap them.
+ * Which glyph shows is a statement about what the button *does*: on dark
+ * paper it offers the sun, on light paper the moon. Both are in the markup and
+ * CSS picks one, so there is no flash of the wrong icon.
  */
 .theme-toggle__moon {
   display: none;
@@ -540,11 +576,55 @@ html[data-theme="dark"] .theme-toggle__moon {
   display: none;
 }
 
+.nav__cta {
+  min-height: 34px;
+  padding-block: 0.4rem;
+  margin-inline-start: var(--space-3xs);
+}
+
+/* The mobile menu: hidden on desktop, where the links are in the bar. */
+.menu {
+  display: none;
+  position: relative;
+}
+
+.menu__panel {
+  position: absolute;
+  top: calc(100% + 0.6rem);
+  right: 0;
+  display: grid;
+  min-width: 13rem;
+  padding: var(--space-3xs);
+  border: var(--rule-hair) solid var(--color-border-strong);
+  border-radius: var(--radius-panel);
+  background: var(--color-surface);
+  box-shadow: 0 16px 32px -12px rgb(0 0 0 / 0.5);
+}
+
+.menu__panel a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  padding-inline: var(--space-xs);
+  border-radius: var(--radius-ctl);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--color-muted);
+}
+.menu__panel a:hover {
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+.menu__panel a:last-child {
+  margin-block-start: var(--space-3xs);
+  border-top: var(--rule-hair) solid var(--color-border);
+  border-radius: 0 0 var(--radius-ctl) var(--radius-ctl);
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
    C1 · Outlined chip + its filled sibling
-   Both ship the full state set. `border-width` never changes between states —
-   state goes to background, outline or colour, never to geometry, or the
-   control shifts its neighbours by a pixel on hover.
+   Both ship the full state set. `border-width` never changes between states.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .chip,
@@ -552,19 +632,21 @@ html[data-theme="dark"] .theme-toggle__moon {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.45em;
+  gap: 0.5em;
   min-height: 44px; /* WCAG AA hit target, at every width */
   padding: 0.6rem 1.05rem;
-  border-radius: var(--radius-ctl);
+  border-radius: var(--radius-card);
   font: inherit;
   font-size: var(--text-sm);
   font-weight: 500;
+  line-height: 1.2;
   text-decoration: none;
   white-space: nowrap; /* a two-line button is a broken button */
   cursor: pointer;
   transition:
     background-color var(--dur-short) var(--ease-out),
     border-color var(--dur-short) var(--ease-out),
+    color var(--dur-short) var(--ease-out),
     transform var(--dur-instant) var(--ease-out);
 }
 
@@ -593,55 +675,46 @@ html[data-theme="dark"] .theme-toggle__moon {
   transform: translateY(1px);
 }
 
-/* A chip that leads with a glyph. `1em` so the icon tracks the label's size,
-   and `flex: none` so it never gets squeezed when the row wraps on a phone. */
+/* The large size, for the page's primary actions. */
+.chip--lg {
+  min-height: 48px;
+  padding: 0.75rem 1.35rem;
+  font-size: 0.95rem;
+}
+
+/* A chip that leads with a glyph. `em` so the icon tracks the label. */
 .chip__icon {
   width: 1.15em;
   height: 1.15em;
   flex: none;
 }
 
-/* The support chip sits beside the download CTA, so it must not compete with
-   it: outlined like any secondary action, and its warmth arrives only on
-   hover. `warning` is the closest the palette has to a coffee, and this is the
-   one place it is not carrying its § Theme meaning — it is a brand colour on a
-   link off-site, not a caution about anything on this page. */
+/* The support chip must not compete with the download: outlined like any
+   secondary action, and its warmth arrives only on hover. `warning` is the
+   closest the palette has to a coffee, and this is the one place it is not
+   carrying its § Theme meaning — it is a brand colour on a link off-site. */
 .chip--coffee:hover {
   border-color: color-mix(in oklab, var(--color-warning) 55%, transparent);
   color: var(--color-warning);
   background: color-mix(in oklab, var(--color-warning) 10%, transparent);
 }
 
-.chip[aria-disabled="true"],
-.chip-solid[aria-disabled="true"] {
-  opacity: 0.45;
-  pointer-events: none;
-}
-
-/* A quiet text link that still reads as an action. The rule under it is drawn
-   with a border, so it sits clear of the descenders. */
+/* A quiet text link that still reads as an action. */
 .link-q {
   display: inline-flex;
   align-items: center;
-  min-height: 44px;
-  padding-inline: var(--space-3xs);
+  min-height: 36px;
   color: var(--color-muted);
   font-size: var(--text-sm);
   text-decoration: none;
-  white-space: nowrap;
-  border-bottom: var(--rule-hair) solid transparent;
   transition: color var(--dur-short) var(--ease-out);
 }
 .link-q:hover {
   color: var(--color-text);
 }
 
-/* A link inside running prose.
-   `.link-q` is a standalone target — 44 px tall with its own padding — which
-   is right in the footer and wrong mid-sentence: the padding opens a gap
-   before the next comma and the min-height inflates the line box around it.
-   This one takes the paragraph's own metrics and carries an underline, so it
-   is identifiable as a link without relying on colour alone. */
+/* A link inside running prose: the paragraph's own metrics and an underline,
+   so it is identifiable as a link without relying on colour alone. */
 .link-inline {
   color: var(--color-text);
   text-decoration: underline;
@@ -653,64 +726,113 @@ html[data-theme="dark"] .theme-toggle__moon {
   text-decoration-color: currentColor;
 }
 
+.actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-xs);
+}
+.actions--center {
+  justify-content: center;
+}
+
 /* ═══════════════════════════════════════════════════════════════════════════
-   H2 · Split diptych hero
+   Hero — centred
+   What it is, two actions, the session strip, then the stage.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .hero {
-  display: grid;
-  /* 6/6 rather than 7/5. `minmax(0, …)` on both tracks: a bare `1fr` refuses to
-     shrink below its content's intrinsic width, which is how a wide screenshot
-     pushes a grid past the viewport.
-
-     The even split is not a style preference — the capture is a timing table,
-     and below about 600 px its 12 px type stops being legible. A hero image you
-     cannot read is decoration, and this system does not use decoration. */
-  grid-template-columns: minmax(0, 6fr) minmax(0, 6fr);
-  gap: var(--space-2xl);
-  align-items: center;
-  padding-block: var(--space-3xl) var(--space-2xl);
+  position: relative;
+  padding-block: var(--space-2xl) 0;
+  isolation: isolate;
 }
 
-.hero__copy {
+/*
+ * The paper under the hero is the inputs trace's own graph paper — the dotted
+ * grid the dashboard draws its throttle and brake lines on — fading out
+ * toward the edges. It is the instrument's ground, not an illustration, and
+ * it is the page's only background texture.
+ */
+.hero::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 25% 0;
+  z-index: -1;
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    color-mix(in oklab, var(--color-border-strong) 85%, transparent) 1px,
+    transparent 1.4px
+  );
+  background-size: 28px 28px;
+  -webkit-mask-image: radial-gradient(ellipse 70% 75% at 50% 30%, #000 30%, transparent 75%);
+  mask-image: radial-gradient(ellipse 70% 75% at 50% 30%, #000 30%, transparent 75%);
+  pointer-events: none;
+}
+
+.hero__inner {
   display: grid;
+  justify-items: center;
+  text-align: center;
   gap: var(--space-md);
-  justify-items: start;
-  /* The leading edge, one more time. The product quarantines identity colour
-     to a 3 px left border; the site has no identity to carry, so the same
-     geometry carries structure instead — hero, band and section all hang off
-     one vertical. */
-  padding-inline-start: var(--space-sm);
-  border-inline-start: 3px solid var(--color-border-strong);
 }
 
-.band--hero {
-  /* Already inside the hero's own leading edge — a second rule here would be
-     the device stacked on itself. */
-  border-inline-start: 0;
-  padding-inline-start: 0;
-  margin-block-end: calc(var(--space-md) * -1 + var(--space-2xs));
+/* The release pill: what changed last, linked to where it is written down. */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  min-height: 36px;
+  padding: 0.25rem 0.75rem 0.25rem 0.3rem;
+  border: var(--rule-hair) solid var(--color-border-strong);
+  border-radius: 999px;
+  background: color-mix(in oklab, var(--color-surface) 80%, transparent);
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  text-decoration: none;
+  transition:
+    border-color var(--dur-short) var(--ease-out),
+    color var(--dur-short) var(--ease-out);
+}
+.pill:hover {
+  border-color: var(--color-faint);
+  color: var(--color-text);
+}
+.pill__tag {
+  flex: none;
+  white-space: nowrap;
+  padding: 0.28rem 0.55rem;
+  border-radius: 999px;
+  background: var(--color-primary);
+  color: var(--color-on-accent);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  line-height: 1;
+}
+.pill__arrow {
+  width: 14px;
+  height: 14px;
+  flex: none;
 }
 
 .hero h1 {
   font-size: var(--text-display);
-  max-width: 17ch; /* two lines, no widow */
-  letter-spacing: -0.035em;
+  max-width: 14ch;
+  letter-spacing: -0.04em;
   font-weight: 700;
+  line-height: 1.02;
+  margin-block-start: var(--space-2xs);
 }
 
 .hero__lede {
   font-size: var(--text-lede);
   color: var(--color-muted);
-  max-width: 46ch;
+  max-width: 54ch;
   text-wrap: pretty;
 }
 
-.hero__actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-xs);
+.hero .actions {
   margin-block-start: var(--space-2xs);
 }
 
@@ -720,14 +842,314 @@ html[data-theme="dark"] .theme-toggle__moon {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   The session strip — the stats row, in the product's session-header grammar
+   A chip, a title over a sub-line, then small sans labels over large mono
+   values, divided by hairlines. The same layout as the header across the top
+   of the standings capture below it.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.session {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm) var(--space-md);
+  width: 100%;
+  max-width: 60rem;
+  margin-block-start: var(--space-lg);
+  padding: var(--space-sm) var(--space-md);
+  border: var(--rule-hair) solid var(--color-border);
+  border-radius: var(--radius-panel);
+  background: var(--color-surface);
+  text-align: left;
+}
+
+.session__chip {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 600;
+  padding: 0.38rem 0.6rem;
+  border-radius: var(--radius-ctl);
+  background: var(--color-accent);
+  color: var(--color-on-accent);
+  line-height: 1;
+}
+
+.session__title {
+  display: grid;
+  gap: 0.15rem;
+  /* Takes the slack between the chip and the fields, and wraps its own
+     sub-line before it lets the fields drop to a second row. */
+  flex: 1 1 12rem;
+  min-width: 0;
+  line-height: 1.2;
+}
+.session__title b {
+  font-weight: 600;
+}
+.session__title span {
+  font-size: var(--text-micro);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-faint);
+}
+
+.session__fields {
+  display: flex;
+  flex: none;
+  margin: 0;
+}
+
+.session__field {
+  display: grid;
+  gap: 0.3rem;
+  padding-inline: var(--space-sm);
+  text-align: right;
+}
+.session__field + .session__field {
+  border-inline-start: var(--rule-hair) solid var(--color-border);
+}
+.session__field:last-child {
+  padding-inline-end: 0;
+}
+
+.session__field dt {
+  font-size: 0.66rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.14em;
+  color: var(--color-faint);
+  line-height: 1;
+}
+.session__field dd {
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: 1.5rem;
+  font-weight: 600;
+  line-height: 1;
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+}
+.session__field small {
+  font-size: 0.55em;
+  font-weight: 500;
+  color: var(--color-faint);
+  margin-inline-start: 0.12em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   The stage — the page's signature
+   A screen-shaped field on the overlays' own paper, with real captures placed
+   on it the way a driver arranges the windows. Each window's place is four
+   custom properties, so the composition is tuned in one block below.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.stage {
+  margin: var(--space-2xl) 0 0;
+}
+
+.stage__screen {
+  position: relative;
+  aspect-ratio: 16 / 9;
+  border: var(--rule-hair) solid var(--color-border);
+  border-radius: 10px;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 80% 60% at 50% 100%, oklch(24% 0.02 240 / 0.55), transparent 70%),
+    var(--color-timing-bg);
+  box-shadow:
+    0 0 0 6px color-mix(in oklab, var(--color-surface) 70%, transparent),
+    0 40px 80px -40px rgb(0 0 0 / 0.7);
+}
+
+/* The faint lane markings of an empty desktop: the same dotted grid as the
+   hero's paper, at the overlays' scale. */
+.stage__screen::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle at 1px 1px, oklch(100% 0 0 / 0.07) 1px, transparent 1.4px);
+  background-size: 22px 22px;
+  pointer-events: none;
+}
+
+.win {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  width: var(--w);
+  height: auto;
+  border: var(--rule-hair) solid oklch(100% 0 0 / 0.12);
+  border-radius: 4px;
+  box-shadow: 0 18px 36px -14px rgb(0 0 0 / 0.75);
+  /* Its own compositing layer, so the scroll drift below moves a texture
+     rather than repainting a 2× screenshot every frame. */
+  will-change: transform;
+}
+
+/* The composition. Percentages of the 16:9 screen; heights follow from each
+   capture's own aspect ratio, so these are the only numbers to move. */
+.win--standings {
+  --x: 2.5%;
+  --y: 4.5%;
+  --w: 52%;
+}
+.win--relative {
+  --x: 57.5%;
+  --y: 8%;
+  --w: 40%;
+}
+.win--coach {
+  --x: 6%;
+  --y: 52%;
+  --w: 34%;
+}
+.win--fuel {
+  --x: 43%;
+  --y: 55%;
+  --w: 22%;
+}
+.win--radar {
+  --x: 70%;
+  --y: 73%;
+  --w: 22%;
+}
+
+.stage__cap {
+  margin-block-start: var(--space-sm);
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-faint);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Sections and their heads
+   Heads are centred and stacked — eyebrow, heading, lede — never a heading
+   parked beside its body (the hanging header this system bans).
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.section {
+  padding-block: var(--space-3xl) 0;
+}
+
+.sec-head {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-sm);
+  text-align: center;
+  margin-block-end: var(--space-xl);
+}
+
+.sec-head h2 {
+  font-size: var(--text-h2);
+  max-width: 22ch;
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+
+.sec-head__lede {
+  color: var(--color-muted);
+  font-size: var(--text-lede);
+  max-width: 56ch;
+  text-wrap: pretty;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Overlay cards — a 12-column bento
+   Every card is a claim and the capture that proves it, so the capture is
+   never cropped and never decorative. Spans pair a wide capture with a tall
+   one so each row's captures land at similar heights.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.bento {
+  display: grid;
+  grid-template-columns: repeat(12, minmax(0, 1fr));
+  gap: var(--space-md);
+}
+
+.card {
+  grid-column: span 6;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-md);
+  border: var(--rule-hair) solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+  transition: border-color var(--dur-mid) var(--ease-out);
+}
+.card:hover {
+  border-color: var(--color-border-strong);
+}
+
+.card--wide {
+  grid-column: 1 / -1;
+}
+.card--7 {
+  grid-column: span 7;
+}
+.card--5 {
+  grid-column: span 5;
+}
+
+.card__copy {
+  display: grid;
+  gap: var(--space-xs);
+  align-content: start;
+}
+
+.card h3,
+.split h3 {
+  font-size: var(--text-h3);
+  margin-block-start: var(--space-3xs);
+}
+
+.card__copy > p,
+.split__copy > p {
+  color: var(--color-muted);
+  max-width: 60ch;
+  text-wrap: pretty;
+}
+
+/* The wide standings card: copy beside a short list, the capture full width
+   beneath — the twelve columns of 12 px type are illegible at half width. */
+.card--wide:not(.card--row) .card__copy {
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+  column-gap: var(--space-xl);
+}
+.card--wide:not(.card--row) .card__copy > .band,
+.card--wide:not(.card--row) .card__copy > h3,
+.card--wide:not(.card--row) .card__copy > p {
+  grid-column: 1;
+}
+.card--wide:not(.card--row) .card__copy > .reads {
+  grid-column: 2;
+  grid-row: 2 / span 2;
+  align-self: end;
+}
+
+/* The radar card: copy and capture side by side, since the capture is small. */
+.card--row {
+  flex-direction: row;
+  align-items: center;
+  gap: var(--space-xl);
+}
+.card--row .card__copy {
+  flex: 1 1 0;
+}
+.card--row .shot {
+  flex: 0 1 26rem;
+  margin-block-start: 0;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    Product captures
-   A real screenshot in a <figure> with a hairline border. No drawn browser
-   bar, no traffic-light dots, no phone frame — the reader's own window already
-   supplies real chrome, and a fake one only ever reads as fake.
+   A real screenshot in a <figure> with a hairline border on the overlays' own
+   paper. No drawn browser bar, no traffic-light dots, no phone frame.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 .shot {
-  margin: 0;
+  margin: auto 0 0;
   border: var(--rule-hair) solid var(--color-border);
   border-radius: var(--radius-panel);
   background: var(--color-timing-bg);
@@ -740,93 +1162,8 @@ html[data-theme="dark"] .theme-toggle__moon {
   border-radius: calc(var(--radius-panel) - 2px);
 }
 
-.shot figcaption {
-  padding: var(--space-2xs) var(--space-3xs) var(--space-3xs);
-}
-
-/* ═══════════════════════════════════════════════════════════════════════════
-   Split Studio rows — the page's spine
-   Text on one side, its proof on the other; the pairing alternates direction
-   down the page. The alternation is done with `direction`-free explicit column
-   placement so the DOM order stays reading order for screen readers.
-   ═══════════════════════════════════════════════════════════════════════════ */
-
-.row {
-  display: grid;
-  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-  /* Row 1 is the band, row 2 the diptych. Declared rather than implicit
-     because the flipped rows place their children by explicit `grid-row`, and
-     an auto-placed band would land in the same cell as the copy. */
-  grid-template-rows: auto auto;
-  gap: var(--space-2xl);
-  align-items: center;
-  padding-block: var(--space-xl) var(--space-2xl);
-  border-top: var(--rule-hair) solid var(--color-border);
-}
-
-/* The band is a heading device, so it sits apart from its section rather than
-   on top of it — the same `CLASS_BAND_H` + `BAND_GAP` reasoning the product
-   uses, at page scale. */
-.row > .band {
-  grid-column: 1 / -1;
-  grid-row: 1;
-  /* The grid gap is sized for the diptych; the band wants a heading's air
-     under it, not a column's. */
-  margin-block-end: calc(var(--space-2xl) * -1 + var(--space-xl));
-}
-
-/* Everything after the band auto-places from row 2 onward — two columns in a
-   diptych row, stacked in `--wide`. Only the flipped rows place explicitly. */
-
-.row__copy {
-  display: grid;
-  gap: var(--space-sm);
-  align-content: start;
-}
-
-.row h2 {
-  font-size: var(--text-h2);
-  max-width: 16ch;
-}
-
-.row__body {
-  color: var(--color-muted);
-  max-width: 52ch;
-  text-wrap: pretty;
-}
-
-/* Alternate rows put the proof on the left. Grid placement, not `order` on a
-   flex container, so the tab order and the reading order stay identical. */
-.row--flip {
-  grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
-}
-.row--flip > .row__copy {
-  grid-column: 2;
-  grid-row: 2;
-}
-.row--flip > .shot {
-  grid-column: 1;
-  grid-row: 2;
-}
-
-/* One row breaks the diptych: the full standings table.
- *
- * Split Studio pairs each claim with a proof at half width, which works for
- * every capture here except this one — the wide table carries twelve columns of
- * 12 px type, and at half width that renders at around 5 px. The rule the
- * archetype is really enforcing is "every claim gets its proof"; a proof too
- * small to read fails that rule while satisfying its letter. So this row stacks:
- * copy at reading measure, then the capture at the full width of the shell.
- *
- * Used exactly once. A second full-width row and the page has stopped being a
- * diptych at all.
- */
-.row--wide {
-  grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-lg);
-}
-.row--wide .row__copy {
-  max-width: 62ch;
+.shot--radar {
+  padding: var(--space-sm);
 }
 
 /* A short list of what the capture beside it actually shows. Every item is
@@ -853,67 +1190,76 @@ html[data-theme="dark"] .theme-toggle__moon {
   width: 10px;
   height: 2px;
   border-radius: 1px;
-  background: var(--color-border-strong);
+  background: var(--color-primary);
   transform: translateY(-0.28em);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   F3 · Tabular spec sheet
-   The page's signature move: the site becomes the instrument it is selling.
-   Hairline rules between rows, mono keys, tabular figures, no vertical rules.
+   Legend — the column reference, folded
    ═══════════════════════════════════════════════════════════════════════════ */
 
-.spec {
-  padding-block: var(--space-xl) var(--space-2xl);
-  border-top: var(--rule-hair) solid var(--color-border);
-  display: grid;
-  gap: var(--space-lg);
+.legend {
+  margin-block-start: var(--space-md);
+  border: var(--rule-hair) solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
 }
 
-.spec__intro {
-  max-width: 54ch;
-  display: grid;
+.legend__sum {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
   gap: var(--space-sm);
+  min-height: 56px;
+  padding: var(--space-xs) var(--space-md);
+  font-weight: 600;
+  cursor: pointer;
+  list-style: none;
+  border-radius: 8px;
+}
+.legend__sum::-webkit-details-marker {
+  display: none;
 }
 
-.spec__intro h2 {
-  font-size: var(--text-h2);
+.legend__icon {
+  width: 16px;
+  height: 16px;
+  flex: none;
+  color: var(--color-faint);
+  transition: transform var(--dur-mid) var(--ease-out);
+}
+.legend[open] .legend__icon {
+  transform: rotate(45deg);
 }
 
-.spec__intro p {
-  color: var(--color-muted);
+.legend__body {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 1fr));
+  gap: var(--space-xl);
+  padding: var(--space-2xs) var(--space-md) var(--space-md);
+  border-top: var(--rule-hair) solid var(--color-border);
 }
 
-/* A table caption is centred and inherits the table's alignment by default;
-   here it is a micro-label naming the readout, so it aligns with the first
-   column like every other label on the page. */
-.spec__cap {
-  text-align: left;
-  padding-block-end: var(--space-xs);
-}
-
-.spec__scroll--stacked {
-  margin-block-start: var(--space-xl);
-}
-
-.spec__scroll {
+.legend__scroll {
   overflow-x: auto;
-  /* The table is the one element allowed to scroll sideways — inside its own
-     container, never taking the page with it. */
   -webkit-overflow-scrolling: touch;
 }
 
-.spec table {
+.legend__cap {
+  text-align: left;
+  padding-block: var(--space-sm) var(--space-xs);
+}
+
+.legend table {
   width: 100%;
-  min-width: 34rem;
+  min-width: 26rem;
   border-collapse: collapse;
   text-align: left;
 }
 
-.spec thead th {
+.legend thead th {
   padding: 0 var(--space-sm) var(--space-2xs) 0;
   border-bottom: var(--rule-hair) solid var(--color-border-strong);
-  font-family: var(--font-sans);
   font-size: var(--text-micro);
   font-weight: 600;
   text-transform: uppercase;
@@ -921,35 +1267,34 @@ html[data-theme="dark"] .theme-toggle__moon {
   color: var(--color-faint);
 }
 
-.spec tbody th {
+.legend tbody th {
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   font-weight: 600;
-  color: var(--color-text);
   white-space: nowrap;
   padding-right: var(--space-md);
 }
 
-.spec tbody td {
+.legend tbody td {
   color: var(--color-muted);
   font-size: var(--text-sm);
   padding-right: var(--space-sm);
 }
 
-.spec tbody th,
-.spec tbody td {
-  padding-block: var(--space-xs);
+.legend tbody th,
+.legend tbody td {
+  padding-block: var(--space-2xs);
   border-bottom: var(--rule-hair) solid var(--color-border);
   vertical-align: baseline;
 }
 
-.spec tbody tr:last-child th,
-.spec tbody tr:last-child td {
+.legend tbody tr:last-child th,
+.legend tbody tr:last-child td {
   border-bottom: 0;
 }
 
-/* Status swatches inside the table, carrying the app's own colour meanings.
-   Coloured ink, never a filled cell — the fill budget belongs to the product. */
+/* Status swatches, carrying the app's own colour meanings. Coloured ink,
+   never a filled cell — the fill budget belongs to the product. */
 .sw {
   font-family: var(--font-mono);
   font-weight: 600;
@@ -968,147 +1313,591 @@ html[data-theme="dark"] .theme-toggle__moon {
   color: var(--color-danger);
 }
 
-/* S5 · Bottom-anchored section label — the table is the act, the label is its
-   footer. Inverts the usual hierarchy and keeps the page clear of the
-   tag-above-heading pattern that reads as templated editorial. */
-.spec__end {
-  margin-block-start: var(--space-md);
-  padding-block-start: var(--space-xs);
-  border-top: var(--rule-hair) solid var(--color-border);
-}
-
 /* ═══════════════════════════════════════════════════════════════════════════
-   Requirements
+   Features — six tiles, then the manager
    ═══════════════════════════════════════════════════════════════════════════ */
 
-/* Heading above its content, never beside it. A heading parked in a left
-   column with the body in a right one is the hanging-header pattern, and it is
-   the single most reliable templated-editorial tell — banned outright here even
-   though the content would technically fit. */
-.needs {
-  padding-block: var(--space-xl) var(--space-2xl);
-  border-top: var(--rule-hair) solid var(--color-border);
+.feats {
   display: grid;
-  gap: var(--space-lg);
-}
-
-.needs h2 {
-  font-size: var(--text-h2);
-}
-
-.needs__list {
-  display: grid;
-  /* `auto-fit`, not a fixed 3: the list gained a fourth entry and a hard
-     column count would have parked it alone on a second row with two empty
-     cells beside it. */
-  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
-  gap: var(--space-lg);
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-md);
   margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
-.needs__list > div {
+.feat {
   display: grid;
-  gap: var(--space-3xs);
-  /* Without this the two auto rows stretch to the tallest column in the row,
-     which pushes each `dd` down by half the difference and leaves the short
-     entries floating clear of their own headings. */
+  gap: var(--space-2xs);
+  align-content: start;
+  padding: var(--space-md);
+  border: var(--rule-hair) solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+}
+
+.feat__icon {
+  width: 40px;
+  height: 40px;
+  padding: 9px;
+  margin-block-end: var(--space-2xs);
+  border: var(--rule-hair) solid var(--color-border-strong);
+  border-radius: var(--radius-card);
+  background: var(--color-surface-2);
+  fill: none;
+  stroke: var(--color-primary);
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.feat h3 {
+  font-size: 1.05rem;
+  letter-spacing: -0.015em;
+}
+
+.feat p {
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
+/* The manager: copy beside its capture. Two columns of unequal weight, the
+   capture taking the larger. */
+.split {
+  display: grid;
+  grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+  gap: var(--space-2xl);
+  align-items: center;
+  margin-block-start: var(--space-xl);
+  padding: var(--space-xl);
+  border: var(--rule-hair) solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+}
+
+.split__copy {
+  display: grid;
+  gap: var(--space-sm);
   align-content: start;
 }
 
-.needs__list dt {
-  font-weight: 600;
-}
-
-.needs__list dd {
+.split .shot {
   margin: 0;
-  color: var(--color-muted);
-  max-width: 46ch;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Closing CTA — one button, not two. The repetition is the call to action.
+   Install — three numbered steps
+   Numbered because order is the information here. A hairline runs behind the
+   numbers so the three read as one track rather than three cards.
    ═══════════════════════════════════════════════════════════════════════════ */
 
-.close {
-  padding-block: var(--space-2xl);
+.steps {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-xl);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.steps::before {
+  content: "";
+  position: absolute;
+  top: 22px;
+  left: 22px;
+  right: 22px;
+  height: 1px;
+  background: linear-gradient(
+    to right,
+    var(--color-primary),
+    var(--color-border-strong) 60%
+  );
+}
+
+.step {
+  position: relative;
+  display: grid;
+  gap: var(--space-2xs);
+  align-content: start;
+}
+
+.step__n {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  margin-block-end: var(--space-xs);
+  border: var(--rule-hair) solid var(--color-border-strong);
+  border-radius: var(--radius-card);
+  background: var(--color-bg);
+  font-family: var(--font-mono);
+  font-weight: 600;
+  font-size: 1.05rem;
+  color: var(--color-text);
+}
+.step:first-child .step__n {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+
+.step h3 {
+  font-size: var(--text-h3);
+}
+
+.step p {
+  color: var(--color-muted);
+  max-width: 38ch;
+}
+
+.install__verify {
+  margin-block-start: var(--space-xl);
+  padding-block-start: var(--space-md);
   border-top: var(--rule-hair) solid var(--color-border);
+  color: var(--color-faint);
+  font-size: var(--text-sm);
+  text-align: center;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Price — two cards in the shape of a plans table
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.plans {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-md);
+  max-width: 56rem;
+  margin-inline: auto;
+}
+
+.plan {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-md);
+  padding: var(--space-lg);
+  border: var(--rule-hair) solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+}
+
+/* The main card's top edge is the one coloured rule in the section: it marks
+   the thing to download, in the colour of the button that downloads it. */
+.plan--main {
+  border-color: var(--color-border-strong);
+  box-shadow: inset 0 3px 0 var(--color-primary);
+}
+
+.plan__head {
+  display: grid;
+  gap: var(--space-2xs);
+  padding-block-end: var(--space-md);
+  border-bottom: var(--rule-hair) solid var(--color-border);
+}
+
+.plan__head h3 {
+  font-size: 1.05rem;
+  letter-spacing: -0.01em;
+  color: var(--color-muted);
+}
+
+.plan__price {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-2xs) var(--space-xs);
+}
+
+.plan__amount {
+  font-family: var(--font-mono);
+  font-size: clamp(2.2rem, 3vw + 1rem, 3rem);
+  font-weight: 600;
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+.plan__amount--word {
+  font-family: var(--font-sans);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+}
+
+.plan__per {
+  color: var(--color-faint);
+  font-size: var(--text-sm);
+}
+
+.plan__list {
+  display: grid;
+  gap: var(--space-xs);
+  margin: 0 0 auto;
+  padding: 0;
+  list-style: none;
+}
+
+.plan__list li {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  gap: var(--space-xs);
+  align-items: start;
+  color: var(--color-muted);
+  font-size: var(--text-sm);
+}
+
+/* A tick, drawn in CSS so there is no icon request. `accent` because each
+   item is something you get — the palette's positive. */
+.plan__list li::before {
+  content: "";
+  width: 12px;
+  height: 7px;
+  margin: 0.38em 0 0 3px;
+  border-left: 2px solid var(--color-accent);
+  border-bottom: 2px solid var(--color-accent);
+  transform: rotate(-45deg);
+}
+
+.plan__cta {
+  width: 100%;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Open source
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.oss {
+  display: grid;
+  grid-template-columns: minmax(0, 6fr) minmax(0, 5fr);
+  gap: var(--space-2xl);
+  align-items: start;
+  padding: var(--space-xl);
+  border: var(--rule-hair) solid var(--color-border);
+  border-radius: 8px;
+  background: var(--color-surface);
+}
+
+.oss__copy {
   display: grid;
   gap: var(--space-md);
   justify-items: start;
 }
 
-.close h2 {
+.oss h2 {
   font-size: var(--text-h2);
-  max-width: 18ch;
+  font-weight: 700;
+  letter-spacing: -0.035em;
 }
 
-.close p {
+.oss__copy > p {
   color: var(--color-muted);
-  max-width: 50ch;
+  max-width: 52ch;
+}
+
+.oss__list {
+  display: grid;
+  gap: var(--space-md);
+  margin: 0;
+}
+
+.oss__list > div {
+  display: grid;
+  gap: var(--space-3xs);
+  padding-block-start: var(--space-md);
+  border-top: var(--rule-hair) solid var(--color-border);
+}
+.oss__list > div:first-child {
+  padding-block-start: 0;
+  border-top: 0;
+}
+
+.oss__list dt {
+  font-weight: 600;
+}
+
+.oss__list dd {
+  margin: 0;
+  color: var(--color-muted);
+  font-size: var(--text-sm);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Responsive — verified at 320 / 375 / 414 / 768
-   Below 60rem every two-column block becomes one column; below 40rem the page
-   is a phone and space is a luxury.
+   FAQ — an accordion of <details>
    ═══════════════════════════════════════════════════════════════════════════ */
 
+.faq {
+  display: grid;
+  max-width: 50rem;
+  margin-inline: auto;
+  border-top: var(--rule-hair) solid var(--color-border);
+}
+
+.faq__item {
+  border-bottom: var(--rule-hair) solid var(--color-border);
+}
+
+.faq__item summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  min-height: 64px;
+  padding-block: var(--space-sm);
+  font-weight: 600;
+  font-size: 1.05rem;
+  cursor: pointer;
+  list-style: none;
+  transition: color var(--dur-short) var(--ease-out);
+}
+.faq__item summary::-webkit-details-marker {
+  display: none;
+}
+.faq__item summary:hover {
+  color: var(--color-primary);
+}
+
+/* The plus that turns into a cross. Two bars, drawn in CSS. */
+.faq__item summary::after {
+  content: "";
+  flex: none;
+  width: 14px;
+  height: 14px;
+  background:
+    linear-gradient(currentColor, currentColor) center / 100% 1.6px no-repeat,
+    linear-gradient(currentColor, currentColor) center / 1.6px 100% no-repeat;
+  color: var(--color-faint);
+  transition: transform var(--dur-mid) var(--ease-out);
+}
+.faq__item[open] summary::after {
+  transform: rotate(45deg);
+}
+
+.faq__item p {
+  padding-block-end: var(--space-md);
+  color: var(--color-muted);
+  max-width: 64ch;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Closing call to action
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.cta {
+  position: relative;
+  display: grid;
+  justify-items: center;
+  gap: var(--space-md);
+  padding: var(--space-2xl) var(--space-lg);
+  border: var(--rule-hair) solid var(--color-border-strong);
+  border-radius: 10px;
+  text-align: center;
+  overflow: hidden;
+  isolation: isolate;
+  background: var(--color-surface);
+}
+
+/* The hero's graph paper, once more, so the page closes on the ground it
+   opened on. */
+.cta::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background-image: radial-gradient(
+    circle at 1px 1px,
+    color-mix(in oklab, var(--color-border-strong) 85%, transparent) 1px,
+    transparent 1.4px
+  );
+  background-size: 28px 28px;
+  -webkit-mask-image: radial-gradient(ellipse 60% 90% at 50% 50%, #000 20%, transparent 80%);
+  mask-image: radial-gradient(ellipse 60% 90% at 50% 50%, #000 20%, transparent 80%);
+}
+
+.cta h2 {
+  font-size: var(--text-h2);
+  font-weight: 700;
+  letter-spacing: -0.035em;
+  max-width: 20ch;
+}
+
+.cta p {
+  color: var(--color-muted);
+  max-width: 50ch;
+  text-wrap: balance;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Responsive — verified at 320 / 375 / 414 / 768 / 1024 / 1440
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 68rem) {
+  .nav__links {
+    display: none;
+  }
+  .nav {
+    grid-template-columns: auto 1fr;
+  }
+  .menu {
+    display: block;
+  }
+}
+
 @media (max-width: 60rem) {
-  .hero,
-  .row,
-  .row--flip,
-  .needs__list {
+  .card--7,
+  .card--5 {
+    grid-column: 1 / -1;
+  }
+
+  .card--wide:not(.card--row) .card__copy {
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-lg);
   }
-
-  .hero {
-    padding-block: var(--space-2xl) var(--space-lg);
-  }
-
-  /* The flipped rows lose their flip: on one column, DOM order wins and the
-     copy always leads. */
-  .row--flip .row__copy,
-  .row--flip .shot {
+  .card--wide:not(.card--row) .card__copy > .reads {
     grid-column: 1;
     grid-row: auto;
   }
 
-  .row {
-    padding-block: var(--space-xl);
+  .card--row {
+    flex-direction: column;
+    align-items: stretch;
+    gap: var(--space-md);
+  }
+  .card--row .shot {
+    flex: none;
+  }
+
+  .feats {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .split,
+  .oss {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-lg);
+    padding: var(--space-lg);
+  }
+
+  .steps {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-lg);
+  }
+  /* The track turns vertical with the steps, and runs number to number
+     rather than through the last step's text. */
+  .steps::before {
+    display: none;
+  }
+  .step:not(:last-child)::after {
+    content: "";
+    position: absolute;
+    left: 22px;
+    top: 44px;
+    bottom: calc(-1 * var(--space-lg));
+    width: 1px;
+    background: var(--color-border-strong);
+  }
+  .step:first-child::after {
+    background: linear-gradient(to bottom, var(--color-primary), var(--color-border-strong));
+  }
+  .step {
+    grid-template-columns: 44px minmax(0, 1fr);
+    column-gap: var(--space-md);
+  }
+  .step__n {
+    grid-row: 1 / span 2;
+    margin: 0;
+  }
+
+  .plans {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  /* The session strip: the fields drop under the title and share the width. */
+  .session__fields {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+  }
+  .session__field {
+    padding-inline: var(--space-2xs);
+    text-align: left;
+  }
+  .session__field:first-child {
+    padding-inline-start: 0;
+  }
+}
+
+/* The stage stops being a screen below tablet width: five windows on a
+   phone-sized 16:9 would be five thumbnails nobody can read. It becomes the
+   two captures that read at that size, stacked. */
+@media (max-width: 48rem) {
+  .stage__screen {
+    aspect-ratio: auto;
+    display: grid;
+    gap: var(--space-xs);
+    padding: var(--space-xs);
+  }
+  .win {
+    position: relative;
+    left: auto;
+    top: auto;
+    width: 100%;
+    box-shadow: none;
+    will-change: auto;
+  }
+  .win--coach,
+  .win--fuel,
+  .win--radar {
+    display: none;
+  }
+
+  .session__fields {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    row-gap: var(--space-sm);
+  }
+  .session__field:nth-child(4) {
+    border-inline-start: 0;
+    padding-inline-start: 0;
   }
 }
 
 @media (max-width: 40rem) {
-  /* The nav used to wrap here, because two actions plus the wordmark would not
-     fit a phone without one of them shrinking below its hit target. There is
-     one action now, and the pair fits a 320 px screen with room to spare — so
-     it stays a single edge-aligned row, which is what N9 is. */
+  .nav__gh,
+  .nav-dock .lang {
+    display: none;
+  }
 
-  .hero__actions .chip,
-  .hero__actions .chip-solid {
+  /* The hero's own download button is the first thing under the bar, so on
+     a phone the bar gives its width to the wordmark and the menu. */
+  .nav__cta {
+    display: none;
+  }
+
+  .feats {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .card,
+  .split,
+  .oss,
+  .plan {
+    padding: var(--space-sm);
+  }
+
+  .hero .actions .chip,
+  .hero .actions .chip-solid,
+  .cta .actions .chip,
+  .cta .actions .chip-solid {
     flex: 1 1 100%;
+  }
+
+  .cta {
+    padding: var(--space-xl) var(--space-sm);
   }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
-   Scroll reveal — opacity only
-   The one place this system animates on scroll, and it is fenced tightly.
-
-   · **Opacity and nothing else.** No rise, no scale, no stagger. A section
-     arrives at full strength by the time it is a third of the way up the
-     viewport; the effect is the arrival, not a performance.
-   · **Zero JavaScript.** `animation-timeline: view()` drives it from the
-     scroller itself, so the page keeps having no script at all. Under
-     `@supports`, because the fallback has to be "visible", never "stuck at
-     zero" — a browser without scroll-driven animations shows the page exactly
-     as it always did.
-   · **Never the hero, never the nav.** Anything above the fold at load must be
-     readable at load. The range ends inside `entry`, so an element already on
-     screen when the page opens is past its own animation and renders at 1.
-   · **Off under reduced motion**, via the guard below rather than by relying
-     on the blanket duration override — a scroll-driven animation has no
-     duration to collapse.
+   Scroll-driven devices — transform and opacity only, no script
+   · Sections fade in on entry; never anything above the fold.
+   · The stage's windows drift apart a little as the hero scrolls away, each
+     by its own depth — at most 28 px, felt rather than watched.
+   · Off under reduced motion by never being declared.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @keyframes reveal-fade {
@@ -1120,72 +1909,79 @@ html[data-theme="dark"] .theme-toggle__moon {
   }
 }
 
-/*
- * The second device: the captures drift.
- *
- * Each product shot travels about 26 px against the page over its whole pass
- * through the viewport, which reads as the image sitting slightly *behind* the
- * copy beside it. It is transform-only, it is tiny, and it is deliberately
- * applied to the `<figure>` rather than to the `<img>` inside it — moving the
- * image within its own frame would look like a bug, moving the framed picture
- * against the paragraph next to it looks like depth.
- *
- * Amplitude is the whole argument here. At 26 px it is felt rather than
- * watched; at the 80–120 px a parallax library would default to, a screenshot
- * whose entire job is to be *read* would be sliding while you read it.
- */
-@keyframes reveal-drift {
+@keyframes stage-drift {
   from {
-    transform: translateY(13px);
+    transform: translateY(0);
   }
   to {
-    transform: translateY(-13px);
+    transform: translateY(calc(var(--depth, 0) * -28px));
   }
 }
 
 @media (prefers-reduced-motion: no-preference) {
   @supports (animation-timeline: view()) {
-    .row,
-    .spec,
-    .needs,
-    .foot__meta {
+    .card,
+    .feat,
+    .split,
+    .step,
+    .plan,
+    .oss,
+    .faq,
+    .cta {
       animation: reveal-fade linear both;
       animation-timeline: view();
-      /* Start as the top edge clears the fold, finish well before the section
-         is centred — the copy is readable long before it stops moving. */
       animation-range: entry 5% entry 55%;
     }
+  }
 
-    /* The hero's own capture is exempt: it is on screen at load, and a hero
-       that arrives already mid-animation reads as a page still loading. */
-    .row .shot {
-      animation: reveal-drift linear both;
-      animation-timeline: view();
-      animation-range: entry 0% exit 100%;
+  @supports (animation-timeline: scroll()) {
+    @media (min-width: 48.01rem) {
+      .win {
+        animation: stage-drift linear both;
+        animation-timeline: scroll(root block);
+        /* From the top of the page to one screen down: the drift happens
+           while the stage is leaving, and is finished by the time it has. */
+        animation-range: 0 100vh;
+      }
+      .win--standings {
+        --depth: 0.35;
+      }
+      .win--relative {
+        --depth: 0.6;
+      }
+      .win--coach {
+        --depth: 0.8;
+      }
+      .win--fuel {
+        --depth: 1;
+      }
+      .win--radar {
+        --depth: 0.5;
+      }
     }
   }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
    Reduced motion
-   Spatial movement collapses and the two short durations go to zero. The
-   scroll reveal above is not disabled here — it is never declared in the
-   first place, because a scroll-driven animation has no duration for this
-   block to shorten.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 @media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
   *,
   *::before,
   *::after {
     animation-duration: 0.01ms !important;
     animation-iteration-count: 1 !important;
     transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
   }
 
   .chip:active,
-  .chip-solid:active {
+  .chip-solid:active,
+  .icon-btn:active {
     transform: none;
   }
 }
