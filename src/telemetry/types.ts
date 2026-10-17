@@ -140,9 +140,12 @@ export interface RadarCar {
 /**
  * The radar (bridge `radar.RadarFrame`), on every telemetry frame.
  *
- * `left` / `right` are the spotter's own counts and are the authority on
- * whether a side is occupied; `cars` is the bridge's placement of the nearest
- * cars onto those sides, from their lap distance.
+ * `left` / `right` say whether a side is occupied: the spotter's own counts
+ * while it calls that side, else the cars it called there that still overlap
+ * the player along the track (iRacing's spotter drops to "clear" with a car
+ * still alongside). `state` / `carLeftRight` are what the sim said, untouched.
+ * `cars` is the bridge's placement of the nearest cars onto those sides, from
+ * their lap distance.
  */
 export interface RadarFrame {
   state: RadarState;

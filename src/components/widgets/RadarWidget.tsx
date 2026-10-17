@@ -5,8 +5,8 @@ import { MATRIX_SIZE, glyphDots, radarLabel, radarSides, type GLYPHS } from "../
 /*
  * The radar is two LED boxes and nothing else: an **L** at the left edge of
  * the window and an **R** at the right, each a square dot matrix in a carbon
- * frame. A box's letter glows red while the spotter calls a car alongside on
- * that side; otherwise its LEDs sit dark, the letter just readable in unlit
+ * frame. A box's letter glows red while a car the spotter called is alongside
+ * on that side; otherwise its LEDs sit dark, the letter just readable in unlit
  * red so the box says which side it is. Size the window to sit either side of
  * your car on screen, or narrow it to bring the two boxes together.
  *
