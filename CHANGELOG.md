@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.27.2] - 2026-10-24
+
 ### Changed
 
 - **A new logo.** TelemetryLab has a new mark: a white T over a teal L, both
@@ -789,7 +791,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.1...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.2...HEAD
+[1.27.2]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.1...v1.27.2
 [1.27.1]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.0...v1.27.1
 [1.27.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.26.0...v1.27.0
 [1.26.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.25.0...v1.26.0
