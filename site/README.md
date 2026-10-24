@@ -14,7 +14,8 @@ site/
 ├── css/footer.css      the footer, which has a device of its own
 ├── assets/*.png        product captures, generated — see capture.mjs
 ├── capture.mjs         regenerates assets/ from the live app
-└── favicon.svg         a copy of ../public/favicon.svg — see below
+├── favicon.svg         a copy of ../public/favicon.svg — see below
+└── apple-touch-icon.png  the same mark, 180 px on a full-bleed plate
 ```
 
 The layout follows the overlay sites sim racers already know — a centred hero
@@ -50,10 +51,12 @@ The five that bite if you forget them:
   duplicated. **Change a colour in `src/styles.css` and you must change it here
   too.**
 - **`favicon.svg` is a copy too**, of `../public/favicon.svg` — which is the
-  source the app's platform icons are generated from. The nav inlines the same
-  two paths a third time so the mark can take `currentColor`. See
+  source the app's platform icons are generated from. The nav and the footer,
+  on both pages, inline the same two paths again so the T can take the text
+  colour and the L `--color-brand`. See
   [`design.md` § The mark](../design.md); change the mark and change all of
-  them.
+  them. `apple-touch-icon.png` is rendered from `src-tauri/icons/icon.png`
+  flattened onto the plate colour, since iOS rounds the corners itself.
 - **The footer wordmark is tuned to the string "TelemetryLab" in Anton.** Its
   two knobs — `--brand-size` and `--brand-crop`, at the top of `css/footer.css`
   — are a measurement, not a preference: the size is 100 divided by the string's

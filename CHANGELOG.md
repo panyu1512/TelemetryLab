@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **A new logo.** TelemetryLab has a new mark: a white T over a teal L, both
+  leaning forward. It is the app's icon (taskbar, Start menu, installer, the
+  window itself), sits beside the name in the Overlay Manager's title bar, and
+  appears in telemetrylab.app's tab icon, nav and footer and at the top of the
+  README. On the site's light theme the T turns dark, so the mark stays
+  readable. The site also has a home-screen icon for iPhone and iPad now.
+
 ## [1.27.1] - 2026-10-17
 
 ### Changed

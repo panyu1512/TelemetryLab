@@ -11,6 +11,7 @@
     <meta name="robots" content="index, follow, max-image-preview:large" />
     <meta name="theme-color" content="#0e1114" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="canonical" href="https://telemetrylab.app/" />
 
     <!-- The two languages point at each other, and `x-default` names the
@@ -151,12 +152,13 @@
       <div class="shell">
         <header class="nav">
           <a class="wordmark" href="#main">
-            <!-- The TL monogram, inlined so it takes `currentColor` and needs
-                 no second request. Same two paths as favicon.svg, minus its
-                 plate — the nav has paper of its own. -->
+            <!-- The TL monogram, inlined so it follows the theme and needs no
+                 second request. Same two paths as favicon.svg, minus its
+                 plate — the nav has paper of its own. The T takes the text
+                 colour and the L the brand teal (site.css .wordmark__mark). -->
             <svg class="wordmark__mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
-              <path d="M8.69 9L18.89 9L17.69 14L15.69 14L13.48 23.2L7.81 26L10.69 14L4.69 14Z" />
-              <path d="M20.41 6L25.41 6L21.81 21L27.31 21L23.31 26L15.61 26Z" />
+              <path d="M6.09 7.64L22.78 7.64L19.68 10.64L14.54 10.64L9.86 24.36L5.82 24.36L10.5 10.64L4 10.64Z" />
+              <path class="wordmark__l" d="M16.36 11.52L20.4 11.52L16.99 21.53L28 21.53L25.2 24.36L11.98 24.36Z" />
             </svg>
             TelemetryLab
           </a>
@@ -947,8 +949,8 @@
           <div class="foot__brand">
             <a class="wordmark" href="#main">
               <svg class="wordmark__mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
-                <path d="M8.69 9L18.89 9L17.69 14L15.69 14L13.48 23.2L7.81 26L10.69 14L4.69 14Z" />
-                <path d="M20.41 6L25.41 6L21.81 21L27.31 21L23.31 26L15.61 26Z" />
+                <path d="M6.09 7.64L22.78 7.64L19.68 10.64L14.54 10.64L9.86 24.36L5.82 24.36L10.5 10.64L4 10.64Z" />
+                <path class="wordmark__l" d="M16.36 11.52L20.4 11.52L16.99 21.53L28 21.53L25.2 24.36L11.98 24.36Z" />
               </svg>
               TelemetryLab
             </a>

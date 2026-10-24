@@ -56,6 +56,11 @@
   --color-warning: oklch(84% 0.12 90); /* caution */
   --color-sector-purple: oklch(70% 0.13 305); /* overall best */
 
+  /* The brand teal — the L of the mark, and nothing else. Not an accent: it
+     carries no meaning in the status table and is never used on data or
+     controls. */
+  --color-brand: #0dd2cb;
+
   /* The only ink allowed on a filled status colour. Every accent here is light
      and every paper dark, so white on a fill lands near 2.5:1; this reads at
      6–12:1. */
@@ -204,6 +209,7 @@
     --color-warning: oklch(54% 0.115 90);
     --color-primary: oklch(49% 0.09 226);
     --color-primary-dim: oklch(42% 0.085 226);
+    --color-brand: oklch(56% 0.1 189);
     --color-sector-purple: oklch(48% 0.16 305);
 
     --color-on-accent: oklch(99% 0 0);
@@ -230,6 +236,7 @@
   --color-warning: oklch(54% 0.115 90);
   --color-primary: oklch(49% 0.09 226);
   --color-primary-dim: oklch(42% 0.085 226);
+  --color-brand: oklch(56% 0.1 189);
   --color-sector-purple: oklch(48% 0.16 305);
 
   --color-on-accent: oklch(99% 0 0);

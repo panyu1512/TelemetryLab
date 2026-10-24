@@ -332,62 +332,64 @@ and a stable one-line helper row, so neither appearing reflows the panel.
 - **Every variant is a square-cornered rectangle set in caps** — 11 px
   (`--text-small`), semibold, `--tracking-caps`. Caps carry no descenders and
   read a size larger than they measure, so the label keeps the row's height.
-  CTAs were cut on the mark's 13.5° shear through 1.24; see § The mark rule 5
-  for why the cut stopped at the mark.
+  CTAs were cut on the old mark's 13.5° shear through 1.24; see § The mark
+  rule 5 for why the cut stopped at the mark.
 - Switches keep their pill track — the one control whose *shape* is its
   affordance; squared, a knob sliding in a rectangle reads as a progress bar —
   with a flat knob and no shadow.
 
 ## The mark
 
-A **TL monogram**, sheared 13.5° off vertical, every free terminal cut on the
-same diagonal. It is the only drawn symbol in the system — everything else on
-every surface is type, rule or data.
+A **TL monogram**: a white T over a teal L, leaning 19° forward, with the
+crossbar's right end and the L's foot cut at 45°. It is the only drawn symbol
+in the system — everything else on every surface is type, rule or data.
 
-The geometry is a construction, not a drawing, and it is written out in the
-header of [`public/favicon.svg`](public/favicon.svg) so it can be rebuilt rather
-than traced: both letters upright on a 32 grid, cap line 8, baseline 25, stroke
-5, then sheared 0.24 x per unit of height about the baseline. Two decisions in
-there are load-bearing — the T's stem hangs at **75 % along its crossbar**
-rather than the middle, without which the pair reads as a pi; and the L starts
-**3 above the cap line** with its foot running 10.5 right, which is what makes
-the letters interlock across the 2.8 channel instead of standing side by side.
+It replaced the single-colour, 13.5°-sheared monogram of 1.8–1.27 with the
+artwork the project now uses everywhere. The geometry is a regularised trace of
+that artwork, written out in the header of
+[`public/favicon.svg`](public/favicon.svg) so it can be rebuilt rather than
+re-traced: the T's stem and the L's upright are parallel at 0.341 x per unit of
+height and share one stroke; the crossbar's left end is cut at 35°; the L's top
+sits just under the crossbar so the two letters share a baseline and read as one
+block. The ink is 24 wide and centred on a 32 grid.
 
 Five rules:
 
-1. **One shape, one colour.** The mark never uses two. It takes `primary` —
-   the one accent — on chrome, the nav and the title bar, because the name
-   beside it is already in the text grey and a grey mark against grey text is
-   a ligature, not a mark. It
-   takes white on the icon plate, where it is ink on paper and the status
-   table does not apply. It never takes `accent`: the mark it replaced filled
-   its counter with `accent`, which by § Theme means *positive* and is never
-   decoration.
+1. **Two colours, fixed roles.** The T is ink and the L is the brand teal
+   (`--color-brand`, `#0dd2cb`). On the icon plate the T is white
+   (`#f4f7f9`); on chrome, the nav and the title bar it takes `text`, so on the
+   site's light paper it goes dark rather than vanishing, and the L takes a
+   darker teal there (`oklch(56% 0.1 189)`). The teal is the logo's colour and
+   nothing else: it is **not** an accent, carries no meaning in the status
+   table, and never appears on data or controls. It is close to `primary`'s hue
+   on purpose but is not `primary` — the mark does not change when a theme
+   moves the accent.
 2. **The plate is for icons only.** A 7-radius square of the timing surfaces'
    near-black (`#0a0d12`), because an OS icon has to bring its own ground. In
    the nav and the title bar the mark is bare — those surfaces have paper
    already.
-3. **The ink fills 62.5 % of the box**, so the box is sized about a fifth
-   larger than the cap height it sits beside — 1.45em against the site's
-   wordmark, 18 px against the title bar's 13 px name. Sizing the box to the
-   cap height sets the mark visibly short.
+3. **The ink fills 52 % of the box's height**, so the box is sized to set the
+   letters about a fifth taller than the cap height they sit beside — 1.75em
+   against the site's wordmark, 22 px against the title bar's 13 px name.
 4. **It is always `aria-hidden`.** The product name is next to it in every
    place it appears.
-5. **The 13.5° shear is the mark's, and stops there.** From 1.8 to 1.24 the
-   cut was a system device on the app's chrome — the title bar's status
-   readout, the profile chip, the section legends, every CTA — while the
+5. **The lean is the mark's, and stops there.** From 1.8 to 1.24 the old
+   mark's 13.5° cut was a system device on the app's chrome — the title bar's
+   status readout, the profile chip, the section legends, every CTA — while the
    instruments stayed square, on the argument that a driver reading a lap time
    needs the column edges vertical. The race-engineer direction extends that
    argument to the frame: an engineering tool is one instrument, and its
    controls are as square as its data. `--shear` and `.shear` are gone; the
    section legend is a 2 px accent bar (`.section-block`), and chips and CTAs
-   are rectangles.
+   are rectangles. The new mark's 19° does not bring any of it back.
 
 `public/favicon.svg` is the source. The platform icons in `src-tauri/icons` are
-generated from it with `npm run tauri icon public/favicon.svg`;
+generated from it with `npm run tauri icon public/favicon.svg` (the Android,
+iOS and Store sets it also emits are dropped — the app ships an msi only);
 `site/favicon.svg` is a copy for the same reason the site's tokens are one; and
-the nav and title bar inline the two paths so they can take `currentColor`.
-**Four places, one geometry** — change the mark and change all four.
+the site's nav and footer (both languages) and the app's title bar inline the
+two paths so they can follow the theme. **One geometry everywhere** — change
+the mark and change every copy.
 
 ## What every surface MUST share
 
