@@ -80,6 +80,10 @@
      ink — the softened status red reads salmon once it glows. */
   --color-led-red: oklch(63% 0.25 27);
 
+  /* The brand teal — the L of the mark, and nothing else. Fixed and unthemed:
+     it is the logo's colour, not an accent, and carries no meaning. */
+  --color-brand: #0dd2cb;
+
   /* Ink on any filled status colour. Every accent is light and every paper
      dark, so white on a fill lands near 2.5:1; this reads 6–12:1. */
   --color-on-accent: oklch(15% 0.008 255);
@@ -345,7 +349,7 @@ a {
 
 /*
  * The section marker on the Manager: a 2 px accent bar at the cap height of
- * the heading beside it. Square — the brand's 13.5° shear stays on the mark
+ * the heading beside it. Square — the brand's 19° lean stays on the mark
  * itself and no longer cuts the chrome.
  */
 .section-block {

@@ -325,14 +325,20 @@ kbd {
   white-space: nowrap;
 }
 
-/* The TL monogram. It takes `primary` because a white mark beside white text
-   is not a mark, it is a ligature. */
+/* The TL monogram: the T in the text colour, the L in the brand teal — the
+   two colours of the icon, re-inked for whichever paper is showing. The box
+   is 1.75em because the ink fills 52 % of its height; that sets the letters a
+   fifth taller than the wordmark's caps (design.md § The mark, rule 3). */
 .wordmark__mark {
   flex: none;
-  width: 1.45em;
-  height: 1.45em;
-  fill: var(--color-primary);
+  width: 1.75em;
+  height: 1.75em;
+  fill: var(--color-text);
   margin-block-start: 0.06em;
+}
+
+.wordmark__l {
+  fill: var(--color-brand);
 }
 
 .nav__links {

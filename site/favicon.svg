@@ -1,17 +1,15 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="TelemetryLab">
   <!--
-    The TelemetryLab mark: a TL monogram sheared 13.5° off vertical, on the
+    The TelemetryLab mark: a white T over a teal L, leaning 19° forward, on the
     timing surfaces' own near-black paper.
 
     A copy of public/favicon.svg, which is the source the platform icons are
     generated from. It is duplicated rather than referenced for the reason
     css/tokens.css is: this page has to stay deployable as a folder. If the mark
-    changes, both files change — and so do the two inline copies of these paths,
-    in the nav here and in the app's title bar.
+    changes, both files change — and so do the inline copies of these paths, in
+    the nav and footer here and in the app's title bar.
   -->
   <rect width="32" height="32" rx="7" fill="#0a0d12" />
-  <g fill="#ffffff">
-    <path d="M8.69 9L18.89 9L17.69 14L15.69 14L13.48 23.2L7.81 26L10.69 14L4.69 14Z" />
-    <path d="M20.41 6L25.41 6L21.81 21L27.31 21L23.31 26L15.61 26Z" />
-  </g>
+  <path fill="#f4f7f9" d="M6.09 7.64L22.78 7.64L19.68 10.64L14.54 10.64L9.86 24.36L5.82 24.36L10.5 10.64L4 10.64Z" />
+  <path fill="#0dd2cb" d="M16.36 11.52L20.4 11.52L16.99 21.53L28 21.53L25.2 24.36L11.98 24.36Z" />
 </svg>

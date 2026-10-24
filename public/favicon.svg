@@ -1,15 +1,19 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="TelemetryLab">
   <!--
-    The TelemetryLab mark: a TL monogram, sheared 13.5° off vertical, with every
-    free terminal cut on the same diagonal.
+    The TelemetryLab mark: a TL monogram leaning 19° forward, a white T over a
+    teal L.
 
-    Construction, so the shape can be rebuilt rather than traced: both letters
-    are drawn upright on a 32 grid — cap line 8, baseline 25, stroke 5 — and then
-    sheared about the baseline by 0.24 units of x per unit of height. The T's
-    stem hangs at 75 % along its crossbar rather than the middle, which is what
-    keeps the pair reading as "TL" and not as a pi; the L starts 3 above the cap
-    line and its foot runs 10.5 to the right, so the two letters interlock across
-    a 2.8-wide channel instead of standing side by side.
+    Traced from the 1254 px master artwork and regularised so it can be rebuilt
+    rather than re-traced: the T's stem and the L's upright are parallel, both
+    at 0.341 x per unit of height (19°) and the same stroke (3.8 here). The
+    crossbar's right end and the foot's end are cut at 45°; the crossbar's left
+    end at 35°. The L's top sits just under the crossbar, so the pair shares one
+    baseline and reads as a single block. The ink is 24 wide and centred on the
+    32 grid.
+
+    Two colours, and only these two: white #f4f7f9 for the T, teal #0dd2cb for
+    the L. On light paper the T takes the text colour and the L a darker teal;
+    see design.md § The mark.
 
     This file is the source of every other form of the icon. The platform icons
     in src-tauri/icons are generated from it:
@@ -18,11 +22,9 @@
 
     site/favicon.svg is a copy — the marketing page has to stay deployable as a
     folder, the same reason its tokens are copied. The nav and the app title bar
-    inline the two paths below directly, in currentColor.
+    inline the two paths below directly.
   -->
   <rect width="32" height="32" rx="7" fill="#0a0d12" />
-  <g fill="#ffffff">
-    <path d="M8.69 9L18.89 9L17.69 14L15.69 14L13.48 23.2L7.81 26L10.69 14L4.69 14Z" />
-    <path d="M20.41 6L25.41 6L21.81 21L27.31 21L23.31 26L15.61 26Z" />
-  </g>
+  <path fill="#f4f7f9" d="M6.09 7.64L22.78 7.64L19.68 10.64L14.54 10.64L9.86 24.36L5.82 24.36L10.5 10.64L4 10.64Z" />
+  <path fill="#0dd2cb" d="M16.36 11.52L20.4 11.52L16.99 21.53L28 21.53L25.2 24.36L11.98 24.36Z" />
 </svg>

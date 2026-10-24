@@ -19,22 +19,21 @@ export interface ConnectionStatus {
 }
 
 /**
- * The TelemetryLab mark: a TL monogram sheared 13.5° off vertical, with every
- * free terminal cut on the same diagonal. The same two paths ship in
+ * The TelemetryLab mark: a TL monogram leaning 19° forward, the T in the text
+ * colour and the L in the brand teal. The same two paths ship in
  * `public/favicon.svg` (which is what the platform icons are generated from)
- * and in the marketing page's nav — change one and change all three.
- *
- * One colour, not two. The mark it replaces filled its counter with `accent`,
- * which by the design system's own table means "positive" and is never
- * decoration; `primary` alone is the informational/chrome sense this wants.
+ * and in the marketing page's nav and footer — change one and change them all.
  */
 function BrandMark() {
-  // 18px, not `size-4`: the ink fills 62.5 % of the box, so a 16px box would
-  // set the mark below the cap height of the 13px name beside it.
+  // 22px, not 18: the ink fills 52 % of the box's height, so this sets the
+  // letters a fifth taller than the cap height of the 13px name beside it.
   return (
-    <svg viewBox="0 0 32 32" className="size-[18px]" fill="var(--color-primary)" aria-hidden>
-      <path d="M8.69 9L18.89 9L17.69 14L15.69 14L13.48 23.2L7.81 26L10.69 14L4.69 14Z" />
-      <path d="M20.41 6L25.41 6L21.81 21L27.31 21L23.31 26L15.61 26Z" />
+    <svg viewBox="0 0 32 32" className="size-[22px]" fill="var(--color-text)" aria-hidden>
+      <path d="M6.09 7.64L22.78 7.64L19.68 10.64L14.54 10.64L9.86 24.36L5.82 24.36L10.5 10.64L4 10.64Z" />
+      <path
+        fill="var(--color-brand)"
+        d="M16.36 11.52L20.4 11.52L16.99 21.53L28 21.53L25.2 24.36L11.98 24.36Z"
+      />
     </svg>
   );
 }
