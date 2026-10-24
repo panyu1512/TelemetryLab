@@ -21,8 +21,9 @@
         npm run tauri icon public/favicon.svg
 
     site/favicon.svg is a copy — the marketing page has to stay deployable as a
-    folder, the same reason its tokens are copied. The nav and the app title bar
-    inline the two paths below directly.
+    folder, the same reason its tokens are copied. The site's nav and footer,
+    the app title bar and the README's .github/assets/logo.svg carry the two
+    paths below directly.
   -->
   <rect width="32" height="32" rx="7" fill="#0a0d12" />
   <path fill="#f4f7f9" d="M6.09 7.64L22.78 7.64L19.68 10.64L14.54 10.64L9.86 24.36L5.82 24.36L10.5 10.64L4 10.64Z" />

@@ -388,7 +388,8 @@ generated from it with `npm run tauri icon public/favicon.svg` (the Android,
 iOS and Store sets it also emits are dropped — the app ships an msi only);
 `site/favicon.svg` is a copy for the same reason the site's tokens are one; and
 the site's nav and footer (both languages) and the app's title bar inline the
-two paths so they can follow the theme. **One geometry everywhere** — change
+two paths so they can follow the theme, as does the README's
+`.github/assets/logo.svg`, which follows GitHub's light or dark mode. **One geometry everywhere** — change
 the mark and change every copy.
 
 ## What every surface MUST share

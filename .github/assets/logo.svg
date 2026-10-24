@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="3 6.64 26 18.72" role="img" aria-label="TelemetryLab">
+  <!--
+    The README's logo: the mark from public/favicon.svg without its plate,
+    cropped to the ink, re-inked for whichever GitHub theme is showing — the
+    same rule as the site's nav (design.md § The mark, rule 1). Same two paths;
+    change the mark and change this too.
+  -->
+  <style>
+    .t { fill: #191d23; }
+    .l { fill: #008780; }
+    @media (prefers-color-scheme: dark) {
+      .t { fill: #f4f7f9; }
+      .l { fill: #0dd2cb; }
+    }
+  </style>
+  <path class="t" d="M6.09 7.64L22.78 7.64L19.68 10.64L14.54 10.64L9.86 24.36L5.82 24.36L10.5 10.64L4 10.64Z" />
+  <path class="l" d="M16.36 11.52L20.4 11.52L16.99 21.53L28 21.53L25.2 24.36L11.98 24.36Z" />
+</svg>

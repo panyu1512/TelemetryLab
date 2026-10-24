@@ -1,7 +1,7 @@
 <br>
 
 <div align="center">
-  <img src="site/favicon.svg" alt="TelemetryLab" width="120">
+  <img src=".github/assets/logo.svg" alt="TelemetryLab" width="160">
   <h1>TelemetryLab</h1>
   <p><strong>Real-time iRacing telemetry overlays for your desktop</strong></p>
   <a href="https://telemetrylab.app">Website</a> •
@@ -297,6 +297,8 @@ On Windows the real bridge talks to iRacing; on macOS and Linux a mock bridge ge
 ```
 .
 ├── site/                     # Static marketing / download page (no build step)
+├── public/
+│   └── favicon.svg           # The logo — source of every icon (see design.md § The mark)
 ├── src/                      # React frontend (Vite + TypeScript)
 │   ├── components/
 │   ├── telemetry/            # Wire protocol, typed models, WS connection
@@ -312,7 +314,7 @@ On Windows the real bridge talks to iRacing; on macOS and Linux a mock bridge ge
 │   ├── src/main.rs           # Spawns + supervises the bridge sidecar
 │   ├── binaries/             # Sidecar exe goes here (built in CI)
 │   ├── capabilities/
-│   ├── icons/
+│   ├── icons/                # Generated: npm run tauri icon public/favicon.svg
 │   ├── tauri.conf.json
 │   └── Cargo.toml
 ├── bridge/                   # Python sidecar
@@ -327,10 +329,12 @@ On Windows the real bridge talks to iRacing; on macOS and Linux a mock bridge ge
 │   ├── pyproject.toml        # pytest / ruff / coverage config
 │   ├── requirements.txt      # runtime deps  (requirements-dev.txt = test/lint)
 │   └── requirements-dev.txt
-└── .github/workflows/
-    ├── ci.yml                # Quality gates: lint + typecheck + tests (every push/PR)
-    ├── release.yml           # Cut a release: bump + changelog + tag (manual)
-    └── build.yml             # Build: Windows installer on version tags
+└── .github/
+    ├── assets/logo.svg       # The README's logo: the mark, re-inked for light/dark
+    └── workflows/
+        ├── ci.yml            # Quality gates: lint + typecheck + tests (every push/PR)
+        ├── release.yml       # Cut a release: bump + changelog + tag (manual)
+        └── build.yml         # Build: Windows installer on version tags
 ```
 
 </details>
