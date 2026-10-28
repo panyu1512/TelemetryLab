@@ -11,7 +11,7 @@ from __future__ import annotations
 from collections.abc import Iterable
 from typing import Any
 
-from .enums import track_surface
+from .enums import decode_car_flags, track_surface
 from .models import CarTiming
 
 #: The CarIdx arrays we read. Kept in one place so the bridge can request
@@ -28,6 +28,7 @@ CAR_IDX_VARS = (
     "CarIdxOnPitRoad",
     "CarIdxTrackSurface",
     "CarIdxTireCompound",
+    "CarIdxSessionFlags",
     # Not an array: the one carIdx keying the radio right now, -1 when nobody
     # is. It rides the same read so the standings row can say who is talking.
     "RadioTransmitCarIdx",
@@ -132,5 +133,6 @@ def ingest_car_timings(
             timestamp=timestamp,
             tire_compound=_at_int(_at(arrays.get("CarIdxTireCompound"), idx)),
             is_transmitting=talking is not None and talking == idx,
+            car_flags=decode_car_flags(_at_int(_at(arrays.get("CarIdxSessionFlags"), idx))),
         )
     return out

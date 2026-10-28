@@ -7,6 +7,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.28.0] - 2026-10-28
+
+### Added
+
+- **Standings: penalties and damage, on every row.** When race control flags
+  a car, a mark appears straight after the driver's name: a red flag for a
+  **black flag** (a penalty to serve in the pits), a red flag with a disc in
+  it for the **meatball** (the car is damaged and must pit for repairs), a
+  yellow gauge with its needle down when the driver has been told to **slow
+  down** after cutting the track, and a red **DQ** once they are
+  disqualified. A car can show more than one — a damaged car that also cut
+  the track shows both — and a disqualified car shows DQ alone. Hover a mark
+  for what it means. The marks come from iRacing's own per-car flags and go
+  as soon as race control lowers the flag. Needs the updated bridge; with an
+  older one no marks appear.
+
 ## [1.27.3] - 2026-10-28
 
 ### Fixed
@@ -804,7 +820,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.3...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.28.0...HEAD
+[1.28.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.3...v1.28.0
 [1.27.3]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.2...v1.27.3
 [1.27.2]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.1...v1.27.2
 [1.27.1]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.0...v1.27.1

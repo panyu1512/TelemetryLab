@@ -86,6 +86,24 @@ def decode_flags(mask: int | None) -> list[str]:
 
 
 # ---------------------------------------------------------------------------
+# CarIdxSessionFlags — the same bitmask, one per car. Most of it is the session
+# as that car sees it (green, yellow, the start lights); four bits are race
+# control speaking to that car alone: disqualified, a black flag to serve in
+# the pits, the meatball (damage that must be repaired before it races on) and
+# the furled black (a warning: slow down, or be penalised). Only those four go
+# on the wire, most severe first — a standings row marks them, and it has no
+# use for sixty copies of the session's own flags ten times a second.
+# ---------------------------------------------------------------------------
+CAR_FLAGS: Final[tuple[str, ...]] = ("disqualify", "black", "repair", "furled")
+
+
+def decode_car_flags(mask: int | None) -> list[str]:
+    """The race-control flags in a car's ``CarIdxSessionFlags``, most severe first."""
+    active = set(decode_flags(mask))
+    return [name for name in CAR_FLAGS if name in active]
+
+
+# ---------------------------------------------------------------------------
 # CarLeftRight (irsdk_CarLeftRight) — the sim's own spotter call. It says how
 # many cars are alongside on each side, never which ones: see radar.py.
 # ---------------------------------------------------------------------------

@@ -1030,6 +1030,40 @@ the fact that a header band and a row cost the same height.
     Under reduced motion none of it runs: the mark is a still,
     full-strength glyph with no ripple.
 
+19. **Race control's flags on a car are marks after the name too.** iRacing
+    flies four flags at a single car, in its per-car `CarIdxSessionFlags`
+    (carried on the row as `carFlags`, most severe first): disqualified, a
+    black flag (a penalty to serve in the pits), the meatball (damage the
+    car must pit to repair) and the furled black (a warning: slow down, or
+    be penalised). Standings prints each as a mark straight after the
+    driver's name (`CarFlagMarks`, [`lib/carFlags.ts`](src/lib/carFlags.ts)):
+
+    - a **solid flag** for the black flag;
+    - **a flag with a disc in it** for the meatball — the marshal's flag
+      with its disc kept and its orange dropped, since orange is a class
+      colour (§ Two colour systems);
+    - **a gauge with its needle down** for the slow-down. It draws what
+      the driver has been told to do rather than the furled flag, which
+      nothing at row size can draw so that it reads as furled;
+    - **`DQ`**, lettered, for a disqualification, the one state timing
+      screens have always spelled out. It shows alone: a disqualified car
+      has no penalty left to serve and no race to repair the car for.
+
+    The rules, and why:
+
+    - **The session header's inks** (`lib/sessionStrip`): `danger` for the
+      three the car must act on — a black flag drawn in black on this paper
+      is nothing — and `warning` for the slow-down, which is still a
+      warning. The same flag never takes two colours on one screen.
+    - **After the name, for rule 18's reasons.** A flag flies for seconds
+      to minutes and on few cars, so a column for it would be empty almost
+      always, and the name truncates before the marks do. They print
+      *before* the radio mark, so a driver keying the mic never moves them.
+    - **Not the state column.** A car serves a black flag in the pit lane,
+      and the wrench and the flag would hide each other.
+    - **Still.** No pop and no pulse: a flag stays up long enough to be
+      caught on the next glance, which a three-second radio call does not.
+
 ### The class band
 
 One line opening each class group on Standings:
@@ -1709,6 +1743,12 @@ band, § The session header, § Fuel & Strategy, § The Coach, § The Radar and
 § The marketing surface rule 3 were rewritten with it.
 
 ## Known follow-ups
+
+- **Relative does not carry race control's flags yet.** Rule 19's marks are
+  on Standings only. Relative's rows have the same name-then-radio slot, and
+  a black flag on the car you are about to lap is arguably worth more there
+  than anywhere; the marks are a component (`CarFlagMarks`) so it is one
+  line when someone wants it.
 
 - **A synced chart cursor with a tabular readout.** The brief asks for a
   vertical crosshair synced across charts, with a compact tabular readout. The

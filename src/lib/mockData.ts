@@ -873,6 +873,46 @@ function qualifyLaps(
   return { last: lapOf(completed), best };
 }
 
+/**
+ * Who race control picks on, four cars a cycle. The first four are cars on
+ * screen in the site's standings capture (`site/capture.mjs`), which fires
+ * ~40 s after the feed opens: the GT3 third and fourth, and GT4's second and
+ * third, the one class capped at three rows. Later cycles work down the list.
+ */
+const RACE_CONTROL_CAST = [10, 5, 2, 3, 6, 1, 8, 4, 7, 9, 11];
+
+/**
+ * Race control's flags on one car at mock time `t`, as the bridge sends them
+ * (most severe first), on a 90 s wall-clock cycle from the moment the feed
+ * opens — the mock bridge runs the same one. A slow-down warning from 5 s that
+ * becomes a black flag at 20 s when it is ignored, a meatball on a second car
+ * from 25 s, a third car told to slow down from 35 s, and a fourth
+ * disqualified from 70 s to 85 s (a real one stays out; this one gives the
+ * next its turn). So ~40 s in, when the site's capture fires, a black flag, a
+ * meatball and a slow-down are all on screen. Never the player, whose flags
+ * the session header shows.
+ */
+function raceControl(idx: number, t: number): string[] {
+  const wall = (t - MOCK_START_OFFSET_S) / MOCK_TIME_SCALE;
+  const cycle = Math.floor(wall / 90);
+  const phase = wall - cycle * 90;
+  const role = RACE_CONTROL_CAST.indexOf(idx);
+  if (role < 0) return [];
+  // Which of this cycle's four parts (0–3) the car plays, if any.
+  const n = RACE_CONTROL_CAST.length;
+  const part = (((role - cycle * 4) % n) + n) % n;
+  const flags: string[] = [];
+  if (part === 3 && phase >= 70 && phase < 85) flags.push("disqualify");
+  if (part === 0 && phase >= 20 && phase < 60) flags.push("black");
+  if (part === 1 && phase >= 25 && phase < 70) flags.push("repair");
+  if (
+    (part === 0 && phase >= 5 && phase < 20) ||
+    (part === 2 && phase >= 35 && phase < 50)
+  )
+    flags.push("furled");
+  return flags;
+}
+
 export function mockStandings(
   t: number,
   sessionType: MockSessionType = "Race",
@@ -1060,6 +1100,7 @@ export function mockStandings(
       !garaged &&
       t % radioPeriod < 3 * MOCK_TIME_SCALE &&
       car.idx === (radioWindow * 3 + 1) % MOCK_FIELD_SIZE;
+    const carFlags = garaged ? [] : raceControl(car.idx, t);
 
     return {
       carIdx: car.idx,
@@ -1109,6 +1150,7 @@ export function mockStandings(
       // set age that only ever climbed made the cell read as a lap counter.
       tireLaps: lap % STINT_LAPS,
       isTransmitting,
+      carFlags,
     };
   });
 

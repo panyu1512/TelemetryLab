@@ -294,6 +294,8 @@ export interface CarTiming {
   timestamp: number;
   /** This car is keying the radio right now (`RadioTransmitCarIdx`). */
   isTransmitting?: boolean;
+  /** Race control's flags on this car, most severe first (see StandingsEntry). */
+  carFlags?: string[];
 }
 
 /**
@@ -391,6 +393,14 @@ export interface StandingsEntry {
    * Optional so an older bridge, which never sends it, reads as nobody talking.
    */
   isTransmitting?: boolean;
+
+  /**
+   * Race control's flags on this car, from iRacing's per-car
+   * `CarIdxSessionFlags`, most severe first: `disqualify`, `black` (a penalty
+   * to serve), `repair` (the meatball: damaged, must pit) and `furled` (the
+   * slow-down warning). Optional so an older bridge reads as no flags.
+   */
+  carFlags?: string[];
 }
 
 /** Per-class grouping metadata for the multi-class timing screen. */

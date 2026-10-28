@@ -98,6 +98,15 @@ On a single monitor the car in your blind spot is a voice, not a picture. The **
 </details>
 
 <details>
+<summary><b>Penalties and damage at a glance</b></summary>
+
+<br>
+
+When race control flags a car, Standings marks it straight after the driver's name: a black flag for a penalty to serve in the pits, the meatball for a car damaged badly enough that it must pit for repairs, a gauge with its needle down when the driver has been told to slow down after cutting the track, and `DQ` once they are disqualified. The marks come from iRacing's own per-car flags (`CarIdxSessionFlags`) and go the moment race control lowers the flag.
+
+</details>
+
+<details>
 <summary><b>Configuration with an instant live preview</b></summary>
 
 <br>
@@ -364,7 +373,7 @@ The bridge multiplexes several **channels** over the single WebSocket, each in a
 | Channel     | Cadence              | Payload                                                              |
 | ----------- | -------------------- | -------------------------------------------------------------------- |
 | `telemetry` | ~60 Hz               | Player car only: speed/rpm/gear, inputs, tyres, current lap, radar.  |
-| `standings` | ~5–10 Hz (on change) | Computed field order: positions, gaps, per-car timing, pit state, who is on the radio. |
+| `standings` | ~5–10 Hz (on change) | Computed field order: positions, gaps, per-car timing, pit state, who is on the radio, race control's flags on each car. |
 | `session`   | on change / ~1 Hz    | Driver roster, session/track/weather metadata, flags, SOF.           |
 | `bridge`    | on change            | `{ iracingActive }` — replaces the old `{connected:false}` heartbeat. |
 | `coaching`  | once per lap         | The last lap against your reference (loss and cause) and the session best (loss), corner by corner. |
