@@ -193,6 +193,18 @@ class TestParseDrivers:
         d = parse_drivers({"Drivers": [make_driver(0, team_id=99)]}, "road")[0]
         assert d.is_team_driver is True
 
+    def test_country_resolved_from_flair_name(self):
+        # iRacing sends FlairID and FlairName, never a country code.
+        raw = make_driver(0, FlairID=72, FlairName="Spain")
+        d = parse_drivers({"Drivers": [raw]}, "road")[0]
+        assert d.country_code == "ESP"
+        assert d.country_name == "Spain"
+
+    def test_no_flair_no_country(self):
+        d = parse_drivers({"Drivers": [make_driver(0)]}, "road")[0]
+        assert d.country_code == ""
+        assert d.country_name == ""
+
 
 class TestParseTireCompounds:
     def test_absent_list_is_empty(self):

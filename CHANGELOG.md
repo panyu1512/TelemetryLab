@@ -7,6 +7,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.27.3] - 2026-10-28
+
+### Fixed
+
+- **Driver flags show in Standings and Relative.** With a real sim the flag
+  column stayed empty for everyone. iRacing names a driver's flag (`FlairName`,
+  e.g. "Spain") but sends no country code, and the bridge was reading a code
+  field the sim does not have, so every driver arrived with no country. The
+  bridge now works the country out from the flag's name. ISO names and the
+  everyday ones ("Russia", "South Korea", "Turkey") both work, and the matching
+  ignores case and accents. A flair that is not a country still draws no flag.
+  Needs the updated bridge.
+
 ## [1.27.2] - 2026-10-24
 
 ### Changed
@@ -791,7 +804,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.2...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.3...HEAD
+[1.27.3]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.2...v1.27.3
 [1.27.2]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.1...v1.27.2
 [1.27.1]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.0...v1.27.1
 [1.27.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.26.0...v1.27.0
