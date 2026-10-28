@@ -187,7 +187,10 @@ export interface DriverEntry {
   licenseColor: string;
   carClassColor: string;
   clubName: string;
-  /** ISO alpha-3 country code from the driver's flair (e.g. "ESP"), "" if unset. */
+  /**
+   * ISO alpha-3 country code the bridge resolves from the driver's flair name
+   * (e.g. "ESP"), "" if the flair is not a country.
+   */
   countryCode: string;
   /** Country display name (e.g. "Spain"), "" if unset. */
   countryName: string;

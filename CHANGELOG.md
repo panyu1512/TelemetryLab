@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **Driver flags show in Standings and Relative.** With a real sim the flag
+  column stayed empty for everyone. iRacing names a driver's flag (`FlairName`,
+  e.g. "Spain") but sends no country code, and the bridge was reading a code
+  field the sim does not have, so every driver arrived with no country. The
+  bridge now works the country out from the flag's name. ISO names and the
+  everyday ones ("Russia", "South Korea", "Turkey") both work, and the matching
+  ignores case and accents. A flair that is not a country still draws no flag.
+  Needs the updated bridge.
+
 ## [1.27.2] - 2026-10-24
 
 ### Changed

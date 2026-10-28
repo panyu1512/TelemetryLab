@@ -17,6 +17,7 @@ import math
 import re
 from typing import Any
 
+from .countries import country_code
 from .enums import decode_flags, session_state
 from .models import (
     ClassEntry,
@@ -227,7 +228,7 @@ def parse_drivers(driver_info: dict[str, Any], category: str) -> list[DriverEntr
                 license_color=_hex_color(d.get("LicColor")),
                 car_class_color=_hex_color(d.get("CarClassColor")),
                 club_name=str(d.get("ClubName", "") or ""),
-                country_code=str(d.get("FlairShortName", "") or "").upper(),
+                country_code=country_code(d.get("FlairName")),
                 country_name=str(d.get("FlairName", "") or ""),
                 division=_int(d.get("DivisionName"), 0),
                 incident_count=_int(d.get("CurDriverIncidentCount"), 0),
