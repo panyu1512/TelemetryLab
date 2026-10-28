@@ -82,6 +82,7 @@ class TestCarTiming:
             timestamp=999,
             tire_compound=1,
             is_transmitting=True,
+            car_flags=["black"],
         )
         wire = t.to_dict()
         assert wire["carIdx"] == 5
@@ -89,6 +90,7 @@ class TestCarTiming:
         assert wire["trackSurfaceLabel"] == "on_track"
         assert wire["tireCompound"] == 1
         assert wire["isTransmitting"] is True
+        assert wire["carFlags"] == ["black"]
         assert not any("_" in k for k in wire)
 
 

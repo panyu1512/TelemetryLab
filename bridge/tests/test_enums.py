@@ -6,6 +6,7 @@ import pytest
 
 from telemetrylab.enums import (
     SESSION_FLAGS,
+    decode_car_flags,
     decode_flags,
     session_state,
     track_surface,
@@ -87,3 +88,27 @@ class TestDecodeFlags:
     def test_unknown_bits_ignored(self):
         # A bit with no mapping contributes nothing.
         assert decode_flags(0x08000000) == []
+
+
+class TestDecodeCarFlags:
+    @pytest.mark.parametrize("mask", [0, None])
+    def test_nothing_set_is_empty(self, mask):
+        assert decode_car_flags(mask) == []
+
+    def test_keeps_only_race_control(self):
+        # green | servicible | furled: the car's view of the session and its
+        # pit eligibility are not race control speaking to it.
+        assert decode_car_flags(0x00000004 | 0x00040000 | 0x00080000) == ["furled"]
+
+    def test_most_severe_first(self):
+        # furled | repair | black | disqualify, in bit order on the way in.
+        mask = 0x00080000 | 0x00100000 | 0x00010000 | 0x00020000
+        assert decode_car_flags(mask) == ["disqualify", "black", "repair", "furled"]
+
+    def test_meatball_and_slow_down_together(self):
+        # servicible | furled | repair, as iRacing reports a damaged car that
+        # also cut the track.
+        assert decode_car_flags(0x001C0000) == ["repair", "furled"]
+
+    def test_start_lights_ignored(self):
+        assert decode_car_flags(0x80000000 | 0x00010000) == ["black"]

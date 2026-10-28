@@ -23,6 +23,7 @@ import { LAP_IMPROVE_MS } from "../../lib/lapImprove";
 import { CountryFlag } from "../ui/CountryFlag";
 import {
   BrandIcon,
+  CarFlagMarks,
   DirectionMark,
   GapCell,
   IntervalCell,
@@ -306,6 +307,11 @@ function StandingsRowInner({
           <span className="truncate text-name font-medium text-text">
             {formatDriverName(driver?.userName) || `Car ${carIdx}`}
           </span>
+          {/* Race control's flags on the car — black flag, meatball, slow
+              down, disqualified — in their status inks, most severe first
+              (rule 19). Before the radio mark, so a driver keying the mic
+              never shifts them. */}
+          <CarFlagMarks flags={row?.carFlags} size={16} />
           {/* On the radio: a mark straight after the name, in the name's own
               ink, sending out waves while the driver keys the mic. Ink rather
               than a status colour — talking is neither good nor bad — and it

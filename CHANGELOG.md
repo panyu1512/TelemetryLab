@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Standings: penalties and damage, on every row.** When race control flags
+  a car, a mark appears straight after the driver's name: a red flag for a
+  **black flag** (a penalty to serve in the pits), a red flag with a disc in
+  it for the **meatball** (the car is damaged and must pit for repairs), a
+  yellow gauge with its needle down when the driver has been told to **slow
+  down** after cutting the track, and a red **DQ** once they are
+  disqualified. A car can show more than one — a damaged car that also cut
+  the track shows both — and a disqualified car shows DQ alone. Hover a mark
+  for what it means. The marks come from iRacing's own per-car flags and go
+  as soon as race control lowers the flag. Needs the updated bridge; with an
+  older one no marks appear.
+
 ## [1.27.3] - 2026-10-28
 
 ### Fixed

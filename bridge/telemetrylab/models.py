@@ -284,6 +284,8 @@ class CarTiming:
     timestamp: int  # server ms when sampled
     tire_compound: int | None = None  # CarIdxTireCompound (series-specific int)
     is_transmitting: bool = False  # RadioTransmitCarIdx == this car
+    # Race control's flags for this car, most severe first (enums.CAR_FLAGS).
+    car_flags: list[str] = field(default_factory=list)
 
     def to_dict(self) -> dict[str, Any]:
         return {
@@ -303,6 +305,7 @@ class CarTiming:
             "timestamp": self.timestamp,
             "tireCompound": self.tire_compound,
             "isTransmitting": self.is_transmitting,
+            "carFlags": self.car_flags,
         }
 
 
@@ -375,6 +378,11 @@ class StandingsEntry:
     # --- radio ---------------------------------------------------------------
     is_transmitting: bool = False  # direct: RadioTransmitCarIdx is this car
 
+    # --- race control --------------------------------------------------------
+    # direct: CarIdxSessionFlags' disqualify / black / repair / furled bits,
+    # most severe first
+    car_flags: list[str] = field(default_factory=list)
+
     def to_dict(self) -> dict[str, Any]:
         return {
             "carIdx": self.car_idx,
@@ -414,6 +422,7 @@ class StandingsEntry:
             "tireCompound": self.tire_compound,
             "tireLaps": self.tire_laps,
             "isTransmitting": self.is_transmitting,
+            "carFlags": self.car_flags,
         }
 
 

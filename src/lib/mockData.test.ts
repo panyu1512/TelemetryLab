@@ -8,6 +8,7 @@ import {
   MOCK_PLAYER_IDX,
   MOCK_PRE_JOIN_IDX,
   MOCK_START_OFFSET_S,
+  MOCK_TIME_SCALE,
   MOCK_COACH_CORNERS,
   mockCoaching,
   mockPlayerTelemetry,
@@ -244,6 +245,20 @@ describe("mockStandings — a field that has raced", () => {
     expect(talking.every((n) => n <= 1)).toBe(true);
     expect(talking).toContain(0);
     expect(talking).toContain(1);
+  });
+
+  it("flies every race-control flag within a cycle, never at the player", () => {
+    // 90 s of wall clock, sampled each second.
+    const seen = new Set<string>();
+    for (let i = 0; i < 90; i++) {
+      for (const e of mockStandings(
+        MOCK_START_OFFSET_S + i * MOCK_TIME_SCALE
+      ).entries) {
+        for (const f of e.carFlags ?? []) seen.add(f);
+        if (e.isPlayer) expect(e.carFlags).toEqual([]);
+      }
+    }
+    expect([...seen].sort()).toEqual(["black", "disqualify", "furled", "repair"]);
   });
 
   it("moves someone on the position-change column", () => {

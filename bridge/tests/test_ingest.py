@@ -132,6 +132,23 @@ class TestIngestCarTimings:
             )
             assert not any(t.is_transmitting for t in out.values())
 
+    def test_race_control_flags_per_car(self):
+        # car 0: green | servicible; car 1: black; car 2: repair | furled.
+        out = ingest_car_timings(
+            _arrays(CarIdxSessionFlags=[0x00040004, 0x00010000, 0x00180000]),
+            timestamp=0,
+            player_car_idx=0,
+            est_lap_time=90.0,
+            include=[0, 1, 2],
+        )
+        assert [out[i].car_flags for i in range(3)] == [[], ["black"], ["repair", "furled"]]
+
+    def test_no_session_flags_means_no_car_flags(self):
+        out = ingest_car_timings(
+            _arrays(), timestamp=0, player_car_idx=0, est_lap_time=90.0, include=[0, 1, 2]
+        )
+        assert all(t.car_flags == [] for t in out.values())
+
     def test_short_array_yields_none_not_crash(self):
         # Only two cars of data, but three requested — index 2 reads as None.
         out = ingest_car_timings(
@@ -158,6 +175,7 @@ class TestIngestCarTimings:
             "CarIdxLap",
             "CarIdxEstTime",
             "CarIdxTireCompound",
+            "CarIdxSessionFlags",
             "RadioTransmitCarIdx",
         ):
             assert var in CAR_IDX_VARS

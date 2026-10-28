@@ -229,8 +229,8 @@
       <section class="hero">
         <div class="shell hero__inner">
           <a class="pill" href="https://github.com/panyu1512/TelemetryLab/blob/main/CHANGELOG.md" rel="noopener" target="_blank">
-            <span class="pill__tag">New in 1.27</span>
-            The radar is two LED boxes now
+            <span class="pill__tag">New in 1.28</span>
+            Penalties and damage on the standings
             <svg class="pill__arrow" viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5 10.5 8 6 12.5" /></svg>
           </a>
 
@@ -260,7 +260,7 @@
                no user count or rating here, because nothing on this page may
                be invented. -->
           <div class="session" role="group" aria-label="TelemetryLab at a glance">
-            <span class="session__chip">v1.27</span>
+            <span class="session__chip">v1.28</span>
             <div class="session__title">
               <b>TelemetryLab</b>
               <span>Timing &amp; telemetry for iRacing</span>
@@ -283,7 +283,7 @@
         <div class="shell">
           <figure class="stage">
             <div class="stage__screen">
-              <img class="win win--standings" src="assets/standings-compact.png" width="1240" height="526" alt="The standings overlay: a session header, then GT3 and GT4 class groups with gaps and lap times." />
+              <img class="win win--standings" src="assets/standings-compact.png" width="1240" height="526" alt="The standings overlay: a session header, then GT3 and GT4 class groups with gaps, lap times and race control's flags." />
               <img class="win win--relative" src="assets/relative.png" width="1400" height="840" alt="The relative overlay: the cars ahead and behind on track, with the player's row highlighted." />
               <img class="win win--coach" src="assets/coach.png" width="1240" height="838" alt="The coach overlay: the corners that cost the most time on the last lap, and why." />
               <img class="win win--fuel" src="assets/fuel.png" width="1240" height="1180" alt="The fuel overlay: fuel laps left, the pit window and a recommended stop." />
@@ -331,6 +331,7 @@
                   <li>iRating with a projected change, licence and safety rating</li>
                   <li>A green ▲ or red ▼ beside the new position on every pass</li>
                   <li>Tyres for every car — a grey D for dries, a blue W for wets</li>
+                  <li>Race control's flags after the driver's name — black flag, meatball, slow down, DQ</li>
                 </ul>
               </div>
               <figure class="shot">
@@ -353,7 +354,11 @@
                        interval, last lap, best lap, tyre and three sector columns — two of the GT4 cars are on
                        wets, shown by a blue W. The car brands are drawn as their own
                        marks in light grey, McLaren's and Aston Martin's lettering included. Each class leader's row reads GAP and INT
-                       where it has no gap to show."
+                       where it has no gap to show. Three rows carry race control's marks
+                       straight after the driver's name: a red flag — a black flag — on
+                       the third GT3 car, a yellow gauge with its needle down — told to
+                       slow down — on the fourth, and a red flag with a disc in it — the
+                       meatball — on the second GT4 car."
                 />
               </figure>
             </article>

@@ -34,12 +34,16 @@ from typing import Any
 from websockets.asyncio.server import serve
 
 from telemetrylab import BridgeService
+from telemetrylab.enums import SESSION_FLAGS
 from telemetrylab.mocktrack import CORNERS, GEAR_STEPS, V_MAX, MockDriver
 
 HOST = "0.0.0.0"
 PORT = 8765
 
 FIELD_SIZE = int(os.environ.get("MOCK_CARS", "20") or 20)
+
+# irsdk_Flags bits by name, for the per-car flags race control hands out.
+_FLAG_BIT = {name: bit for bit, name in SESSION_FLAGS}
 MULTICLASS = (os.environ.get("MOCK_MULTICLASS", "1") or "1") != "0"
 DISCONNECT_EVERY = float(os.environ.get("MOCK_DISCONNECT_EVERY", "0") or 0)
 
@@ -294,8 +298,10 @@ class MockField:
                 "CarIdxOnPitRoad",
                 "CarIdxTrackSurface",
                 "CarIdxTireCompound",
+                "CarIdxSessionFlags",
             )
         }
+        race_control = self._race_control(t)
         for c in self.cars:
             prog = c.progress(t)
             lap = int(prog)
@@ -316,6 +322,8 @@ class MockField:
             arr["CarIdxTrackSurface"][c.idx] = 1 if on_pit else 3
             # Alternate compound every ~20 laps to exercise the tyre column.
             arr["CarIdxTireCompound"][c.idx] = (lap // 20) % 2
+            # Every car may be serviced; race control adds its own flags.
+            arr["CarIdxSessionFlags"][c.idx] = _FLAG_BIT["servicible"] | race_control.get(c.idx, 0)
         # Someone keys the radio for 4 s in every 15, a different car each
         # time, so the standings' radio mark has something to show.
         window = int(t // 15)
@@ -323,6 +331,42 @@ class MockField:
             self.cars[(window * 5) % len(self.cars)].idx if t % 15 < 4 else -1
         )
         return arr
+
+    def _race_control(self, t: float) -> dict[int, int]:
+        """Per-car race-control bits for this moment, keyed by car index.
+
+        The frontend mock's 90 s cycle (``raceControl`` in
+        ``src/lib/mockData.ts``), four cars a cycle working down the field: a
+        slow-down warning from 5 s that becomes a black flag at 20 s when it
+        is ignored, a meatball on a second car from 25 s, a third car told to
+        slow down from 35 s, and a fourth disqualified from 70 s to 85 s (a
+        real one stays out; this one gives the next its turn). Never the
+        player: the session header shows the player's flags from the mock's
+        own ``SessionFlags``, and the two would disagree.
+        """
+        others = [c for c in self.cars if c is not self.player]
+        if not others:
+            return {}
+        cycle, phase = divmod(t, 90.0)
+        warned, damaged, cutter, dq = (
+            others[(int(cycle) * 4 + n) % len(others)].idx for n in range(4)
+        )
+        out: dict[int, int] = {}
+
+        def fly(idx: int, flag: str) -> None:
+            out[idx] = out.get(idx, 0) | _FLAG_BIT[flag]
+
+        if 5 <= phase < 20:
+            fly(warned, "furled")
+        elif 20 <= phase < 60:
+            fly(warned, "black")
+        if 25 <= phase < 70:
+            fly(damaged, "repair")
+        if 35 <= phase < 50:
+            fly(cutter, "furled")
+        if 70 <= phase < 85:
+            fly(dq, "disqualify")
+        return out
 
     def session_raw(self, t: float, active_state: int, flags: int) -> dict[str, Any]:
         return {

@@ -127,6 +127,11 @@ const SHOTS = [
   // re-measured for 1.19's 42 px session header, up from 428).
   // This capture is the page's proof that the table groups by class; at 420
   // an older layout cropped the GT4 group mid-row.
+  //
+  // Both standings shots also carry race control's marks (1.28): the mock
+  // flies a black flag, a slow-down and a meatball at cars on screen here
+  // ~40 s in (`raceControl` in src/lib/mockData.ts). The standings alt text in
+  // both pages names which rows carry them — re-read it after a re-shoot.
   { name: "standings", route: "?overlay=standings", w: 1180, h: 444 },
   // 420 fits five cars ahead, the player and four behind, all whole: the
   // tenth row's strip ends at 413 at this width's ~0.93 scale. Widened from

@@ -26,6 +26,7 @@ def _timing(
     pit=False,
     tire=0,
     talking=False,
+    flags=(),
 ):
     return CarTiming(
         car_idx=car_idx,
@@ -46,6 +47,7 @@ def _timing(
         timestamp=0,
         tire_compound=tire,
         is_transmitting=talking,
+        car_flags=list(flags),
     )
 
 
@@ -166,6 +168,16 @@ class TestStandingsEngine:
         snap = StandingsEngine().compute(session, _drivers_by_idx(session), timings, 0)
         assert [e.is_transmitting for e in snap.entries] == [False, True]
         assert snap.to_dict()["entries"][1]["isTransmitting"] is True
+
+    def test_race_control_flags_passed_through(self):
+        session = _session()
+        timings = {
+            0: _timing(0, position=1),
+            1: _timing(1, position=2, flags=("black", "furled")),
+        }
+        snap = StandingsEngine().compute(session, _drivers_by_idx(session), timings, 0)
+        assert [e.car_flags for e in snap.entries] == [[], ["black", "furled"]]
+        assert snap.to_dict()["entries"][1]["carFlags"] == ["black", "furled"]
 
     def test_position_gain_since_start(self):
         session = _session()

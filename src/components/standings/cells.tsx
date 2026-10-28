@@ -13,6 +13,7 @@ import { useSessionStore } from "../../stores/useSessionStore";
 import { TyreCompoundIcon } from "../ui/TyreCompoundIcon";
 import { markHeight, viewBoxAspect } from "../../lib/markSize";
 import { CHANGE_SLOT_W, RATING_PAD_X } from "../../lib/ratingPill";
+import { carFlagMarks, type CarFlag } from "../../lib/carFlags";
 
 /* -------------------------------------------------------------------------- */
 /*  Direction mark (▲ / ▼) — one glyph for every "which way" on the table      */
@@ -99,6 +100,92 @@ export function RadioMark({ size }: { size: number }) {
         </g>
       </svg>
     </span>
+  );
+}
+
+/* -------------------------------------------------------------------------- */
+/*  Race control — black flag, meatball, slow down, disqualified               */
+/* -------------------------------------------------------------------------- */
+
+/**
+ * Race control's flags on a car, after the driver's name (§ Dense tabular
+ * overlays, rule 19), most severe first: a solid flag for a black flag, a flag
+ * with a disc in it for the meatball, a gauge reading low for the slow-down,
+ * and `DQ` — the one timing screens have always lettered — for a
+ * disqualification. Each in its status ink from `lib/carFlags`, still, with
+ * what it means in the tooltip.
+ */
+export function CarFlagMarks({
+  flags,
+  size,
+}: {
+  flags: readonly string[] | undefined;
+  size: number;
+}) {
+  const marks = carFlagMarks(flags);
+  if (!marks.length) return null;
+  return (
+    <span className="inline-flex shrink-0 items-center gap-0.5">
+      {marks.map((m) => (
+        <span
+          key={m.flag}
+          className="inline-flex items-center"
+          style={{ color: m.color, height: size }}
+          role="img"
+          aria-label={m.label}
+          title={m.label}
+        >
+          <CarFlagGlyph flag={m.flag} size={size} />
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/** One race-control mark, drawn on a 16-unit grid in `currentColor`. */
+function CarFlagGlyph({ flag, size }: { flag: CarFlag; size: number }) {
+  if (flag === "disqualify") {
+    return (
+      <span aria-hidden className="text-cell font-bold leading-none">
+        DQ
+      </span>
+    );
+  }
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 16 16"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={1.5}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+    >
+      {flag === "furled" ? (
+        // A gauge with its needle down at the slow end, a step heavier than
+        // the flags: its open arc is thinner ink than a flag's body.
+        <g strokeWidth={2}>
+          <path d="M2.2 12.6A6.4 6.4 0 1 1 13.8 12.6" />
+          <path d="M8 10.2 3.9 8.6" />
+          <circle cx="8" cy="10.2" r="1.6" fill="currentColor" stroke="none" />
+        </g>
+      ) : (
+        // A flag on its pole: solid for the black flag, an outline with the
+        // meatball's disc in it for the repair flag.
+        <>
+          <path d="M3.5 14.5V1.75" />
+          <path
+            d="M3.5 2.25h9.75v7.5H3.5z"
+            fill={flag === "black" ? "currentColor" : "none"}
+          />
+          {flag === "repair" && (
+            <circle cx="8.4" cy="6" r="2" fill="currentColor" stroke="none" />
+          )}
+        </>
+      )}
+    </svg>
   );
 }
 
