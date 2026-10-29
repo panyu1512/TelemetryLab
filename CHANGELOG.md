@@ -7,6 +7,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.29.0] - 2026-10-29
+
+### Changed
+
+- **A tyre icon for every compound.** The tyre badge on Standings and the
+  Relative now looks like the compound graphic from a TV broadcast — a dark
+  tyre with a coloured band round it and a letter in the middle — and shows
+  which compound each car is on, not just dry or wet: a red **S** for softs,
+  yellow **M** for mediums, white **H** for hards, green **I** for
+  intermediates and blue **W** for wets. Hover it for the compound's name. In
+  a GT3 or GT4 race, where the dry tyre is the "Hard", the dries now show a
+  white H instead of a grey D. A dry tyre the sim gives no recognisable name
+  still shows a grey D.
+
 ## [1.28.0] - 2026-10-28
 
 ### Added
@@ -820,7 +834,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.28.0...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.29.0...HEAD
+[1.29.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.28.0...v1.29.0
 [1.28.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.3...v1.28.0
 [1.27.3]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.2...v1.27.3
 [1.27.2]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.1...v1.27.2

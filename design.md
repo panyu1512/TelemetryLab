@@ -130,7 +130,8 @@ tertiary grey (`faint` 60 %, the floor that clears 4.5:1 on `surface`).
 | `--color-warning` | caution: pit soon, yellow flag, worn tyres | interactive affordances |
 | `--color-sector-purple` | overall-best lap/sector | anything else |
 | `--color-lapped` | Relative ink for a car a lap or more behind you — the sim's blue flag. Fixed, not themed | grounds, fills, anything but that ink |
-| `--color-tyre-wet` | a wet tyre: the ring and `W` of the compound badge. Fixed, not themed | anything but that badge |
+| `--color-tyre-soft` · `-medium` · `-hard` · `-inter` · `-wet` | a compound in its broadcast colour — red soft, yellow medium, white hard, green inter, blue wet: the sidewall band and letter of the compound badge. Fixed, not themed | anything but that badge — the red and yellow are not `danger` and `warning` |
+| `--color-tyre-rubber` | the compound badge's dark disc. Fixed, not themed | anything but that badge |
 | `--color-class-1…5` | car class, multiclass sessions only (§ Two colour systems) | grounds, backgrounds, text |
 | `--color-chart-*` | chart channels in neutrals, the reference lap, grid, axis, bar track | status |
 
@@ -895,14 +896,26 @@ the fact that a header band and a row cost the same height.
     third of a healthy field and spent overall-best purple on a tyre. Nothing
     about a compound is good, cautionary, critical or a session best.
 
-    What a compound *does* have is a colour every driver already reads: blue
-    for rain. So the cell — on both tables, see below — is a ring with one
-    letter: **`D` in the label grey (`muted`) for a dry, `W` in
-    `--color-tyre-wet` blue for a wet**, then laps on the set in the row's
-    ink. A dry is the ordinary case and recedes; the wet is the one that
-    means something. Blue is its own token,
-    fixed and unthemed like `lapped` and deeper than it, so a wet badge on a
-    lapped row still reads as a badge (§ Theme table).
+    What a compound *does* have is a colour every driver already reads off
+    every broadcast: red soft, yellow medium, white hard, green inter, blue
+    wet. So the cell — on both tables, see below — is that graphic: **a dark
+    rubber disc, a sidewall band in the compound's colour broken at three and
+    nine o'clock, and the compound's letter (`S` `M` `H` `I` `W`) in the same
+    colour**, then laps on the set in the row's ink. The compound comes from
+    the sim's own name for it (`DriverTires`, `lib/tyreCompound`); a slick it
+    names in no way we recognise is a `D` in the label grey (`muted`). Each
+    colour is its own token, fixed and unthemed like `lapped` — the soft red
+    is not `danger` and the medium yellow is not `warning`, and neither
+    appears anywhere but the badge (§ Theme table). Wet blue is deeper than
+    `lapped`, so a wet badge on a lapped row still reads as a badge. The disc
+    is what the band and letter sit on, so a yellow `M` or a white `H` stays
+    legible over live footage as well as on the paper.
+
+    This reverses the `D`/`W` badge of 1.15–1.28, which split the field only
+    into dry and wet and greyed every dry, at the owner's request for one
+    icon per compound. What the rule above rejected was colour by *index*
+    — `P`/`A`/`B` in status colours, which made a meaning up. Colour by the
+    sim's compound *name*, in the broadcast's own palette, reports one.
 
     **The badge is the brand mark's height** (`BRAND_ICON_H`, 24 px, on
     Relative; `STANDINGS_BRAND_H`, 21 px, on Standings), and its letter the
@@ -911,14 +924,13 @@ the fact that a header band and a row cost the same height.
     about the car that are equal; at one height they read as a pair. The
     column is 3.4rem, so a three-digit lap count still fits beside it.
 
-    This reverses two earlier calls. A letter in a ring was rejected because at
-    the table's smaller scales an 8 px letter in a thin 15 px circle read as a
-    clock face; the badge answers that with a heavy ring and a bold letter set
-    as large as the ring allows, and with colour carrying the distinction a
-    second time — a 1.25-unit ring and a semibold letter since 1.25, light
-    enough to sit beside the mono figures. And a side-on tyre glyph — slick hub or water drop, shape
-    only — replaced the letter; at row size that asked the reader to tell a
-    dot from a drop.
+    The `D`/`W` badge itself reversed two earlier calls. A letter in a ring
+    was rejected because at the table's smaller scales an 8 px letter in a
+    thin 15 px circle read as a clock face; the badge answers that with a
+    1.5-unit band and a bold letter set as large as the band allows, and with
+    colour carrying the distinction a second time. And a side-on tyre glyph
+    — slick hub or water drop, shape only — replaced the letter; at row size
+    that asked the reader to tell a dot from a drop.
 
     **The tyre is on both tables, and optional on both.** It moved to Relative
     alone for 1.15: whether the cars around you have gone to wets, and how old
@@ -1741,6 +1753,12 @@ telemetry was added; § Theme, § Two colour systems, § Typography, § Motion,
 allowances, § Dense tabular overlays rules 1, 5, 8–11, 13 and 15, § The class
 band, § The session header, § Fuel & Strategy, § The Coach, § The Radar and
 § The marketing surface rule 3 were rewritten with it.
+
+**A badge per compound, 2026-10-29.** At the owner's request the tyre badge
+names the compound rather than only dry or wet, in the broadcast's drawing of
+it: a rubber disc, a broken sidewall band and a letter, each compound in its
+own fixed colour. § Dense tabular overlays rule 15 and the tyre rows of the
+theme table were rewritten with it.
 
 ## Known follow-ups
 

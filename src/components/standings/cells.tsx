@@ -8,7 +8,7 @@ import {
   sectorTime,
 } from "../../lib/format";
 import { LAP_COLOR, SECTOR_COLOR } from "./constants";
-import { tyreKind, tyreName } from "../../lib/tyreCompound";
+import { TYRE_NAME, tyreCompound, tyreName } from "../../lib/tyreCompound";
 import { useSessionStore } from "../../stores/useSessionStore";
 import { TyreCompoundIcon } from "../ui/TyreCompoundIcon";
 import { markHeight, viewBoxAspect } from "../../lib/markSize";
@@ -873,19 +873,21 @@ export function SectorCell({ sector }: { sector: SectorSplit | undefined }) {
 const COMPOUND_LABEL: Record<number, string> = { 0: "P", 1: "A", 2: "B", 3: "C" };
 
 /**
- * Compound badge (`D` dry / `W` wet), then laps on the set.
+ * Compound badge (`S` soft, `M` medium, `H` hard, `I` inter, `W` wet, `D` an
+ * unnamed dry), then laps on the set.
  *
  * Both timing tables carry it, each as an option that is on by default. On the
  * Relative it answers whether the cars *around you* have gone to wets and how
  * old the rubber is on the car you are about to race; on Standings, the same
- * for the whole field — who pitted for wets, and who is on an old set.
+ * for the whole field — who pitted for wets, who is on softs, and who is on an
+ * old set.
  *
- * The badge's colour is the one exception to "the row's own ink": blue for a
- * wet is the meaning, so it is fixed (see {@link TyreCompoundIcon}). The lap
- * count is plain data and takes the row's ink — `--color-lapped` on lapped
- * traffic — like every other value on the row.
+ * The badge's colour is the one exception to "the row's own ink": the
+ * compound's broadcast colour is the meaning, so it is fixed (see
+ * {@link TyreCompoundIcon}). The lap count is plain data and takes the row's
+ * ink — `--color-lapped` on lapped traffic — like every other value on the row.
  *
- * The kind is selected as a string from the session store, not as the
+ * The compound is selected as a string from the session store, not as the
  * compound list, so a 1 Hz session tick does not re-render every row.
  */
 export function TireCell({
@@ -901,14 +903,14 @@ export function TireCell({
   /** Badge height in px — the brand mark's height on the same row. */
   size?: number;
 }) {
-  const kind = useSessionStore((s) => tyreKind(compound, s.session?.tireCompounds));
+  const tyre = useSessionStore((s) => tyreCompound(compound, s.session?.tireCompounds));
   const name = useSessionStore((s) => tyreName(compound, s.session?.tireCompounds));
   if (compound == null) {
     return <span className="text-center text-micro text-faint/40">·</span>;
   }
   const label = COMPOUND_LABEL[compound] ?? String(compound);
-  const title = kind
-    ? `${kind === "wet" ? "Wet" : "Dry"}${name && name.toLowerCase() !== kind ? ` (${name})` : ""}`
+  const title = tyre
+    ? `${TYRE_NAME[tyre]}${name && name.toLowerCase() !== TYRE_NAME[tyre].toLowerCase() ? ` (${name})` : ""}`
     : `Compound ${label}`;
   // The badge is drawn at the brand mark's height (`BRAND_ICON_H` on Relative,
   // `STANDINGS_BRAND_H` on Standings), so the car's mark and its tyre read as a
@@ -920,8 +922,8 @@ export function TireCell({
         style={{ width: size }}
         title={title}
       >
-        {kind ? (
-          <TyreCompoundIcon kind={kind} size={`${size}px`} label={title} />
+        {tyre ? (
+          <TyreCompoundIcon compound={tyre} size={`${size}px`} label={title} />
         ) : (
           label
         )}
