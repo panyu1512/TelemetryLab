@@ -7,6 +7,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **A tyre icon for every compound.** The tyre badge on Standings and the
+  Relative now looks like the compound graphic from a TV broadcast — a dark
+  tyre with a coloured band round it and a letter in the middle — and shows
+  which compound each car is on, not just dry or wet: a red **S** for softs,
+  yellow **M** for mediums, white **H** for hards, green **I** for
+  intermediates and blue **W** for wets. Hover it for the compound's name. In
+  a GT3 or GT4 race, where the dry tyre is the "Hard", the dries now show a
+  white H instead of a grey D. A dry tyre the sim gives no recognisable name
+  still shows a grey D.
+
 ## [1.28.0] - 2026-10-28
 
 ### Added

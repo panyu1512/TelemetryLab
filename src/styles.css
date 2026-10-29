@@ -92,9 +92,16 @@
      unthemed so it never follows a theme's accent. Ink only. */
   --color-lapped: oklch(72% 0.12 245);
 
-  /* A wet tyre: the `W` badge. Blue because that is what a wet tyre wears on
-     every timing graphic; fixed, unthemed, deeper than `lapped`. */
+  /* The compound badge: each compound in the colour it wears on every timing
+     graphic — red soft, yellow medium, white hard, green inter, blue wet —
+     on a dark rubber disc. Fixed and unthemed, and the badge's alone: the red
+     and yellow are not `danger` and `warning`. Wet is deeper than `lapped`. */
+  --color-tyre-soft: oklch(63% 0.21 27);
+  --color-tyre-medium: oklch(86% 0.16 95);
+  --color-tyre-hard: oklch(90% 0 0);
+  --color-tyre-inter: oklch(72% 0.17 145);
   --color-tyre-wet: oklch(64% 0.15 256);
+  --color-tyre-rubber: oklch(12% 0 0);
 
   /* --- car class (multiclass sessions only) ------------------------------- */
   /* The one exception to "no decorative colour": in a multiclass race the

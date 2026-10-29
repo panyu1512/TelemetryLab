@@ -1,17 +1,48 @@
 import type { TireCompoundInfo } from "../telemetry/types";
 
-/** What a compound is for, as far as the driver cares: dry or wet running. */
-export type TyreKind = "dry" | "wet";
-
 /**
- * Names iRacing gives a treaded tyre. Only "Wet" ships today; "inter" and
- * "rain" are here so an intermediate or a renamed wet still reads as wet
- * rather than falling through to a dry.
+ * A compound as the driver reads it off a timing graphic. `dry` is a slick the
+ * sim names in no way we recognise ("Dry", "Primary", …), or any slick on a car
+ * that lists no compounds at all.
  */
-const WET_NAME = /wet|inter|rain/i;
+export type TyreCompound = "soft" | "medium" | "hard" | "inter" | "wet" | "dry";
+
+/** The badge's letter for each compound. */
+export const TYRE_LETTER: Record<TyreCompound, string> = {
+  soft: "S",
+  medium: "M",
+  hard: "H",
+  inter: "I",
+  wet: "W",
+  dry: "D",
+};
+
+/** A compound's name in full, for the badge's tooltip and accessible name. */
+export const TYRE_NAME: Record<TyreCompound, string> = {
+  soft: "Soft",
+  medium: "Medium",
+  hard: "Hard",
+  inter: "Intermediate",
+  wet: "Wet",
+  dry: "Dry",
+};
 
 /**
- * Whether a car's compound is a dry or a wet, or `null` when we cannot say.
+ * Names iRacing gives its compounds, checked in order. "Wet" is the only
+ * treaded tyre that ships today; "inter" and "rain" are here so an
+ * intermediate or a renamed wet still reads as one rather than falling
+ * through to a dry. "Supersoft" and the like land on soft.
+ */
+const BY_NAME: readonly (readonly [RegExp, TyreCompound])[] = [
+  [/inter/i, "inter"],
+  [/wet|rain/i, "wet"],
+  [/soft/i, "soft"],
+  [/med/i, "medium"],
+  [/hard/i, "hard"],
+];
+
+/**
+ * A car's compound, or `null` when we cannot say.
  *
  * `compounds` is the player car's `DriverTires` list — the only one the sim
  * publishes — applied to the whole field. That is exact for every car of the
@@ -25,15 +56,15 @@ const WET_NAME = /wet|inter|rain/i;
  * - An index missing from a non-empty list belongs to some other car's range,
  *   so the answer is `null` and the cell falls back to the compound letter.
  */
-export function tyreKind(
+export function tyreCompound(
   compound: number | null,
   compounds: readonly TireCompoundInfo[] | undefined,
-): TyreKind | null {
+): TyreCompound | null {
   if (compound == null) return null;
   if (!compounds || compounds.length === 0) return "dry";
   const entry = compounds.find((c) => c.index === compound);
   if (!entry) return null;
-  return WET_NAME.test(entry.type) ? "wet" : "dry";
+  return BY_NAME.find(([re]) => re.test(entry.type))?.[1] ?? "dry";
 }
 
 /** The sim's name for a compound ("Hard", "Wet"), or `null` if unlisted. */

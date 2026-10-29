@@ -61,7 +61,13 @@
   --color-warning: oklch(84% 0.12 90); /* caution: pit soon, yellow flag */
   --color-sector-purple: oklch(70% 0.13 305); /* overall-best lap/sector */
   --color-lapped: oklch(72% 0.12 245); /* lapped traffic (fixed) */
-  --color-tyre-wet: oklch(64% 0.15 256); /* wet tyre (fixed) */
+  /* Tyre compound badge (fixed): band and letter on a rubber disc. */
+  --color-tyre-soft: oklch(63% 0.21 27); /* soft tyre */
+  --color-tyre-medium: oklch(86% 0.16 95); /* medium tyre */
+  --color-tyre-hard: oklch(90% 0 0); /* hard tyre */
+  --color-tyre-inter: oklch(72% 0.17 145); /* intermediate tyre */
+  --color-tyre-wet: oklch(64% 0.15 256); /* wet tyre */
+  --color-tyre-rubber: oklch(12% 0 0); /* the badge's disc */
 
   /* Text on any filled status colour. */
   --color-on-accent: oklch(15% 0.008 255);
