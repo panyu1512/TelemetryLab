@@ -7,6 +7,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.29.0] - 2026-10-29
+
 ### Changed
 
 - **A tyre icon for every compound.** The tyre badge on Standings and the
@@ -832,7 +834,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.28.0...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.29.0...HEAD
+[1.29.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.28.0...v1.29.0
 [1.28.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.3...v1.28.0
 [1.27.3]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.2...v1.27.3
 [1.27.2]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.1...v1.27.2
