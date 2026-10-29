@@ -1048,21 +1048,32 @@ the fact that a header band and a row cost the same height.
     black flag (a penalty to serve in the pits), the meatball (damage the
     car must pit to repair) and the furled black (a warning: slow down, or
     be penalised). Standings prints each as a mark straight after the
-    driver's name (`CarFlagMarks`, [`lib/carFlags.ts`](src/lib/carFlags.ts)):
+    driver's name (`CarFlagMarks`, [`lib/carFlags.ts`](src/lib/carFlags.ts)),
+    each **a chip filled with its status ink, with the glyph cut out of it**
+    in `--color-on-accent`, the way a broadcast tags a penalty:
 
-    - a **solid flag** for the black flag;
-    - **a flag with a disc in it** for the meatball — the marshal's flag
-      with its disc kept and its orange dropped, since orange is a class
-      colour (§ Two colour systems);
+    - **a flag** for the black flag;
+    - **a disc** for the meatball — the marshal's flag reduced to the disc
+      it is named for, with its orange dropped, since orange is a class
+      colour (§ Two colour systems). A flag with a disc in it, on its
+      pole, read as a `P` at row size: a parking sign on a red chip;
     - **a gauge with its needle down** for the slow-down. It draws what
       the driver has been told to do rather than the furled flag, which
       nothing at row size can draw so that it reads as furled;
-    - **`DQ`**, lettered, for a disqualification, the one state timing
-      screens have always spelled out. It shows alone: a disqualified car
-      has no penalty left to serve and no race to repair the car for.
+    - **`DQ`**, lettered on a wider chip, for a disqualification, the one
+      state timing screens have always spelled out. It shows alone: a
+      disqualified car has no penalty left to serve and no race to repair
+      the car for.
 
     The rules, and why:
 
+    - **Filled, not outlined.** The marks shipped in 1.28 as 1.5-unit
+      outlines in the status ink. A mark that flies on a few cars for seconds
+      has to be caught in peripheral vision, and at 16 px an outline was
+      the lightest ink on the row; a filled chip is the heaviest, which is
+      the right way round for the one thing on the row that asks the
+      driver to act. The knocked-out glyph is `on-accent`, rule 1's only
+      ink on a status fill.
     - **The session header's inks** (`lib/sessionStrip`): `danger` for the
       three the car must act on — a black flag drawn in black on this paper
       is nothing — and `warning` for the slow-down, which is still a
@@ -1759,6 +1770,15 @@ names the compound rather than only dry or wet, in the broadcast's drawing of
 it: a rubber disc, a broken sidewall band and a letter, each compound in its
 own fixed colour. § Dense tabular overlays rule 15 and the tyre rows of the
 theme table were rewritten with it.
+
+**Race control's marks as chips, 2026-10-29.** At the owner's request, after
+three versions were drawn in the live table and compared (broadcast chips,
+timing-tower tags `PEN`/`DMG`/`SLOW`, and heavier outline glyphs), the
+black-flag, meatball, slow-down and `DQ` marks became filled status chips with
+their glyph knocked out, and the meatball lost its flag and pole to a plain
+disc. The tags read without learning but were the widest, and cost the one
+column allowed to truncate; the heavier outlines were still the lightest ink
+on the row. § Dense tabular overlays rule 19 was rewritten with it.
 
 ## Known follow-ups
 

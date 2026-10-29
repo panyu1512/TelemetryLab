@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.29.1] - 2026-10-29
+
+### Changed
+
+- **Clearer penalty and damage marks on Standings.** The marks after a
+  driver's name are now small filled chips, like a TV broadcast's penalty
+  tags, so they stand out at a glance: a red chip with a flag for a **black
+  flag**, a red chip with a disc for the **meatball** (damage, must pit), a
+  yellow chip with a gauge reading low for **slow down**, and a red **DQ**
+  chip for a disqualification. The meatball no longer looks like a "P".
+
 ## [1.29.0] - 2026-10-29
 
 ### Changed
@@ -834,7 +845,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   with a SHA-256 so the download can be verified. It is not code-signed, so
   Windows SmartScreen will warn on first run — see the README.
 
-[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.29.0...HEAD
+[Unreleased]: https://github.com/panyu1512/TelemetryLab/compare/v1.29.1...HEAD
+[1.29.1]: https://github.com/panyu1512/TelemetryLab/compare/v1.29.0...v1.29.1
 [1.29.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.28.0...v1.29.0
 [1.28.0]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.3...v1.28.0
 [1.27.3]: https://github.com/panyu1512/TelemetryLab/compare/v1.27.2...v1.27.3
