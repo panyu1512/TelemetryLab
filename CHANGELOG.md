@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Clearer penalty and damage marks on Standings.** The marks after a
+  driver's name are now small filled chips, like a TV broadcast's penalty
+  tags, so they stand out at a glance: a red chip with a flag for a **black
+  flag**, a red chip with a disc for the **meatball** (damage, must pit), a
+  yellow chip with a gauge reading low for **slow down**, and a red **DQ**
+  chip for a disqualification. The meatball no longer looks like a "P".
+
 ## [1.29.0] - 2026-10-29
 
 ### Changed

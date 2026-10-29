@@ -109,11 +109,11 @@ export function RadioMark({ size }: { size: number }) {
 
 /**
  * Race control's flags on a car, after the driver's name (§ Dense tabular
- * overlays, rule 19), most severe first: a solid flag for a black flag, a flag
- * with a disc in it for the meatball, a gauge reading low for the slow-down,
+ * overlays, rule 19), most severe first. Each is a chip filled with its status
+ * ink from `lib/carFlags`, the way a broadcast tags a penalty: a flag for a
+ * black flag, a disc for the meatball, a gauge reading low for the slow-down,
  * and `DQ` — the one timing screens have always lettered — for a
- * disqualification. Each in its status ink from `lib/carFlags`, still, with
- * what it means in the tooltip.
+ * disqualification. Still, with what it means in the tooltip.
  */
 export function CarFlagMarks({
   flags,
@@ -142,49 +142,59 @@ export function CarFlagMarks({
   );
 }
 
-/** One race-control mark, drawn on a 16-unit grid in `currentColor`. */
+/** The ink knocked out of a mark's chip — the one allowed on a status fill. */
+const ON_CHIP = "var(--color-on-accent)";
+
+/**
+ * One race-control mark: a rounded chip in `currentColor` with its glyph cut
+ * out of it in {@link ON_CHIP}, on a 16-unit grid (`DQ` takes a wider chip).
+ * A filled chip is caught at a glance where a 1.5-unit outline was not.
+ */
 function CarFlagGlyph({ flag, size }: { flag: CarFlag; size: number }) {
   if (flag === "disqualify") {
     return (
-      <span aria-hidden className="text-cell font-bold leading-none">
-        DQ
-      </span>
+      <svg width={(size * 22) / 16} height={size} viewBox="0 0 22 16" aria-hidden>
+        <rect x="0.5" y="0.5" width="21" height="15" rx="3.5" fill="currentColor" />
+        <text
+          x="11"
+          y="8.6"
+          textAnchor="middle"
+          dominantBaseline="central"
+          fill={ON_CHIP}
+          fontFamily="var(--font-timing)"
+          fontSize="10"
+          fontWeight="700"
+        >
+          DQ
+        </text>
+      </svg>
     );
   }
   return (
-    <svg
-      width={size}
-      height={size}
-      viewBox="0 0 16 16"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden
-    >
-      {flag === "furled" ? (
-        // A gauge with its needle down at the slow end, a step heavier than
-        // the flags: its open arc is thinner ink than a flag's body.
-        <g strokeWidth={2}>
-          <path d="M2.2 12.6A6.4 6.4 0 1 1 13.8 12.6" />
-          <path d="M8 10.2 3.9 8.6" />
-          <circle cx="8" cy="10.2" r="1.6" fill="currentColor" stroke="none" />
-        </g>
-      ) : (
-        // A flag on its pole: solid for the black flag, an outline with the
-        // meatball's disc in it for the repair flag.
-        <>
-          <path d="M3.5 14.5V1.75" />
-          <path
-            d="M3.5 2.25h9.75v7.5H3.5z"
-            fill={flag === "black" ? "currentColor" : "none"}
-          />
-          {flag === "repair" && (
-            <circle cx="8.4" cy="6" r="2" fill="currentColor" stroke="none" />
-          )}
-        </>
-      )}
+    <svg width={size} height={size} viewBox="0 0 16 16" aria-hidden>
+      <rect x="0.5" y="0.5" width="15" height="15" rx="3.5" fill="currentColor" />
+      <g fill={ON_CHIP} stroke={ON_CHIP} strokeLinecap="round">
+        {flag === "black" && (
+          // A flag flying from its pole.
+          <>
+            <path d="M4.75 3v10.25" fill="none" strokeWidth={1.6} />
+            <path d="M4.75 3.4c2-1 3.9 1 7 0v5.4c-3.1 1-5-1-7 0z" stroke="none" />
+          </>
+        )}
+        {flag === "repair" && (
+          // The meatball's disc alone. A flag with a disc in it, on its pole,
+          // read as a `P` at row size — a parking sign on a red chip.
+          <circle cx="8" cy="8" r="4.1" stroke="none" />
+        )}
+        {flag === "furled" && (
+          // A gauge with its needle down at the slow end.
+          <>
+            <path d="M3.7 11.6A5 5 0 1 1 12.3 11.6" fill="none" strokeWidth={1.75} />
+            <path d="M8 9.1 4.7 10.4" fill="none" strokeWidth={1.75} />
+            <circle cx="8" cy="9.1" r="1.45" stroke="none" />
+          </>
+        )}
+      </g>
     </svg>
   );
 }
