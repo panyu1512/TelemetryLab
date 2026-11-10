@@ -96,6 +96,22 @@
       }
     </script>
 
+    <!-- The trailer, for the same readers as the block above. The date is the
+         day the film was rendered — change it when the film is re-rendered. -->
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "VideoObject",
+        "name": "TelemetryLab — trailer",
+        "description": "Forty seconds of the TelemetryLab overlays for iRacing, recorded from the app on its built-in mock feed: the relative, the radar, the standings, the coach and the fuel panel, then all five windows placed over the game.",
+        "inLanguage": "en",
+        "thumbnailUrl": "https://telemetrylab.app/assets/trailer-poster.jpg",
+        "contentUrl": "https://telemetrylab.app/assets/trailer.mp4",
+        "uploadDate": "2026-11-10",
+        "duration": "PT40S"
+      }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -251,6 +267,10 @@
               Download for Windows
             </a>
             <a class="chip chip--lg" href="#overlays">See the overlays</a>
+            <a class="chip chip--lg" href="#trailer">
+              <svg class="chip__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M8 5.5v13l10.5-6.5z" /></svg>
+              Watch the trailer
+            </a>
           </div>
           <p class="hero__note">Free and open source · Windows · no administrator rights needed</p>
 
@@ -292,6 +312,51 @@
             <figcaption class="stage__cap">
               Five of the overlays, placed the way they sit over the game. A
               composite of real captures, taken on the built-in mock feed.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <!-- ══ Trailer ════════════════════════════════════════════════════
+           One film, and the only moving picture on the page (design.md § The
+           marketing surface, rule 10). It never plays by itself: it has sound,
+           and `preload="none"` keeps its megabytes off the page until someone
+           asks for them. The poster is a frame of the film. There is no
+           speech in it, so the caption is its text alternative — it says what
+           happens on screen, in order. The source is ../trailer/. -->
+      <section id="trailer" class="section">
+        <div class="shell">
+          <header class="sec-head">
+            <p class="eyebrow">Trailer</p>
+            <h2>The whole thing, in forty seconds.</h2>
+            <p class="sec-head__lede">
+              Every screen in it is the app itself, running on its built-in
+              mock feed. Turn the sound on.
+            </p>
+          </header>
+
+          <figure class="film">
+            <video
+              class="film__video"
+              controls
+              playsinline
+              preload="none"
+              poster="assets/trailer-poster.jpg"
+              width="1920"
+              height="1080"
+              aria-label="TelemetryLab trailer"
+              aria-describedby="trailer-cap"
+            >
+              <source src="assets/trailer.mp4" type="video/mp4" />
+              <a href="assets/trailer.mp4">Download the trailer (MP4)</a>
+            </video>
+            <figcaption class="film__cap" id="trailer-cap">
+              Forty seconds, music and no speech. A driving cluster at speed;
+              the relative as the gap to the car ahead runs down to nothing;
+              the radar's R lighting; the standings as the player's row moves
+              up to fifth; the coach turning a finished lap into two tips; the
+              fuel panel — then all five windows landing where a driver would
+              put them. Recorded from the app, frame by frame.
             </figcaption>
           </figure>
         </div>
@@ -965,6 +1030,7 @@
 
           <nav class="foot__col" aria-label="Product">
             <h2 class="foot__h">Product</h2>
+            <a class="link-q" href="#trailer">Trailer</a>
             <a class="link-q" href="#overlays">Overlays</a>
             <a class="link-q" href="#features">Features</a>
             <a class="link-q" href="#install">Install</a>

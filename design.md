@@ -1650,6 +1650,49 @@ Seven things it is allowed that no app surface is:
    them in English on screen (`Mock data`, the capture text); Windows' dialog
    buttons are given as the Spanish Windows names them.
 
+10. **One film.** The page has a trailer, between the hero and the overlay
+    cards: forty seconds with a score, built in [`trailer/`](trailer/) with
+    HyperFrames and served as a plain `<video>`. It is the only thing on any
+    surface of this system that moves by itself for longer than a transition,
+    and it is on the page because the product owner asked for one — so, like
+    rule 6, it is admitted with its fences rather than slipped in.
+
+    - **It is rule 2 at thirty frames a second.** Every picture of the product
+      in it is the app running on its mock feed, recorded frame by frame
+      ([`trailer/scripts/record-footage.mjs`](trailer/scripts/record-footage.mjs)
+      steps the page's clock a thirtieth of a second at a time and takes a
+      screenshot) — never a redrawn panel, never a mocked-up number. The edit
+      rearranges real footage; it does not invent any. The one composite is the
+      hero's own stage, assembled in front of the viewer.
+    - **Its copy is the page's copy.** The title is the h1, each overlay's line
+      is its card's heading, the strip at the end is the stats strip. A film
+      that claimed something the page beside it does not would break the
+      honest-copy rule below from inside a video file, where nobody greps.
+    - **It never starts by itself.** It has sound, and a page that plays sound
+      unasked is a page people close. `controls`, no `autoplay`, no `loop`,
+      and `preload="none"` with a poster: the megabytes are spent only when
+      someone presses play, and nothing moves under `prefers-reduced-motion`
+      because nothing moves at all until asked.
+    - **No script, no player.** The browser's own controls are its only
+      chrome, in the frame a capture gets — a hairline on `--color-timing-bg`.
+      A custom player would be a second control vocabulary on a page that has
+      one.
+    - **The caption is its text alternative.** There is no speech in it, so
+      there is nothing to subtitle; the figcaption says what happens on screen,
+      in order, and the `<video>` is described by it.
+    - **Motion inside the film is the film's business** — § Motion's durations
+      and the reveal pattern govern interfaces, and a trailer is not one. What
+      it keeps is everything else: Carbon's colours and their meanings, Inter
+      and the mono, the mark's two fixed colours, square geometry, and the
+      rule that the teal is the logo's and nothing else's.
+    - **Two languages, two files**, as rule 9 has it: one composition with a
+      `lang` variable, rendered twice. The app's own labels stay in English in
+      the Spanish cut, because that is what the app shows.
+
+    The film goes stale the way the captures do. When an overlay it shows
+    changes materially, re-shoot and re-render it —
+    [`trailer/README.md`](trailer/README.md) is the whole procedure.
+
 Two rules it does *not* get to break:
 
 - **Honest copy.** No invented metric, download count, testimonial or logo wall.

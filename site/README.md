@@ -13,6 +13,8 @@ site/
 ├── css/site.css        the page's styles
 ├── css/footer.css      the footer, which has a device of its own
 ├── assets/*.png        product captures, generated — see capture.mjs
+├── assets/trailer*.mp4 the trailer, English and Spanish — see ../trailer/
+├── assets/trailer-poster.jpg  one frame of it, shown until it is played
 ├── capture.mjs         regenerates assets/ from the live app
 ├── favicon.svg         a copy of ../public/favicon.svg — see below
 └── apple-touch-icon.png  the same mark, 180 px on a full-bleed plate
@@ -71,6 +73,26 @@ The five that bite if you forget them:
   capture on the page or a plain fact about how the software runs — the stats
   strip under the hero included, which counts overlays, widgets and themes in
   this repo. If you want to add a number, measure it first.
+
+## The trailer
+
+The film in the Trailer section is not made here. Its source is
+[`../trailer/`](../trailer/) — a HyperFrames composition, the script that
+records its footage from the live app and the script that writes its score —
+and `npm run site` there encodes the two cuts and the poster into `assets/`.
+[`../trailer/README.md`](../trailer/README.md) has the procedure;
+[`design.md` § The marketing surface](../design.md), rule 10, has the fences.
+
+Three things to keep true on this side:
+
+- **`trailer.mp4` is the English cut and `trailer-es.mp4` the Spanish one**,
+  each referenced from its own page only. They share `trailer-poster.jpg`,
+  which is a frame with no copy on it for exactly that reason.
+- **The figcaption under the video is its text alternative** — the film has
+  music and no speech. If the edit changes, re-read that caption in both pages,
+  the way the alts are re-read after a re-shoot.
+- **The `VideoObject` block in each page's `<head>` carries the render date.**
+  Move it when the film is re-rendered.
 
 ## Regenerating the captures
 

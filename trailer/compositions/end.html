@@ -1,0 +1,156 @@
+<!-- End card · 34–40 s. The mark arrives on the final hit — the T down its
+     own 19° lean, the L in along the baseline — then makes room for the name.
+     The download is the site's own button. Everything has landed by 37 s and
+     holds for three. -->
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+    }
+    /* The card is laid out at 1× and shown at 1.2×, about the frame's centre. */
+    #end-all {
+      position: absolute;
+      inset: 0;
+      transform: scale(1.2);
+      transform-origin: 50% 54%;
+    }
+    #end-lockup {
+      position: absolute;
+      left: 484px;
+      top: 318px;
+      width: 952px;
+      height: 200px;
+    }
+    #end-mark {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 200px;
+      height: 200px;
+      overflow: visible;
+    }
+    #end-name-clip {
+      position: absolute;
+      left: 232px;
+      top: 0;
+      width: 720px;
+      height: 200px;
+      display: flex;
+      align-items: center;
+    }
+    #end-name {
+      font-size: 108px;
+      letter-spacing: -0.03em;
+      white-space: nowrap;
+    }
+    #end-lede {
+      position: absolute;
+      left: 0;
+      top: 560px;
+      width: 1920px;
+      text-align: center;
+      font-size: 44px;
+      font-weight: 500;
+      letter-spacing: -0.01em;
+      color: var(--muted);
+    }
+    #end-row {
+      position: absolute;
+      left: 0;
+      top: 690px;
+      width: 1920px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 44px;
+    }
+    #end-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 18px;
+      padding: 26px 44px;
+      border-radius: 6px;
+      background: var(--primary);
+      color: var(--on-accent);
+      font-size: 42px;
+      font-weight: 600;
+      line-height: 1.2;
+      white-space: nowrap;
+    }
+    #end-cta svg {
+      width: 44px;
+      height: 44px;
+    }
+    #end-url {
+      font-family: var(--mono);
+      font-size: 42px;
+      font-weight: 500;
+      color: var(--text);
+    }
+    #end-note {
+      position: absolute;
+      left: 0;
+      top: 850px;
+      width: 1920px;
+      text-align: center;
+      font-size: 32px;
+      color: var(--faint);
+    }
+  </style>
+  <div id="root" data-composition-id="end" data-width="1920" data-height="1080">
+    <div id="end-all">
+    <div id="end-lockup">
+      <!-- The TL monogram: the two paths of public/favicon.svg, without its
+           plate — this surface has paper of its own (design.md § The mark). -->
+      <svg id="end-mark" viewBox="0 0 32 32" aria-hidden="true">
+        <path id="end-t" fill="#f4f7f9" d="M6.09 7.64L22.78 7.64L19.68 10.64L14.54 10.64L9.86 24.36L5.82 24.36L10.5 10.64L4 10.64Z" />
+        <path id="end-l" fill="#0dd2cb" d="M16.36 11.52L20.4 11.52L16.99 21.53L28 21.53L25.2 24.36L11.98 24.36Z" />
+      </svg>
+      <div id="end-name-clip">
+        <div class="tl-h" id="end-name">TelemetryLab</div>
+      </div>
+    </div>
+    <p id="end-lede" data-t="endLede">Timing and telemetry overlays for iRacing</p>
+    <div id="end-row">
+      <div id="end-cta">
+        <svg viewBox="0 0 24 24" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round"><path d="M12 4v11M7 10.5l5 5 5-5M5 19.5h14" /></svg>
+        <span data-t="cta">Download for Windows</span>
+      </div>
+      <span id="end-url">telemetrylab.app</span>
+    </div>
+    <p id="end-note" data-t="note">Free and open source · Windows</p>
+    </div>
+  </div>
+  <script>
+    {
+      const root = document.querySelector('[data-composition-id="end"]');
+      window.TL.localise(root);
+      const tl = gsap.timeline({ paused: true });
+
+      // The mark starts alone in the middle of the frame (the lockup is 952
+      // wide, the mark 200: +376 centres it), large, and lands on the hit.
+      tl.fromTo("#end-mark", { x: 376, scale: 1.9, transformOrigin: "50% 50%" },
+        { scale: 1.45, duration: 0.5, ease: "expo.out" }, 0);
+      // T down its lean, L along the baseline — in the mark's own 32-unit space.
+      tl.fromTo("#end-t", { x: 6.8, y: -20, opacity: 0 }, { x: 0, y: 0, opacity: 1, duration: 0.3, ease: "power4.out" }, 0);
+      tl.fromTo("#end-l", { x: -22, y: 0, opacity: 0 }, { x: 0, y: 0, opacity: 1, duration: 0.3, ease: "power4.out" }, 0.06);
+
+      // It steps left and down to size; the name wipes in from behind it.
+      tl.to("#end-mark", { x: 0, scale: 1, duration: 0.55, ease: "power3.inOut" }, 0.7);
+      tl.fromTo("#end-name-clip", { clipPath: "inset(0 100% 0 0)" },
+        { clipPath: "inset(0 0% 0 0)", duration: 0.5, ease: "power3.out" }, 0.9);
+      tl.fromTo("#end-name", { x: -60 }, { x: 0, duration: 0.5, ease: "power3.out" }, 0.9);
+
+      window.TL.wordsIn(tl, root.querySelector("#end-lede"), 1.5, 0.05);
+      tl.fromTo("#end-cta", { opacity: 0, scale: 0.9, transformOrigin: "50% 50%" },
+        { opacity: 1, scale: 1, duration: 0.3, ease: "back.out(1.6)" }, 2);
+      tl.fromTo("#end-url", { opacity: 0, filter: "blur(8px)" },
+        { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power2.out" }, 2.25);
+      tl.fromTo("#end-note", { opacity: 0 }, { opacity: 1, duration: 0.3, ease: "power1.out" }, 2.6);
+
+      tl.set({}, {}, 6);
+      window.__timelines["end"] = tl;
+    }
+  </script>
+</template>

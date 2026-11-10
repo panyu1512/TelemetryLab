@@ -1,0 +1,74 @@
+<!-- Standings · 16–20 s. The camera is on rows 5 and 6 when, on the bar line
+     at 18 s, the player's row glides up a place and takes its green ▲. -->
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+    }
+    #sta-copy {
+      position: absolute;
+      left: 80px;
+      top: 790px;
+      width: 1760px;
+    }
+    /* A fixed box, so the punch-in's origin does not move when the window
+       closes up around the rows it frames. */
+    #sta-cam {
+      inset: auto;
+      left: 0;
+      top: 0;
+      width: 1840px;
+      height: 692px;
+    }
+    #sta-h {
+      margin-top: 30px;
+      font-size: 84px;
+      white-space: nowrap;
+    }
+    #root[data-lang="es"] #sta-h {
+      font-size: 76px;
+    }
+  </style>
+  <div id="root" data-composition-id="standings" data-width="1920" data-height="1080">
+    <div id="sta-move">
+      <figure class="tl-win" id="sta-win" style="left: 40px; top: 40px; width: 1840px; height: 692px">
+        <div class="tl-cam" id="sta-cam">
+          <video id="sta-video" class="clip" src="assets/footage/standings.mp4" muted playsinline
+            data-start="0" data-duration="4" data-media-start="6.1667" data-track-index="1"></video>
+        </div>
+      </figure>
+      <div id="sta-copy">
+        <div class="tl-band" id="sta-band">
+          <span class="tl-band__chip" data-t="staChip">Standings</span>
+          <span><span class="tl-band__k" data-t="staK1">Columns</span><span class="tl-band__v" data-t="staV1">15</span></span>
+        </div>
+        <h2 class="tl-h" id="sta-h" data-t="staH">The running order, grouped by class.</h2>
+      </div>
+    </div>
+  </div>
+  <script>
+    {
+      const root = document.querySelector('[data-composition-id="standings"]');
+      window.TL.localise(root);
+      const tl = gsap.timeline({ paused: true });
+
+      // In from below, as the radar left upward.
+      tl.fromTo("#sta-move", { y: 280, opacity: 0, filter: "blur(18px)" },
+        { y: 0, opacity: 1, filter: "blur(0px)", duration: 0.45, ease: "power4.out" }, 0);
+      window.TL.wordsIn(tl, root.querySelector("#sta-h"), 0.3);
+
+      // Punch in on the GT3 group, arriving before the pass at 2.0. At 1.55
+      // from 404 px down the left edge the frame runs from the first GT3 row
+      // to the first GT4 one and from the position to the interval column;
+      // the window closes up 30 px so it ends on a row line, not through one.
+      tl.fromTo("#sta-cam", { scale: 1, transformOrigin: "0px 404.4px" },
+        { scale: 1.55, duration: 0.6, ease: "power2.inOut" }, 1.15);
+      tl.fromTo("#sta-win", { height: 692 }, { height: 662, duration: 0.6, ease: "power2.inOut" }, 1.15);
+
+      // Out to the left.
+      tl.to("#sta-move", { x: -340, opacity: 0, filter: "blur(18px)", duration: 0.2, ease: "power3.in" }, 3.8);
+      window.__timelines["standings"] = tl;
+    }
+  </script>
+</template>

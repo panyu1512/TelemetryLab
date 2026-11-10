@@ -1,0 +1,55 @@
+<!-- Coach · 20–23 s. A second in, the lap just driven lands and the panel
+     turns from the last new-best banner into this lap's two tips. -->
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+    }
+    #coa-copy {
+      position: absolute;
+      left: 1340px;
+      top: 290px;
+      width: 520px;
+    }
+    #coa-h {
+      margin-top: 40px;
+      font-size: 80px;
+    }
+    #root[data-lang="es"] #coa-h {
+      font-size: 76px;
+    }
+  </style>
+  <div id="root" data-composition-id="coach" data-width="1920" data-height="1080">
+    <div id="coa-move">
+      <figure class="tl-win" id="coa-win" style="left: 40px; top: 121px; width: 1240px; height: 838px">
+        <video id="coa-video" class="clip" src="assets/footage/coach.mp4" muted playsinline
+          data-start="0" data-duration="3" data-media-start="2.9667" data-track-index="1"></video>
+      </figure>
+      <div id="coa-copy">
+        <div class="tl-band" id="coa-band">
+          <span class="tl-band__chip" data-t="coaChip">Coach</span>
+          <span><span class="tl-band__k" data-t="coaK1">Runs</span><span class="tl-band__v" data-t="coaV1">locally</span></span>
+        </div>
+        <h2 class="tl-h" id="coa-h" data-t="coaH">Where the lap went, corner by corner.</h2>
+      </div>
+    </div>
+  </div>
+  <script>
+    {
+      const root = document.querySelector('[data-composition-id="coach"]');
+      window.TL.localise(root);
+      const tl = gsap.timeline({ paused: true });
+
+      // In from the right, continuing the Standings' exit to the left.
+      tl.fromTo("#coa-win", { x: 340, opacity: 0, filter: "blur(18px)" },
+        { x: 0, opacity: 1, filter: "blur(0px)", duration: 0.45, ease: "power4.out" }, 0);
+      tl.fromTo("#coa-band", { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "power1.out" }, 0.15);
+      window.TL.wordsIn(tl, root.querySelector("#coa-h"), 0.3);
+
+      // Out: a blur swap — the paper holds and Fuel sharpens in its place.
+      tl.to("#coa-move", { opacity: 0, filter: "blur(12px)", duration: 0.17, ease: "power2.in" }, 2.83);
+      window.__timelines["coach"] = tl;
+    }
+  </script>
+</template>

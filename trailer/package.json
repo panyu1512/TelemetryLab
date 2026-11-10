@@ -1,0 +1,19 @@
+{
+  "name": "telemetrylab-trailer",
+  "private": true,
+  "type": "module",
+  "description": "The TelemetryLab trailer: a HyperFrames composition, the scripts that shoot its footage and write its score, and the encode for the site.",
+  "scripts": {
+    "dev": "hyperframes preview",
+    "check": "hyperframes check",
+    "footage": "node scripts/record-footage.mjs",
+    "score": "python3 scripts/score.py",
+    "render": "hyperframes render -q delivery -o out/trailer-en.mp4",
+    "render:es": "hyperframes render -q delivery --variables '{\"lang\":\"es\"}' -o out/trailer-es.mp4",
+    "site": "node scripts/encode-for-site.mjs"
+  },
+  "devDependencies": {
+    "gsap": "^3.15.0",
+    "hyperframes": "^0.9.29"
+  }
+}
