@@ -1,0 +1,68 @@
+<!-- Relative · 10–14 s. The gap to the car ahead runs +0.4 → 0.0 s; the scene
+     cuts on the frame before the two rows swap, and Standings pays it off. -->
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+    }
+    #rel-copy {
+      position: absolute;
+      left: 80px;
+      top: 300px;
+      width: 520px;
+    }
+    #rel-h {
+      margin-top: 40px;
+      font-size: 96px;
+    }
+    #rel-dip {
+      position: absolute;
+      inset: 0;
+      background: #000;
+      opacity: 0;
+    }
+  </style>
+  <div id="root" data-composition-id="relative" data-width="1920" data-height="1080">
+    <div id="rel-copy">
+      <div class="tl-band" id="rel-band">
+        <span class="tl-band__chip" data-t="relChip">Relative</span>
+        <span><span class="tl-band__k" data-t="relK1">Sort</span><span class="tl-band__v" data-t="relV1">track order</span></span>
+      </div>
+      <h2 class="tl-h" id="rel-h" data-t="relH">Who is actually coming.</h2>
+    </div>
+
+    <figure class="tl-win" id="rel-win" style="left: 640px; top: 168px; width: 1240px; height: 744px">
+      <div class="tl-cam" id="rel-cam">
+        <video id="rel-video" class="clip" src="assets/footage/relative.mp4" muted playsinline
+          data-start="0" data-duration="4" data-media-start="1.1" data-track-index="1"></video>
+      </div>
+    </figure>
+
+    <div id="rel-dip" data-layout-ignore></div>
+  </div>
+  <script>
+    {
+      const root = document.querySelector('[data-composition-id="relative"]');
+      window.TL.localise(root);
+      const tl = gsap.timeline({ paused: true });
+
+      // In: the window whips in from the right and sharpens as it lands.
+      tl.fromTo("#rel-win", { x: 320, opacity: 0, filter: "blur(18px)" },
+        { x: 0, opacity: 1, filter: "blur(0px)", duration: 0.45, ease: "power4.out" }, 0);
+      tl.fromTo("#rel-band", { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "power1.out" }, 0.15);
+      window.TL.wordsIn(tl, root.querySelector("#rel-h"), 0.3);
+
+      // Punch in on the ten rows around the player while the gap runs down.
+      // 1.27 from (100 %, 58.2 %) frames the table from just under its header
+      // to the foot of the tenth row, and from the flags to the right edge.
+      tl.fromTo("#rel-cam", { scale: 1, transformOrigin: "100% 58.2%" },
+        { scale: 1.27, duration: 0.6, ease: "power2.inOut" }, 0.8);
+
+      // Out: a three-frame dip, so the hard cut to the radar reads as meant.
+      tl.fromTo("#rel-dip", { opacity: 0 }, { opacity: 0.4, duration: 0.1, ease: "none" }, 3.9);
+
+      window.__timelines["relative"] = tl;
+    }
+  </script>
+</template>

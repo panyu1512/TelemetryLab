@@ -1,0 +1,396 @@
+<!doctype html>
+<!--
+  The TelemetryLab trailer — a HyperFrames composition (https://hyperframes.heygen.com).
+
+  40 s, 1920×1080, 30 fps, cut to a 120 BPM score: 15 frames a beat, 60 a bar,
+  so every scene below starts on a bar line or a beat. This file is the edit:
+  it mounts one scene per file from compositions/ and lays the two audio stems
+  under them. README.md has the shot list and how to rebuild every asset.
+
+  One variable, `lang`: `en` (default) or `es`. Every line of copy is in the
+  table below, in both languages, and is the site's own — see README.md.
+-->
+<html
+  lang="en"
+  data-composition-variables='[{"id":"lang","type":"enum","label":"Language","default":"en","options":[{"value":"en","label":"English"},{"value":"es","label":"Español"}]}]'
+>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1920, height=1080" />
+    <script src="node_modules/gsap/dist/gsap.min.js"></script>
+    <style>
+      /* The app's own faces, from the files it bundles (@fontsource-variable). */
+      @font-face {
+        font-family: "Inter Variable";
+        src: url("assets/fonts/inter-latin-wght-normal.woff2") format("woff2-variations");
+        font-weight: 100 900;
+        font-style: normal;
+      }
+      @font-face {
+        font-family: "JetBrains Mono Variable";
+        src: url("assets/fonts/jetbrains-mono-latin-wght-normal.woff2") format("woff2-variations");
+        font-weight: 100 800;
+        font-style: normal;
+      }
+
+      /* Carbon, copied from site/css/tokens.css — the third copy of these
+         values, for the reason that file gives for being the second. */
+      :root {
+        --bg: oklch(17.5% 0.009 255);
+        --surface: oklch(20.5% 0.01 255);
+        --surface-2: oklch(23.5% 0.011 255);
+        --border: oklch(29% 0.012 255);
+        --border-strong: oklch(36% 0.013 255);
+        --timing-bg: color-mix(in oklab, oklch(17.5% 0.009 255) 86%, #000);
+        --text: oklch(91% 0.005 255);
+        --muted: oklch(72% 0.012 255);
+        --faint: oklch(60% 0.012 255);
+        --primary: oklch(79% 0.09 226);
+        --accent: oklch(75% 0.125 152);
+        --danger: oklch(67% 0.16 22);
+        --brand: #0dd2cb;
+        --on-accent: oklch(15% 0.008 255);
+        --sans: "Inter Variable", sans-serif;
+        --mono: "JetBrains Mono Variable", monospace;
+      }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        background: var(--bg);
+      }
+      #root {
+        position: relative;
+        width: 1920px;
+        height: 1080px;
+        overflow: hidden;
+        font-family: var(--sans);
+        color: var(--text);
+        -webkit-font-smoothing: antialiased;
+      }
+      /* The ground every scene sits on: the page's paper, never black. */
+      #ground {
+        position: absolute;
+        inset: 0;
+        background: var(--bg);
+      }
+
+      /* ── Shared furniture, in the site's own grammar ─────────────────── */
+
+      /* A product window: live footage on the overlays' paper inside a
+         hairline. No drawn chrome — design.md § The marketing surface, rule 2. */
+      .tl-win {
+        position: absolute;
+        overflow: hidden;
+        border: 1px solid oklch(100% 0 0 / 0.12);
+        border-radius: 6px;
+        background: var(--timing-bg);
+      }
+      .tl-cam {
+        position: absolute;
+        inset: 0;
+        transform-origin: 0 0;
+      }
+      .tl-crop {
+        position: absolute;
+        overflow: hidden;
+        border: 1px solid oklch(100% 0 0 / 0.12);
+        border-radius: 6px;
+        background: var(--timing-bg);
+      }
+      .tl-win video,
+      .tl-crop video {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        display: block;
+      }
+
+      /* Headings: the site's h1–h3 — Inter 600, tight, roman. */
+      .tl-h {
+        font-family: var(--sans);
+        font-weight: 600;
+        line-height: 1.06;
+        letter-spacing: -0.028em;
+        color: var(--text);
+      }
+      .tl-h .w {
+        display: inline-block;
+        white-space: pre;
+      }
+      .tl-hi {
+        color: var(--primary);
+      }
+
+      /* The section band: a chip naming the subject, then label/value pairs. */
+      .tl-band {
+        display: flex;
+        align-items: center;
+        gap: 22px;
+        padding-left: 18px;
+        border-left: 5px solid var(--border-strong);
+        white-space: nowrap;
+      }
+      .tl-band__chip {
+        font-size: 28px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.12em;
+        line-height: 1;
+        padding: 12px 14px;
+        border-radius: 4px;
+        background: var(--surface-2);
+        color: var(--text);
+      }
+      .tl-band__k {
+        font-size: 28px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.14em;
+        color: var(--faint);
+        line-height: 1;
+        margin-right: 12px;
+      }
+      .tl-band__v {
+        font-family: var(--mono);
+        font-size: 28px;
+        font-weight: 500;
+        color: var(--text);
+        line-height: 1;
+      }
+    </style>
+    <script>
+      /*
+       * Copy. Every line is the site's — the h1, the section headings and the
+       * card bands of site/index.html and site/es/index.html — so the trailer
+       * cannot claim anything the page does not. The app's own labels (GAP,
+       * FUEL LAPS…) stay in English in both, as they do on the Spanish page.
+       */
+      window.TL = {
+        copy: {
+          en: {
+            hook: "Everything you would turn your head for.",
+            cut1: "Gap.",
+            cut2: "Fuel.",
+            cut3: "Pit window.",
+            cut4: "Car alongside.",
+            cut5: "Time lost.",
+            cut6: "Class leader.",
+            title1: "Read the field",
+            title2: "without looking.",
+            relChip: "Relative",
+            relK1: "Sort",
+            relV1: "track order",
+            relH: "Who is actually coming.",
+            radChip: "Radar",
+            radK1: "Source",
+            radV1: "iRacing spotter",
+            radH: "A spotter for single-screen drivers.",
+            staChip: "Standings",
+            staK1: "Columns",
+            staV1: "15",
+            staH: "The running order, grouped by class.",
+            coaChip: "Coach",
+            coaK1: "Runs",
+            coaV1: "locally",
+            coaH: "Where the lap went, corner by corner.",
+            fueChip: "Fuel",
+            fueK1: "Burn",
+            fueV1: "measured",
+            fueH: "The stop, before you need it.",
+            stage1: "Each in its own window.",
+            stage2: "Place it. Size it. Lock it.",
+            free: "Free. All of it.",
+            sub: "Timing & telemetry for iRacing",
+            kOverlays: "Overlays",
+            kWidgets: "Widgets",
+            kThemes: "Themes",
+            kFeed: "Feed",
+            kPrice: "Price",
+            kLicence: "Licence",
+            endLede: "Timing and telemetry overlays for iRacing",
+            cta: "Download for Windows",
+            note: "Free and open source · Windows",
+          },
+          es: {
+            hook: "Todo lo que necesitas ver, sin girar la cabeza.",
+            cut1: "Distancia.",
+            cut2: "Combustible.",
+            cut3: "Boxes.",
+            cut4: "Coche al lado.",
+            cut5: "Tiempo perdido.",
+            cut6: "Líder de clase.",
+            title1: "Lee la carrera",
+            title2: "sin apartar la vista.",
+            relChip: "Relative",
+            relK1: "Orden",
+            relV1: "en pista",
+            relH: "Quién viene de verdad.",
+            radChip: "Radar",
+            radK1: "Fuente",
+            radV1: "spotter de iRacing",
+            radH: "Un spotter para quien corre con una sola pantalla.",
+            staChip: "Standings",
+            staK1: "Columnas",
+            staV1: "15",
+            staH: "El orden de carrera, agrupado por clase.",
+            coaChip: "Coach",
+            coaK1: "Corre",
+            coaV1: "en local",
+            coaH: "Dónde se fue la vuelta, curva a curva.",
+            fueChip: "Fuel",
+            fueK1: "Consumo",
+            fueV1: "medido",
+            fueH: "La parada, antes de necesitarla.",
+            stage1: "Cada uno en su ventana.",
+            stage2: "Colócala. Ajústala. Bloquéala.",
+            free: "Gratis. Todo.",
+            sub: "Tiempos y telemetría para iRacing",
+            kOverlays: "Overlays",
+            kWidgets: "Widgets",
+            kThemes: "Temas",
+            kFeed: "Datos",
+            kPrice: "Precio",
+            kLicence: "Licencia",
+            endLede: "Overlays de tiempos y telemetría para iRacing",
+            cta: "Descargar para Windows",
+            note: "Gratis y de código abierto · Windows",
+          },
+        },
+
+        lang() {
+          const v = window.__hyperframes?.getVariables?.() ?? {};
+          return v.lang === "es" ? "es" : "en";
+        },
+
+        /** Write the scene's copy into every `[data-t]` under `scope`. */
+        localise(scope) {
+          const table = this.copy[this.lang()];
+          scope.dataset.lang = this.lang();
+          scope.querySelectorAll("[data-t]").forEach((el) => {
+            const line = table[el.dataset.t];
+            if (line !== undefined) el.textContent = line;
+          });
+        },
+
+        /** Split a heading into one inline-block per word; returns the spans. */
+        words(el) {
+          const parts = el.textContent.trim().split(/\s+/);
+          el.textContent = "";
+          return parts.map((word, i) => {
+            const span = document.createElement("span");
+            span.className = "w";
+            span.textContent = i < parts.length - 1 ? word + " " : word;
+            el.appendChild(span);
+            return span;
+          });
+        },
+
+        /**
+         * Frame a region of a footage clip. A `.tl-crop` box has a width; its
+         * video's `data-region="x,y,w,h,W,H"` names a rectangle of the clip in
+         * the CSS pixels it was shot at (W×H is the whole viewport). The video
+         * is sized and offset so that rectangle fills the box exactly.
+         */
+        crops(scope) {
+          scope.querySelectorAll("video[data-region]").forEach((video) => {
+            const [x, y, w, h, W, H] = video.dataset.region.split(",").map(Number);
+            const box = video.parentElement;
+            const k = parseFloat(box.style.width) / w;
+            box.style.height = `${h * k}px`;
+            video.style.width = `${W * k}px`;
+            video.style.height = `${H * k}px`;
+            video.style.left = `${-x * k}px`;
+            video.style.top = `${-y * k}px`;
+          });
+        },
+
+        /** Words arrive blurred and sharpen in place — no slide. */
+        wordsIn(tl, el, at, gap = 0.067) {
+          const spans = this.words(el);
+          tl.fromTo(
+            spans,
+            { opacity: 0, filter: "blur(10px)" },
+            { opacity: 1, filter: "blur(0px)", duration: 0.16, ease: "power2.out", stagger: gap },
+            at,
+          );
+          return spans;
+        },
+      };
+    </script>
+  </head>
+  <body>
+    <div
+      id="root"
+      data-composition-id="main"
+      data-start="0"
+      data-duration="40"
+      data-fps="30"
+      data-width="1920"
+      data-height="1080"
+    >
+      <div id="ground"></div>
+
+      <!-- bars 1–2 · the need: flat out, with everything else out of sight -->
+      <div id="hook" class="clip" data-composition-id="hook" data-composition-src="compositions/hook.html"
+        data-start="0" data-duration="4" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+
+      <!-- bars 3–4 · the things you would look away for, a beat each -->
+      <div id="cuts" class="clip" data-composition-id="cuts" data-composition-src="compositions/cuts.html"
+        data-start="4" data-duration="4" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+
+      <!-- bar 5 · the claim -->
+      <div id="title" class="clip" data-composition-id="title" data-composition-src="compositions/title.html"
+        data-start="8" data-duration="2" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+
+      <!-- bars 6–7 · Relative: the gap to the car ahead runs down to nothing -->
+      <div id="relative" class="clip" data-composition-id="relative" data-composition-src="compositions/relative.html"
+        data-start="10" data-duration="4" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+
+      <!-- bar 8 · Radar: the R lights -->
+      <div id="radar" class="clip" data-composition-id="radar" data-composition-src="compositions/radar.html"
+        data-start="14" data-duration="2" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+
+      <!-- bars 9–10 · Standings: the pass, on the bar line -->
+      <div id="standings" class="clip" data-composition-id="standings" data-composition-src="compositions/standings.html"
+        data-start="16" data-duration="4" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+
+      <!-- bars 11–12½ · Coach: the lap just driven turns into its two tips -->
+      <div id="coach" class="clip" data-composition-id="coach" data-composition-src="compositions/coach.html"
+        data-start="20" data-duration="3" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+
+      <!-- bars 12½–16 · Fuel, which then shrinks into its place as the other
+           windows land around it: the product's whole idea, and the payoff -->
+      <div id="stage" class="clip" data-composition-id="stage" data-composition-src="compositions/stage.html"
+        data-start="23" data-duration="9" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+
+      <!-- bar 17 · the price, as the product's own session header -->
+      <div id="stats" class="clip" data-composition-id="stats" data-composition-src="compositions/stats.html"
+        data-start="32" data-duration="2" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+
+      <!-- bars 18–20 · the mark, the name, the download -->
+      <div id="end" class="clip" data-composition-id="end" data-composition-src="compositions/end.html"
+        data-start="34" data-duration="6" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+
+      <!-- Two stems, both written by scripts/score.py. The two volumes are the
+           mix: together they land the film near −14 LUFS with its peaks under
+           −1 dBTP, and put each effect a few dB over the bed where it hits. -->
+      <audio id="music" class="clip" data-timeline-role="music" src="assets/audio/music.m4a"
+        data-start="0" data-duration="40" data-track-index="2" data-volume="0.55"></audio>
+      <audio id="sfx" class="clip" src="assets/audio/sfx.m4a"
+        data-start="0" data-duration="40" data-track-index="3" data-volume="0.75"></audio>
+    </div>
+    <script>
+      window.__timelines = window.__timelines || {};
+      window.__timelines["main"] = gsap.timeline({ paused: true });
+    </script>
+  </body>
+</html>

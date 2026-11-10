@@ -88,6 +88,20 @@
       }
     </script>
 
+    <script type="application/ld+json">
+      {
+        "@context": "https://schema.org",
+        "@type": "VideoObject",
+        "name": "TelemetryLab — tráiler",
+        "description": "Cuarenta segundos de los overlays de TelemetryLab para iRacing, grabados de la app con sus datos de prueba: el relative, el radar, el standings, el coach y el panel de combustible, y después las cinco ventanas colocadas sobre el juego.",
+        "inLanguage": "es",
+        "thumbnailUrl": "https://telemetrylab.app/assets/trailer-poster.jpg",
+        "contentUrl": "https://telemetrylab.app/assets/trailer-es.mp4",
+        "uploadDate": "2026-11-10",
+        "duration": "PT40S"
+      }
+    </script>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -210,6 +224,10 @@
               Descargar para Windows
             </a>
             <a class="chip chip--lg" href="#overlays">Ver los overlays</a>
+            <a class="chip chip--lg" href="#trailer">
+              <svg class="chip__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="currentColor"><path d="M8 5.5v13l10.5-6.5z" /></svg>
+              Ver el tráiler
+            </a>
           </div>
           <p class="hero__note">Gratis y de código abierto · Windows · sin permisos de administrador</p>
 
@@ -243,6 +261,45 @@
               Cinco de los overlays, colocados como quedan sobre el juego. Un
               montaje con capturas reales, tomadas con los datos simulados
               integrados.
+            </figcaption>
+          </figure>
+        </div>
+      </section>
+
+      <section id="trailer" class="section">
+        <div class="shell">
+          <header class="sec-head">
+            <p class="eyebrow">Tráiler</p>
+            <h2>Todo, en cuarenta segundos.</h2>
+            <p class="sec-head__lede">
+              Cada pantalla que sale es la propia app, funcionando con sus
+              datos de prueba. Sube el volumen.
+            </p>
+          </header>
+
+          <figure class="film">
+            <video
+              class="film__video"
+              controls
+              playsinline
+              preload="none"
+              poster="../assets/trailer-poster.jpg"
+              width="1920"
+              height="1080"
+              aria-label="Tráiler de TelemetryLab"
+              aria-describedby="trailer-cap"
+            >
+              <source src="../assets/trailer-es.mp4" type="video/mp4" />
+              <a href="../assets/trailer-es.mp4">Descargar el tráiler (MP4)</a>
+            </video>
+            <figcaption class="film__cap" id="trailer-cap">
+              Cuarenta segundos, con música y sin voz. Un cuadro de
+              instrumentos a fondo; el relative mientras la distancia con el
+              coche de delante baja hasta cero; la R del radar al encenderse;
+              el standings cuando la fila del piloto sube a quinto; el coach
+              convirtiendo una vuelta terminada en dos consejos; el panel de
+              combustible… y después las cinco ventanas colocándose donde las
+              pondría un piloto. Grabado de la app, fotograma a fotograma.
             </figcaption>
           </figure>
         </div>
@@ -897,6 +954,7 @@
 
           <nav class="foot__col" aria-label="Producto">
             <h2 class="foot__h">Producto</h2>
+            <a class="link-q" href="#trailer">Tráiler</a>
             <a class="link-q" href="#overlays">Overlays</a>
             <a class="link-q" href="#features">Funciones</a>
             <a class="link-q" href="#install">Instalar</a>

@@ -1,0 +1,102 @@
+<!-- Price · 32–34 s. The site's pricing heading over its stats strip — the
+     product's own session header, carrying facts checkable in this repo
+     (design.md § The marketing surface, rule 8). A value lands every eighth. -->
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+    }
+    #sts-h {
+      position: absolute;
+      left: 110px;
+      top: 170px;
+      font-size: 250px;
+      letter-spacing: -0.04em;
+      white-space: nowrap;
+    }
+    #root[data-lang="es"] #sts-h {
+      font-size: 250px;
+    }
+    #sts-strip {
+      position: absolute;
+      left: 120px;
+      top: 620px;
+      width: 1680px;
+      height: 250px;
+      display: flex;
+      align-items: stretch;
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      background: var(--surface);
+    }
+    .sts-field {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      gap: 30px;
+      padding: 0 36px;
+      border-left: 1px solid var(--border);
+    }
+    .sts-field:first-child {
+      border-left: 0;
+    }
+    .sts-k {
+      font-size: 30px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.14em;
+      color: var(--faint);
+      line-height: 1;
+    }
+    .sts-v {
+      font-family: var(--mono);
+      font-size: 104px;
+      font-weight: 600;
+      letter-spacing: -0.02em;
+      line-height: 1;
+      color: var(--text);
+      white-space: nowrap;
+    }
+    .sts-v small {
+      font-size: 0.5em;
+      font-weight: 500;
+      color: var(--faint);
+      margin-left: 0.12em;
+    }
+  </style>
+  <div id="root" data-composition-id="stats" data-width="1920" data-height="1080">
+    <h2 class="tl-h" id="sts-h" data-t="free">Free. All of it.</h2>
+    <div id="sts-strip">
+      <div class="sts-field"><span class="sts-k" data-t="kOverlays">Overlays</span><span class="sts-v">5</span></div>
+      <div class="sts-field"><span class="sts-k" data-t="kWidgets">Widgets</span><span class="sts-v">7</span></div>
+      <div class="sts-field"><span class="sts-k" data-t="kThemes">Themes</span><span class="sts-v">4</span></div>
+      <div class="sts-field"><span class="sts-k" data-t="kFeed">Feed</span><span class="sts-v">~60<small>Hz</small></span></div>
+      <div class="sts-field"><span class="sts-k" data-t="kPrice">Price</span><span class="sts-v">0<small>€</small></span></div>
+      <div class="sts-field"><span class="sts-k" data-t="kLicence">Licence</span><span class="sts-v">MIT</span></div>
+    </div>
+  </div>
+  <script>
+    {
+      const root = document.querySelector('[data-composition-id="stats"]');
+      window.TL.localise(root);
+      const tl = gsap.timeline({ paused: true });
+
+      const words = window.TL.words(root.querySelector("#sts-h"));
+      tl.fromTo(words[0], { opacity: 0, filter: "blur(14px)" },
+        { opacity: 1, filter: "blur(0px)", duration: 0.13, ease: "power2.out" }, 0);
+      tl.fromTo(words.slice(1), { opacity: 0, filter: "blur(14px)" },
+        { opacity: 1, filter: "blur(0px)", duration: 0.16, ease: "power2.out", stagger: 0.05 }, 0.25);
+
+      tl.fromTo("#sts-strip", { opacity: 0 }, { opacity: 1, duration: 0.15, ease: "power1.out" }, 0.1);
+      root.querySelectorAll(".sts-v").forEach((value, i) => {
+        tl.fromTo(value, { opacity: 0, filter: "blur(10px)" },
+          { opacity: 1, filter: "blur(0px)", duration: 0.13, ease: "power2.out" }, 0.25 + i * 0.25);
+      });
+
+      tl.to("#root > *", { opacity: 0, filter: "blur(12px)", duration: 0.2, ease: "power2.in" }, 1.8);
+      window.__timelines["stats"] = tl;
+    }
+  </script>
+</template>

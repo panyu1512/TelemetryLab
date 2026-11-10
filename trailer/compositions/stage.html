@@ -1,0 +1,200 @@
+<!-- Fuel, then the stage · 23–32 s.
+
+     0–3 s   Fuel on its own; at 1.0 the lap completes and a row lands in the
+             fuel-per-lap table.
+     3–5 s   The fuel window shrinks into its place and the other four land
+             around it, a window a beat — the hero composite of the site
+             (site/css/site.css · .stage), built in front of the viewer.
+     5–7 s   The payoff, on the bar line at 28 s: five live windows, one line.
+     7–9 s   A cursor drags the radar somewhere else and sizes it up, because
+             that is what "its own window" means.
+
+     One file rather than two so the fuel footage is a single clip: a window
+     that crossed a scene boundary mid-flight would have to match to the pixel. -->
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+    }
+    /* The empty desktop: the overlays' paper, the site stage's dotted lanes
+       and its one low light. */
+    #stg-desk {
+      position: absolute;
+      inset: 0;
+      background:
+        radial-gradient(circle at 1px 1px, oklch(100% 0 0 / 0.07) 1.5px, transparent 2px) 0 0 / 34px 34px,
+        radial-gradient(ellipse 80% 60% at 50% 100%, oklch(24% 0.02 240 / 0.55), transparent 70%),
+        var(--timing-bg);
+    }
+    #stg-field {
+      position: absolute;
+      inset: 0;
+      transform-origin: 50% 50%;
+    }
+    #stg-field .tl-win {
+      box-shadow: 0 30px 60px -22px rgb(0 0 0 / 0.75);
+    }
+    #stg-fuel {
+      transform-origin: 0 0;
+    }
+    #stg-radar {
+      transform-origin: 0 0;
+    }
+    #stg-copy {
+      position: absolute;
+      left: 80px;
+      top: 300px;
+      width: 740px;
+    }
+    #stg-h {
+      margin-top: 40px;
+      font-size: 112px;
+    }
+    #root[data-lang="es"] #stg-h {
+      font-size: 96px;
+    }
+    /* The one gap the composite leaves: right of Fuel, between the Relative
+       and the Radar. */
+    .stg-line {
+      position: absolute;
+      left: 1292px;
+      top: 580px;
+      width: 590px;
+      font-size: 72px;
+    }
+    #root[data-lang="es"] .stg-line {
+      font-size: 66px;
+    }
+    #stg-line2 {
+      font-size: 58px;
+      line-height: 1.07;
+    }
+    #root[data-lang="es"] #stg-line2 {
+      font-size: 58px;
+    }
+
+    #stg-cursor {
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 84px;
+      height: 84px;
+    }
+  </style>
+  <div id="root" data-composition-id="stage" data-width="1920" data-height="1080">
+    <div id="stg-desk" data-layout-ignore></div>
+
+    <div id="stg-copy">
+      <div class="tl-band" id="stg-band">
+        <span class="tl-band__chip" data-t="fueChip">Fuel</span>
+        <span><span class="tl-band__k" data-t="fueK1">Burn</span><span class="tl-band__v" data-t="fueV1">measured</span></span>
+      </div>
+      <h2 class="tl-h" id="stg-h" data-t="fueH">The stop, before you need it.</h2>
+    </div>
+
+    <div id="stg-field" data-layout-allow-overflow>
+      <figure class="tl-win" id="stg-standings" style="left: 48px; top: 49px; width: 998px; height: 376px">
+        <video id="stg-v-standings" class="clip" src="assets/footage/standings.mp4" muted playsinline
+          data-start="3.4" data-duration="5.6" data-media-start="0.2" data-track-index="2" data-hf-media-start-basis="local"></video>
+      </figure>
+      <figure class="tl-win" id="stg-relative" style="left: 1104px; top: 86px; width: 768px; height: 461px">
+        <video id="stg-v-relative" class="clip" src="assets/footage/relative.mp4" muted playsinline
+          data-start="3.4" data-duration="5.6" data-media-start="0" data-track-index="3" data-hf-media-start-basis="local"></video>
+      </figure>
+      <figure class="tl-win" id="stg-coach" style="left: 115px; top: 562px; width: 653px; height: 441px">
+        <video id="stg-v-coach" class="clip" src="assets/footage/coach.mp4" muted playsinline
+          data-start="3.4" data-duration="5.6" data-media-start="4.2" data-track-index="4" data-hf-media-start-basis="local"></video>
+      </figure>
+      <figure class="tl-win" id="stg-radar" style="left: 1450px; top: 788px; width: 422px; height: 202px">
+        <video id="stg-v-radar" class="clip" src="assets/footage/radar.mp4" muted playsinline
+          data-start="3.4" data-duration="5.6" data-media-start="1.2333" data-track-index="5" data-hf-media-start-basis="local"></video>
+      </figure>
+      <figure class="tl-win" id="stg-fuel" style="left: 877px; top: 40px; width: 1003px; height: 1000px">
+        <video id="stg-v-fuel" class="clip" src="assets/footage/fuel.mp4" muted playsinline
+          data-start="0" data-duration="9" data-media-start="2.8333" data-track-index="1"></video>
+      </figure>
+    </div>
+
+    <h2 class="tl-h stg-line" id="stg-line1" data-t="stage1">Each in its own window.</h2>
+    <h2 class="tl-h stg-line" id="stg-line2" data-t="stage2">Place it. Size it. Lock it.</h2>
+
+    <!-- The system pointer, large enough to follow at phone width. -->
+    <svg id="stg-cursor" viewBox="0 0 24 24" aria-hidden="true" data-layout-ignore>
+      <path d="M5 2.5v17.2l4.4-4.1 2.9 6.6 2.6-1.1-2.9-6.5h6L5 2.5z" fill="#f4f7f9" stroke="#0a0d12" stroke-width="1.3" stroke-linejoin="round" />
+    </svg>
+  </div>
+  <script>
+    {
+      const root = document.querySelector('[data-composition-id="stage"]');
+      window.TL.localise(root);
+      const tl = gsap.timeline({ paused: true });
+
+      // ── 0–3 · Fuel ────────────────────────────────────────────────────
+      tl.fromTo("#stg-desk", { opacity: 0 }, { opacity: 0, duration: 0.01 }, 0);
+      tl.fromTo("#stg-fuel", { opacity: 0, filter: "blur(12px)", x: 0, y: 0, scale: 1 },
+        { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power2.out" }, 0);
+      tl.fromTo("#stg-band", { opacity: 0 }, { opacity: 1, duration: 0.2, ease: "power1.out" }, 0.1);
+      const fuelWords = window.TL.wordsIn(tl, root.querySelector("#stg-h"), 0.2);
+      tl.to("#stg-copy", { opacity: 0, filter: "blur(10px)", duration: 0.2, ease: "power2.in" }, 2.8);
+
+      // ── 3–5 · the windows take their places ───────────────────────────
+      tl.to("#stg-desk", { opacity: 1, duration: 0.6, ease: "power2.inOut" }, 3);
+      // Fuel: 1003 px wide down to its 422 px slot at (826, 594).
+      tl.to("#stg-fuel", { x: -51, y: 554, scale: 0.4207, duration: 0.5, ease: "power3.inOut" }, 3);
+      const fly = (id, from, land) => {
+        tl.fromTo(id, { ...from, opacity: 0, filter: "blur(14px)" },
+          { x: 0, y: 0, opacity: 1, filter: "blur(0px)", duration: 0.45, ease: "power4.out" }, land - 0.33);
+      };
+      fly("#stg-standings", { x: -900, y: -120 }, 4.0);
+      fly("#stg-relative", { x: 800, y: -100 }, 4.25);
+      fly("#stg-coach", { x: -700, y: 420 }, 4.5);
+      fly("#stg-radar", { x: 640, y: 300, scale: 1 }, 4.75);
+
+      // ── 5 · the payoff: the frame lands, the line is there ────────────
+      tl.fromTo("#stg-field", { scale: 1.035 }, { scale: 1, duration: 0.7, ease: "expo.out", immediateRender: false }, 5);
+      const line1 = root.querySelector("#stg-line1");
+      const line2 = root.querySelector("#stg-line2");
+      window.TL.wordsIn(tl, line1, 5, 0.06);
+      tl.to(line1, { opacity: 0, filter: "blur(8px)", duration: 0.15, ease: "power2.in" }, 6.82);
+
+      // ── 7–9 · place it, size it, lock it ──────────────────────────────
+      // Three short sentences, a line each and one a beat, each with its
+      // action. They are split on the full stop, not counted in words: the
+      // English ones are two words long and the Spanish ones are one.
+      const steps = [[]];
+      for (const word of window.TL.words(line2)) {
+        steps[steps.length - 1].push(word);
+        if (word.textContent.trim().endsWith(".")) {
+          word.after(document.createElement("br"));
+          steps.push([]);
+        }
+      }
+      steps.filter((step) => step.length).forEach((step, i) => {
+        tl.fromTo(step, { opacity: 0, filter: "blur(10px)" },
+          { opacity: 1, filter: "blur(0px)", duration: 0.16, ease: "power2.out" }, 7 + i * 0.5);
+      });
+
+      // The pointer comes in from the corner, takes the radar by its middle
+      // and carries it left; then takes its bottom-right corner and pulls.
+      const tip = { x: -8, y: -4 }; // the arrow's tip, inside the 84 px svg
+      tl.fromTo("#stg-cursor", { x: 2000, y: 1120, opacity: 1 },
+        { x: 1661 + tip.x, y: 889 + tip.y, duration: 0.5, ease: "power3.out" }, 6.45);
+      tl.to("#stg-cursor", { x: 1475 + tip.x, y: 899 + tip.y, duration: 0.42, ease: "power2.inOut" }, 7.02);
+      tl.to("#stg-radar", { x: -186, y: 10, duration: 0.42, ease: "power2.inOut" }, 7.02);
+      // To the corner of the moved window (1264+422, 798+202), then out by 25 %.
+      tl.to("#stg-cursor", { x: 1686 + tip.x, y: 1000 + tip.y, duration: 0.16, ease: "power2.inOut" }, 7.44);
+      tl.to("#stg-cursor", { x: 1791 + tip.x, y: 1050 + tip.y, duration: 0.36, ease: "power2.inOut" }, 7.62);
+      tl.to("#stg-radar", { scale: 1.25, duration: 0.36, ease: "power2.inOut" }, 7.62);
+      // Locked: the pointer has nothing left to hold, and leaves.
+      tl.to("#stg-cursor", { x: 2000, y: 1180, duration: 0.45, ease: "power3.in" }, 8.02);
+
+      // Out: the whole desk falls back and softens for the price.
+      tl.to("#stg-field", { scale: 0.94, opacity: 0, filter: "blur(12px)", duration: 0.22, ease: "power3.in" }, 8.78);
+      tl.to(line2, { opacity: 0, filter: "blur(10px)", duration: 0.2, ease: "power2.in" }, 8.8);
+      tl.to("#stg-desk", { opacity: 0, duration: 0.2, ease: "power1.in" }, 8.8);
+
+      window.__timelines["stage"] = tl;
+    }
+  </script>
+</template>

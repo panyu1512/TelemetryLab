@@ -1,0 +1,53 @@
+<!-- Radar · 14–16 s. Half a second of dark boxes, then the R lights on the
+     second beat — the frame the spotter calls a car alongside. -->
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+    }
+    #rad-copy {
+      position: absolute;
+      left: 80px;
+      top: 812px;
+      width: 1760px;
+    }
+    #rad-h {
+      margin-top: 30px;
+      font-size: 76px;
+      white-space: nowrap;
+    }
+    #root[data-lang="es"] #rad-h {
+      font-size: 62px;
+    }
+  </style>
+  <div id="root" data-composition-id="radar" data-width="1920" data-height="1080">
+    <div id="rad-move">
+      <figure class="tl-win" id="rad-win" style="left: 210px; top: 40px; width: 1500px; height: 717px">
+        <video id="rad-video" class="clip" src="assets/footage/radar.mp4" muted playsinline
+          data-start="0" data-duration="2" data-media-start="2.3333" data-track-index="1"></video>
+      </figure>
+      <div id="rad-copy">
+        <div class="tl-band" id="rad-band">
+          <span class="tl-band__chip" data-t="radChip">Radar</span>
+          <span><span class="tl-band__k" data-t="radK1">Source</span><span class="tl-band__v" data-t="radV1">iRacing spotter</span></span>
+        </div>
+        <h2 class="tl-h" id="rad-h" data-t="radH">A spotter for single-screen drivers.</h2>
+      </div>
+    </div>
+  </div>
+  <script>
+    {
+      const root = document.querySelector('[data-composition-id="radar"]');
+      window.TL.localise(root);
+      const tl = gsap.timeline({ paused: true });
+
+      // In on a hard cut, heading and all; half a second later the R lights.
+      window.TL.wordsIn(tl, root.querySelector("#rad-h"), 0.03, 0.04);
+
+      // Out: everything leaves upward as Standings comes in from below.
+      tl.to("#rad-move", { y: -260, opacity: 0, filter: "blur(16px)", duration: 0.2, ease: "power3.in" }, 1.8);
+      window.__timelines["radar"] = tl;
+    }
+  </script>
+</template>

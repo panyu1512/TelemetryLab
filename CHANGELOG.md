@@ -7,6 +7,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **A trailer on the website.** telemetrylab.app has a 40-second film under
+  the hero, in English and in Spanish: the relative as you close on the car
+  ahead, the radar lighting, the standings as you take the place, the coach
+  and the fuel panel — then all five windows landing where you would put
+  them. Every screen in it is the app itself, recorded on its mock feed. It
+  has music and only plays when you press play. Nothing changes in the app.
+
 ## [1.29.1] - 2026-10-29
 
 ### Changed

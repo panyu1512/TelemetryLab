@@ -1029,6 +1029,38 @@ html[data-theme="dark"] .theme-toggle__moon {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
+   The film
+   The trailer, in the frame the captures get: a hairline on the overlays' own
+   paper and nothing drawn around it — the browser's own controls are the only
+   chrome. The box is 16:9 from its attributes, so the page does not move when
+   the poster or the first frame arrives. See design.md § The marketing
+   surface, rule 10.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+.film {
+  margin: 0;
+}
+
+.film__video {
+  display: block;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 16 / 9;
+  border: var(--rule-hair) solid var(--color-border);
+  border-radius: var(--radius-panel);
+  background: var(--color-timing-bg);
+}
+
+.film__cap {
+  max-width: 72ch;
+  margin: var(--space-sm) auto 0;
+  text-align: center;
+  font-size: var(--text-sm);
+  color: var(--color-faint);
+  text-wrap: pretty;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    Sections and their heads
    Heads are centred and stacked — eyebrow, heading, lede — never a heading
    parked beside its body (the hanging header this system bans).

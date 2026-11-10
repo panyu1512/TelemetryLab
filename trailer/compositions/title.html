@@ -1,0 +1,55 @@
+<!-- Title · 8–10 s. The site's h1, on the impact. -->
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+    }
+    #title-block {
+      position: absolute;
+      left: 120px;
+      top: 330px;
+      transform-origin: 0 50%;
+    }
+    #title-block .tl-h {
+      font-size: 196px;
+      line-height: 1.02;
+      letter-spacing: -0.035em;
+      white-space: nowrap;
+    }
+    #root[data-lang="es"] #title-block .tl-h {
+      font-size: 164px;
+    }
+    #title-flash {
+      position: absolute;
+      inset: 0;
+      background: var(--text);
+      opacity: 0;
+    }
+  </style>
+  <div id="root" data-composition-id="title" data-width="1920" data-height="1080">
+    <div id="title-block">
+      <h1 class="tl-h" id="title-l1" data-t="title1">Read the field</h1>
+      <h1 class="tl-h tl-hi" id="title-l2" data-t="title2">without looking.</h1>
+    </div>
+    <div id="title-flash" data-layout-ignore></div>
+  </div>
+  <script>
+    {
+      const root = document.querySelector('[data-composition-id="title"]');
+      window.TL.localise(root);
+      const tl = gsap.timeline({ paused: true });
+
+      // The hit is a set, not an ease: the first line is simply there.
+      tl.fromTo("#title-flash", { opacity: 0.2 }, { opacity: 0, duration: 0.3, ease: "power2.out" }, 0);
+      tl.fromTo("#title-block", { scale: 1.06 }, { scale: 1, duration: 0.9, ease: "expo.out" }, 0);
+      tl.fromTo("#title-l1", { opacity: 0, filter: "blur(14px)" },
+        { opacity: 1, filter: "blur(0px)", duration: 0.13, ease: "power2.out" }, 0);
+      window.TL.wordsIn(tl, root.querySelector("#title-l2"), 0.5, 0.25);
+
+      // Out with one blur, so the Relative's window can whip in over the paper.
+      tl.to("#title-block", { opacity: 0, filter: "blur(12px)", duration: 0.2, ease: "power2.in" }, 1.8);
+      window.__timelines["title"] = tl;
+    }
+  </script>
+</template>

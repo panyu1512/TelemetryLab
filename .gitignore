@@ -48,3 +48,9 @@ __pycache__/
 venv/
 
 # Rust/Tauri artifacts are ignored via src-tauri/.gitignore
+
+# --- Trailer (HyperFrames) ---
+# Renders, the tool's own state, and the uncompressed stems score.py can write.
+trailer/out/
+trailer/.hyperframes/
+trailer/assets/audio/*.wav

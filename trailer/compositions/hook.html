@@ -1,0 +1,50 @@
+<!-- Hook · 0–4 s. The driving cluster and the pedal traces, live and large:
+     the driver is busy. The line says what they cannot do. -->
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+    }
+    #hook-h {
+      position: absolute;
+      left: 80px;
+      top: 764px;
+      width: 1760px;
+      font-size: 104px;
+      text-wrap: balance;
+    }
+    #root[data-lang="es"] #hook-h {
+      font-size: 96px;
+    }
+  </style>
+  <div id="root" data-composition-id="hook" data-width="1920" data-height="1080">
+    <figure class="tl-win" id="hook-win" style="left: 40px; top: 40px; width: 1840px; height: 661px">
+      <div class="tl-cam" id="hook-cam">
+        <video id="hook-cluster" class="clip" src="assets/footage/cluster.mp4" muted playsinline
+          data-start="0" data-duration="2" data-media-start="0.5" data-track-index="1" data-hf-media-start-basis="local"></video>
+        <video id="hook-inputs" class="clip" src="assets/footage/inputs.mp4" muted playsinline
+          data-start="2" data-duration="2" data-media-start="3" data-track-index="2" data-hf-media-start-basis="local"></video>
+      </div>
+    </figure>
+    <h1 class="tl-h" id="hook-h" data-t="hook">Everything you would turn your head for.</h1>
+  </div>
+  <script>
+    {
+      const root = document.querySelector('[data-composition-id="hook"]');
+      window.TL.localise(root);
+      const tl = gsap.timeline({ paused: true });
+
+      // Frame 0 is the thumbnail: the cluster is already there, at speed.
+      // The line arrives a word an eighth-note, from the second beat.
+      window.TL.wordsIn(tl, root.querySelector("#hook-h"), 0.5, 0.25);
+
+      // Bar 2: the same window cuts to the pedals, a touch large, and settles.
+      tl.fromTo("#hook-cam", { scale: 1.05, transformOrigin: "50% 50%" },
+        { scale: 1, duration: 0.5, ease: "expo.out", immediateRender: false }, 2);
+
+      tl.to("#hook-h", { opacity: 0, filter: "blur(8px)", duration: 0.17, ease: "power2.in" }, 3.8);
+      window.__timelines["hook"] = tl;
+    }
+  </script>
+</template>

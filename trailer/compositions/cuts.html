@@ -1,0 +1,97 @@
+<!-- Cuts · 4–8 s. The things a driver looks away for, a beat each: two words
+     and the real cell that answers them. Then four frames-long flashes, and
+     half a second of nothing before the title. -->
+<template>
+  <style>
+    #root {
+      position: absolute;
+      inset: 0;
+    }
+    .cut-word {
+      position: absolute;
+      left: 80px;
+      font-size: 170px;
+      white-space: nowrap;
+    }
+    #root[data-lang="es"] .cut-word {
+      font-size: 150px;
+    }
+  </style>
+  <div id="root" data-composition-id="cuts" data-width="1920" data-height="1080">
+    <!-- 1 · Relative: the car ahead and the player, and the gap between them -->
+    <h2 class="tl-h cut-word clip" id="cut-w1" style="top: 210px" data-start="0" data-duration="0.5" data-t="cut1">Gap.</h2>
+    <div class="tl-crop" data-layout-allow-overflow id="cut-c1" style="left: 80px; top: 560px; width: 1760px">
+      <video id="cut-v1" class="clip" src="assets/footage/relative.mp4" muted playsinline data-region="149,178,551,78,700,420"
+        data-start="0" data-duration="0.5" data-media-start="0.5" data-track-index="1" data-hf-media-start-basis="local"></video>
+    </div>
+
+    <!-- 2 · Fuel: laps of fuel against laps to the flag -->
+    <h2 class="tl-h cut-word clip" id="cut-w2" style="top: 640px" data-start="0.5" data-duration="0.5" data-t="cut2">Fuel.</h2>
+    <div class="tl-crop" data-layout-allow-overflow id="cut-c2" style="left: 80px; top: 200px; width: 1760px">
+      <video id="cut-v2" class="clip" src="assets/footage/fuel.mp4" muted playsinline data-region="10,38,600,58,620,618"
+        data-start="0.5" data-duration="0.5" data-media-start="1" data-track-index="2" data-hf-media-start-basis="local"></video>
+    </div>
+
+    <!-- 3 · Fuel: the stint, the pit window and the recommended lap -->
+    <h2 class="tl-h cut-word clip" id="cut-w3" style="top: 120px" data-start="1" data-duration="0.5" data-t="cut3">Pit window.</h2>
+    <div class="tl-crop" data-layout-allow-overflow id="cut-c3" style="left: 700px; top: 400px; width: 1140px">
+      <video id="cut-v3" class="clip" src="assets/footage/fuel.mp4" muted playsinline data-region="312,98,298,142,620,618"
+        data-start="1" data-duration="0.5" data-media-start="1.5" data-track-index="3" data-hf-media-start-basis="local"></video>
+    </div>
+
+    <!-- 4 · Radar: the R, lit -->
+    <h2 class="tl-h cut-word clip" id="cut-w4" style="top: 380px; width: 900px; white-space: normal" data-start="1.5" data-duration="0.5" data-t="cut4">Car alongside.</h2>
+    <div class="tl-crop" data-layout-allow-overflow id="cut-c4" style="left: 1020px; top: 100px; width: 820px">
+      <video id="cut-v4" class="clip" src="assets/footage/radar.mp4" muted playsinline data-region="244,0,216,220,460,220"
+        data-start="1.5" data-duration="0.5" data-media-start="4" data-track-index="4" data-hf-media-start-basis="local"></video>
+    </div>
+
+    <!-- 5 · Coach: the corner that cost the most, and why -->
+    <h2 class="tl-h cut-word clip" id="cut-w5" style="top: 210px" data-start="2" data-duration="0.5" data-t="cut5">Time lost.</h2>
+    <div class="tl-crop" data-layout-allow-overflow id="cut-c5" style="left: 80px; top: 560px; width: 1760px">
+      <video id="cut-v5" class="clip" src="assets/footage/coach.mp4" muted playsinline data-region="10,38,600,58,620,419"
+        data-start="2" data-duration="0.5" data-media-start="5" data-track-index="5" data-hf-media-start-basis="local"></video>
+    </div>
+
+    <!-- 6 · Standings: the class band and the car that leads it -->
+    <h2 class="tl-h cut-word clip" id="cut-w6" style="top: 640px" data-start="2.5" data-duration="0.5" data-t="cut6">Class leader.</h2>
+    <div class="tl-crop" data-layout-allow-overflow id="cut-c6" style="left: 80px; top: 200px; width: 1760px">
+      <video id="cut-v6" class="clip" src="assets/footage/standings.mp4" muted playsinline data-region="5,56,600,75,1180,444"
+        data-start="2.5" data-duration="0.5" data-media-start="2" data-track-index="6" data-hf-media-start-basis="local"></video>
+    </div>
+
+    <!-- The flurry: four frames each, no words — the screens themselves. -->
+    <div class="tl-crop" data-layout-allow-overflow id="cut-c7" style="left: 0; top: 0; width: 1920px; border: 0; border-radius: 0; background: none">
+      <video id="cut-v7" class="clip" src="assets/footage/cluster.mp4" muted playsinline data-region="60,28,400,225,640,230"
+        data-start="3" data-duration="0.1333" data-media-start="4" data-track-index="7" data-hf-media-start-basis="local"></video>
+      <video id="cut-v8" class="clip" src="assets/footage/standings.mp4" muted playsinline data-region="0,80,640,360,1180,444"
+        data-start="3.1333" data-duration="0.1334" data-media-start="9" data-track-index="8" data-hf-media-start-basis="local"></video>
+      <video id="cut-v9" class="clip" src="assets/footage/inputs.mp4" muted playsinline data-region="0,5,400,225,640,230"
+        data-start="3.2667" data-duration="0.1333" data-media-start="6" data-track-index="9" data-hf-media-start-basis="local"></video>
+      <video id="cut-v10" class="clip" src="assets/footage/relative.mp4" muted playsinline data-region="60,60,640,360,700,420"
+        data-start="3.4" data-duration="0.1" data-media-start="6" data-track-index="10" data-hf-media-start-basis="local"></video>
+    </div>
+  </div>
+  <script>
+    {
+      const root = document.querySelector('[data-composition-id="cuts"]');
+      window.TL.localise(root);
+      window.TL.crops(root);
+      const tl = gsap.timeline({ paused: true });
+
+      // A crop box is only there while its footage is: hard on, hard off.
+      const shots = [[1, 0, 0.5], [2, 0.5, 1], [3, 1, 1.5], [4, 1.5, 2], [5, 2, 2.5], [6, 2.5, 3], [7, 3, 3.5]];
+      for (const [n, on, off] of shots) {
+        tl.set(`#cut-c${n}`, { opacity: 0 }, 0);
+        tl.set(`#cut-c${n}`, { opacity: 1 }, on);
+        tl.set(`#cut-c${n}`, { opacity: 0 }, off);
+        // Each lands a little large and settles inside its half-second.
+        if (n < 7) {
+          tl.fromTo(`#cut-c${n}`, { scale: 1.06 }, { scale: 1, duration: 0.4, ease: "expo.out" }, on);
+        }
+      }
+      tl.set({}, {}, 4);
+      window.__timelines["cuts"] = tl;
+    }
+  </script>
+</template>
