@@ -91,7 +91,7 @@ describe("applyTheme", () => {
   });
 
   it("falls back to the default theme for an unknown id", () => {
-    expect(getTheme("obsidian").id).toBe("carbon");
+    expect(getTheme("obsidian").id).toBe("hornet");
   });
 });
 

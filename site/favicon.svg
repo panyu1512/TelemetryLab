@@ -1,15 +1,20 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" role="img" aria-label="TelemetryLab">
   <!--
-    The TelemetryLab mark: a white T over a teal L, leaning 19° forward, on the
-    timing surfaces' own near-black paper.
-
-    A copy of public/favicon.svg, which is the source the platform icons are
-    generated from. It is duplicated rather than referenced for the reason
-    css/tokens.css is: this page has to stay deployable as a folder. If the mark
-    changes, both files change — and so do the inline copies of these paths, in
-    the nav and footer here and in the app's title bar.
+    The TelemetryLab favicon: the kitten mark reduced for 16–32 px — the
+    silhouette, the ears' warm insides and two big yellow eyes with a slit
+    pupil, on the hornet-yellow plate. Whiskers, tufts, nose and catch-lights
+    are dropped: below 32 px they turn to noise. Full mark: brand/kitten.svg.
+    site/favicon.svg is a copy (the site deploys as a plain folder).
   -->
-  <rect width="32" height="32" rx="7" fill="#0a0d12" />
-  <path fill="#f4f7f9" d="M6.09 7.64L22.78 7.64L19.68 10.64L14.54 10.64L9.86 24.36L5.82 24.36L10.5 10.64L4 10.64Z" />
-  <path fill="#0dd2cb" d="M16.36 11.52L20.4 11.52L16.99 21.53L28 21.53L25.2 24.36L11.98 24.36Z" />
+  <rect width="32" height="32" rx="7" fill="#ffd400" />
+  <path fill="#0a0a0d" d="M5 18.5 C5 14.5 5.8 11.3 6.8 9 L6.2 2.6 L13 8.4 C15 7.8 17 7.8 19 8.4 L25.8 2.6 L25.2 9 C26.2 11.3 27 14.5 27 18.5 C27 25 22 29 16 29 C10 29 5 25 5 18.5 Z" />
+  <path fill="#ff8f7a" d="M7.8 5.4 L11.6 8.9 C10.2 9.5 9.1 10.4 8.3 11.4 C8 9.4 7.8 7.4 7.8 5.4 Z" />
+  <path fill="#ff8f7a" d="M24.2 5.4 L20.4 8.9 C21.8 9.5 22.9 10.4 23.7 11.4 C24 9.4 24.2 7.4 24.2 5.4 Z" />
+  <ellipse cx="11.6" cy="18.4" rx="3.5" ry="4" fill="#ffd400" />
+  <ellipse cx="20.4" cy="18.4" rx="3.5" ry="4" fill="#ffd400" />
+  <ellipse cx="12" cy="18.8" rx="1.1" ry="2.9" fill="#0a0a0d" />
+  <ellipse cx="20" cy="18.8" rx="1.1" ry="2.9" fill="#0a0a0d" />
+  <!-- the slanted lid: inner corners lower, the mark's determined look -->
+  <path fill="#0a0a0d" d="M7.4 13.6 L15.8 17.4 L15.8 13.6 Z" />
+  <path fill="#0a0a0d" d="M24.6 13.6 L16.2 17.4 L16.2 13.6 Z" />
 </svg>

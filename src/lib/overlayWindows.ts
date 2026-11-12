@@ -11,6 +11,7 @@
  * which its position/size/lock state is persisted (see `windowState.ts`).
  */
 
+import { APP_NAME } from "../config";
 import { getWindowBounds } from "./windowState";
 import { liveMonitors, monitorOf, placeWindow } from "./windowPlacement";
 import { broadcast } from "./windowBus";
@@ -202,7 +203,7 @@ async function openWindow(
       };
       const win = new WebviewWindow(winLabel, {
         url: relativeUrl(param, id),
-        title: `${label} — iRacing Telemetry`,
+        title: `${label} — ${APP_NAME}`,
         width: saved?.width ?? (kind === "widget" ? 320 : 640),
         height: saved?.height ?? (kind === "widget" ? 220 : 420),
         ...(saved ? { x: saved.x, y: saved.y } : {}),

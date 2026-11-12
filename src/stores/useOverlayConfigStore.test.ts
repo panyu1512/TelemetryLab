@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { useOverlayConfigStore } from "./useOverlayConfigStore";
+import { migrateToHornet, useOverlayConfigStore } from "./useOverlayConfigStore";
 
 const store = () => useOverlayConfigStore.getState();
 
@@ -42,5 +42,35 @@ describe("appearance clamping", () => {
     );
     store().setOverlayBrightness("dashboard", -5);
     expect(store().getOverlaySettings("dashboard").appearance.brightness).toBe(0);
+  });
+});
+
+describe("Hornet migration", () => {
+  function memStorage(initial: Record<string, string> = {}) {
+    const m = new Map(Object.entries(initial));
+    return {
+      getItem: (k: string) => m.get(k) ?? null,
+      setItem: (k: string, v: string) => void m.set(k, v),
+    };
+  }
+  const base = store().globalSettings;
+
+  it("defaults new installs to Hornet", () => {
+    expect(base.themeId).toBe("hornet");
+  });
+
+  it("moves a saved Carbon (the old default) to Hornet once", () => {
+    const storage = memStorage();
+    const out = migrateToHornet({ ...base, themeId: "carbon" }, storage);
+    expect(out.themeId).toBe("hornet");
+    // A later deliberate choice of Carbon survives.
+    expect(migrateToHornet({ ...base, themeId: "carbon" }, storage).themeId).toBe(
+      "carbon"
+    );
+  });
+
+  it("leaves any other saved theme alone", () => {
+    const out = migrateToHornet({ ...base, themeId: "midnight" }, memStorage());
+    expect(out.themeId).toBe("midnight");
   });
 });

@@ -55,7 +55,7 @@ export interface Profile {
 }
 
 export interface GlobalSettings {
-  /** Active color theme id (falls back to "carbon" if unknown). */
+  /** Active color theme id (falls back to "hornet" if unknown). */
   themeId: string;
   /** WebSocket endpoint for the telemetry bridge. */
   bridgeEndpoint: string;
@@ -100,7 +100,7 @@ export const DEFAULT_OVERLAY_SETTINGS: OverlaySettings = {
 
 function makeDefaultGlobalSettings(): GlobalSettings {
   return {
-    themeId: "carbon",
+    themeId: "hornet",
     bridgeEndpoint: "ws://127.0.0.1:8765",
     logLevel: "info",
     mockDataEnabled: false,
@@ -138,12 +138,38 @@ function loadPersisted(): Persisted {
     return {
       profiles: p.profiles?.length ? p.profiles : fallback.profiles,
       activeProfileId: p.activeProfileId ?? fallback.activeProfileId,
-      globalSettings: { ...fallback.globalSettings, ...p.globalSettings },
+      globalSettings: migrateToHornet({
+        ...fallback.globalSettings,
+        ...p.globalSettings,
+      }),
       lastOverlayId: p.lastOverlayId ?? fallback.lastOverlayId,
     };
   } catch {
     return fallback;
   }
+}
+
+const HORNET_MIGRATION_KEY = "telemetrylab.migrated.hornet";
+
+/**
+ * The 1.30 rebrand made Hornet the default theme. Carbon was the default
+ * before it, so a saved "carbon" almost always means "never chose" rather than
+ * "chose carbon": move it to Hornet, once. The flag means anyone who picks
+ * Carbon again afterwards keeps it.
+ */
+export function migrateToHornet(
+  settings: GlobalSettings,
+  storage: Pick<Storage, "getItem" | "setItem"> = localStorage
+): GlobalSettings {
+  try {
+    if (storage.getItem(HORNET_MIGRATION_KEY)) return settings;
+    storage.setItem(HORNET_MIGRATION_KEY, "1");
+  } catch {
+    return settings;
+  }
+  return settings.themeId === "carbon"
+    ? { ...settings, themeId: "hornet" }
+    : settings;
 }
 
 /** True while applying a remote (bus) update, so we don't echo it back out. */

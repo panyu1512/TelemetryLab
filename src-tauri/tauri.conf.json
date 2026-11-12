@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "iRacing Telemetry",
+        "title": "TelemetryLab",
         "width": 1400,
         "height": 900,
         "minWidth": 800,

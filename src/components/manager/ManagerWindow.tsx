@@ -184,7 +184,7 @@ function OverlayControlHead({ overlayId }: { overlayId: string }) {
           <Icon className="size-5" />
         </span>
         <div className="min-w-[8rem] flex-1">
-          <h1 className="truncate text-base font-semibold tracking-tight text-text">
+          <h1 className="display-title truncate text-2xl text-text">
             {dashboard.label}
           </h1>
           {/* The status line is mono: it reports machine state, not prose. */}
@@ -454,7 +454,7 @@ function ConfigSection({
       <div className="mb-4">
         <div className="flex items-center gap-2.5">
           <span className="section-block" aria-hidden />
-          <h2 className="whitespace-nowrap text-name font-semibold uppercase tracking-caps text-text">
+          <h2 className="display-title whitespace-nowrap text-base uppercase text-text">
             {title}
           </h2>
         </div>
@@ -525,8 +525,8 @@ function EnableToggle({
 function ManagerHeader() {
   return (
     <header className="flex h-12 flex-none items-center gap-4 border-b border-border px-4">
-      <span className="text-name font-semibold uppercase tracking-caps text-text">
-        Overlay Manager
+      <span className="display-title text-lg uppercase text-text">
+        Overlay <span className="text-primary">Manager</span>
       </span>
 
       <div className="ml-auto flex items-center gap-2">
@@ -836,7 +836,7 @@ function OverlaySidebarItem({
       className={[
         "group flex items-center gap-2 rounded-ctl py-2 pl-1 pr-2 transition-colors",
         selected
-          ? "bg-surface-2 text-text"
+          ? "bg-primary/10 text-text [&_svg]:text-primary"
           : enabled
             ? "text-muted hover:bg-surface hover:text-text"
             : "text-faint hover:bg-surface",

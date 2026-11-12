@@ -1,6 +1,7 @@
-/* design-system: design.md · direction: race-engineer telemetry
- * paper oklch(17.5% 0.009 255) graphite · sans Inter · mono JetBrains Mono
- * one accent (cyan 226°) · semantic green / red / yellow · class ramp ×5
+/* design-system: design.md · direction v2: Hornet
+ * paper oklch(13% 0.005 285) near-black · sans Inter · display Inter Black
+ * Italic · mono JetBrains Mono · one accent (hornet yellow 94°) · semantic
+ * green / red / amber · class ramp ×5
  */
 
 /*
@@ -17,7 +18,7 @@
  *  every token. It exists so the system can be lifted into another project, a
  *  Figma variables import, or a docs site.
  *
- *  The values below are the Carbon (default) theme. For the other three, read
+ *  The values below are the Hornet (default) theme. For the other three, read
  *  `THEMES` in `src/themes/index.ts` — the token *names* are identical across
  *  all four; only the values move.
  * ─────────────────────────────────────────────────────────────────────────────
@@ -30,36 +31,36 @@
 
   /* Paper / surfaces — three close levels and two hairline tones. Elevation
      reads through lightness and a 1 px edge, never through glow. */
-  --color-bg: oklch(17.5% 0.009 255);
-  --color-surface: oklch(20.5% 0.01 255);
-  --color-surface-2: oklch(23.5% 0.011 255);
-  --color-border: oklch(29% 0.012 255);
-  --color-border-strong: oklch(36% 0.013 255);
+  --color-bg: oklch(13% 0.005 285);
+  --color-surface: oklch(17% 0.007 285);
+  --color-surface-2: oklch(20.5% 0.009 285);
+  --color-border: oklch(27% 0.012 285);
+  --color-border-strong: oklch(35% 0.014 285);
 
   /* The overlay panels' ground: a step under `bg`, never pure black. */
-  --color-timing-bg: color-mix(in oklab, oklch(17.5% 0.009 255) 86%, #000);
+  --color-timing-bg: color-mix(in oklab, oklch(13% 0.005 285) 86%, #000);
   --color-divider: rgb(255 255 255 / 0.055);
   --color-section: rgb(255 255 255 / 0.03);
   --color-panel-header: rgb(255 255 255 / 0.035);
 
   /* Ink — light grey for data, mid grey for labels, a lower grey for anything
      tertiary. Nothing is pure white. `faint` clears 4.5:1 on `surface`. */
-  --color-text: oklch(91% 0.005 255);
-  --color-muted: oklch(72% 0.012 255);
-  --color-faint: oklch(60% 0.012 255);
+  --color-text: oklch(96% 0.003 285);
+  --color-muted: oklch(76% 0.012 285);
+  --color-faint: oklch(62% 0.014 285);
 
   /* The one accent: focus, selection, active, "this is you", the primary
      channel on a chart. */
-  --color-primary: oklch(79% 0.09 226);
-  --color-primary-dim: oklch(68% 0.085 226);
-  --color-focus: oklch(79% 0.09 226);
+  --color-primary: oklch(88% 0.18 94);
+  --color-primary-dim: oklch(76% 0.16 92);
+  --color-focus: oklch(88% 0.18 94);
 
   /* Semantic — only where a colour means something. */
-  --color-accent: oklch(75% 0.125 152); /* gain: PB, faster, healthy */
-  --color-accent-dim: oklch(64% 0.11 152);
-  --color-danger: oklch(67% 0.16 22); /* loss: slower, overheating */
-  --color-warning: oklch(84% 0.12 90); /* caution: pit soon, yellow flag */
-  --color-sector-purple: oklch(70% 0.13 305); /* overall-best lap/sector */
+  --color-accent: oklch(78% 0.17 152); /* gain: PB, faster, healthy */
+  --color-accent-dim: oklch(66% 0.15 152);
+  --color-danger: oklch(65% 0.21 22); /* loss: slower, overheating */
+  --color-warning: oklch(80% 0.16 84); /* caution: amber, under the yellow */
+  --color-sector-purple: oklch(70% 0.15 305); /* overall-best lap/sector */
   --color-lapped: oklch(72% 0.12 245); /* lapped traffic (fixed) */
   /* Tyre compound badge (fixed): band and letter on a rubber disc. */
   --color-tyre-soft: oklch(63% 0.21 27); /* soft tyre */
@@ -70,7 +71,7 @@
   --color-tyre-rubber: oklch(12% 0 0); /* the badge's disc */
 
   /* Text on any filled status colour. */
-  --color-on-accent: oklch(15% 0.008 255);
+  --color-on-accent: oklch(12% 0.004 285);
 
   /* Car class — multiclass sessions only: a thin row bar, a small tag, a chart
      line. Never a row's ground, a panel's background or a block of text. */
@@ -106,6 +107,8 @@
   --font-mono: "JetBrains Mono Variable", "JetBrains Mono", ui-monospace,
     SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   --font-timing: "Inter Variable", Inter, system-ui, sans-serif;
+  /* Display: Inter 900 italic at the display optical size — titles only. */
+  --font-display: "Inter Variable", Inter, "Arial Black", system-ui, sans-serif;
 
   --text-colhead: 0.5rem;
   --text-label: 0.5625rem;
@@ -137,11 +140,19 @@
   --radius-ctl: 2px;
   --radius-card: 3px;
   --radius-panel: 3px;
+  --radius-pill: 9999px; /* the primary action (Direction v2) */
 
   /* ── Elevation ───────────────────────────────────────────────────────────
      Only a floating layer casts anything, and it is neutral and tight. */
   --shadow-raise: 0 1px 0 rgb(0 0 0 / 0.35);
   --shadow-float: 0 4px 12px rgb(0 0 0 / 0.4);
+  /* Brand glow — chrome only (Manager, site), never an overlay. */
+  --shadow-glow: 0 6px 24px color-mix(in oklab, var(--color-primary) 35%, transparent);
+  --shadow-glow-strong: 0 8px 32px color-mix(in oklab, var(--color-primary) 55%, transparent);
+
+  /* The brand yellow: the kitten's eyes and rim, the wordmark. Unthemed. */
+  --color-brand: #ffd400;
+  --color-brand-ink: #0a0a0d;
 
   /* ── Motion ──────────────────────────────────────────────────────────────
      Short and ease-out; no overshoot, no bounce, nothing over 200 ms on UI

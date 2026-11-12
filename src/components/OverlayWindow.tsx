@@ -14,6 +14,7 @@
  * the top lets the user reposition the frameless desktop window.
  */
 
+import { APP_NAME } from "../config";
 import { useEffect } from "react";
 import { useBridge } from "../hooks/useBridge";
 import { useTelemetry } from "../hooks/useTelemetry";
@@ -71,7 +72,7 @@ export function OverlayWindow({ id }: { id: string }) {
   }, [themeId]);
 
   useEffect(() => {
-    document.title = `${dashboard.label} — iRacing Telemetry`;
+    document.title = `${dashboard.label} — ${APP_NAME}`;
   }, [dashboard.label]);
 
   // Per-overlay appearance adjustments (saturation / brightness / opacity).

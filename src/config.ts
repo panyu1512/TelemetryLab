@@ -1,3 +1,6 @@
+/** The product's name, as every window title and the title bar print it. */
+export const APP_NAME = "TelemetryLab";
+
 /**
  * Connection configuration for the telemetry bridge.
  *

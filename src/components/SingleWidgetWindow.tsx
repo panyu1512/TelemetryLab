@@ -14,6 +14,7 @@
  * them apply live, over the window bus, with the window left open.
  */
 
+import { APP_NAME } from "../config";
 import { useEffect } from "react";
 import { useBridge } from "../hooks/useBridge";
 import { useTelemetry } from "../hooks/useTelemetry";
@@ -63,8 +64,8 @@ export function SingleWidgetWindow({ id }: { id: string }) {
 
   useEffect(() => {
     document.title = def
-      ? `${def.title} — iRacing Telemetry`
-      : "Widget — iRacing Telemetry";
+      ? `${def.title} — ${APP_NAME}`
+      : `Widget — ${APP_NAME}`;
   }, [def]);
 
   if (!def) {
