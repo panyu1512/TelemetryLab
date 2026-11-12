@@ -167,13 +167,18 @@ jobs:
       # ...and as a GitHub Release asset when triggered by a version tag. The
       # body is that version's CHANGELOG section — release.yml wrote it, so it
       # is prose someone chose rather than a list of commit subjects.
+      #
+      # The body is written twice, English first and Spanish under it, each
+      # half complete on its own: what changed, then how to install. A reader
+      # stops at the language they read and never has to hunt through the
+      # other one for the checksum.
       - name: Extract release notes
         if: startsWith(github.ref, 'refs/tags/v')
         shell: bash
         # A hand-pushed tag may have no CHANGELOG section; fall back rather
         # than failing a build that otherwise produced a good installer.
         run: |
-          node scripts/release.mjs notes "${GITHUB_REF_NAME}" > RELEASE_NOTES.md \
+          node scripts/release.mjs notes "${GITHUB_REF_NAME}" en > RELEASE_NOTES.md \
             || echo "See [CHANGELOG.md](CHANGELOG.md)." > RELEASE_NOTES.md
 
           # Every release says the same thing about the SmartScreen warning,
@@ -215,6 +220,54 @@ jobs:
               echo
               echo "You can also confirm the file came from this repository's own build,"
               echo "rather than from whoever handed it to you:"
+              echo
+              echo '```powershell'
+              echo "gh attestation verify '.\\${ASSET_NAME}' --repo ${GITHUB_REPOSITORY}"
+              echo '```'
+            fi
+          } >> RELEASE_NOTES.md
+
+          # The same again in Spanish. A version whose Spanish notes were never
+          # written still gets the install instructions, and says where the
+          # notes are rather than leaving a heading with nothing under it.
+          {
+            echo
+            echo "---"
+            echo
+            echo "## En español"
+            echo
+            node scripts/release.mjs notes "${GITHUB_REF_NAME}" es 2>/dev/null \
+              || echo "Las novedades de esta versión solo están en inglés, más arriba."
+            echo
+            echo "### Instalación en Windows"
+            echo
+            echo "Descarga el **\`-setup.exe\`** y ejecútalo. Se instala solo para el usuario"
+            echo "actual, así que no pide permisos de administrador, y abre la aplicación al"
+            echo "terminar. El \`.msi\` que hay al lado es la misma aplicación empaquetada para"
+            echo "instalaciones por equipo o gestionadas — no lo necesitas."
+            echo
+            echo "Windows mostrará **\"Windows protegió su PC\"** e indicará que el editor es"
+            echo "desconocido. Es lo esperado: ningún instalador está firmado digitalmente, y"
+            echo "SmartScreen bloquea todo lo que no puede atribuir a un editor. Elige"
+            echo "**Más información → Ejecutar de todas formas** para continuar."
+            echo
+            echo "No hace falta que te fíes: compara los bytes que has descargado con los"
+            echo "que generó este flujo de trabajo:"
+            echo
+            echo '```powershell'
+            echo "certutil -hashfile '.\\${ASSET_NAME}' SHA256"
+            echo '```'
+            echo
+            echo "SHA-256 esperado:"
+            echo
+            echo '```'
+            cat SHA256SUMS.txt
+            echo '```'
+
+            if [ "${IS_PRIVATE}" = "false" ]; then
+              echo
+              echo "También puedes confirmar que el archivo salió de la compilación de este"
+              echo "repositorio, y no de quien te lo haya pasado:"
               echo
               echo '```powershell'
               echo "gh attestation verify '.\\${ASSET_NAME}' --repo ${GITHUB_REPOSITORY}"

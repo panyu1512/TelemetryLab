@@ -415,7 +415,7 @@ Then switch on **Global Settings → Mock Data** for a full twelve-car, two-clas
 Two files are worth reading before you change anything visual:
 
 - **[`design.md`](design.md)** — the design system, and unusually it records the *arguments* rather than just the rules, including the ones that were later reversed. If your change contradicts it, that is allowed: say so in the PR and update the file in the same change.
-- **[`CHANGELOG.md`](CHANGELOG.md)** — anything user-visible gets a line under `## [Unreleased]`, written for someone deciding whether to update.
+- **[`CHANGELOG.md`](CHANGELOG.md)** — anything user-visible gets a line under `## [Unreleased]`, written for someone deciding whether to update. The same line goes in [`CHANGELOG.es.md`](CHANGELOG.es.md) in Spanish: release notes are published in both languages.
 
 Commits follow [Conventional Commits](https://www.conventionalcommits.org/) (`fix(standings): …`, `feat(inputs): …`); the changelog and release notes are written from them.
 
@@ -463,7 +463,7 @@ Both roll up into a single `ci` status so branch protection can require one chec
 [`release.yml`](.github/workflows/release.yml) is the **release** pipeline — the decision to ship. Run it from the Actions tab (or `gh workflow run release.yml -f bump=minor`) and pick `patch`/`minor`/`major`, or `custom` with an exact `X.Y.Z`. It re-runs the frontend gates, then:
 
 1. Bumps the version in `package.json`, `package-lock.json`, `src-tauri/tauri.conf.json`, `src-tauri/Cargo.toml` and `Cargo.lock` — all five must move together, since Tauri stamps the `.msi` from `tauri.conf.json`.
-2. Converts the CHANGELOG's `## [Unreleased]` section into a dated `## [X.Y.Z]` section and refreshes the compare links. An empty `[Unreleased]` aborts the release: there is nothing to ship.
+2. Converts the CHANGELOG's `## [Unreleased]` section into a dated `## [X.Y.Z]` section and refreshes the compare links, in both `CHANGELOG.md` and its Spanish twin `CHANGELOG.es.md`. An empty `[Unreleased]` in `CHANGELOG.md` aborts the release: there is nothing to ship. An empty one in `CHANGELOG.es.md` only raises a warning on the run, and that version ships with English notes alone.
 3. Commits `chore(release): vX.Y.Z`, tags `vX.Y.Z`, pushes both, and dispatches `build.yml` against the new tag.
 
 The bump/extract logic lives in [`scripts/release.mjs`](scripts/release.mjs) (`bump` and `notes` modes) so it can be run and tested outside CI.
@@ -473,7 +473,7 @@ The bump/extract logic lives in [`scripts/release.mjs`](scripts/release.mjs) (`b
 1. Builds the bridge into a onefile `iracing-bridge.exe` with PyInstaller.
 2. Copies it to `src-tauri/binaries/iracing-bridge-x86_64-pc-windows-msvc.exe` (the exact name Tauri requires for a sidecar: `{name}-{target-triple}.exe`).
 3. Runs `npm run tauri build` to produce the installer.
-4. Uploads it as a workflow artifact, and as a Release asset on tags — with that version's CHANGELOG section as the release body, rather than a dump of commit subjects.
+4. Uploads it as a workflow artifact, and as a Release asset on tags — with that version's CHANGELOG section as the release body, rather than a dump of commit subjects. The body is written in English and then again in Spanish, install instructions included.
 
 So a release is one button: run `release`, and the installer and release notes follow from the tag it pushes.
 

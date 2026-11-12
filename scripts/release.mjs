@@ -7,15 +7,22 @@
 //     converts the CHANGELOG's [Unreleased] section into a dated release
 //     section and refreshes the compare links at the bottom.
 //
-//   node scripts/release.mjs notes <X.Y.Z>
+//   node scripts/release.mjs notes <X.Y.Z> [en|es]
 //     Prints that version's CHANGELOG section to stdout, so the GitHub
 //     release body is the changelog rather than a dump of commit subjects.
+//     With a language, prints that language alone (and fails if it has no
+//     section for the version). With none, prints English followed by the
+//     Spanish section when there is one.
+//
+// The changelog is kept in two files: CHANGELOG.md (English, the source of
+// truth — a release cannot be cut without it) and CHANGELOG.es.md (Spanish).
+// `bump` rolls both, so their version sections never drift apart.
 //
 // The four version files must never drift apart: Tauri stamps the .msi from
 // tauri.conf.json, so a bump that misses it ships an installer labelled with
 // the previous version.
 
-import { readFileSync, writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -88,21 +95,41 @@ function bumpCargoLock(version) {
 // CHANGELOG
 // -----------------------------------------------------------------------------
 
-/** Body of one `## [x]` section, minus the heading. */
+/**
+ * Body of one `## [x]` section, minus the heading. The section ends at the next
+ * heading or, for the oldest one in the file, at the block of compare links —
+ * which would otherwise be printed as part of that version's notes.
+ */
 function section(changelog, heading) {
   const start = changelog.indexOf(`## [${heading}]`);
   if (start === -1) return null;
   const from = changelog.indexOf("\n", start) + 1;
-  const next = changelog.indexOf("\n## [", from);
-  return changelog.slice(from, next === -1 ? undefined : next).trim();
+  const rest = changelog.slice(from);
+  const end = rest.search(/^(## \[|\[[^\]\n]+\]: )/m);
+  return (end === -1 ? rest : rest.slice(0, end)).trim();
 }
 
-function rollChangelog(version, previous) {
-  const src = read("CHANGELOG.md");
-  const unreleased = section(src, "Unreleased");
-  if (unreleased === null) die("no [Unreleased] section in CHANGELOG.md");
-  if (!unreleased) die("[Unreleased] is empty — nothing to release");
+const CHANGELOG = "CHANGELOG.md";
+const CHANGELOG_ES = "CHANGELOG.es.md";
 
+/** The Spanish changelog, or null on a checkout from before it existed. */
+function readSpanish() {
+  return existsSync(join(root, CHANGELOG_ES)) ? read(CHANGELOG_ES) : null;
+}
+
+/** Surface a problem on the workflow run's summary page, not just in its log. */
+function warn(msg) {
+  console.error(process.env.GITHUB_ACTIONS ? `::warning::${msg}` : `release: warning: ${msg}`);
+}
+
+/**
+ * Turn `path`'s [Unreleased] section into a dated one. `isFirst` is decided by
+ * the caller from the English log, because that is the one that knows whether
+ * an earlier tag exists: the Spanish log started later, and its first section
+ * still has a previous version to compare against.
+ */
+function rollChangelog(path, version, previous, isFirst) {
+  const src = read(path);
   const today = new Date().toISOString().slice(0, 10);
 
   // Leave an empty [Unreleased] behind for the next cycle.
@@ -110,13 +137,6 @@ function rollChangelog(version, previous) {
     /## \[Unreleased\]\n/,
     `## [Unreleased]\n\n## [${version}] - ${today}\n`,
   );
-
-  // Was there a released version in the log before this one? If not, this
-  // release opens the log, and there is no earlier tag to compare against —
-  // link the release itself instead. A compare link against a tag that was
-  // never pushed (or has since been deleted) is a 404 in the one file whose
-  // job is to be a reliable index of what shipped.
-  const isFirst = !/^## \[\d+\.\d+\.\d+\]/m.test(src);
 
   const links =
     `[Unreleased]: ${REPO}/compare/v${version}...HEAD\n` +
@@ -135,18 +155,59 @@ function rollChangelog(version, previous) {
     out = `${out.replace(/\s+$/, "")}\n\n${links}\n`;
   }
 
-  write("CHANGELOG.md", out);
+  write(path, out);
+}
+
+function rollChangelogs(version, previous) {
+  const src = read(CHANGELOG);
+  const unreleased = section(src, "Unreleased");
+  if (unreleased === null) die(`no [Unreleased] section in ${CHANGELOG}`);
+  if (!unreleased) die("[Unreleased] is empty — nothing to release");
+
+  // Was there a released version in the log before this one? If not, this
+  // release opens the log, and there is no earlier tag to compare against —
+  // link the release itself instead. A compare link against a tag that was
+  // never pushed (or has since been deleted) is a 404 in the one file whose
+  // job is to be a reliable index of what shipped.
+  const isFirst = !/^## \[\d+\.\d+\.\d+\]/m.test(src);
+
+  rollChangelog(CHANGELOG, version, previous, isFirst);
+
+  // The Spanish notes ride along when they were written. Missing ones do not
+  // block the release — a contributor who does not write Spanish must still be
+  // able to ship a fix — but they are flagged, because the release page will
+  // then carry English only and nothing else would say so.
+  const es = readSpanish();
+  if (es === null || section(es, "Unreleased") === null) {
+    warn(`${CHANGELOG_ES} has no [Unreleased] section — v${version} ships with English notes only`);
+  } else if (!section(es, "Unreleased")) {
+    warn(`[Unreleased] in ${CHANGELOG_ES} is empty — v${version} ships with English notes only`);
+  } else {
+    rollChangelog(CHANGELOG_ES, version, previous, isFirst);
+  }
 }
 
 // -----------------------------------------------------------------------------
 
-const [mode, arg] = process.argv.slice(2);
+const [mode, arg, lang] = process.argv.slice(2);
 
 if (mode === "notes") {
-  if (!arg) die("usage: release.mjs notes <X.Y.Z>");
-  const body = section(read("CHANGELOG.md"), arg.replace(/^v/, ""));
-  if (!body) die(`no CHANGELOG section for ${arg}`);
-  process.stdout.write(`${body}\n`);
+  if (!arg || (lang && lang !== "en" && lang !== "es")) {
+    die("usage: release.mjs notes <X.Y.Z> [en|es]");
+  }
+  const version = arg.replace(/^v/, "");
+  const en = section(read(CHANGELOG), version);
+  const spanish = readSpanish();
+  const es = spanish === null ? null : section(spanish, version);
+
+  if (lang === "es") {
+    if (!es) die(`no ${CHANGELOG_ES} section for ${arg}`);
+    process.stdout.write(`${es}\n`);
+  } else {
+    if (!en) die(`no CHANGELOG section for ${arg}`);
+    process.stdout.write(`${en}\n`);
+    if (!lang && es) process.stdout.write(`\n---\n\n## En español\n\n${es}\n`);
+  }
 } else if (mode === "bump") {
   if (!arg) die("usage: release.mjs bump <major|minor|patch|X.Y.Z>");
   const current = JSON.parse(read("package.json")).version;
@@ -158,7 +219,7 @@ if (mode === "notes") {
   bumpJson("src-tauri/tauri.conf.json", current, version);
   bumpCargoToml(version);
   bumpCargoLock(version);
-  rollChangelog(version, current);
+  rollChangelogs(version, current);
 
   // Consumed by the workflow to name the commit, tag and release.
   console.log(version);

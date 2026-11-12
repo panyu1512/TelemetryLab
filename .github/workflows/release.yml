@@ -1,6 +1,7 @@
 name: release
 
-# Cuts a release: bump the version everywhere, roll the CHANGELOG, tag, push.
+# Cuts a release: bump the version everywhere, roll the CHANGELOG (English and
+# Spanish), tag, push.
 # Pushing the tag is what starts build.yml, which compiles the Windows .msi and
 # attaches it to the GitHub release. This workflow deliberately does no
 # building of its own — it is the decision to ship, not the shipping.
@@ -83,7 +84,7 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add package.json package-lock.json CHANGELOG.md \
+          git add package.json package-lock.json CHANGELOG.md CHANGELOG.es.md \
                   src-tauri/tauri.conf.json src-tauri/Cargo.toml src-tauri/Cargo.lock
           git commit -m "chore(release): v${VERSION}"
           git tag -a "v${VERSION}" -m "v${VERSION}"

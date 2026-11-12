@@ -65,6 +65,10 @@ still works.
 
 **A CHANGELOG line for anything user-visible**, under `## [Unreleased]`, written
 for someone deciding whether to update — not for someone reading the diff.
+Release notes are published in English and Spanish, so the same line goes in
+[`CHANGELOG.es.md`](CHANGELOG.es.md) in Spanish. If you do not write Spanish,
+leave that file alone and say so in the PR — a maintainer will add it, and a
+missing translation never blocks a release.
 
 ## Quality gates
 
