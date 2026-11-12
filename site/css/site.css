@@ -31,19 +31,11 @@ body {
 
 /* `color-scheme` tells the browser which way to paint the things this
    stylesheet does not own — form controls, scrollbars, the canvas behind the
-   page. It follows the same three states as the palette. */
+   page. Dark only since 1.30 (design.md § Direction v2). */
 html {
   color-scheme: dark;
   -webkit-text-size-adjust: 100%;
   scroll-behavior: smooth;
-}
-@media (prefers-color-scheme: light) {
-  html:not([data-theme="dark"]) {
-    color-scheme: light;
-  }
-}
-html[data-theme="light"] {
-  color-scheme: light;
 }
 
 body {
@@ -65,9 +57,10 @@ svg {
   height: auto;
 }
 
-/* Headings are roman throughout — no italic display type anywhere in this
-   system. `overflow-wrap: anywhere` lets a long word break inside itself
-   rather than pushing the page sideways at 320 px. */
+/* h3 stays roman; h1 and h2 take the display voice (Inter Black Italic —
+   design.md § Direction v2, set in the Hornet layer at the end of this file).
+   `overflow-wrap: anywhere` lets a long word break inside itself rather than
+   pushing the page sideways at 320 px. */
 h1,
 h2,
 h3 {
@@ -325,20 +318,26 @@ kbd {
   white-space: nowrap;
 }
 
-/* The TL monogram: the T in the text colour, the L in the brand teal — the
-   two colours of the icon, re-inked for whichever paper is showing. The box
-   is 1.75em because the ink fills 52 % of its height; that sets the letters a
-   fifth taller than the wordmark's caps (design.md § The mark, rule 3). */
+/* The kitten mark (assets/kitten.svg, a copy of public/brand/kitten.svg):
+   bare, on its yellow rim — the nav has paper of its own. Sized so the head
+   reads a little taller than the wordmark's caps beside it. */
 .wordmark__mark {
   flex: none;
-  width: 1.75em;
-  height: 1.75em;
-  fill: var(--color-text);
-  margin-block-start: 0.06em;
+  width: 2.1em;
+  height: 2.1em;
+  margin-block: -0.2em;
 }
 
-.wordmark__l {
-  fill: var(--color-brand);
+/* "Telemetry" in the display voice, "Lab" in the brand yellow. */
+.wordmark__text {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 900;
+  letter-spacing: -0.015em;
+}
+.wordmark__text em {
+  font-style: inherit;
+  color: var(--color-brand);
 }
 
 .nav__links {
@@ -551,35 +550,6 @@ kbd {
 .icon-btn svg {
   width: 17px;
   height: 17px;
-}
-
-/*
- * Which glyph shows is a statement about what the button *does*: on dark
- * paper it offers the sun, on light paper the moon. Both are in the markup and
- * CSS picks one, so there is no flash of the wrong icon.
- */
-.theme-toggle__moon {
-  display: none;
-}
-@media (prefers-color-scheme: light) {
-  html:not([data-theme="dark"]) .theme-toggle__sun {
-    display: none;
-  }
-  html:not([data-theme="dark"]) .theme-toggle__moon {
-    display: block;
-  }
-}
-html[data-theme="light"] .theme-toggle__sun {
-  display: none;
-}
-html[data-theme="light"] .theme-toggle__moon {
-  display: block;
-}
-html[data-theme="dark"] .theme-toggle__sun {
-  display: block;
-}
-html[data-theme="dark"] .theme-toggle__moon {
-  display: none;
 }
 
 .nav__cta {
@@ -1990,4 +1960,125 @@ html[data-theme="dark"] .theme-toggle__moon {
   .icon-btn:active {
     transform: none;
   }
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   Direction v2 · Hornet (1.30)
+   The rebrand, as one layer over the system above: near-black paper, the
+   hornet-yellow accent with its glow, the display voice on every headline,
+   pills for actions and softer, larger cards. Kept together so the change of
+   direction reads in one place — design.md § Direction v2.
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+h1,
+h2 {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+.hero h1,
+.sec-head h2,
+.cta h2 {
+  font-weight: 900;
+  letter-spacing: -0.02em;
+}
+.hero h1 {
+  line-height: 1;
+  max-width: 16ch;
+}
+/* The headline's payoff in the brand colour, with its light. */
+h1 span,
+h2 span {
+  color: var(--color-primary);
+  text-shadow: 0 0 34px color-mix(in oklab, var(--color-primary) 45%, transparent);
+}
+
+/* A yellow bloom behind the hero, under the graph paper. */
+.hero::after {
+  content: "";
+  position: absolute;
+  inset: -20% 0 30% 0;
+  z-index: -2;
+  background: radial-gradient(
+    ellipse 45% 40% at 50% 18%,
+    color-mix(in oklab, var(--color-primary) 14%, transparent),
+    transparent 70%
+  );
+  pointer-events: none;
+}
+
+.eyebrow {
+  letter-spacing: 0.16em;
+}
+
+/* Actions are pills; the primary one glows and lifts. */
+.chip,
+.chip-solid {
+  border-radius: var(--radius-pill);
+}
+.chip-solid {
+  font-weight: 700;
+  box-shadow: var(--shadow-glow);
+  transition:
+    background-color var(--dur-short) var(--ease-out),
+    box-shadow var(--dur-mid) var(--ease-out),
+    transform var(--dur-short) var(--ease-out);
+}
+.chip-solid:hover {
+  background: var(--color-primary);
+  box-shadow: var(--shadow-glow-strong);
+  transform: translateY(-2px);
+}
+.chip:hover {
+  border-color: var(--color-primary);
+  background: var(--color-surface);
+}
+.chip-solid:active,
+.chip:active {
+  transform: translateY(0);
+}
+
+/* Cards: larger radius, a hairline that turns yellow on hover. */
+.card,
+.feat,
+.plan {
+  border-radius: 16px;
+  transition: border-color var(--dur-mid) var(--ease-out);
+}
+.card:hover,
+.feat:hover {
+  border-color: color-mix(in oklab, var(--color-primary) 55%, var(--color-border));
+}
+.feat__icon {
+  border-radius: 10px;
+  border-color: color-mix(in oklab, var(--color-primary) 35%, var(--color-border));
+  background: color-mix(in oklab, var(--color-primary) 8%, var(--color-surface-2));
+}
+.plan--main {
+  border-color: color-mix(in oklab, var(--color-primary) 60%, var(--color-border));
+  box-shadow:
+    inset 0 3px 0 var(--color-primary),
+    0 0 60px -20px color-mix(in oklab, var(--color-primary) 45%, transparent);
+}
+
+.pill:hover {
+  border-color: var(--color-primary);
+}
+
+.cta {
+  border-radius: 22px;
+  border-color: color-mix(in oklab, var(--color-primary) 40%, var(--color-border));
+  background:
+    radial-gradient(
+      ellipse 60% 80% at 50% 0%,
+      color-mix(in oklab, var(--color-primary) 12%, transparent),
+      transparent 70%
+    ),
+    var(--color-surface);
+}
+
+.nav-dock {
+  background: rgb(0 0 0 / 0.82);
 }

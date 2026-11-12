@@ -9,7 +9,7 @@
       content="Multi-class timing, relative, fuel, corner-by-corner coaching and telemetry overlays for iRacing. Each screen is its own window over the game, read at a glance. Free, open source, Windows."
     />
     <meta name="robots" content="index, follow, max-image-preview:large" />
-    <meta name="theme-color" content="#0e1114" />
+    <meta name="theme-color" content="#0a0a0d" />
     <link rel="icon" href="favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="apple-touch-icon.png" />
     <link rel="canonical" href="https://telemetrylab.app/" />
@@ -99,44 +99,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <!-- Anton is the third face and it is scoped to exactly one element — the
-         footer wordmark. Its own request, for `display=block` rather than the
-         `swap` above: the wordmark is a decorative shape below the fold, and
-         swapping it would flash a fallback ~40 % too wide for the crop it is
-         sized to. See design.md § The marketing surface, rule 5. -->
-    <link
-      href="https://fonts.googleapis.com/css2?family=Anton&display=block"
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,800;1,900&family=JetBrains+Mono:wght@500;600;700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="css/site.css" />
-
-    <!-- The theme, resolved before the first paint.
-         Inline and synchronous on purpose: a stored preference applied after
-         paint is a white flash on a dark page, which is the one thing a theme
-         toggle must never do. With scripting off the page still follows the
-         OS, through the `prefers-color-scheme` copy of the palette. -->
-    <script>
-      (function () {
-        var KEY = "telemetrylab.theme";
-        var stored = null;
-        try {
-          stored = localStorage.getItem(KEY);
-        } catch (e) {
-          /* private mode, or storage disabled — fall through to the OS */
-        }
-        var theme =
-          stored === "light" || stored === "dark"
-            ? stored
-            : window.matchMedia &&
-                window.matchMedia("(prefers-color-scheme: light)").matches
-              ? "light"
-              : "dark";
-        document.documentElement.dataset.theme = theme;
-      })();
-    </script>
+    <!-- Dark only since 1.30 (design.md § Direction v2): no theme resolver. -->
   </head>
 
   <body>
@@ -152,15 +119,8 @@
       <div class="shell">
         <header class="nav">
           <a class="wordmark" href="#main">
-            <!-- The TL monogram, inlined so it follows the theme and needs no
-                 second request. Same two paths as favicon.svg, minus its
-                 plate — the nav has paper of its own. The T takes the text
-                 colour and the L the brand teal (site.css .wordmark__mark). -->
-            <svg class="wordmark__mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
-              <path d="M6.09 7.64L22.78 7.64L19.68 10.64L14.54 10.64L9.86 24.36L5.82 24.36L10.5 10.64L4 10.64Z" />
-              <path class="wordmark__l" d="M16.36 11.52L20.4 11.52L16.99 21.53L28 21.53L25.2 24.36L11.98 24.36Z" />
-            </svg>
-            TelemetryLab
+            <img class="wordmark__mark" src="assets/kitten.svg" alt="" width="64" height="64" />
+            <span class="wordmark__text">Telemetry<em>Lab</em></span>
           </a>
 
           <nav class="nav__links" aria-label="Sections">
@@ -176,18 +136,6 @@
               <a class="lang__opt" href="./" hreflang="en" lang="en" aria-current="page">EN</a>
               <a class="lang__opt" href="es/" hreflang="es" lang="es">ES</a>
             </div>
-
-            <!-- The glyph names the destination, not the current state: sun on
-                 dark paper, moon on light. Both ship; CSS picks. -->
-            <button class="icon-btn theme-toggle" type="button" id="theme-toggle" aria-label="Switch theme">
-              <svg class="theme-toggle__sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-                <circle cx="12" cy="12" r="4.2" />
-                <path d="M12 2.6v2.2M12 19.2v2.2M4.2 12H2M22 12h-2.2M6.5 6.5 4.9 4.9M19.1 19.1l-1.6-1.6M17.5 6.5l1.6-1.6M4.9 19.1l1.6-1.6" />
-              </svg>
-              <svg class="theme-toggle__moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
-                <path d="M20 13.4A8.2 8.2 0 0 1 10.6 4a8.4 8.4 0 1 0 9.4 9.4Z" />
-              </svg>
-            </button>
 
             <a class="icon-btn nav__gh" href="https://github.com/panyu1512/TelemetryLab" rel="noopener" target="_blank" aria-label="Source on GitHub">
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -234,7 +182,7 @@
             <svg class="pill__arrow" viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5 10.5 8 6 12.5" /></svg>
           </a>
 
-          <h1>Read the field without looking.</h1>
+          <h1>Read the field <span>without looking.</span></h1>
           <p class="hero__lede">
             Timing and telemetry overlays for iRacing. Multi-class standings, an
             on-track relative, fuel strategy, a corner-by-corner coach and a
@@ -268,7 +216,7 @@
             <dl class="session__fields">
               <div class="session__field"><dt>Overlays</dt><dd>5</dd></div>
               <div class="session__field"><dt>Widgets</dt><dd>7</dd></div>
-              <div class="session__field"><dt>Themes</dt><dd>4</dd></div>
+              <div class="session__field"><dt>Themes</dt><dd>5</dd></div>
               <div class="session__field"><dt>Feed</dt><dd>~60<small>Hz</small></dd></div>
               <div class="session__field"><dt>Price</dt><dd>0<small>€</small></dd></div>
               <div class="session__field"><dt>Licence</dt><dd>MIT</dd></div>
@@ -492,10 +440,10 @@
                   height="1240"
                   loading="lazy"
                   alt="The dashboard overlay's seven widgets on one grid: a speed gauge
-                       reading 224 km/h in fifth gear under a shift-light bar at 6871
-                       rpm; an inputs panel with the throttle trace in cyan and the
+                       reading 206 km/h in fifth gear under a shift-light bar at 5356
+                       rpm; an inputs panel with the throttle trace in yellow and the
                        brake in grey beside throttle, brake and clutch bars and a
-                       steering wheel; fuel — 15.1 litres in tank, 5.4 laps left at
+                       steering wheel; fuel — 15.2 litres in tank, 5.4 laps left at
                        2.82 litres a lap; lap timing — last 2:20.128, best 2:18.917 in
                        green, current lap running and a delta of plus 1.211 in red;
                        temperatures and pressures for all four tyres; position P6 on
@@ -663,8 +611,8 @@
           <ul class="feats">
             <li class="feat">
               <svg class="feat__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="4" width="11" height="8" rx="1" /><rect x="10" y="12" width="11" height="8" rx="1" /></svg>
-              <h3>One window per overlay</h3>
-              <p>Frameless and always on top. Each window remembers its own position and size, and reopens exactly where you left it.</p>
+              <h3>Place it on the monitor</h3>
+              <p>The layout editor draws your screen with every overlay on it, live. Drag, resize, scale and lock each window — or save the whole arrangement as a preset.</p>
             </li>
             <li class="feat">
               <svg class="feat__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="5" y="10.5" width="14" height="10" rx="1.5" /><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" /></svg>
@@ -697,7 +645,7 @@
             <div class="split__copy">
               <div class="band">
                 <span class="band__chip">Manager</span>
-                <span class="band__field"><span class="band__k">THEMES</span><b class="band__v">4</b></span>
+                <span class="band__field"><span class="band__k">THEMES</span><b class="band__v">5</b></span>
               </div>
               <h3>Configured once, then left alone.</h3>
               <p>
@@ -707,7 +655,7 @@
               </p>
               <ul class="reads">
                 <li>Choose your timing columns; the table scales to keep every one</li>
-                <li>Four themes: Carbon, Midnight, Graphite and Endurance</li>
+                <li>Five themes: Hornet, Carbon, Midnight, Graphite and Endurance</li>
                 <li>Mock data in the global settings, for when there is no sim to hand</li>
               </ul>
             </div>
@@ -717,12 +665,12 @@
                 width="2800"
                 height="1800"
                 loading="lazy"
-                alt="The Overlay Manager: a left rail listing Dashboard, Standings,
+                alt="The Overlay Manager: a left rail with the Layout editor above Dashboard, Standings,
                      Relative, Fuel Calc and Coach, a column of widget and
                      appearance settings in the middle, and a live scaled preview
                      of the dashboard overlay on the right — its speed gauge
-                     reading 206 km/h in fifth, and a throttle and brake trace
-                     below it, throttle in cyan and brake in grey."
+                     reading 214 km/h in fifth, and a throttle and brake trace
+                     below it, throttle in yellow and brake in grey."
               />
             </figure>
           </div>
@@ -799,7 +747,7 @@
               <ul class="plan__list">
                 <li>Standings, Relative, Fuel, Coach and Dashboard</li>
                 <li>All seven widgets, the radar included</li>
-                <li>Four themes and a live-preview manager</li>
+                <li>Five themes, a layout editor and a live-preview manager</li>
                 <li>Every release, as it ships</li>
                 <li>The source code, MIT licensed</li>
               </ul>
@@ -954,11 +902,8 @@
         <div class="foot__grid">
           <div class="foot__brand">
             <a class="wordmark" href="#main">
-              <svg class="wordmark__mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
-                <path d="M6.09 7.64L22.78 7.64L19.68 10.64L14.54 10.64L9.86 24.36L5.82 24.36L10.5 10.64L4 10.64Z" />
-                <path class="wordmark__l" d="M16.36 11.52L20.4 11.52L16.99 21.53L28 21.53L25.2 24.36L11.98 24.36Z" />
-              </svg>
-              TelemetryLab
+              <img class="wordmark__mark" src="assets/kitten.svg" alt="" width="64" height="64" />
+            <span class="wordmark__text">Telemetry<em>Lab</em></span>
             </a>
             <p>Timing and telemetry overlays for iRacing. Free and open source.</p>
           </div>

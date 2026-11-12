@@ -7,6 +7,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **Layout editor.** A new page in the Manager draws your monitor with every
+  overlay and widget window on it, live, where it really sits. Drag a window
+  to move it, pull an edge or corner to resize it, and the real window follows
+  as you drag. Snap to grid, nudge with the arrow keys, and fine-tune in the
+  inspector: exact position and size, align to an edge, content scale
+  (50–200 %), opacity, enabled and click-through lock. Closed windows show as
+  faded boxes, so you can place them before you open them. Works across
+  several monitors.
+- **Layout presets.** Save the whole arrangement — positions, sizes, scale,
+  locks and which windows are open — under a name, and load it back in one
+  click. Plus "All compact", "All large" and "Reset layout".
+- **Import profiles.** Profiles exported from the Manager can be imported
+  again; the file is checked and anything this version does not know is
+  skipped.
+
+### Changed
+
+- **New look: Hornet.** A full rebrand in yellow and black. The new default
+  theme is near-black with a hornet-yellow accent, page titles use a heavy
+  italic face, and the main buttons are glowing yellow pills. Your saved
+  Carbon theme moves to Hornet once; pick Carbon again in Global Settings to
+  keep the old look. The caution colour is now a deeper amber so it is not
+  mistaken for the accent.
+- **New logo: a black kitten.** The app icon, favicon, title bar and website
+  all use the new mark.
+- **The website** follows the new look and is dark only.
+- Window titles say "TelemetryLab" instead of "iRacing Telemetry".
+
 ## [1.29.1] - 2026-10-29
 
 ### Changed

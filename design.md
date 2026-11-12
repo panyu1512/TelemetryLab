@@ -1436,6 +1436,16 @@ is a rule that will keep getting revisited.
 
 ## The marketing surface
 
+> **Amended by § Direction v2 (1.30).** The page is now dark only (the light
+> palette and the theme toggle are gone); h1 and h2 are set in the display
+> voice, Inter Black Italic, with the headline's payoff in the brand yellow
+> and its glow; actions are pills and the primary one glows; cards take a
+> 16 px radius and a hairline that turns yellow on hover; the footer wordmark
+> is Inter Black Italic rather than Anton (re-measured in `css/footer.css`);
+> the nav and footer carry the kitten mark (`assets/kitten.svg`). All of it is
+> one layer at the end of `site/css/site.css`. Where the text below says
+> otherwise, this note wins.
+
 One page at [`site/`](site/), in two languages — `index.html` and
 `es/index.html` — with three stylesheets and a few dozen lines of inline script
 for the theme toggle and the mobile menu: no build step, no framework,

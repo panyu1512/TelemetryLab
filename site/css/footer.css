@@ -29,27 +29,29 @@
      of its last letter to the crop. `.foot` is full-bleed, so `100cqw` is the
      same measurement with the scrollbar taken off.
 
-     "TelemetryLab" measures 5.344em of ink in Anton, so the value is 100 /
-     5.35 rounded down — and that rounding is the slack that stops a sub-pixel
-     pushing the last letter into the crop. It leaves 0.5–3.3 px between the
-     `b` and the right edge, from a phone to a 1920. Tuned to THIS string in
-     THIS face: a longer name, or a wider one, wants 100 divided by its own
-     measured ink width. */
-  --brand-size: 18.68cqw;
+     "TelemetryLab" in Inter 900 italic (the display voice since 1.30, as
+     Google Fonts serves it) runs 6.975em from its origin to the right edge of
+     its ink — the italic `b` leans past its advance — and its ink starts
+     0.07em in, which the margin on `.foot__mark-word` takes back. So the word
+     spans 6.905em; 100 / 6.905 is 14.48, and 14.3 leaves the slack that stops
+     a sub-pixel pushing the last letter into the crop. Measured at 375, 1440
+     and 1920 px. Tuned to THIS string in THIS face: a longer name wants 100
+     divided by its own measured ink width. */
+  --brand-size: 14.3cqw;
 
   /* How far the bottom edge is pulled up into the letters. Subtracted from the
      wordmark's 1em line box, so the crop scales with the type at every width —
      a crop in pixels would swallow the whole word on a phone and barely nick
      it on a desktop.
 
-     0.444em is half the x-height: Anton sets the baseline 0.9235em below the
-     top of the line box (ascender 1.176em, descender 0.329em, half-leading
-     −0.2525em), and half an x-height is 0.3675em back off that. It leaves half
-     the lowercase and the top 57 % of the capitals — enough that the word
-     still reads, little enough that it is unmistakably cut. Raise it toward
-     0.6em to bury more of the letters; drop it to 0 and the wordmark sits on
+     0.40em is half the x-height: with `line-height: 1` Inter sets the
+     baseline 0.86em below the top of the line box, its x-height is 0.52em,
+     and half of that back off the baseline is 0.60em down — 0.40em above the
+     bottom of the box. It leaves half the lowercase and the top 64 % of the
+     capitals: the word still reads, and is unmistakably cut. Raise it toward
+     0.55em to bury more of the letters; drop it to 0 and the wordmark sits on
      the bottom edge uncropped. */
-  --brand-crop: 0.444em;
+  --brand-crop: 0.4em;
 
   /* The container the wordmark's `cqw` is measured against. */
   container-type: inline-size;
@@ -135,19 +137,18 @@
    1. **`line-height: 1` and nothing else.** The negative margin is measured
       against the line box, so any leading would shift the cut off the letters
       and onto empty space.
-   2. **No optical margin, and that is a measurement rather than an
-      oversight.** Anton's `T` sits flush on its origin — a left side bearing
-      of 0.000em, against the 0.040em Inter carries — so nothing needs pulling
-      out to the edge. Swap the face and that has to be re-measured, or the
-      wordmark will start a few pixels shy of the bleed it is claiming.
+   2. **An optical margin of −0.07em, and that is a measurement.** The black
+      italic `T` starts 0.07em inside its origin, so the word is pulled left
+      by that much to reach the bleed. Swap the face and that has to be
+      re-measured, or the wordmark will start a few pixels shy of the edge.
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* `hidden` clips both axes, which is what makes the vertical crop work and is
-   also the one risk in this component: a fallback face wider than Anton has its
-   tail cut rather than pushed past the gutter. Two things hold it off — the
-   fallbacks in `--font-display` are condensed, and Anton loads `display=block`
-   so a cold page never paints the wrong face into this box. If a wider fallback
-   ever does land here, `overflow: visible clip` lets it bleed instead. */
+   also the one risk in this component: a fallback face wider than Inter Black
+   Italic has its tail cut rather than pushed past the gutter. Arial Black, the
+   first fallback, runs a little wider; the slack in `--brand-size` absorbs
+   most of it. If a wider fallback ever does land here, `overflow: visible
+   clip` lets it bleed instead. */
 .foot__mark {
   overflow: hidden;
   margin-block-start: var(--space-lg);
@@ -157,11 +158,12 @@
   display: block;
   font-family: var(--font-display);
   font-size: var(--brand-size);
-  font-weight: 400; /* Anton ships one weight; it is already the bold. */
+  font-style: italic;
+  font-weight: 900;
   line-height: 1;
-  /* Anton is drawn tight. Tracking it further closes the counters on `e` and
-     `a` before it buys any width worth having. */
   letter-spacing: 0;
+  /* The italic's ink starts 0.07em inside its box; pull it to the bleed. */
+  margin-inline-start: -0.07em;
   white-space: nowrap;
 
   /* The cut. The line box is 1em tall; this pulls the bottom of the box up
@@ -170,7 +172,9 @@
      cut, not lowered. */
   margin-block-end: calc(-1 * var(--brand-crop));
 
-  color: var(--color-border-strong);
+  /* Near-black on black, with a yellow edge of light along the cut. */
+  color: var(--color-surface-2);
+  -webkit-text-stroke: 1px color-mix(in oklab, var(--color-primary) 22%, transparent);
 
   /* It is a shape, not a string. `aria-hidden` in the markup keeps it out of
      the accessibility tree; these keep it out of a selection and out of the

@@ -214,7 +214,7 @@ export function MonitorCanvas({
               aria-label={`${item.title} window`}
               aria-pressed={isSel}
               className={[
-                "group absolute touch-none select-none outline-none",
+                "group absolute touch-none select-none outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-black",
                 isSel ? "z-20" : "z-10",
                 item.open ? "" : isSel ? "opacity-85" : "opacity-50",
               ].join(" ")}
