@@ -1,6 +1,7 @@
-/* design-system: design.md · direction: race-engineer telemetry
- * paper oklch(17.5% 0.009 255) graphite · sans Inter · mono JetBrains Mono
- * one accent (cyan 226°) · semantic green / red / yellow · class ramp ×5
+/* design-system: design.md · direction v2: Hornet
+ * paper oklch(13% 0.005 285) near-black · sans Inter · display Inter Black
+ * Italic · mono JetBrains Mono · one accent (hornet yellow 94°) · semantic
+ * green / red / amber · class ramp ×5
  */
 
 @import "tailwindcss";
@@ -36,26 +37,26 @@
   /* Graphite with a blue-black cast, never pure black. Three surface levels
      a few points apart — the eye reads them as one material at three heights
      — and two hairline tones. Carbon's values; `applyTheme` overrides them. */
-  --color-bg: oklch(17.5% 0.009 255);
-  --color-surface: oklch(20.5% 0.01 255);
-  --color-surface-2: oklch(23.5% 0.011 255);
-  --color-border: oklch(29% 0.012 255);
-  --color-border-strong: oklch(36% 0.013 255);
+  --color-bg: oklch(13% 0.005 285);
+  --color-surface: oklch(17% 0.007 285);
+  --color-surface-2: oklch(20.5% 0.009 285);
+  --color-border: oklch(27% 0.012 285);
+  --color-border-strong: oklch(35% 0.014 285);
 
   /* --- ink --------------------------------------------------------------- */
   /* Light grey for data, mid grey for labels, a lower grey for anything
      tertiary. Nothing is pure white: at full-screen scale white glares, and
      hierarchy here comes from size and weight, not from brightness.
      `faint` is held where it still clears 4.5:1 on `surface`. */
-  --color-text: oklch(91% 0.005 255);
-  --color-muted: oklch(72% 0.012 255);
-  --color-faint: oklch(60% 0.012 255);
+  --color-text: oklch(96% 0.003 285);
+  --color-muted: oklch(76% 0.012 285);
+  --color-faint: oklch(62% 0.014 285);
 
   /* The overlay panels' ground (Standings, Relative, Fuel & Strategy, Coach,
      every widget): a step under `bg`, so a panel over live footage carries
      the darkest graphite the palette has. Recomputed per theme by
      `applyTheme`, and made translucent over the game. */
-  --color-timing-bg: color-mix(in oklab, oklch(17.5% 0.009 255) 86%, #000);
+  --color-timing-bg: color-mix(in oklab, oklch(13% 0.005 285) 86%, #000);
 
   /* A row's lift off that ground, and the 1 px rule between rows. White
      alphas rather than mixed colours, so they lift whatever paper is under
@@ -68,25 +69,27 @@
   --color-panel-header: rgb(255 255 255 / 0.035);
 
   /* --- the one accent, and the semantic colours ---------------------------- */
-  --color-primary: oklch(79% 0.09 226); /* THE accent — focus, selection */
-  --color-primary-dim: oklch(68% 0.085 226);
-  --color-focus: oklch(79% 0.09 226);
-  --color-accent: oklch(75% 0.125 152); /* gain / best */
-  --color-accent-dim: oklch(64% 0.11 152);
-  --color-danger: oklch(67% 0.16 22); /* loss / critical */
-  --color-warning: oklch(84% 0.12 90); /* caution */
-  --color-sector-purple: oklch(70% 0.13 305); /* overall best */
+  --color-primary: oklch(88% 0.18 94); /* THE accent — hornet yellow */
+  --color-primary-dim: oklch(76% 0.16 92);
+  --color-focus: oklch(88% 0.18 94);
+  --color-accent: oklch(78% 0.17 152); /* gain / best */
+  --color-accent-dim: oklch(66% 0.15 152);
+  --color-danger: oklch(65% 0.21 22); /* loss / critical */
+  --color-warning: oklch(80% 0.16 84); /* caution — amber, under the yellow */
+  --color-sector-purple: oklch(70% 0.15 305); /* overall best */
   /* The radar's LED: `danger`'s hue at full chroma. A lit LED is a light, not
      ink — the softened status red reads salmon once it glows. */
   --color-led-red: oklch(63% 0.25 27);
 
-  /* The brand teal — the L of the mark, and nothing else. Fixed and unthemed:
-     it is the logo's colour, not an accent, and carries no meaning. */
-  --color-brand: #0dd2cb;
+  /* The brand yellow — the kitten mark's eyes and rim, the wordmark, the
+     marketing site. Fixed and unthemed: it is the logo's colour, and stays
+     yellow even under a theme whose accent is cyan. */
+  --color-brand: #ffd400;
+  --color-brand-ink: #0a0a0d;
 
   /* Ink on any filled status colour. Every accent is light and every paper
      dark, so white on a fill lands near 2.5:1; this reads 6–12:1. */
-  --color-on-accent: oklch(15% 0.008 255);
+  --color-on-accent: oklch(12% 0.004 285);
 
   /* Lapped traffic on the Relative: the sim's own blue-flag blue, fixed and
      unthemed so it never follows a theme's accent. Ink only. */
@@ -140,6 +143,10 @@
   /* The overlays' text face — the same Inter, named for the surfaces that use
      it, so a future split costs one line. */
   --font-timing: "Inter Variable", Inter, system-ui, sans-serif;
+  /* The display voice — page titles in the Manager and the site's headlines:
+     Inter at its heaviest, italic, at the display optical size. Words only;
+     never a number, never inside an overlay. */
+  --font-display: "Inter Variable", Inter, "Arial Black", system-ui, sans-serif;
 
   /* A type scale by role, in px-exact rems. Labels are the smallest; a unit
      is one step under its value; hierarchy is carried by these sizes and by
@@ -163,12 +170,19 @@
   --radius-ctl: 2px;
   --radius-card: 3px;
   --radius-panel: 3px;
+  /* The Manager's primary actions and the site's buttons: a full pill. */
+  --radius-pill: 9999px;
 
   /* Elevation reads through lightness and a hairline, not glow. Only a
      floating layer (a menu, a dragged widget) casts anything, and it is
      neutral and tight. */
   --shadow-raise: 0 1px 0 rgb(0 0 0 / 0.35);
   --shadow-float: 0 4px 12px rgb(0 0 0 / 0.4);
+  /* The brand glow: under a primary pill and the selected item, in the
+     Manager and on the site only. Never on an overlay — over live footage a
+     glow is noise, and it would read as a status. */
+  --shadow-glow: 0 6px 24px color-mix(in oklab, var(--color-primary) 35%, transparent);
+  --shadow-glow-strong: 0 8px 32px color-mix(in oklab, var(--color-primary) 55%, transparent);
 
   /* --- motion -------------------------------------------------------------- */
   /* Short and ease-out. No overshoot, no bounce, nothing over 200 ms on UI
@@ -263,6 +277,21 @@ a {
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
   color: var(--color-muted);
+}
+
+/*
+ * The display voice (Direction v2): Inter at 900, italic, at the display
+ * optical size. Page titles in the Manager and headlines on the site — words
+ * only, never a number and never inside an overlay, where it would shout over
+ * the data.
+ */
+@utility display-title {
+  font-family: var(--font-display);
+  font-style: italic;
+  font-weight: 900;
+  font-variation-settings: "opsz" 32;
+  letter-spacing: -0.01em;
+  line-height: 1.05;
 }
 
 /* A unit beside its value: smaller, dimmer, never competing with the number. */

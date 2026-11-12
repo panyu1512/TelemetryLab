@@ -65,7 +65,7 @@ describe("real-time config propagation", () => {
       ],
       activeProfileId: "remote",
       globalSettings: {
-        themeId: "carbon",
+        themeId: "hornet",
         bridgeEndpoint: "ws://127.0.0.1:8765",
         logLevel: "info",
         mockDataEnabled: true,

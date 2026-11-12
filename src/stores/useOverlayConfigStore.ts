@@ -17,7 +17,12 @@
  */
 
 import { create } from "zustand";
-import { getTheme, applyTheme } from "../themes";
+import { THEMES, getTheme, applyTheme } from "../themes";
+import {
+  parseProfileImport,
+  serializeProfile,
+  type ImportResult,
+} from "../lib/profileImport";
 import type { MockSessionType } from "../lib/mockData";
 import { isSingleView } from "../lib/overlayWindows";
 import { broadcast, subscribe } from "../lib/windowBus";
@@ -55,7 +60,7 @@ export interface Profile {
 }
 
 export interface GlobalSettings {
-  /** Active color theme id (falls back to "carbon" if unknown). */
+  /** Active color theme id (falls back to "hornet" if unknown). */
   themeId: string;
   /** WebSocket endpoint for the telemetry bridge. */
   bridgeEndpoint: string;
@@ -100,7 +105,7 @@ export const DEFAULT_OVERLAY_SETTINGS: OverlaySettings = {
 
 function makeDefaultGlobalSettings(): GlobalSettings {
   return {
-    themeId: "carbon",
+    themeId: "hornet",
     bridgeEndpoint: "ws://127.0.0.1:8765",
     logLevel: "info",
     mockDataEnabled: false,
@@ -138,12 +143,38 @@ function loadPersisted(): Persisted {
     return {
       profiles: p.profiles?.length ? p.profiles : fallback.profiles,
       activeProfileId: p.activeProfileId ?? fallback.activeProfileId,
-      globalSettings: { ...fallback.globalSettings, ...p.globalSettings },
+      globalSettings: migrateToHornet({
+        ...fallback.globalSettings,
+        ...p.globalSettings,
+      }),
       lastOverlayId: p.lastOverlayId ?? fallback.lastOverlayId,
     };
   } catch {
     return fallback;
   }
+}
+
+const HORNET_MIGRATION_KEY = "telemetrylab.migrated.hornet";
+
+/**
+ * The 1.30 rebrand made Hornet the default theme. Carbon was the default
+ * before it, so a saved "carbon" almost always means "never chose" rather than
+ * "chose carbon": move it to Hornet, once. The flag means anyone who picks
+ * Carbon again afterwards keeps it.
+ */
+export function migrateToHornet(
+  settings: GlobalSettings,
+  storage: Pick<Storage, "getItem" | "setItem"> = localStorage
+): GlobalSettings {
+  try {
+    if (storage.getItem(HORNET_MIGRATION_KEY)) return settings;
+    storage.setItem(HORNET_MIGRATION_KEY, "1");
+  } catch {
+    return settings;
+  }
+  return settings.themeId === "carbon"
+    ? { ...settings, themeId: "hornet" }
+    : settings;
 }
 
 /** True while applying a remote (bus) update, so we don't echo it back out. */
@@ -243,8 +274,14 @@ interface OverlayConfigState extends Persisted {
   deleteProfile: (id: string) => void;
   setActiveProfile: (id: string) => void;
 
-  // Profile export (backup). Import was removed.
+  // Profile export (backup) and import.
   exportProfile: (id: string) => string;
+  /**
+   * Import a profile file's text as a new profile and make it active.
+   * `overlayIds` are the overlays this build knows (the registry lives above
+   * this store, so the caller passes them in).
+   */
+  importProfile: (text: string, overlayIds: readonly string[]) => ImportResult;
 
   // Editor selection
   setLastOverlay: (overlayId: string) => void;
@@ -342,8 +379,24 @@ export const useOverlayConfigStore = create<OverlayConfigState>()((set, get) => 
   },
 
   exportProfile(id) {
-    const p = resolveProfile(get().profiles, id);
-    return JSON.stringify(p, null, 2);
+    return serializeProfile(resolveProfile(get().profiles, id));
+  },
+
+  importProfile(text, overlayIds) {
+    const result = parseProfileImport(text, {
+      overlayIds,
+      themeIds: THEMES.map((t) => t.id),
+      existingNames: get().profiles.map((p) => p.name),
+      newId: `profile_${Date.now()}`,
+    });
+    if (!result.ok) return result;
+    const profile = result.profile;
+    set((s) => {
+      const profiles = [...s.profiles, profile];
+      persist({ ...s, profiles, activeProfileId: profile.id });
+      return { profiles, activeProfileId: profile.id };
+    });
+    return result;
   },
 
   setLastOverlay(overlayId) {

@@ -1,7 +1,7 @@
-/* design-system: design.md · surface: marketing
- * mirrors the app's Carbon values — the system is shared, not re-picked per
- * surface. paper oklch(17.5% 0.009 255) graphite · sans Inter · mono
- * JetBrains Mono · one accent (cyan 226°)
+/* design-system: design.md § Direction v2 (Hornet) · surface: marketing
+ * mirrors the app's Hornet values — the system is shared, not re-picked per
+ * surface. paper oklch(13% 0.005 285) near-black · sans Inter · display Inter
+ * Black Italic · mono JetBrains Mono · one accent (hornet yellow 94°)
  * nav: N1 product · footer: sitemap columns over the Ft5 wordmark
  * enrichment: real product captures
  */
@@ -11,7 +11,7 @@
  *  TelemetryLab — marketing-surface tokens
  *
  *  The colour values below are copied from the project's `tokens.css` export
- *  (the Carbon theme). They are duplicated rather than imported because this
+ *  (the Hornet theme). They are duplicated rather than imported because this
  *  site is a static page with no build step and no npm graph — it cannot reach
  *  the app's Tailwind `@theme` block. If a colour changes in `src/styles.css`,
  *  it must be changed here too. That is the cost of the site being standalone,
@@ -29,46 +29,48 @@
 
   /* Paper / surfaces: graphite with a blue-black cast, three close levels
      and two hairline tones. Elevation reads through lightness, never glow. */
-  --color-bg: oklch(17.5% 0.009 255);
-  --color-surface: oklch(20.5% 0.01 255);
-  --color-surface-2: oklch(23.5% 0.011 255);
-  --color-border: oklch(29% 0.012 255);
-  --color-border-strong: oklch(36% 0.013 255);
+  --color-bg: oklch(13% 0.005 285);
+  --color-surface: oklch(17% 0.007 285);
+  --color-surface-2: oklch(20.5% 0.009 285);
+  --color-border: oklch(27% 0.012 285);
+  --color-border-strong: oklch(35% 0.014 285);
 
   /* The overlay panels' own paper. On the site it grounds every product
      capture, so a screenshot sits on the same paper it was shot on instead of
      floating on a lighter card. */
-  --color-timing-bg: color-mix(in oklab, oklch(17.5% 0.009 255) 86%, #000);
+  --color-timing-bg: color-mix(in oklab, oklch(13% 0.005 285) 86%, #000);
 
   /* Ink — light grey for data, mid grey for labels, a lower grey for anything
      tertiary. Never pure white. `faint` clears 4.5:1 against `surface`. */
-  --color-text: oklch(91% 0.005 255);
-  --color-muted: oklch(72% 0.012 255);
-  --color-faint: oklch(60% 0.012 255);
+  --color-text: oklch(96% 0.003 285);
+  --color-muted: oklch(76% 0.012 285);
+  --color-faint: oklch(62% 0.014 285);
 
   /* The one accent — focus, selection, the current section — and the
      semantic colours, each with one meaning. Unchanged from the app. */
-  --color-primary: oklch(79% 0.09 226); /* THE accent */
-  --color-primary-dim: oklch(68% 0.085 226);
-  --color-accent: oklch(75% 0.125 152); /* gain */
-  --color-accent-dim: oklch(64% 0.11 152);
-  --color-danger: oklch(67% 0.16 22); /* loss */
-  --color-warning: oklch(84% 0.12 90); /* caution */
-  --color-sector-purple: oklch(70% 0.13 305); /* overall best */
+  --color-primary: oklch(88% 0.18 94); /* THE accent — hornet yellow */
+  --color-primary-dim: oklch(76% 0.16 92);
+  --color-accent: oklch(78% 0.17 152); /* gain */
+  --color-accent-dim: oklch(66% 0.15 152);
+  --color-danger: oklch(65% 0.21 22); /* loss */
+  --color-warning: oklch(80% 0.16 84); /* caution — amber */
+  --color-sector-purple: oklch(70% 0.15 305); /* overall best */
 
-  /* The brand teal — the L of the mark, and nothing else. Not an accent: it
-     carries no meaning in the status table and is never used on data or
-     controls. */
-  --color-brand: #0dd2cb;
+  /* The brand yellow — the kitten's eyes and rim, the "Lab" of the wordmark.
+     On this page it is also the accent, and the glow is its light. */
+  --color-brand: #ffd400;
+  --shadow-glow: 0 8px 30px color-mix(in oklab, var(--color-primary) 38%, transparent);
+  --shadow-glow-strong: 0 10px 40px color-mix(in oklab, var(--color-primary) 60%, transparent);
+  --radius-pill: 999px;
 
   /* The only ink allowed on a filled status colour. Every accent here is light
      and every paper dark, so white on a fill lands near 2.5:1; this reads at
      6–12:1. */
-  --color-on-accent: oklch(15% 0.008 255);
+  --color-on-accent: oklch(12% 0.004 285);
 
   /* Focus ring. Its own token so a theme can move it without moving
      `primary`. Clears 3:1 against both `bg` and `surface`. */
-  --color-focus: oklch(79% 0.09 226);
+  --color-focus: oklch(88% 0.18 94);
 
   /* ── Typography ─────────────────────────────────────────────────────────── */
 
@@ -85,18 +87,11 @@
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, "SF Mono", Menlo,
     Consolas, monospace;
 
-  /* Marketing-surface extension, and the narrowest one in this file: a
-     condensed display face for the footer wordmark and nothing else. Inter has
-     no condensed cut, and a wordmark set edge to edge across the viewport in
-     Inter would be either 300 px tall or letter-spaced into a fence. It is a
-     token rather than a literal so the one element that uses it can be found
-     by grepping for the token; anything else reaching for `--font-display` is
-     a bug — see design.md § The marketing surface, rule 5.
-
-     The fallbacks are the condensed faces that actually ship on Windows and
-     macOS. A grotesk of normal width standing in for Anton would set the same
-     string ~40 % wider and push the tail of it past the viewport. */
-  --font-display: "Anton", "Arial Narrow", Impact, var(--font-sans);
+  /* The display voice (design.md § Direction v2): Inter at 900, italic —
+     every headline and the footer wordmark. Words only, never a figure. The
+     italic and the weight are set where it is used (`.display`, the h1/h2
+     rules, `.foot__mark-word`); this token only names the family. */
+  --font-display: "Inter", "Inter Variable", "Arial Black", var(--font-sans);
 
   /* Type scale — marketing-surface extension. Every step is a clamp, so the
      page never needs a font-size breakpoint. */
@@ -148,99 +143,8 @@
 }
 
 /*
- * ─────────────────────────────────────────────────────────────────────────────
- *  Light
- *
- *  A marketing-surface extension, and the largest one in this file: the app is
- *  dark by necessity — overlays composite over live footage and the manager
- *  sits on a second monitor at night — but a page read at arm's length in
- *  daylight has no such constraint, and half the people who open it have their
- *  OS set to light.
- *
- *  What does NOT invert:
- *
- *  · **Colour meaning.** `accent` is still positive, `danger` still critical,
- *    `primary` still interactive. Only their lightness moves, so each one
- *    clears 4.5:1 against paper instead of against ink.
- *  · **`--color-timing-bg`.** It stays near-black in both themes, because it
- *    grounds the product captures and those are screenshots of a dark app. A
- *    light frame around a dark screenshot is a frame that fights its picture.
- *  · **`--color-on-accent`.** It is still "the only ink allowed on a filled
- *    status colour" — but on light paper the accents are dark, so it is
- *    near-white here rather than near-black. The rule is unchanged; the value
- *    it resolves to is the other end of the scale.
- *
- *  Measured, not guessed (WCAG, sRGB, against the light `bg`): text 15.6:1,
- *  muted 7.0:1, faint 5.0:1, `primary` as a link 5.5:1, accent 5.6:1, danger
- *  5.9:1, warning 4.6:1, sector-purple 6.4:1; `on-accent` on a filled
- *  `primary` 6.0:1 and on `accent` 6.0:1.
- *
- *  Declared twice on purpose. The media-query copy is what a browser with
- *  JavaScript off gets, so the page still follows the OS; the attribute copy is
- *  what the toggle sets, and it has to win over the OS in both directions.
- * ─────────────────────────────────────────────────────────────────────────────
+ * Dark only, since 1.30 (design.md § Direction v2). The light palette and the
+ * theme toggle were removed with the Hornet rebrand: the brand is yellow on
+ * black, and a yellow accent on white paper fails contrast before it says
+ * anything.
  */
-
-@media (prefers-color-scheme: light) {
-  :root:not([data-theme="dark"]) {
-/* Paper, not white. The dark theme's `bg` is the page and `surface` sits
-       above it in lightness; on light paper elevation runs the same direction,
-       so `surface` is the *lighter* of the two and the page is a tone below it.
-       At 98.6% the page was brighter than every card on it, which reads as a
-       document rather than as an instrument.
-
-       Measured against this paper (WCAG, sRGB): text 15.6:1 · muted 7.0:1 ·
-       faint 5.0:1 · accent 5.6:1 · danger 5.9:1 · warning 4.6:1 ·
-       primary 5.5:1 · sector-purple 6.4:1. Only lightness moves between the
-       two papers; no meaning does. */
-    --color-bg: oklch(96.4% 0.0035 255);
-    --color-surface: oklch(98.4% 0.0022 255);
-    --color-surface-2: oklch(93% 0.006 255);
-    --color-border: oklch(86% 0.007 255);
-    --color-border-strong: oklch(76% 0.01 255);
-
-    --color-text: oklch(22% 0.012 255);
-    --color-muted: oklch(44% 0.014 255);
-    --color-faint: oklch(52% 0.014 255);
-
-    --color-accent: oklch(48% 0.12 152);
-    --color-accent-dim: oklch(42% 0.11 152);
-    --color-danger: oklch(50% 0.17 22);
-    --color-warning: oklch(54% 0.115 90);
-    --color-primary: oklch(49% 0.09 226);
-    --color-primary-dim: oklch(42% 0.085 226);
-    --color-brand: oklch(56% 0.1 189);
-    --color-sector-purple: oklch(48% 0.16 305);
-
-    --color-on-accent: oklch(99% 0 0);
-    --color-focus: oklch(49% 0.09 226);
-
-    --shadow-raise: 0 1px 0 rgb(15 20 28 / 0.08);
-  }
-}
-
-:root[data-theme="light"] {
-  --color-bg: oklch(96.4% 0.0035 255);
-  --color-surface: oklch(98.4% 0.0022 255);
-  --color-surface-2: oklch(93% 0.006 255);
-  --color-border: oklch(86% 0.007 255);
-  --color-border-strong: oklch(76% 0.01 255);
-
-  --color-text: oklch(22% 0.012 255);
-  --color-muted: oklch(44% 0.014 255);
-  --color-faint: oklch(52% 0.014 255);
-
-  --color-accent: oklch(48% 0.12 152);
-  --color-accent-dim: oklch(42% 0.11 152);
-  --color-danger: oklch(50% 0.17 22);
-  --color-warning: oklch(54% 0.115 90);
-  --color-primary: oklch(49% 0.09 226);
-  --color-primary-dim: oklch(42% 0.085 226);
-  --color-brand: oklch(56% 0.1 189);
-  --color-sector-purple: oklch(48% 0.16 305);
-
-  --color-on-accent: oklch(99% 0 0);
-  --color-focus: oklch(49% 0.09 226);
-
-  --shadow-raise: 0 1px 0 rgb(15 20 28 / 0.08);
-}

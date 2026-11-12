@@ -13,7 +13,7 @@
       content="Clasificación multiclase, relative, combustible, un coach curva a curva y telemetría para iRacing. Cada pantalla en su propia ventana sobre el juego, legible de un vistazo. Gratis, de código abierto, para Windows."
     />
     <meta name="robots" content="index, follow, max-image-preview:large" />
-    <meta name="theme-color" content="#0e1114" />
+    <meta name="theme-color" content="#0a0a0d" />
     <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
     <link rel="canonical" href="https://telemetrylab.app/es/" />
@@ -91,34 +91,11 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Anton&display=block"
+      href="https://fonts.googleapis.com/css2?family=Inter:ital,wght@0,400;0,500;0,600;0,700;1,800;1,900&family=JetBrains+Mono:wght@500;600;700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="../css/site.css" />
-
-    <script>
-      (function () {
-        var KEY = "telemetrylab.theme";
-        var stored = null;
-        try {
-          stored = localStorage.getItem(KEY);
-        } catch (e) {
-          /* private mode, or storage disabled — fall through to the OS */
-        }
-        var theme =
-          stored === "light" || stored === "dark"
-            ? stored
-            : window.matchMedia &&
-                window.matchMedia("(prefers-color-scheme: light)").matches
-              ? "light"
-              : "dark";
-        document.documentElement.dataset.theme = theme;
-      })();
-    </script>
+    <!-- Solo oscuro desde 1.30 (design.md § Direction v2): sin selector de tema. -->
   </head>
 
   <body>
@@ -128,11 +105,8 @@
       <div class="shell">
         <header class="nav">
           <a class="wordmark" href="#main">
-            <svg class="wordmark__mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
-              <path d="M6.09 7.64L22.78 7.64L19.68 10.64L14.54 10.64L9.86 24.36L5.82 24.36L10.5 10.64L4 10.64Z" />
-              <path class="wordmark__l" d="M16.36 11.52L20.4 11.52L16.99 21.53L28 21.53L25.2 24.36L11.98 24.36Z" />
-            </svg>
-            TelemetryLab
+            <img class="wordmark__mark" src="../assets/kitten.svg" alt="" width="64" height="64" />
+            <span class="wordmark__text">Telemetry<em>Lab</em></span>
           </a>
 
           <nav class="nav__links" aria-label="Secciones">
@@ -148,16 +122,6 @@
               <a class="lang__opt" href="../" hreflang="en" lang="en">EN</a>
               <a class="lang__opt" href="./" hreflang="es" lang="es" aria-current="page">ES</a>
             </div>
-
-            <button class="icon-btn theme-toggle" type="button" id="theme-toggle" aria-label="Cambiar tema">
-              <svg class="theme-toggle__sun" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round">
-                <circle cx="12" cy="12" r="4.2" />
-                <path d="M12 2.6v2.2M12 19.2v2.2M4.2 12H2M22 12h-2.2M6.5 6.5 4.9 4.9M19.1 19.1l-1.6-1.6M17.5 6.5l1.6-1.6M4.9 19.1l1.6-1.6" />
-              </svg>
-              <svg class="theme-toggle__moon" viewBox="0 0 24 24" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round">
-                <path d="M20 13.4A8.2 8.2 0 0 1 10.6 4a8.4 8.4 0 1 0 9.4 9.4Z" />
-              </svg>
-            </button>
 
             <a class="icon-btn nav__gh" href="https://github.com/panyu1512/TelemetryLab" rel="noopener" target="_blank" aria-label="Código en GitHub">
               <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false">
@@ -196,7 +160,7 @@
             <svg class="pill__arrow" viewBox="0 0 16 16" aria-hidden="true" focusable="false" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3.5 10.5 8 6 12.5" /></svg>
           </a>
 
-          <h1>Lee la carrera sin apartar la vista.</h1>
+          <h1>Lee la carrera <span>sin apartar la vista.</span></h1>
           <p class="hero__lede">
             Overlays de cronometraje y telemetría para iRacing. Clasificación
             multiclase, relative en pista, estrategia de combustible, un coach
@@ -222,7 +186,7 @@
             <dl class="session__fields">
               <div class="session__field"><dt>Overlays</dt><dd>5</dd></div>
               <div class="session__field"><dt>Widgets</dt><dd>7</dd></div>
-              <div class="session__field"><dt>Temas</dt><dd>4</dd></div>
+              <div class="session__field"><dt>Temas</dt><dd>5</dd></div>
               <div class="session__field"><dt>Datos</dt><dd>~60<small>Hz</small></dd></div>
               <div class="session__field"><dt>Precio</dt><dd>0<small>€</small></dd></div>
               <div class="session__field"><dt>Licencia</dt><dd>MIT</dd></div>
@@ -446,10 +410,10 @@
                   height="1240"
                   loading="lazy"
                   alt="Los siete widgets del overlay dashboard en una rejilla: un
-                       velocímetro a 224 km/h en quinta bajo una barra de luces de
-                       cambio a 6871 rpm; un panel de pedales con la traza del
-                       acelerador en cian y el freno en gris junto a barras de
-                       acelerador, freno y embrague y un volante; combustible — 15,1
+                       velocímetro a 206 km/h en quinta bajo una barra de luces de
+                       cambio a 5356 rpm; un panel de pedales con la traza del
+                       acelerador en amarillo y el freno en gris junto a barras de
+                       acelerador, freno y embrague y un volante; combustible — 15,2
                        litros en el depósito, 5,4 vueltas a 2,82 litros por vuelta;
                        tiempos — última 2:20.128, mejor 2:18.917 en verde, la vuelta
                        en curso y una diferencia de más 1,211 en rojo; temperaturas y
@@ -615,8 +579,8 @@
           <ul class="feats">
             <li class="feat">
               <svg class="feat__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="3" y="4" width="11" height="8" rx="1" /><rect x="10" y="12" width="11" height="8" rx="1" /></svg>
-              <h3>Una ventana por overlay</h3>
-              <p>Sin marco y siempre visible. Cada ventana recuerda su posición y su tamaño, y se vuelve a abrir justo donde la dejaste.</p>
+              <h3>Colócalo en el monitor</h3>
+              <p>El editor de layout dibuja tu pantalla con cada overlay encima, en vivo. Arrastra, redimensiona, escala y bloquea cada ventana, o guarda la disposición entera como preset.</p>
             </li>
             <li class="feat">
               <svg class="feat__icon" viewBox="0 0 24 24" aria-hidden="true" focusable="false"><rect x="5" y="10.5" width="14" height="10" rx="1.5" /><path d="M8 10.5V7.5a4 4 0 0 1 8 0v3" /></svg>
@@ -649,7 +613,7 @@
             <div class="split__copy">
               <div class="band">
                 <span class="band__chip">Gestor</span>
-                <span class="band__field"><span class="band__k">TEMAS</span><b class="band__v">4</b></span>
+                <span class="band__field"><span class="band__k">TEMAS</span><b class="band__v">5</b></span>
               </div>
               <h3>Se configura una vez y te olvidas.</h3>
               <p>
@@ -659,7 +623,7 @@
               </p>
               <ul class="reads">
                 <li>Elige tus columnas de tiempos; la tabla se escala para conservarlas todas</li>
-                <li>Cuatro temas: Carbon, Midnight, Graphite y Endurance</li>
+                <li>Cinco temas: Hornet, Carbon, Midnight, Graphite y Endurance</li>
                 <li>Datos simulados en los ajustes globales, para cuando no tienes el simulador a mano</li>
               </ul>
             </div>
@@ -669,12 +633,12 @@
                 width="2800"
                 height="1800"
                 loading="lazy"
-                alt="El gestor de overlays: una columna a la izquierda con Dashboard,
+                alt="El gestor de overlays: una columna a la izquierda con el editor de layout sobre Dashboard,
                      Standings, Relative, Fuel Calc y Coach, una columna de ajustes de
                      widgets y apariencia en el centro, y a la derecha una vista previa
-                     a escala del overlay dashboard — su velocímetro a 206 km/h en
+                     a escala del overlay dashboard — su velocímetro a 214 km/h en
                      quinta, y debajo la traza de acelerador y freno, el acelerador en
-                     cian y el freno en gris."
+                     amarillo y el freno en gris."
               />
             </figure>
           </div>
@@ -747,7 +711,7 @@
               <ul class="plan__list">
                 <li>Clasificación, Relative, Combustible, Coach y Dashboard</li>
                 <li>Los siete widgets, radar incluido</li>
-                <li>Cuatro temas y un gestor con vista previa en vivo</li>
+                <li>Cinco temas, un editor de layout y un gestor con vista previa en vivo</li>
                 <li>Cada versión, en cuanto sale</li>
                 <li>El código fuente, con licencia MIT</li>
               </ul>
@@ -886,11 +850,8 @@
         <div class="foot__grid">
           <div class="foot__brand">
             <a class="wordmark" href="#main">
-              <svg class="wordmark__mark" viewBox="0 0 32 32" aria-hidden="true" focusable="false">
-                <path d="M6.09 7.64L22.78 7.64L19.68 10.64L14.54 10.64L9.86 24.36L5.82 24.36L10.5 10.64L4 10.64Z" />
-                <path class="wordmark__l" d="M16.36 11.52L20.4 11.52L16.99 21.53L28 21.53L25.2 24.36L11.98 24.36Z" />
-              </svg>
-              TelemetryLab
+              <img class="wordmark__mark" src="../assets/kitten.svg" alt="" width="64" height="64" />
+            <span class="wordmark__text">Telemetry<em>Lab</em></span>
             </a>
             <p>Overlays de cronometraje y telemetría para iRacing. Gratis y de código abierto.</p>
           </div>

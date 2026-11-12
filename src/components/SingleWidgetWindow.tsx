@@ -14,6 +14,7 @@
  * them apply live, over the window bus, with the window left open.
  */
 
+import { APP_NAME } from "../config";
 import { useEffect } from "react";
 import { useBridge } from "../hooks/useBridge";
 import { useTelemetry } from "../hooks/useTelemetry";
@@ -30,7 +31,9 @@ import {
   visibilityConditions,
 } from "../lib/overlayVisibility";
 import { getTheme, applyTheme } from "../themes";
-import { initWindow } from "../stores/useWindowStore";
+import { WINDOW_LABEL, initWindow } from "../stores/useWindowStore";
+import { useWindowScale } from "../hooks/useWindowScale";
+import { ScaledFrame } from "./ScaledFrame";
 
 export function SingleWidgetWindow({ id }: { id: string }) {
   useBridge();
@@ -41,6 +44,8 @@ export function SingleWidgetWindow({ id }: { id: string }) {
   const settings = config.getOverlaySettings(dashboardId);
   const widgetEnabled = useWidgetSelectionStore((s) => s.isEnabled(id));
   const session = useSessionStore((s) => s.session);
+  // Content scale from the Layout editor.
+  const scale = useWindowScale(WINDOW_LABEL);
 
   const hidden = isOverlayHidden(
     settings,
@@ -63,8 +68,8 @@ export function SingleWidgetWindow({ id }: { id: string }) {
 
   useEffect(() => {
     document.title = def
-      ? `${def.title} — iRacing Telemetry`
-      : "Widget — iRacing Telemetry";
+      ? `${def.title} — ${APP_NAME}`
+      : `Widget — ${APP_NAME}`;
   }, [def]);
 
   if (!def) {
@@ -87,6 +92,7 @@ export function SingleWidgetWindow({ id }: { id: string }) {
   );
 
   return (
+    <ScaledFrame scale={scale}>
     <div className="widget-frame flex h-full w-full flex-col overflow-hidden bg-bg text-text">
       <OverlayChrome kind="widget" id={id} />
 
@@ -113,5 +119,6 @@ export function SingleWidgetWindow({ id }: { id: string }) {
         )}
       </div>
     </div>
+    </ScaledFrame>
   );
 }

@@ -1,5 +1,7 @@
 import { Minus, X } from "lucide-react";
 
+import { KittenMark } from "../ui/KittenMark";
+
 /** True when running inside the Tauri WebView (vs. a plain browser tab). */
 const isTauri =
   typeof window !== "undefined" && "__TAURI_INTERNALS__" in window;
@@ -19,26 +21,6 @@ export interface ConnectionStatus {
 }
 
 /**
- * The TelemetryLab mark: a TL monogram leaning 19° forward, the T in the text
- * colour and the L in the brand teal. The same two paths ship in
- * `public/favicon.svg` (which is what the platform icons are generated from)
- * and in the marketing page's nav and footer — change one and change them all.
- */
-function BrandMark() {
-  // 22px, not 18: the ink fills 52 % of the box's height, so this sets the
-  // letters a fifth taller than the cap height of the 13px name beside it.
-  return (
-    <svg viewBox="0 0 32 32" className="size-[22px]" fill="var(--color-text)" aria-hidden>
-      <path d="M6.09 7.64L22.78 7.64L19.68 10.64L14.54 10.64L9.86 24.36L5.82 24.36L10.5 10.64L4 10.64Z" />
-      <path
-        fill="var(--color-brand)"
-        d="M16.36 11.52L20.4 11.52L16.99 21.53L28 21.53L25.2 24.36L11.98 24.36Z"
-      />
-    </svg>
-  );
-}
-
-/**
  * Frameless, draggable title bar for the Overlay Manager: brand, live bridge
  * status and standard window buttons. The manager is a normal window — it never
  * becomes an overlay, so there are no overlay-mode or lock controls here.
@@ -52,13 +34,15 @@ export function TitleBar({ status }: { status: ConnectionStatus }) {
       {/* Brand */}
       <div
         data-tauri-drag-region
-        className="flex items-center gap-2.5 text-name font-semibold tracking-tight text-text"
+        className="flex items-center gap-2 text-text"
       >
-        <BrandMark />
-        <span data-tauri-drag-region>TelemetryLab</span>
+        <KittenMark className="size-7 -my-1" />
+        <span data-tauri-drag-region className="display-title text-base">
+          Telemetry<span className="text-brand">Lab</span>
+        </span>
         <span
           data-tauri-drag-region
-          className="text-name font-normal text-faint"
+          className="text-small font-medium uppercase tracking-caps text-faint"
         >
           for iRacing
         </span>

@@ -14,6 +14,7 @@
  * the top lets the user reposition the frameless desktop window.
  */
 
+import { APP_NAME } from "../config";
 import { useEffect } from "react";
 import { useBridge } from "../hooks/useBridge";
 import { useTelemetry } from "../hooks/useTelemetry";
@@ -30,7 +31,9 @@ import {
   visibilityConditions,
 } from "../lib/overlayVisibility";
 import { getTheme, applyTheme } from "../themes";
-import { initWindow } from "../stores/useWindowStore";
+import { WINDOW_LABEL, initWindow } from "../stores/useWindowStore";
+import { useWindowScale } from "../hooks/useWindowScale";
+import { ScaledFrame } from "./ScaledFrame";
 
 export function OverlayWindow({ id }: { id: string }) {
   // Each overlay window owns its own socket to the bridge.
@@ -71,13 +74,16 @@ export function OverlayWindow({ id }: { id: string }) {
   }, [themeId]);
 
   useEffect(() => {
-    document.title = `${dashboard.label} — iRacing Telemetry`;
+    document.title = `${dashboard.label} — ${APP_NAME}`;
   }, [dashboard.label]);
 
   // Per-overlay appearance adjustments (saturation / brightness / opacity).
   const style = appearanceStyle(settings.appearance);
+  // Content scale from the Layout editor.
+  const scale = useWindowScale(WINDOW_LABEL);
 
   return (
+    <ScaledFrame scale={scale}>
     <div className="flex h-full w-full flex-col overflow-hidden bg-bg text-text">
       <OverlayChrome kind="overlay" id={id} />
 
@@ -91,5 +97,6 @@ export function OverlayWindow({ id }: { id: string }) {
         <DashboardGrid layout={layout} data={data} />
       </main>
     </div>
+    </ScaledFrame>
   );
 }

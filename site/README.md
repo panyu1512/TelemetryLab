@@ -1,8 +1,7 @@
 # site/
 
 The marketing page for TelemetryLab, in English and Spanish. Static HTML,
-three stylesheets and a few dozen lines of inline script for the theme toggle
-and the mobile menu — no build step, no framework, no dependencies. Deploy the
+three stylesheets and a few lines of inline script for the mobile menu — no build step, no framework, no dependencies. Deploy the
 folder.
 
 ```
@@ -50,14 +49,15 @@ The five that bite if you forget them:
   cannot reach the app's Tailwind `@theme` block, so the colour values are
   duplicated. **Change a colour in `src/styles.css` and you must change it here
   too.**
-- **`favicon.svg` is a copy too**, of `../public/favicon.svg` — which is the
-  source the app's platform icons are generated from. The nav and the footer,
-  on both pages, inline the same two paths again so the T can take the text
-  colour and the L `--color-brand`. See
-  [`design.md` § The mark](../design.md); change the mark and change all of
-  them. `apple-touch-icon.png` is rendered from `src-tauri/icons/icon.png`
-  flattened onto the plate colour, since iOS rounds the corners itself.
-- **The footer wordmark is tuned to the string "TelemetryLab" in Anton.** Its
+- **`favicon.svg` and `assets/kitten.svg` are copies too**, of
+  `../public/favicon.svg` and `../public/brand/kitten.svg` — the kitten mark
+  (design.md § The mark). The nav and the footer, on both pages, point at
+  `assets/kitten.svg`; change the mark and copy it again.
+  `apple-touch-icon.png` is rendered by `../scripts/render-icon.mjs`.
+- **Dark only.** Since the 1.30 rebrand (design.md § Direction v2) there is no
+  light palette and no theme toggle: the brand is hornet yellow on black.
+- **The footer wordmark is tuned to the string "TelemetryLab" in Inter Black
+  Italic.** Its
   two knobs — `--brand-size` and `--brand-crop`, at the top of `css/footer.css`
   — are a measurement, not a preference: the size is 100 divided by the string's
   ink width in ems, the crop is half an x-height off the baseline. **Change the

@@ -15,6 +15,52 @@ race-engineering software (§ Race-engineer telemetry). Dark by necessity:
 overlays are composited over live game footage, and the manager sits on a
 second monitor at night.
 
+## Direction v2: Hornet
+
+**The direction since 1.30, and it overrides anything below that disagrees.**
+The product owner asked for a full rebrand: more modern, more aggressive, in
+yellow and black, with a black kitten as the mark (the reference was the
+racebuddy.at landing page and app — pure black, one loud accent, a black
+italic display face, pill buttons with a glow). The race-engineer rules below
+still hold for **what data looks like**; Hornet changes **the brand, the
+chrome and the paper**.
+
+1. **Near-black paper, one loud accent.** The default theme is **Hornet**:
+   `bg` 13 %, `surface` 17 %, `surface-2` 20.5 %, hairlines at 27 / 35 %, all
+   with a faint violet-black cast (hue 285). The one accent (`--color-primary`)
+   is **hornet yellow, `oklch(88% 0.18 94)` ≈ #FFD400**. It marks the same
+   things the cyan did — focus, selection, the active thing, "this is you",
+   the primary chart channel — and fills the one primary action per surface.
+   The four earlier themes stay, cyan accent and all, for anyone who wants the
+   quieter instrument. A saved Carbon (the old default) is moved to Hornet once
+   on first launch of 1.30 (`migrateToHornet`); choosing Carbon afterwards
+   sticks.
+2. **Where yellow could live.** The class ramp leaves one gap between orange
+   (57°) and lime (121°) that clears both by the tested 25°: 82–96°. The accent
+   sits at 94°. Two consequences, both deliberate:
+   - **`--color-warning` moves to a deeper amber, `oklch(80% 0.16 84)`.**
+     Caution and "this is you" are now told apart by lightness and by the
+     icon a warning always carries, not by hue alone. The rule "primary ≥30°
+     from warning" (§ Theme rule 2) is **waived for Hornet**, and only there.
+   - **The medium tyre stays yellow (95°).** It is the broadcast convention,
+     the badge always prints its "M", and it never sits on a filled ground.
+3. **A display voice.** Page titles in the Manager and every headline on the
+   site are set in **Inter Black Italic at the display optical size**
+   (`--font-display`, the `display-title` utility). Words only — never a
+   number, never inside an overlay. Data stays in JetBrains Mono `.tnum`.
+4. **The primary action is a pill, and it glows.** `Button variant="primary"`
+   is a full pill (`--radius-pill`) filled yellow with `on-accent` ink, the
+   brand glow under it (`--shadow-glow`) and a 1 px lift on hover. Secondary,
+   ghost and danger buttons stay square. **Glow is chrome-only**: the
+   Manager and the site. An overlay over live footage never glows — it would
+   read as a status, and it costs legibility.
+5. **The brand colour is the accent.** `--color-brand` is #FFD400 (fixed,
+   unthemed): the kitten's eyes and rim and the "Lab" of the wordmark. Under
+   a cyan theme the mark stays yellow.
+6. **Overlays keep their instrument discipline.** Hairlines, 2–3 px radii,
+   mono figures, semantic colour only where it means something. They pick up
+   the new paper and the yellow "you" — nothing else changes on them.
+
 ## Race-engineer telemetry
 
 **The direction since 1.25.** The app reads like motorsport data-analysis
@@ -147,9 +193,9 @@ Three rules that fall out of that table and are easy to break:
 2. **A theme's `primary` must stay ≥30° in hue from its `warning`.** Endurance
    once shipped them 8° apart, which made "you can click this" and "caution"
    the same colour.
-3. **A theme's `primary` stays in the cyan band, 222–234.** The class ramp is
-   tested against every theme's accent; an accent that wanders takes a class
-   colour's room with it.
+3. **A theme's `primary` stays in the cyan band, 222–234 — or, for Hornet,
+   at 94°** (§ Direction v2 rule 2). The class ramp is tested against every
+   theme's accent; an accent that wanders takes a class colour's room with it.
 
 ## Two colour systems
 
@@ -341,56 +387,46 @@ and a stable one-line helper row, so neither appearing reflows the panel.
 
 ## The mark
 
-A **TL monogram**: a white T over a teal L, leaning 19° forward, with the
-crossbar's right end and the L's foot cut at 45°. It is the only drawn symbol
-in the system — everything else on every surface is type, rule or data.
+**Since 1.30: a black kitten.** An anime-style head — tall pointed ears with
+a warm inner ear (`#ff8f7a`), big hornet-yellow eyes with slit pupils, two
+white catch-lights and slanted lids (the determined look), a pink nose, a "w"
+mouth, whiskers and cheek tufts. It replaced the TL monogram (1.28–1.29),
+which replaced the sheared monogram of 1.8–1.27.
 
-It replaced the single-colour, 13.5°-sheared monogram of 1.8–1.27 with the
-artwork the project now uses everywhere. The geometry is a regularised trace of
-that artwork, written out in the header of
-[`public/favicon.svg`](public/favicon.svg) so it can be rebuilt rather than
-re-traced: the T's stem and the L's upright are parallel at 0.341 x per unit of
-height and share one stroke; the crossbar's left end is cut at 35°; the L's top
-sits just under the crossbar so the two letters share a baseline and read as one
-block. The ink is 24 wide and centred on a 32 grid.
+Three drawings, one cat — every surface points at a file rather than
+inlining paths:
 
-Five rules:
+| File | Form | Used for |
+| --- | --- | --- |
+| [`public/brand/kitten.svg`](public/brand/kitten.svg) | full detail, black fur (`#121217`) with a 2.2 hornet-yellow rim so the head reads on black | the app's title bar (`KittenMark`), the site's nav and footer |
+| [`public/brand/kitten-plate.svg`](public/brand/kitten-plate.svg) | full detail on a 14-radius yellow plate, rim turned black | the master for every platform icon and `site/apple-touch-icon.png` |
+| [`public/favicon.svg`](public/favicon.svg) | reduced: silhouette, inner ears, two eyes with a slit and the lid cut, on the yellow plate — whiskers, tufts, nose and catch-lights dropped | favicons, and every icon layer at 32 px and under |
 
-1. **Two colours, fixed roles.** The T is ink and the L is the brand teal
-   (`--color-brand`, `#0dd2cb`). On the icon plate the T is white
-   (`#f4f7f9`); on chrome, the nav and the title bar it takes `text`, so on the
-   site's light paper it goes dark rather than vanishing, and the L takes a
-   darker teal there (`oklch(56% 0.1 189)`). The teal is the logo's colour and
-   nothing else: it is **not** an accent, carries no meaning in the status
-   table, and never appears on data or controls. It is close to `primary`'s hue
-   on purpose but is not `primary` — the mark does not change when a theme
-   moves the accent.
-2. **The plate is for icons only.** A 7-radius square of the timing surfaces'
-   near-black (`#0a0d12`), because an OS icon has to bring its own ground. In
-   the nav and the title bar the mark is bare — those surfaces have paper
-   already.
-3. **The ink fills 52 % of the box's height**, so the box is sized to set the
-   letters about a fifth taller than the cap height they sit beside — 1.75em
-   against the site's wordmark, 22 px against the title bar's 13 px name.
-4. **It is always `aria-hidden`.** The product name is next to it in every
-   place it appears.
-5. **The lean is the mark's, and stops there.** From 1.8 to 1.24 the old
-   mark's 13.5° cut was a system device on the app's chrome — the title bar's
-   status readout, the profile chip, the section legends, every CTA — while the
-   instruments stayed square, on the argument that a driver reading a lap time
-   needs the column edges vertical. The race-engineer direction extends that
-   argument to the frame: an engineering tool is one instrument, and its
-   controls are as square as its data. `--shear` and `.shear` are gone; the
-   section legend is a 2 px accent bar (`.section-block`), and chips and CTAs
-   are rectangles. The new mark's 19° does not bring any of it back.
+Rules:
 
-`public/favicon.svg` is the source. The platform icons in `src-tauri/icons` are
-generated from it with `npm run tauri icon public/favicon.svg` (the Android,
-iOS and Store sets it also emits are dropped — the app ships an msi only);
-`site/favicon.svg` is a copy for the same reason the site's tokens are one; and
-the site's nav and footer (both languages) and the app's title bar inline the
-two paths so they can follow the theme. **One geometry everywhere** — change
-the mark and change every copy.
+1. **Black and yellow, fixed.** Fur near-black, eyes and rim `--color-brand`
+   (#FFD400). The warm inner ear and the pink nose are the only other colours,
+   and they belong to the cat — never to chrome or data.
+2. **The plate is for icons only.** An OS icon brings its own ground, and
+   yellow reads on light and dark taskbars alike. In the title bar and the nav
+   the mark is bare, on the rim.
+3. **Small is a different drawing, not a smaller one.** Under ~32 px the
+   detailed head turns to noise, so the reduced favicon drawing is used —
+   `scripts/render-icon.mjs` renders `32x32.png` from it, and
+   `scripts/build-ico.py` builds the `.ico`'s 16/24/32 layers from it.
+4. **Always decorative** (`alt=""`, `aria-hidden`): the product name is beside
+   it everywhere it appears.
+
+Regenerating the platform icons:
+
+    node scripts/render-icon.mjs           # icon.png 1024, apple-touch, 32x32
+    npx tauri icon src-tauri/icons/icon.png
+    node scripts/render-icon.mjs           # put the crisp small sizes back
+    python3 scripts/build-ico.py           # .ico with crisp small layers
+
+then delete the android/ios/Square*/StoreLogo/64x64 files `tauri icon` also
+writes — the app ships an msi only. `site/favicon.svg` is a copy of
+`public/favicon.svg` (the site deploys as a plain folder).
 
 ## What every surface MUST share
 
@@ -401,7 +437,8 @@ the mark and change every copy.
 - The mark, and the rules under § The mark.
 - The control contract and the 8 states.
 - 2–3 px radii — 2 on controls, 3 on cards and panels — and 1 px edges.
-- The motion tokens: nothing on UI state over 200 ms, no bounce, no glow.
+- The motion tokens: nothing on UI state over 200 ms, no bounce. Glow only
+  on chrome (§ Direction v2 rule 4).
 
 ## What surfaces MAY differ on
 
@@ -1398,6 +1435,16 @@ needs*, which is the pattern worth noticing — a rule that only removes chrome
 is a rule that will keep getting revisited.
 
 ## The marketing surface
+
+> **Amended by § Direction v2 (1.30).** The page is now dark only (the light
+> palette and the theme toggle are gone); h1 and h2 are set in the display
+> voice, Inter Black Italic, with the headline's payoff in the brand yellow
+> and its glow; actions are pills and the primary one glows; cards take a
+> 16 px radius and a hairline that turns yellow on hover; the footer wordmark
+> is Inter Black Italic rather than Anton (re-measured in `css/footer.css`);
+> the nav and footer carry the kitten mark (`assets/kitten.svg`). All of it is
+> one layer at the end of `site/css/site.css`. Where the text below says
+> otherwise, this note wins.
 
 One page at [`site/`](site/), in two languages — `index.html` and
 `es/index.html` — with three stylesheets and a few dozen lines of inline script

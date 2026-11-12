@@ -159,16 +159,17 @@ type ButtonVariant = "primary" | "secondary" | "ghost" | "danger";
  * 4.5:1 floor — because every status accent in this system is a light color.
  * Dark ink on the same fill reads at 6–12:1.
  *
- * Every variant is a square-cornered rectangle set in caps. The 13.5° shear
- * the chrome used to be cut on is retired: the app is one instrument, and an
- * engineering tool's controls are as square as its data.
+ * Secondary, ghost and danger are square-cornered rectangles set in caps.
+ * Primary is the Hornet pill (design.md § Direction v2): the one action on a
+ * surface, filled yellow, with the brand glow under it and a 1 px lift on
+ * hover. There is only ever one of them in view, so the glow never competes.
  *
  * Caps at 11 px rather than 12 px mixed case — capitals carry no descenders and
  * read a size larger than they measure, so the label keeps the row's height.
  */
 const BUTTON_VARIANT: Record<ButtonVariant, string> = {
   primary:
-    "border border-transparent bg-primary text-on-accent hover:bg-primary-dim active:brightness-90",
+    "rounded-pill border border-transparent bg-primary px-4 text-on-accent shadow-glow hover:-translate-y-px hover:shadow-glow-strong active:translate-y-0 active:brightness-90",
   secondary:
     "border border-border bg-surface-2 text-text hover:border-border-strong hover:bg-surface active:brightness-95",
   ghost:
@@ -218,7 +219,7 @@ export function Button({
       className={[
         // `whitespace-nowrap`: a clickable label that wraps to two lines reads
         // as a rendering fault, and breaks the row's vertical rhythm.
-        "inline-flex items-center whitespace-nowrap rounded-ctl px-3 py-1.5 text-small font-semibold uppercase tracking-caps transition-colors",
+        "inline-flex items-center whitespace-nowrap rounded-ctl px-3 py-1.5 text-small font-semibold uppercase tracking-caps transition-[color,background-color,border-color,box-shadow,translate]",
         inert
           ? "cursor-not-allowed border border-border bg-surface-2 text-faint"
           : BUTTON_VARIANT[variant],

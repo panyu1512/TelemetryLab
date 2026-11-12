@@ -51,18 +51,48 @@ export interface Theme {
 }
 
 /*
- * Every theme is the same instrument: near-monochrome graphite, light-grey
- * ink, ONE accent for focus and selection, and semantic colour only where it
- * means something. Themes vary the temperature of the neutrals and the exact
- * tone of the accent — never what a colour means, and never the accent's
- * family: it stays a cool cyan in all four, so the five car-class colours
- * (`lib/classColors`) can be spaced against a single reserved hue.
+ * Every theme is the same instrument: dark neutrals, light-grey ink, ONE
+ * accent for focus and selection, and semantic colour only where it means
+ * something. Themes vary the temperature of the neutrals and the tone of the
+ * accent — never what a colour means.
+ *
+ * Hornet (the default since 1.30, design.md § Direction v2) is the brand:
+ * near-black and a hornet yellow. The yellow sits at 94°, in the one gap the
+ * class ramp leaves between orange (57°) and lime (121°), so it keeps its 25°
+ * clearance from every class colour (`lib/classColors.test.ts`). Its caution
+ * colour moves to a deeper amber at 84° so "warning" is told from "this is
+ * you" by lightness as well as by its icon. The other four keep the cool
+ * cyan accent of the race-engineer direction for anyone who prefers it.
  */
 export const THEMES: readonly Theme[] = [
   {
+    id: "hornet",
+    name: "Hornet",
+    description: "Default · near-black, hornet-yellow accent",
+    colors: {
+      bg: "oklch(13% 0.005 285)",
+      surface: "oklch(17% 0.007 285)",
+      surface2: "oklch(20.5% 0.009 285)",
+      border: "oklch(27% 0.012 285)",
+      borderStrong: "oklch(35% 0.014 285)",
+      accent: "oklch(78% 0.17 152)",
+      accentDim: "oklch(66% 0.15 152)",
+      primary: "oklch(88% 0.18 94)",
+      primaryDim: "oklch(76% 0.16 92)",
+      onAccent: "oklch(12% 0.004 285)",
+      focus: "oklch(88% 0.18 94)",
+      text: "oklch(96% 0.003 285)",
+      muted: "oklch(76% 0.012 285)",
+      faint: "oklch(62% 0.014 285)",
+      danger: "oklch(65% 0.21 22)",
+      warning: "oklch(80% 0.16 84)",
+      sectorPurple: "oklch(70% 0.15 305)",
+    },
+  },
+  {
     id: "carbon",
     name: "Carbon",
-    description: "Default · blue-black graphite, cyan accent",
+    description: "Blue-black graphite, cyan accent",
     colors: {
       bg: "oklch(17.5% 0.009 255)",
       surface: "oklch(20.5% 0.01 255)",
