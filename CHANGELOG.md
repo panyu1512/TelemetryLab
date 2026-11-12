@@ -7,6 +7,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Release notes in English and Spanish.** Each version's page on GitHub now
+  explains what is new, and how to install the app, in both languages:
+  English first, Spanish below it.
+
 ## [1.29.1] - 2026-10-29
 
 ### Changed

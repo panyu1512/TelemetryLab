@@ -33,4 +33,5 @@
   are written from them.
 - User-visible changes get a line under `## [Unreleased]` in
   [`CHANGELOG.md`](../CHANGELOG.md), written for someone deciding whether to
-  update rather than for someone reading the diff.
+  update rather than for someone reading the diff — and the same line in
+  Spanish in [`CHANGELOG.es.md`](../CHANGELOG.es.md), if you can write it.
