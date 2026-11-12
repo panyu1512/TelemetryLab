@@ -157,7 +157,7 @@ function isModified(a: OverlayAppearance): boolean {
 
 // ── sub-components ─────────────────────────────────────────────────────────────
 
-function SliderRow({
+export function SliderRow({
   label,
   value,
   min,

@@ -8,9 +8,11 @@ import {
   Pencil,
   Trash2,
   FileDown,
+  FileUp,
   Check,
   AppWindow,
   PanelTopClose,
+  MonitorSmartphone,
 } from "lucide-react";
 import {
   DASHBOARDS,
@@ -34,12 +36,14 @@ import { RelativeOptionsPanel } from "./RelativeOptionsPanel";
 import { CoachOptionsPanel } from "./CoachOptionsPanel";
 import { GlobalSettingsPanel } from "./GlobalSettingsPanel";
 import { DebugPanel } from "./DebugPanel";
+import { MonitorEditor } from "./monitor/MonitorEditor";
 import { Button, IconButton, ToggleSwitch } from "../ui/controls";
 
 // ── types ─────────────────────────────────────────────────────────────────────
 
 type SidebarItem =
   | { kind: "overlay"; overlayId: string }
+  | { kind: "layout" }
   | { kind: "global" }
   | { kind: "debug" };
 
@@ -110,6 +114,8 @@ export function OverlayManager() {
               </div>
             </div>
           )}
+
+          {selected.kind === "layout" && <MonitorEditor />}
 
           {selected.kind === "global" && (
             <div className="flex-1 overflow-y-auto p-8">
@@ -579,6 +585,26 @@ function ProfileSelector() {
     setNewName("");
   };
 
+  const fileRef = useRef<HTMLInputElement>(null);
+  const [importMsg, setImportMsg] = useState<{ ok: boolean; text: string } | null>(null);
+
+  const handleImport = async (file: File | undefined) => {
+    if (!file) return;
+    const text = await file.text();
+    const result = store.importProfile(text, DASHBOARDS.map((d) => d.id));
+    setImportMsg(
+      result.ok
+        ? {
+            ok: true,
+            text:
+              `Imported “${result.profile.name}”` +
+              (result.dropped.length ? ` · skipped ${result.dropped.join(", ")}` : ""),
+          }
+        : { ok: false, text: result.error }
+    );
+    if (fileRef.current) fileRef.current.value = "";
+  };
+
   const handleExport = (id: string) => {
     const json = store.exportProfile(id);
     const blob = new Blob([json], { type: "application/json" });
@@ -717,11 +743,37 @@ function ProfileSelector() {
                 </button>
               </form>
             ) : (
-              <MenuAction
-                icon={<Plus className="size-3" />}
-                label="New profile"
-                onClick={() => setCreating(true)}
-              />
+              <>
+                <MenuAction
+                  icon={<Plus className="size-3" />}
+                  label="New profile"
+                  onClick={() => setCreating(true)}
+                />
+                <MenuAction
+                  icon={<FileUp className="size-3" />}
+                  label="Import profile…"
+                  onClick={() => fileRef.current?.click()}
+                />
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept="application/json,.json"
+                  aria-label="Import profile file"
+                  className="hidden"
+                  onChange={(e) => void handleImport(e.target.files?.[0])}
+                />
+              </>
+            )}
+            {importMsg && (
+              <p
+                role="status"
+                className={[
+                  "px-2 pb-1.5 pt-1 text-small",
+                  importMsg.ok ? "text-accent" : "text-danger",
+                ].join(" ")}
+              >
+                {importMsg.text}
+              </p>
             )}
           </div>
         </div>
@@ -751,6 +803,25 @@ function Sidebar({
     <aside className="flex w-56 flex-none flex-col border-r border-border">
       {/* Overlay catalog */}
       <div className="flex-1 overflow-y-auto p-3">
+        {/* The Layout editor is the one place every window is placed at
+            once, so it sits above the catalog rather than in the footer. */}
+        <button
+          type="button"
+          onClick={() => onSelect({ kind: "layout" })}
+          aria-current={selected.kind === "layout" ? "page" : undefined}
+          className={[
+            "mb-4 flex w-full items-center gap-2.5 rounded-ctl border px-2.5 py-2 text-left transition-colors",
+            selected.kind === "layout"
+              ? "border-primary bg-primary/10 text-text shadow-glow"
+              : "border-border bg-surface-2 text-muted hover:border-primary/60 hover:text-text",
+          ].join(" ")}
+        >
+          <MonitorSmartphone className="size-4 shrink-0 text-primary" />
+          <span className="min-w-0 flex-1">
+            <span className="display-title block text-sm uppercase">Layout editor</span>
+            <span className="block truncate text-small text-faint">Place windows on screen</span>
+          </span>
+        </button>
         <p className="mb-2 px-2 label-caps">
           Overlays
         </p>

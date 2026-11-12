@@ -70,7 +70,7 @@ const ZOOM_PRESETS: Zoom[] = [0.5, 0.75, 1, "fit"];
  * the other two approximate on-track scenes (dark cockpit/asphalt and a
  * bright, hazy day) so readability can be judged before going in-sim.
  */
-type Backdrop = "checker" | "asphalt" | "daylight";
+export type Backdrop = "checker" | "asphalt" | "daylight";
 
 /*
  * These are raw literals on purpose, and the one place in the app that is
@@ -79,7 +79,7 @@ type Backdrop = "checker" | "asphalt" | "daylight";
  * point of the backdrop switcher, which exists to check that a widget stays
  * legible against scenes the design system does not control.
  */
-const BACKDROPS: Record<Backdrop, { label: string; css: string }> = {
+export const BACKDROPS: Record<Backdrop, { label: string; css: string }> = {
   checker: { label: "Checker", css: "" },
   asphalt: {
     label: "Asphalt",
@@ -318,8 +318,8 @@ function SegBtn({
 // ── single view ────────────────────────────────────────────────────────────────
 
 /** A checker + dark backdrop that stands in for the game behind the overlay. */
-const CANVAS_BG = "#0d0d0d";
-const CHECKER =
+export const CANVAS_BG = "#0d0d0d";
+export const CHECKER =
   "repeating-conic-gradient(rgba(255,255,255,0.03) 0% 25%, transparent 0% 50%) 0 0";
 
 type Size = { w: number; h: number };
@@ -531,21 +531,28 @@ function WidgetStackView({
   );
 }
 
-/** One stacked widget card, with the same chrome as a real widget window. */
-function WidgetPreviewCard({
+/**
+ * One stacked widget card, with the same chrome as a real widget window.
+ * `height` overrides the stack height (the Layout editor draws each widget at
+ * its real window size).
+ */
+export function WidgetPreviewCard({
   def,
   data,
+  height,
 }: {
   def: WidgetDef;
   data: TelemetryData | null;
+  height?: number;
 }) {
+  const h = height ?? widgetPreviewHeight(def);
   if (def.bare) {
     // A bare widget paints only its marks over the game, so that is all its
     // preview paints over the backdrop.
     return (
       <div
         className="pointer-events-none flex flex-col"
-        style={{ height: widgetPreviewHeight(def) }}
+        style={{ height: h }}
       >
         <div
           className="widget-body min-h-0 flex-1 overflow-hidden"
@@ -564,7 +571,7 @@ function WidgetPreviewCard({
       // overlay paints near-black is a preview that lies about the thing it is
       // previewing.
       className="overlay-card widget-card timing-surface pointer-events-none flex flex-col overflow-hidden rounded-card"
-      style={{ height: widgetPreviewHeight(def) }}
+      style={{ height: h }}
     >
       {/* The same header the real widget carries. The comment above is the
           reason: a preview that differs from the overlay is a preview that
@@ -755,7 +762,7 @@ function OverlayStage({
 }
 
 /** The actual overlay body — a Screen, or the dashboard's widget grid. */
-function RealOverlay({
+export function RealOverlay({
   overlayId,
   height,
 }: {

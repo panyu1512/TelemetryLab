@@ -32,6 +32,18 @@ export interface WindowLockEvent {
   locked: boolean;
 }
 
+/** Payload carried by the `window:bounds` topic (physical px). */
+export interface WindowBoundsEvent {
+  label: string;
+  bounds: { x: number; y: number; width: number; height: number };
+}
+
+/** Payload carried by the `window:scale` topic (1 = 100 %). */
+export interface WindowScaleEvent {
+  label: string;
+  scale: number;
+}
+
 /**
  * The bus contract: every topic and the payload it carries. This map is the
  * single source of truth — {@link BusTopic} is derived from its keys, so a new
@@ -41,6 +53,12 @@ export interface WindowLockEvent {
 export interface BusPayloadMap {
   "config:changed": OverlayConfigSnapshot;
   "window:lock": WindowLockEvent;
+  /** A window moved or resized — by the user, or by the Layout editor. */
+  "window:bounds": WindowBoundsEvent;
+  /** A window's content scale changed (Layout editor). */
+  "window:scale": WindowScaleEvent;
+  /** Layout presets were saved, loaded or deleted. */
+  "layout-presets:changed": null;
   /** Pure notification — the receiver re-reads persisted window state. */
   "windows:changed": null;
   "standings-ui:changed": StandingsUiSnapshot;

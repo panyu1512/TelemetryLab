@@ -23,6 +23,12 @@ export interface WindowState {
   bounds?: WindowBounds;
   /** Click-through lock: pointer events pass through to the game underneath. */
   locked: boolean;
+  /**
+   * Content scale (1 = 100 %), set from the Layout editor. The window lays its
+   * content out at `size / scale` and draws it `scale` times larger, so a
+   * table keeps its columns and simply reads bigger or smaller. Absent = 1.
+   */
+  scale?: number;
 }
 
 const STORAGE_KEY = "telemetrylab.window-state.v1";
@@ -78,4 +84,28 @@ export function isWindowLocked(label: string): boolean {
 /** Persist a window's lock state. */
 export function saveWindowLock(label: string, locked: boolean): void {
   patchWindowState(label, { locked });
+}
+
+/** A window's content scale (1 when never set). */
+export function getWindowScale(label: string): number {
+  const s = readAll()[label]?.scale;
+  return typeof s === "number" && Number.isFinite(s) && s > 0 ? s : 1;
+}
+
+/** Persist a window's content scale. */
+export function saveWindowScale(label: string, scale: number): void {
+  patchWindowState(label, { scale });
+}
+
+/** Every persisted window record, keyed by label (for layout presets). */
+export function getAllWindowStates(): Record<string, WindowState> {
+  return readAll();
+}
+
+/** Replace a window's record outright (layout preset load / reset). */
+export function replaceWindowState(label: string, state: WindowState | undefined): void {
+  const all = readAll();
+  if (state) all[label] = { ...DEFAULT_STATE, ...state };
+  else delete all[label];
+  writeAll(all);
 }

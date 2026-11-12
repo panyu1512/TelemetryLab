@@ -17,7 +17,12 @@
  */
 
 import { create } from "zustand";
-import { getTheme, applyTheme } from "../themes";
+import { THEMES, getTheme, applyTheme } from "../themes";
+import {
+  parseProfileImport,
+  serializeProfile,
+  type ImportResult,
+} from "../lib/profileImport";
 import type { MockSessionType } from "../lib/mockData";
 import { isSingleView } from "../lib/overlayWindows";
 import { broadcast, subscribe } from "../lib/windowBus";
@@ -269,8 +274,14 @@ interface OverlayConfigState extends Persisted {
   deleteProfile: (id: string) => void;
   setActiveProfile: (id: string) => void;
 
-  // Profile export (backup). Import was removed.
+  // Profile export (backup) and import.
   exportProfile: (id: string) => string;
+  /**
+   * Import a profile file's text as a new profile and make it active.
+   * `overlayIds` are the overlays this build knows (the registry lives above
+   * this store, so the caller passes them in).
+   */
+  importProfile: (text: string, overlayIds: readonly string[]) => ImportResult;
 
   // Editor selection
   setLastOverlay: (overlayId: string) => void;
@@ -368,8 +379,24 @@ export const useOverlayConfigStore = create<OverlayConfigState>()((set, get) => 
   },
 
   exportProfile(id) {
-    const p = resolveProfile(get().profiles, id);
-    return JSON.stringify(p, null, 2);
+    return serializeProfile(resolveProfile(get().profiles, id));
+  },
+
+  importProfile(text, overlayIds) {
+    const result = parseProfileImport(text, {
+      overlayIds,
+      themeIds: THEMES.map((t) => t.id),
+      existingNames: get().profiles.map((p) => p.name),
+      newId: `profile_${Date.now()}`,
+    });
+    if (!result.ok) return result;
+    const profile = result.profile;
+    set((s) => {
+      const profiles = [...s.profiles, profile];
+      persist({ ...s, profiles, activeProfileId: profile.id });
+      return { profiles, activeProfileId: profile.id };
+    });
+    return result;
   },
 
   setLastOverlay(overlayId) {

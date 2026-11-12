@@ -144,6 +144,10 @@ export function placeWindow(
 /** A monitor's work area plus the DPI scale its windows are drawn at. */
 export interface LiveMonitor extends MonitorRect {
   scaleFactor: number;
+  /** The whole screen, taskbar included (the work area is `x/y/width/height`). */
+  full?: MonitorRect;
+  /** The OS's name for it, when it has one. */
+  name?: string;
 }
 
 /**
@@ -164,6 +168,13 @@ export async function liveMonitors(): Promise<LiveMonitor[]> {
         width: area.size.width,
         height: area.size.height,
         scaleFactor: m.scaleFactor || 1,
+        full: {
+          x: m.position.x,
+          y: m.position.y,
+          width: m.size.width,
+          height: m.size.height,
+        },
+        name: m.name ?? undefined,
         primary: !!primary && m.name === primary.name &&
           m.position.x === primary.position.x && m.position.y === primary.position.y,
       };

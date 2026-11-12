@@ -161,7 +161,12 @@ export async function initWindow(): Promise<void> {
       const pos = await w.innerPosition();
       const size = await w.innerSize();
       const next = { x: pos.x, y: pos.y, width: size.width, height: size.height };
-      if (isPlausibleBounds(next)) saveWindowBounds(WINDOW_LABEL, next);
+      if (isPlausibleBounds(next)) {
+        saveWindowBounds(WINDOW_LABEL, next);
+        // The Layout editor draws this window where it really is, so a drag
+        // of the window itself has to reach it.
+        broadcast("window:bounds", { label: WINDOW_LABEL, bounds: next });
+      }
     } catch {}
   };
   await w.listen("tauri://move", saveBounds);
